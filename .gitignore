@@ -1,6 +1,7 @@
 node_modules/
 dist/
 test-results/
+playwright-report/
 .idea/
 .pnpm-store/
 pnpm-debug.log*

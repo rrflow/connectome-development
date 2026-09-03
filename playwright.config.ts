@@ -5,7 +5,9 @@ export default defineConfig({
 	fullyParallel: false,
 	forbidOnly: !!process.env.CI,
 	retries: 0,
-	reporter: process.env.CI ? "github" : "list",
+	reporter: process.env.CI
+		? [["github"], ["html", { outputFolder: "playwright-report", open: "never" }]]
+		: "list",
 	use: {
 		baseURL: "http://127.0.0.1:4173",
 		trace: "retain-on-failure",

@@ -8,9 +8,14 @@ repository = "https://github.com/EonsofStupid/rrflow-connectome"
 edition = "2021"
 publish = false
 
-# Connectome is mounted inside the RRFlow repository as a submodule. Keep its
-# Tauri dependency graph isolated from the parent engine Cargo workspace.
+# Connectome is a standalone repository and release boundary. Keep its Tauri
+# dependency graph isolated from any engine workspace checked out beside it.
 [workspace]
+
+# objc 0.2.7 expands `cfg(feature = "cargo-clippy")` in the destination crate.
+# Declare that legacy macro value as expected without weakening warning policy.
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(feature, values("cargo-clippy"))'] }
 
 [dependencies]
 tauri = { version = "2.4.0", features = ["devtools"] }

@@ -126,6 +126,7 @@
 			"!**/src-tauri",
 			"!**/dist",
 			"!**/test-results",
+			"!**/playwright-report",
 			"!**/*.js",
 			"!**/src/assets/data/license-report.json"
 		]
