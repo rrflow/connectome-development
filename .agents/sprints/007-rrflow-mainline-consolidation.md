@@ -194,8 +194,30 @@ After Connectome `main` is green:
 - A parent `/devlabs/pnpm-workspace.yaml` caused local installs to validate the
   wrong lockfile. Connectome package installation was repeated with
   `--ignore-workspace`; the isolated lockfile and `node_modules` now match.
-- Local validation commands use `pnpm --ignore-workspace ...`; this selects the
-  app's declared pnpm 11.24.0 instead of the parent prototype's pnpm 11.22.0.
+- Before the app-owned workspace file landed, local validation commands used
+  `pnpm --ignore-workspace ...` to select the app's declared pnpm 11.24.0
+  instead of the parent prototype's pnpm 11.22.0.
 - Canonical RRD diagnostics and the generated TypeScript SDK are present only
   in RRFlow's unpublished worktree. The handwritten prompt-flight protocol was
   not relabelled or represented as complete RRD integration.
+
+### 2026-08-26 — first remote matrix correction
+
+- Push run `32924463247` reproduced a clean-install failure before the frontend
+  build: pnpm 11.24 rejected unreviewed dependency lifecycle scripts.
+- A fresh standalone clone reproduced the same failure for `@parcel/watcher`,
+  `esbuild`, and `sharp`; this proved the local `--ignore-scripts` install had
+  not exercised the clean CI contract.
+- Added an app-owned `pnpm-workspace.yaml`. It isolates Connectome from the
+  unrelated parent prototype workspace and explicitly allows only those three
+  required build packages. A clean frozen install is required before repush.
+
+### 2026-08-26 — native release artifact gate
+
+- The first native release build produced the optimized Linux executable but
+  bundling failed because updater artifacts were enabled without an updater
+  public key, endpoint, or signing key.
+- Disabled updater-artifact generation for pre-release builds. Standard native
+  bundles remain required now; signed automatic updates remain blocked until a
+  reviewed key, HTTPS release endpoint, CI secret, rotation process, and update
+  installation test exist.

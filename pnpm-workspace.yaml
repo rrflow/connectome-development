@@ -1,0 +1,10 @@
+packages:
+  - "."
+
+# pnpm 11 executes no dependency build script unless the project explicitly
+# approves it. These three packages provide native/build binaries used by the
+# existing Vite, Sass, file-watcher, and image-optimization toolchain.
+allowBuilds:
+  "@parcel/watcher": true
+  esbuild: true
+  sharp: true

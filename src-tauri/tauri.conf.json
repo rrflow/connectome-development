@@ -22,7 +22,7 @@
 			"deb",
 			"rpm"
 		],
-		"createUpdaterArtifacts": true,
+		"createUpdaterArtifacts": false,
 		"externalBin": [],
 		"resources": [],
 		"icon": [
