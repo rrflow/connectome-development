@@ -16,6 +16,7 @@ import { ControlPlanePage } from "./pages/ControlPlane";
 import { CreateConnectionPage } from "./pages/CreateConnection";
 import { NewEmbedPage } from "./pages/NewEmbed";
 import { OverviewPage } from "./pages/Overview";
+import { RuntimeConnectionPage } from "./pages/RuntimeConnection";
 import { RuntimeDiagnosticsPage } from "./pages/RuntimeDiagnostics";
 import { ConnectomeSidebar } from "./sidebar";
 import classes from "./style.module.scss";
@@ -168,6 +169,10 @@ export function ConnectomeScreen() {
 								{({ id }) => <RuntimeDiagnosticsPage id={id} />}
 							</Route>
 
+							<Route path="/runtime/:id">
+								{({ id }) => <RuntimeConnectionPage id={id} />}
+							</Route>
+
 							<Route path="/c/:connection/:view">
 								{({ connection, view }) => {
 									const profile = getConnectionById(connection);
@@ -176,6 +181,9 @@ export function ConnectomeScreen() {
 									}
 									if (profile?.target === "diagnostics") {
 										return <Redirect to={`/diagnostics/${profile.id}`} />;
+									}
+									if (profile?.target === "runtime") {
+										return <Redirect to={`/runtime/${profile.id}`} />;
 									}
 
 									const _view = view as ViewPage;

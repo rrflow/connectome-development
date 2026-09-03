@@ -53,7 +53,11 @@ export function useConnectionAndView() {
 	}
 
 	const connection = getConnectionById(params.connection);
-	if (connection?.target === "control-plane" || connection?.target === "diagnostics") {
+	if (
+		connection?.target === "control-plane" ||
+		connection?.target === "diagnostics" ||
+		connection?.target === "runtime"
+	) {
 		return [null, null] as const;
 	}
 
@@ -76,6 +80,10 @@ export function useConnectionNavigator() {
 			}
 			if (info.target === "diagnostics") {
 				navigate(`/diagnostics/${info.id}`);
+				return;
+			}
+			if (info.target === "runtime") {
+				navigate(`/runtime/${info.id}`);
 				return;
 			}
 

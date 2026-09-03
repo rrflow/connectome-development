@@ -20,6 +20,7 @@ mod database;
 mod diagnostics;
 mod open;
 mod paths;
+mod rrd;
 mod whitelist;
 pub mod window;
 
@@ -95,6 +96,7 @@ fn main() {
             database::start_database,
             database::stop_database,
             diagnostics::runtime_diagnostics_request,
+            rrd::rrd_public_request,
             window::toggle_devtools,
             window::new_window,
             open::get_opened_resources,

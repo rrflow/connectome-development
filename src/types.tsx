@@ -149,6 +149,7 @@ export interface Connection {
 	id: string;
 	name: string;
 	target?: "runtime" | "diagnostics" | "control-plane";
+	runtimeInstance?: string;
 	icon: number;
 	labels?: string[];
 	instance?: boolean;

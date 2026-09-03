@@ -1,0 +1,23 @@
+.stage,
+.phase {
+	border: 1px solid color-mix(in srgb, var(--mantine-color-violet-6) 18%, transparent);
+	background: color-mix(in srgb, var(--mantine-color-body) 92%, transparent);
+}
+
+.identity {
+	border: 1px solid color-mix(in srgb, var(--mantine-color-violet-6) 34%, transparent);
+	background:
+		radial-gradient(circle at 90% 0%, rgba(139, 92, 246, 0.2), transparent 36%),
+		color-mix(in srgb, var(--mantine-color-body) 92%, transparent);
+}
+
+.boundary {
+	border: 1px solid color-mix(in srgb, var(--mantine-color-blue-6) 28%, transparent);
+	background: color-mix(in srgb, var(--mantine-color-body) 94%, transparent);
+}
+
+.primitive {
+	padding: 12px;
+	border-radius: var(--mantine-radius-md);
+	border: 1px solid color-mix(in srgb, var(--mantine-color-blue-6) 16%, transparent);
+}

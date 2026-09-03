@@ -28,8 +28,6 @@ import { useMemo } from "react";
 import { useImmer } from "use-immer";
 import { Link, useLocation } from "wouter";
 import { adapter } from "~/adapter";
-import { ConnectionAddressDetails } from "~/components/ConnectionDetails/address";
-import { ConnectionAuthDetails } from "~/components/ConnectionDetails/authentication";
 import { ConnectionNameDetails } from "~/components/ConnectionDetails/connection";
 import { ConnectionLabelsDetails } from "~/components/ConnectionDetails/labels";
 import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
@@ -50,7 +48,7 @@ function parseRuntimeEndpoint(value: string | null) {
 	if (!value) return null;
 	try {
 		const url = new URL(value);
-		return ["http:", "https:", "ws:", "wss:"].includes(url.protocol) ? url : null;
+		return ["http:", "https:"].includes(url.protocol) ? url : null;
 	} catch {
 		return null;
 	}
@@ -66,10 +64,9 @@ export function CreateConnectionPage() {
 		const runtime = new URLSearchParams(window.location.search).get("runtime");
 		const runtimeURL = parseRuntimeEndpoint(runtime);
 		draft.name = runtimeURL ? "Managed RRFlow" : "Local RRFlow";
-		draft.target = "diagnostics";
-		draft.authentication.protocol =
-			runtimeURL?.protocol === "https:" || runtimeURL?.protocol === "wss:" ? "https" : "http";
-		draft.authentication.hostname = runtimeURL?.host ?? "localhost:4387";
+		draft.target = "runtime";
+		draft.authentication.protocol = runtimeURL?.protocol === "https:" ? "https" : "http";
+		draft.authentication.hostname = runtimeURL?.host ?? "localhost:9477";
 		draft.authentication.mode = "none";
 		draft.authentication.username = "";
 		draft.authentication.password = "";
@@ -87,7 +84,7 @@ export function CreateConnectionPage() {
 			);
 		}
 
-		if (connection.target === "diagnostics") {
+		if (connection.target === "runtime" || connection.target === "diagnostics") {
 			return Boolean(
 				connection.name &&
 					connection.authentication.hostname &&
@@ -118,7 +115,7 @@ export function CreateConnectionPage() {
 
 	const setTarget = (target: string) => {
 		setConnection((draft) => {
-			draft.target = target === "control-plane" ? "control-plane" : "diagnostics";
+			draft.target = target === "control-plane" ? "control-plane" : "runtime";
 			if (draft.target === "control-plane") {
 				draft.name = "RRFlow Enterprise";
 				draft.authentication.protocol = "https";
@@ -131,7 +128,7 @@ export function CreateConnectionPage() {
 			} else {
 				draft.name = "Local RRFlow";
 				draft.authentication.protocol = "http";
-				draft.authentication.hostname = "localhost:4387";
+				draft.authentication.hostname = "localhost:9477";
 				draft.authentication.mode = "none";
 				draft.authentication.username = "";
 				draft.authentication.password = "";
@@ -319,12 +316,12 @@ export function CreateConnectionPage() {
 					</Box>
 					<SegmentedControl
 						fullWidth
-						value={connection.target ?? "diagnostics"}
+						value={connection.target ?? "runtime"}
 						onChange={setTarget}
 						data={[
 							{
-								value: "diagnostics",
-								label: "Vyrm instance",
+								value: "runtime",
+								label: "RRD runtime",
 							},
 							{
 								value: "control-plane",
@@ -348,7 +345,7 @@ export function CreateConnectionPage() {
 									>
 										{connection.target === "control-plane"
 											? "Optional enterprise plane"
-											: "Native developer diagnostics"}
+											: "Direct RRD bootstrap"}
 									</Badge>
 									<Badge
 										variant="dot"
@@ -365,7 +362,7 @@ export function CreateConnectionPage() {
 								>
 									{connection.target === "control-plane"
 										? "Attach Connectome to an RRFlow enterprise control plane"
-										: "Attach Connectome to a Vyrm instance"}
+										: "Attach Connectome to an RRD instance"}
 								</Text>
 								<Text
 									maw={720}
@@ -373,7 +370,7 @@ export function CreateConnectionPage() {
 								>
 									{connection.target === "control-plane"
 										? "The profile is stored locally. Connectome performs a strict RRFlow control handshake, then loads managed instances, deployment state, versions, regions, and control capabilities."
-										: "The profile is stored locally. Connectome negotiates vyrm-diagnostics v1, then loads persisted prompt flights, replay controls, runtime health, and evidence-backed capability maturity."}
+										: "Connectome verifies HTTP transport, engine readiness, RRD protocol v1, and the runtime instance identity before exposing any higher-level capability."}
 								</Text>
 							</Box>
 							<Box className={classes.runtimePulse}>
@@ -389,10 +386,10 @@ export function CreateConnectionPage() {
 							spacing="sm"
 						>
 							{[
-								[iconDatabase, "Data", "Tables & records"],
-								[iconRelation, "Graph", "Relations & paths"],
-								[iconQuery, "Query", "RRFlowQL studio"],
-								[iconChart, "Diagnose", "Connection & schema"],
+								[iconDatabase, "HTTP", "Liveness & readiness"],
+								[iconRelation, "Identity", "Protocol & instance"],
+								[iconQuery, "Mesh", "Endpoint adapter boundary"],
+								[iconChart, "Attune", "Resumable engine job"],
 							].map(([icon, label, detail]) => (
 								<Group
 									key={label}
@@ -446,7 +443,7 @@ export function CreateConnectionPage() {
 						<Text>
 							{connection.target === "control-plane"
 								? "Connect to the optional RRFlow enterprise management plane"
-								: "Connect locally or over the network using the RRFlow endpoint"}
+								: "Connect directly now; a mesh adapter may resolve the same RRD endpoint later"}
 						</Text>
 					</Box>
 					{connection.target === "control-plane" ? (
@@ -477,7 +474,7 @@ export function CreateConnectionPage() {
 								/>
 							</Stack>
 						</Paper>
-					) : connection.target === "diagnostics" ? (
+					) : (
 						<Paper
 							p="lg"
 							mt="md"
@@ -498,8 +495,8 @@ export function CreateConnectionPage() {
 									]}
 								/>
 								<TextInput
-									label="Vyrm diagnostics host"
-									placeholder="localhost:4387"
+									label="RRD HTTP host"
+									placeholder="localhost:9477"
 									value={connection.authentication.hostname}
 									onChange={(event) =>
 										setConnection((draft) => {
@@ -508,36 +505,22 @@ export function CreateConnectionPage() {
 									}
 								/>
 								<Text fz="sm">
-									Plain HTTP is accepted only for loopback. Remote instances
-									require HTTPS.
+									Plain HTTP is accepted only for loopback. Mesh and other remote
+									endpoints require HTTPS.
 								</Text>
+								<TextInput
+									label="Expected instance ID (optional)"
+									placeholder="rrflow-instance"
+									value={connection.runtimeInstance ?? ""}
+									onChange={(event) =>
+										setConnection((draft) => {
+											draft.runtimeInstance = event.target.value || undefined;
+										})
+									}
+									description="Reject a reachable endpoint that identifies as another RRD instance."
+								/>
 							</Stack>
 						</Paper>
-					) : (
-						<ConnectionAddressDetails
-							value={connection}
-							onChange={setConnection}
-						/>
-					)}
-					{connection.target === "runtime" && (
-						<Box mt={24}>
-							<Text
-								fz="xl"
-								fw={600}
-								c="bright"
-							>
-								Runtime access
-							</Text>
-							<Text>
-								Provide the credentials and initial namespace/database scope
-							</Text>
-						</Box>
-					)}
-					{connection.target === "runtime" && (
-						<ConnectionAuthDetails
-							value={connection}
-							onChange={setConnection}
-						/>
 					)}
 					<Box mt={24}>
 						<Text
@@ -570,7 +553,7 @@ export function CreateConnectionPage() {
 						>
 							{connection.target === "control-plane"
 								? "Save & open enterprise"
-								: "Save & open diagnostics"}
+								: "Save & connect to RRD"}
 						</Button>
 					</Group>
 				</Stack>

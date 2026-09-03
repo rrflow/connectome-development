@@ -2,14 +2,21 @@
 
 Connectome is the native desktop control surface for RRFlow. It runs as a Tauri application on Windows, macOS, and Linux and connects to a separately deployed RRFlow runtime.
 
-This repository is consumed as `apps/connectome` by the engine repository that is becoming RRFlow. It is not the database engine and it is not an embedded browser panel.
+This is a standalone Git repository. It may be checked out as `apps/connectome`
+while the repositories are developed together, but it is not part of the
+database engine and it is not an embedded browser panel.
 
 ## Current alpha
 
 Connectome currently provides:
 
 - locally persisted RRFlow connection profiles;
-- local or remote endpoint probing over HTTP(S) and WebSocket transports;
+- a real RRD HTTP bootstrap over `/v1/health/live`, `/v1/health/ready`, and
+  `/v1/capabilities`;
+- strict `rrd` protocol-version and instance-identity validation before a
+  runtime is considered connected;
+- a native transport allowlist with bounded responses, redirects disabled,
+  loopback-only plaintext HTTP, and HTTPS required off-loopback;
 - root, namespace, database, record-access, token, and anonymous authentication;
 - namespace and database selection;
 - a RRFlowQL query studio with table, graph, JSON, and live-result lenses;
@@ -22,17 +29,52 @@ Connectome currently provides:
 - separate project-runtime and optional enterprise-control-plane profiles;
 - multi-window native desktop operation.
 
-Connectome uses RRFlow-native runtime and control-plane contracts. A runtime
-connection opens one project instance for RRFlowQL, data, graph, schema, trace,
-and lifecycle work. The optional enterprise control-plane connection manages
-fleets, deployments, upgrades, audit activity, and availability policy. There
-is no compatibility fallback.
+Connectome uses RRFlow-native runtime and control-plane contracts. A new
+runtime profile opens the RRD bootstrap screen; it does not route through the
+inherited Surreal-compatible query client. The inherited query, graph, and
+schema surfaces remain available for migration, but are not evidence that the
+native RRD operations behind those surfaces are finished. The optional
+enterprise control-plane connection remains a separate fleet-management
+boundary. There is no runtime compatibility fallback.
 
-Native diagnostics requests cross the Tauri command boundary instead of relying
-on WebView CORS. The transport allowlists only capability, snapshot, flight,
-and demo endpoints; caps requests at 128 KiB and responses at 16 MiB; disables
-redirects; permits plaintext HTTP only for loopback; and requires HTTPS for a
-remote Vyrm instance.
+The connection sequence is deliberately narrow:
+
+```text
+direct origin or mesh-resolved origin
+                 |
+                 v
+  HTTP liveness -> readiness -> capabilities
+                 |
+                 v
+    validate rrd v1 + exact instance identity
+```
+
+A mesh integration may supply a private devspace endpoint and opaque
+attestation reference. It does not become a database transport, store
+credentials in the connection model, or make network reachability equivalent
+to RRD identity. No Zuul Zero or shippin.ai command has been invented in this
+repository; their adapter remains pending an exact installation and discovery
+contract.
+
+Existing-project attunement is scaffolded as a future resumable, checkpointed
+RRD engine job with a 30–45 minute planning estimate. Its phases are connect,
+inventory, parse, normalize, entity-link, lexical index, embed, vector index,
+graph, ground, and verify. Only `connect` is implemented here. The UI labels
+the remaining phases `planned` until RRD advertises and executes a canonical
+attunement contract.
+
+Triggers, routines, hook adapters, and skills follow the same authority rule:
+triggers are conditions over canonical engine events; routines are authorized
+RRD operations; hook adapters may submit typed host events; skills are
+versioned instruction/resource references. Connectome can configure and
+observe them, but it cannot execute a parallel lifecycle or write directly to
+RRFlowDB.
+
+Native RRD bootstrap requests cross the Tauri command boundary instead of
+relying on WebView CORS. That transport accepts only the three public bootstrap
+GETs, caps responses at 1 MiB, disables redirects, permits plaintext HTTP only
+for loopback, and requires HTTPS for a remote runtime. The older diagnostics
+transport remains isolated for existing diagnostic profiles.
 
 The enterprise contract is deliberately separate from the runtime query
 protocol:
@@ -49,12 +91,15 @@ protocol:
 ## Repository boundary
 
 ```text
-RRFlow engine repository
+RRFlow engine repository             Connectome repository
 ├── runtime / storage / query execution
 ├── QORTEX vector internals
-└── apps/connectome  ← this repository (git submodule)
+└── rrd-contract <------------------ typed client boundary
+                                      └── native desktop UI
 ```
 
+During joint development the Connectome repository may be mounted at
+`apps/connectome`, but its Git history and release boundary remain independent.
 Connectome visualizes and controls project RRFlow instances. The optional
 enterprise profile connects to a distinct control plane for fleet and
 deployment management; it does not change or proxy the project-runtime
@@ -62,7 +107,8 @@ contract.
 
 ## Development
 
-Requirements: Node.js, pnpm 9, and the Tauri 2 platform prerequisites.
+Requirements: Node.js 22.13 or newer, pnpm 11.24, and the Tauri 2 platform
+prerequisites.
 
 ```bash
 pnpm install --frozen-lockfile
