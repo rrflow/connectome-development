@@ -4,7 +4,7 @@ version = "0.0.0"
 description = "Connectome — native control surface for RRFlow runtimes"
 authors = ["EonsofStupid"]
 license = "MIT"
-repository = "https://github.com/EonsofStupid/connectome"
+repository = "https://github.com/EonsofStupid/rrflow-connectome"
 edition = "2021"
 publish = false
 

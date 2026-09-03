@@ -2,9 +2,11 @@
 
 Connectome is the native desktop control surface for RRFlow. It runs as a Tauri application on Windows, macOS, and Linux and connects to a separately deployed RRFlow runtime.
 
-This is a standalone Git repository. It may be checked out as `apps/connectome`
-while the repositories are developed together, but it is not part of the
-database engine and it is not an embedded browser panel.
+This is the standalone
+[`EonsofStupid/rrflow-connectome`](https://github.com/EonsofStupid/rrflow-connectome)
+Git repository. It may be checked out beside the engine while the repositories
+are developed together, but it is not part of the database engine and it is
+not an embedded browser panel.
 
 ## Current alpha
 
@@ -98,8 +100,9 @@ RRFlow engine repository             Connectome repository
                                       └── native desktop UI
 ```
 
-During joint development the Connectome repository may be mounted at
-`apps/connectome`, but its Git history and release boundary remain independent.
+During joint development the Connectome and RRFlow repositories may be checked
+out beside one another, but their Git histories and release boundaries remain
+independent.
 Connectome visualizes and controls project RRFlow instances. The optional
 enterprise profile connects to a distinct control plane for fleet and
 deployment management; it does not change or proxy the project-runtime
