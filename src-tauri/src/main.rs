@@ -9,6 +9,7 @@ use std::{env, sync::OnceLock};
 use database::DatabaseState;
 use log::info;
 use paths::get_logs_directory;
+use rrd::RrdClientState;
 use tauri::{AppHandle, Manager, RunEvent};
 use tauri_plugin_log::{Target, TargetKind};
 use time::{format_description, OffsetDateTime};
@@ -86,6 +87,7 @@ fn main() {
         )
         .manage(open::OpenResourceState(Default::default()))
         .manage(DatabaseState(Default::default()))
+        .manage(RrdClientState::default())
         .invoke_handler(tauri::generate_handler![
             analytics::track_event,
             config::load_config,
@@ -97,6 +99,11 @@ fn main() {
             database::stop_database,
             diagnostics::runtime_diagnostics_request,
             rrd::rrd_public_request,
+            rrd::rrd_connect,
+            rrd::rrd_capabilities,
+            rrd::rrd_diagnostic_snapshot,
+            rrd::rrd_assemble_context,
+            rrd::rrd_disconnect,
             window::toggle_devtools,
             window::new_window,
             open::get_opened_resources,

@@ -8,15 +8,12 @@ fn is_loopback(host: Host<&str>) -> bool {
     }
 }
 
-pub(super) fn public_rrd_url(endpoint: &str, path: &str) -> Result<Url, String> {
-    if !matches!(
-        path,
-        "/v1/health/live" | "/v1/health/ready" | "/v1/capabilities"
-    ) {
-        return Err("RRD request is outside the public bootstrap allowlist".into());
-    }
+pub(super) fn is_loopback_origin(url: &Url) -> bool {
+    url.host().is_some_and(is_loopback)
+}
 
-    let mut url = Url::parse(endpoint).map_err(|error| format!("invalid RRD endpoint: {error}"))?;
+pub(super) fn rrd_origin(endpoint: &str) -> Result<Url, String> {
+    let url = Url::parse(endpoint).map_err(|error| format!("invalid RRD endpoint: {error}"))?;
     if !matches!(url.scheme(), "http" | "https")
         || !url.username().is_empty()
         || url.password().is_some()
@@ -33,6 +30,18 @@ pub(super) fn public_rrd_url(endpoint: &str, path: &str) -> Result<Url, String> 
         return Err("remote RRD endpoints require HTTPS".into());
     }
 
+    Ok(url)
+}
+
+pub(super) fn public_rrd_url(endpoint: &str, path: &str) -> Result<Url, String> {
+    if !matches!(
+        path,
+        "/v1/health/live" | "/v1/health/ready" | "/v1/capabilities"
+    ) {
+        return Err("RRD request is outside the public bootstrap allowlist".into());
+    }
+
+    let mut url = rrd_origin(endpoint)?;
     url.set_path(path);
     Ok(url)
 }

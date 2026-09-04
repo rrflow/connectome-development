@@ -44,6 +44,41 @@ export interface RrdHandshake {
 	service: RrdServiceCapabilities;
 }
 
+export interface RrdConnectRequest {
+	endpoint: string;
+	instance: string;
+	principal: string;
+	api_key: string;
+	scope: string;
+}
+
+export interface RrdSessionSummary {
+	session_id: string;
+	issued_at_unix_ms: number;
+	idle_expires_at_unix_ms: number;
+	absolute_expires_at_unix_ms: number;
+}
+
+export interface RrdConnectionSummary {
+	endpoint: string;
+	instance: string;
+	principal: string;
+	scope: string;
+	connected_at_unix_ms: number;
+	session: RrdSessionSummary;
+	service: RrdServiceCapabilities;
+}
+
+export interface RrdContextRequest {
+	query: string;
+	seeds?: unknown[];
+	valid_at?: number;
+	max_graph_depth?: number;
+	max_items?: number;
+	max_output_bytes?: number;
+	max_scanned_changes?: number;
+}
+
 type JsonRecord = Record<string, unknown>;
 const DEPLOYMENT_MODES = ["memory", "embedded", "local_daemon", "edge", "remote", "distributed"];
 
@@ -257,5 +292,49 @@ export class RrdRuntimeClient {
 			readiness,
 			service,
 		};
+	}
+}
+
+/**
+ * Native authenticated RRD session. The API key and bearer token remain in
+ * the Tauri process; the webview receives only the bounded public results.
+ */
+export class RrdAuthenticatedClient {
+	private requireNative() {
+		if (!isTauri()) {
+			throw new Error("Authenticated RRD operations require the native Connectome client");
+		}
+	}
+
+	async connect(request: RrdConnectRequest): Promise<RrdConnectionSummary> {
+		this.requireNative();
+		const summary = await invoke<RrdConnectionSummary>("rrd_connect", { request });
+		if (
+			summary.instance !== request.instance ||
+			summary.service.instance.id !== request.instance
+		) {
+			throw new Error("RRD connection summary changed the requested instance identity");
+		}
+		return summary;
+	}
+
+	async capabilities(): Promise<RrdServiceCapabilities> {
+		this.requireNative();
+		return invoke<RrdServiceCapabilities>("rrd_capabilities");
+	}
+
+	async diagnosticSnapshot(): Promise<unknown> {
+		this.requireNative();
+		return invoke<unknown>("rrd_diagnostic_snapshot");
+	}
+
+	async assembleContext(request: RrdContextRequest): Promise<unknown> {
+		this.requireNative();
+		return invoke<unknown>("rrd_assemble_context", { request });
+	}
+
+	async disconnect(): Promise<void> {
+		this.requireNative();
+		await invoke<void>("rrd_disconnect");
 	}
 }

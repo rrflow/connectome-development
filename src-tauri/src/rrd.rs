@@ -1,12 +1,65 @@
 use reqwest::{redirect::Policy, Client};
 use serde_json::Value;
 use std::time::Duration;
+use tauri::State;
 
+mod client;
 mod transport;
 
+use client::{NativeRrdClient, RrdConnectRequest, RrdConnectionSummary, RrdContextRequest};
 use transport::public_rrd_url;
 
 const MAX_RRD_RESPONSE_BYTES: u64 = 1024 * 1024;
+
+#[derive(Default)]
+pub struct RrdClientState(tokio::sync::Mutex<Option<NativeRrdClient>>);
+
+#[tauri::command]
+pub async fn rrd_connect(
+    request: RrdConnectRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<RrdConnectionSummary, String> {
+    let mut guard = state.0.lock().await;
+    if guard.is_some() {
+        return Err("Connectome is already connected to RRD; disconnect first".into());
+    }
+    let (client, summary) = NativeRrdClient::connect(request).await?;
+    *guard = Some(client);
+    Ok(summary)
+}
+
+#[tauri::command]
+pub async fn rrd_capabilities(state: State<'_, RrdClientState>) -> Result<Value, String> {
+    let guard = state.0.lock().await;
+    let client = guard.as_ref().ok_or("Connectome is not connected to RRD")?;
+    client.capabilities().await
+}
+
+#[tauri::command]
+pub async fn rrd_diagnostic_snapshot(state: State<'_, RrdClientState>) -> Result<Value, String> {
+    let mut guard = state.0.lock().await;
+    let client = guard.as_mut().ok_or("Connectome is not connected to RRD")?;
+    client.diagnostic_snapshot().await
+}
+
+#[tauri::command]
+pub async fn rrd_assemble_context(
+    request: RrdContextRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<Value, String> {
+    let mut guard = state.0.lock().await;
+    let client = guard.as_mut().ok_or("Connectome is not connected to RRD")?;
+    client.assemble_context(request).await
+}
+
+#[tauri::command]
+pub async fn rrd_disconnect(state: State<'_, RrdClientState>) -> Result<(), String> {
+    let client = state.0.lock().await.take();
+    match client {
+        Some(client) => client.close().await,
+        None => Ok(()),
+    }
+}
 
 #[tauri::command]
 pub async fn rrd_public_request(endpoint: String, path: String) -> Result<Value, String> {
