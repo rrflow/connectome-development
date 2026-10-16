@@ -23,12 +23,14 @@ use std::fmt;
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::path::Path;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use tokio::net::TcpStream;
 
 // Connectome's own session policy; the engine enforces its own ceilings.
 const SESSION_IDLE_TIMEOUT_MS: u64 = 900_000;
 const SESSION_ABSOLUTE_TIMEOUT_MS: u64 = 3_600_000;
 const SESSION_RENEWAL_MARGIN_MS: u64 = 30_000;
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
+const LOOPBACK_PROBE_TIMEOUT: Duration = Duration::from_secs(2);
 /// Most recent change-feed and audit records the Storage lens renders.
 const RECENT_CHANGES: u64 = 64;
 const RECENT_AUDIT_RECORDS: u16 = 64;
@@ -128,7 +130,8 @@ fn data_reference(reference: &RrdReference) -> Result<DataReference, String> {
     })
 }
 
-fn loopback_address(endpoint: &str) -> Result<(String, SocketAddr), String> {
+/// The validated loopback origin plus every loopback socket address it names.
+fn loopback_candidates(endpoint: &str) -> Result<(String, Vec<SocketAddr>), String> {
     let origin = rrd_origin(endpoint)?;
     if origin.scheme() != "http" || !is_loopback_origin(&origin) {
         return Err(
@@ -140,12 +143,34 @@ fn loopback_address(endpoint: &str) -> Result<(String, SocketAddr), String> {
     let port = origin
         .port_or_known_default()
         .ok_or("RRD endpoint has no port")?;
-    let address = (host.trim_matches(|c| c == '[' || c == ']'), port)
+    let candidates: Vec<SocketAddr> = (host.trim_matches(|c| c == '[' || c == ']'), port)
         .to_socket_addrs()
         .map_err(|error| format!("cannot resolve RRD loopback endpoint: {error}"))?
-        .find(|address| address.ip().is_loopback())
-        .ok_or("RRD endpoint does not resolve to a loopback address")?;
-    Ok((origin.as_str().trim_end_matches('/').to_owned(), address))
+        .filter(|address| address.ip().is_loopback())
+        .collect();
+    if candidates.is_empty() {
+        return Err("RRD endpoint does not resolve to a loopback address".into());
+    }
+    Ok((origin.as_str().trim_end_matches('/').to_owned(), candidates))
+}
+
+/// `localhost` names both `::1` and `127.0.0.1`, and RRD may listen on only
+/// one family. The SDK dials a single address, so pick the first that accepts.
+async fn reachable_loopback(candidates: &[SocketAddr]) -> Result<SocketAddr, String> {
+    for address in candidates {
+        let probe = tokio::time::timeout(LOOPBACK_PROBE_TIMEOUT, TcpStream::connect(address));
+        if matches!(probe.await, Ok(Ok(_))) {
+            return Ok(*address);
+        }
+    }
+    Err(format!(
+        "no RRD service accepts connections at {}",
+        candidates
+            .iter()
+            .map(SocketAddr::to_string)
+            .collect::<Vec<_>>()
+            .join(" or ")
+    ))
 }
 
 fn read_credential(path: &str) -> Result<(CanonicalId, Secret), String> {
@@ -223,7 +248,8 @@ async fn create_session(
 
 impl NativeRrdClient {
     pub async fn connect(request: RrdConnectRequest) -> Result<Self, String> {
-        let (endpoint, address) = loopback_address(&request.endpoint)?;
+        let (endpoint, candidates) = loopback_candidates(&request.endpoint)?;
+        let address = reachable_loopback(&candidates).await?;
         let instance = canonical(&request.instance, "instance")?;
         let (principal, api_key) = read_credential(&request.credential_path)?;
         let config = ClientConfig {
@@ -461,10 +487,10 @@ mod tests {
 
     #[test]
     fn endpoint_and_identity_validation_fail_closed() {
-        assert!(loopback_address("http://127.0.0.1:9477").is_ok());
-        assert!(loopback_address("http://localhost:9477").is_ok());
-        assert!(loopback_address("https://runtime.example.com").is_err());
-        assert!(loopback_address("http://runtime.example.com:9477").is_err());
+        assert!(loopback_candidates("http://127.0.0.1:9477").is_ok());
+        assert!(loopback_candidates("http://localhost:9477").is_ok());
+        assert!(loopback_candidates("https://runtime.example.com").is_err());
+        assert!(loopback_candidates("http://runtime.example.com:9477").is_err());
         assert!(canonical("instance-one", "instance").is_ok());
         assert!(canonical("Instance-One", "instance").is_err());
         assert!(data_reference(&RrdReference {
@@ -477,6 +503,19 @@ mod tests {
             id: "readme".into()
         })
         .is_err());
+    }
+
+    #[test]
+    fn localhost_resolves_to_the_loopback_family_that_listens() {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("bind IPv4 loopback");
+        let listening = listener.local_addr().expect("listener address");
+        let refused = std::net::TcpListener::bind("127.0.0.1:0")
+            .and_then(|closed| closed.local_addr())
+            .expect("reserve a closed port");
+        let chosen = tauri::async_runtime::block_on(reachable_loopback(&[refused, listening]))
+            .expect("one loopback address accepts");
+        assert_eq!(chosen, listening);
+        assert!(tauri::async_runtime::block_on(reachable_loopback(&[refused])).is_err());
     }
 
     #[test]

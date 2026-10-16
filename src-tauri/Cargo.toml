@@ -38,7 +38,7 @@ log = "^0.4"
 url = "2"
 showfile = "0.1.1"
 reqwest = "0.12"
-tokio = { version = "1", features = ["sync"] }
+tokio = { version = "1", features = ["net", "sync", "time"] }
 # RRFlow's Rust SDK and contract own every authenticated RRD request and
 # response type. Pinned to one rrflow-development revision so the native client
 # and the engine it targets share one OpenAPI digest.
