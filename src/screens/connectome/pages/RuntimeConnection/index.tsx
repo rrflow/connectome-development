@@ -3,17 +3,27 @@ import {
 	Badge,
 	Box,
 	Button,
+	Divider,
 	Group,
 	Paper,
 	Progress,
 	ScrollArea,
 	SimpleGrid,
 	Stack,
+	Tabs,
 	Text,
 } from "@mantine/core";
-import { Icon, iconErrorCircle, iconRefresh } from "@rrflow/ui";
+import {
+	Icon,
+	iconDatabase,
+	iconErrorCircle,
+	iconMemory,
+	iconRefresh,
+	iconRelation,
+} from "@rrflow/ui";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { isTauri } from "@tauri-apps/api/core";
+import { useMemo, useState } from "react";
 import { Redirect } from "wouter";
 import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
@@ -23,8 +33,15 @@ import {
 	AUTOMATION_PRIMITIVES,
 } from "~/rrflow/attunement";
 import { RrdRuntimeClient } from "~/rrflow/runtime";
+import { RrdSessionClient } from "~/rrflow/session";
 import { useConfigStore } from "~/shell/stores/config";
+import { SESSION_QUERY_KEY, SessionPanel } from "./session";
 import classes from "./style.module.scss";
+import { DatabaseTab } from "./tabs/database";
+import { StorageTab } from "./tabs/storage";
+import { VectorsTab } from "./tabs/vectors";
+
+type RuntimeLens = "database" | "vectors" | "storage";
 
 export function RuntimeConnectionPage({ id }: { id: string }) {
 	const connection = useConfigStore((state) =>
@@ -43,12 +60,29 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 		queryFn: () => client.handshake(),
 		retry: false,
 	});
+	const sessionClient = useMemo(() => new RrdSessionClient(), []);
+	const nativeSession = useQuery({
+		queryKey: SESSION_QUERY_KEY,
+		enabled: isTauri(),
+		queryFn: () => sessionClient.current(),
+		staleTime: Number.POSITIVE_INFINITY,
+	});
+	const [lens, setLens] = useState<RuntimeLens>("database");
 
 	if (connection?.target !== "runtime") {
 		return <Redirect to="/overview" />;
 	}
 
 	const handshake = query.data;
+	const current = nativeSession.data ?? null;
+	const ownsSession =
+		current !== null &&
+		handshake !== undefined &&
+		current.endpoint === endpoint &&
+		current.instance === handshake.service.instance.id;
+	const session = ownsSession ? current : null;
+	const foreign = ownsSession ? null : current;
+	const sessionKey = session ? `${session.instance}:${session.connected_at_unix_ms}` : "";
 	const stages = [
 		{
 			label: "HTTP transport",
@@ -205,8 +239,21 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 										{handshake.service.implementation_version}
 									</Text>
 									<Text fz="sm">
-										{handshake.service.deployment_mode} deployment
+										{handshake.service.deployment.deployment_form} ·{" "}
+										{handshake.service.deployment.storage_profile} ·{" "}
+										{handshake.service.deployment.endpoint_presentation}
 									</Text>
+									{handshake.service.installed_estate && (
+										<Text
+											fz="sm"
+											ff="monospace"
+										>
+											{handshake.service.installed_estate.project_id} ·{" "}
+											{handshake.service.installed_estate.estate_id} ·
+											configuration r
+											{handshake.service.configuration.revision}
+										</Text>
+									)}
 								</Box>
 								<Badge variant="outline">
 									{handshake.service.capabilities.length} capabilities
@@ -227,6 +274,77 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 								))}
 							</Group>
 						</Paper>
+					)}
+
+					{connection && (
+						<SessionPanel
+							client={sessionClient}
+							connection={connection}
+							endpoint={endpoint}
+							handshake={handshake}
+							session={session}
+							foreign={foreign}
+						/>
+					)}
+
+					{session && (
+						<Tabs
+							variant="gradient"
+							value={lens}
+							onChange={(value) => value && setLens(value as RuntimeLens)}
+						>
+							<Tabs.List
+								mb="md"
+								bg="transparent"
+								bd="none"
+							>
+								<Tabs.Tab
+									px="xl"
+									value="database"
+									leftSection={<Icon path={iconRelation} />}
+								>
+									Database
+								</Tabs.Tab>
+								<Tabs.Tab
+									px="xl"
+									value="vectors"
+									leftSection={<Icon path={iconDatabase} />}
+								>
+									Vectors
+								</Tabs.Tab>
+								<Tabs.Tab
+									px="xl"
+									value="storage"
+									leftSection={<Icon path={iconMemory} />}
+								>
+									Storage
+								</Tabs.Tab>
+							</Tabs.List>
+							<Divider mb="xl" />
+							<Tabs.Panel value="database">
+								<DatabaseTab
+									client={sessionClient}
+									connection={session}
+									sessionKey={sessionKey}
+								/>
+							</Tabs.Panel>
+							<Tabs.Panel value="vectors">
+								<VectorsTab
+									client={sessionClient}
+									connection={session}
+									sessionKey={sessionKey}
+								/>
+							</Tabs.Panel>
+							<Tabs.Panel value="storage">
+								{lens === "storage" && (
+									<StorageTab
+										client={sessionClient}
+										connection={session}
+										sessionKey={sessionKey}
+									/>
+								)}
+							</Tabs.Panel>
+						</Tabs>
 					)}
 
 					<Box mt="md">

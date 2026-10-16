@@ -221,3 +221,42 @@ After Connectome `main` is green:
   bundles remain required now; signed automatic updates remain blocked until a
   reviewed key, HTTPS release endpoint, CI secret, rotation process, and update
   installation test exist.
+
+### 2026-10-16 — Slice D: native SDK lenses (Database, Vectors, Storage)
+
+Starting revision `38f68ce` on `agent/rrd-engine-lenses`.
+
+- Authenticated RRD reads now cross RRFlow's Rust SDK instead of handwritten
+  envelopes: `rrd-client` and `rrd-contract` are pinned by git revision to
+  `rrflow/rrflow-development@94c9aa9`, so the native client and the engine it
+  targets share one contract. This is the dependency justification required by
+  `REVIEW.md`: the SDK validates every response against the contract, which is
+  Authority decision 3 applied to the native side. `rust-toolchain.toml` pins
+  Rust 1.99.1, the toolchain RRFlow pins, because the SDK builds from source
+  in this crate graph.
+- `src-tauri/src/rrd/view.rs` projects validated responses into view models;
+  `src/rrflow/session.ts` mirrors those view models and no wire schema. The
+  operator credential is read from its file by the native process and never
+  reaches the webview; the connection stores only the file path.
+- Bounds come from the contract (`MAX_QUERY_BYTES`,
+  `MAX_VECTOR_STORAGE_KEYS`, `MAX_VECTOR_POINT_PAGE`,
+  `MAX_VECTOR_SEARCH_TOP_K`, `MAX_DIAGNOSTIC_RUNTIME_SCANNED_CHANGES`) and
+  query budgets from the estate's configured `configuration.query`.
+- Lenses on the runtime page: Database (schema registry, ForceAtlas2 record
+  and relation graph, record inspector, RRFlowQL console with record and
+  traversal queries), Vectors (collections, named-vector contract, paged
+  point scroll, exact query-by-example search with read evidence), and
+  Storage (cursors, sequences, retention, vector artifacts, query indexes).
+- The public handshake parser now reads the current capability contract
+  (`deployment`, `installed_estate`, `configuration`) instead of the retired
+  scalar `deployment_mode`.
+
+Verified locally: `pnpm check` (Biome, identity gate, `tsc`), `cargo fmt
+--check`, `cargo check`, `cargo test` (5 passed), and strict Clippy, all with
+`--locked`.
+
+Not yet done: rrflowKV cache, memtable, WAL, and compaction counters are
+recorded inside the engine but not published by `diagnostics-read`; the
+Storage lens states that gap until the engine change lands. The wider
+Connectome UI still mixes `RRFlowQL` with RRFlow's own `rrflowQL` spelling in
+the engine README; Authority decision 4 governs this repository.
