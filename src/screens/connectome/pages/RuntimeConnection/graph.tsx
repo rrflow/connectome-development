@@ -49,6 +49,11 @@ export interface RecordGraphProps extends BoxProps {
 	/** Every record kind in the estate, so a kind keeps its color in any subgraph. */
 	kinds: string[];
 	selected: string | null;
+	/**
+	 * Dim records outside the selection's direct neighbourhood. A neighbourhood
+	 * subgraph is already the context, so it keeps every drawn record lit.
+	 */
+	dimUnselected: boolean;
 	onSelect: (record: string | null) => void;
 }
 
@@ -56,10 +61,22 @@ export interface RecordGraphProps extends BoxProps {
  * Records and relations from the diagnostic graph snapshot, laid out with
  * ForceAtlas2. Node size follows degree; color follows record kind.
  */
-export function RecordGraph({ graph, kinds, selected, onSelect, ...other }: RecordGraphProps) {
+export function RecordGraph({
+	graph,
+	kinds,
+	selected,
+	dimUnselected,
+	onSelect,
+	...other
+}: RecordGraphProps) {
 	const ref = useRef<HTMLDivElement>(null);
 	const sigmaRef = useRef<Sigma<RecordNode, RelationEdge> | null>(null);
-	const focusRef = useRef({ hovered: "", neighbours: new Set<string>(), selected });
+	const focusRef = useRef({
+		hovered: "",
+		neighbours: new Set<string>(),
+		selected,
+		dimUnselected,
+	});
 	const theme = useMantineTheme();
 	const isLight = useIsLight();
 	const handleSelect = useStable(onSelect);
@@ -127,6 +144,7 @@ export function RecordGraph({ graph, kinds, selected, onSelect, ...other }: Reco
 	useEffect(() => {
 		const instance = sigmaRef.current;
 		focusRef.current.selected = selected;
+		focusRef.current.dimUnselected = dimUnselected;
 		focusRef.current.neighbours =
 			selected && layout.hasNode(selected) ? new Set(layout.neighbors(selected)) : new Set();
 		if (!instance) return;
@@ -137,7 +155,7 @@ export function RecordGraph({ graph, kinds, selected, onSelect, ...other }: Reco
 				.getCamera()
 				.animate({ x: display.x, y: display.y, ratio: 0.35 }, { duration: 400 });
 		}
-	}, [selected, layout]);
+	}, [selected, dimUnselected, layout]);
 
 	useEffect(() => {
 		if (!ref.current) return;
@@ -158,7 +176,7 @@ export function RecordGraph({ graph, kinds, selected, onSelect, ...other }: Reco
 			nodeReducer: (node, data) => {
 				const display: Partial<NodeDisplayData> = { ...data };
 				const focus = focusRef.current;
-				const anchor = focus.hovered || focus.selected;
+				const anchor = focus.hovered || (focus.dimUnselected ? focus.selected : "");
 				if (anchor && node !== anchor && !focus.neighbours.has(node)) {
 					display.label = "";
 					display.color = getIsLight()
@@ -173,7 +191,7 @@ export function RecordGraph({ graph, kinds, selected, onSelect, ...other }: Reco
 			edgeReducer: (edge, data) => {
 				const display: Partial<EdgeDisplayData> = { ...data };
 				const focus = focusRef.current;
-				const anchor = focus.hovered || focus.selected;
+				const anchor = focus.hovered || (focus.dimUnselected ? focus.selected : "");
 				if (anchor && !layout.extremities(edge).includes(anchor)) {
 					display.hidden = true;
 				}

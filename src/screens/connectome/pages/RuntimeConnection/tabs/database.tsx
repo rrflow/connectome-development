@@ -292,6 +292,7 @@ export function DatabaseTab({ client, sessionKey }: RuntimeLensProps) {
 									graph={drawn}
 									kinds={allRecordKinds}
 									selected={selected}
+									dimUnselected={scope === "estate"}
 									onSelect={setSelected}
 								/>
 							) : (

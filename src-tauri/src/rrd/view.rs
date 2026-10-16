@@ -328,7 +328,13 @@ fn bounded(mut text: String) -> String {
 }
 
 pub fn display_value(value: &QueryValue) -> String {
-    bounded(match value {
+    bounded(plain_value(value))
+}
+
+/// Renders a value as its content: a traversal path reads
+/// `[document:a, document:b]`, not the tagged wire encoding.
+fn plain_value(value: &QueryValue) -> String {
+    match value {
         QueryValue::Null => "null".into(),
         QueryValue::Bool(value) => value.to_string(),
         QueryValue::Integer(value) => value.to_string(),
@@ -336,10 +342,19 @@ pub fn display_value(value: &QueryValue) -> String {
         QueryValue::Decimal(value) | QueryValue::String(value) | QueryValue::Digest(value) => {
             value.clone()
         }
-        QueryValue::List(_) | QueryValue::Map(_) => {
-            serde_json::to_string(value).unwrap_or_else(|_| "unrenderable value".into())
-        }
-    })
+        QueryValue::List(items) => format!(
+            "[{}]",
+            items.iter().map(plain_value).collect::<Vec<_>>().join(", ")
+        ),
+        QueryValue::Map(entries) => format!(
+            "{{{}}}",
+            entries
+                .iter()
+                .map(|(key, item)| format!("{key}: {}", plain_value(item)))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
+    }
 }
 
 fn display_properties(properties: &BTreeMap<String, QueryValue>) -> BTreeMap<String, String> {
@@ -1209,6 +1224,21 @@ mod tests {
             .find(|group| group.id == "segment_io")
             .expect("segment I/O group");
         assert_eq!(io.notes, ["Requested read path: auto"]);
+    }
+
+    #[test]
+    fn nested_query_values_render_as_their_content() {
+        let path = QueryValue::List(vec![
+            QueryValue::String("document:a".into()),
+            QueryValue::String("document:b".into()),
+        ]);
+        assert_eq!(display_value(&path), "[document:a, document:b]");
+        let map = QueryValue::Map(
+            [("depth".to_owned(), QueryValue::Unsigned(2))]
+                .into_iter()
+                .collect(),
+        );
+        assert_eq!(display_value(&map), "{depth: 2}");
     }
 
     #[test]
