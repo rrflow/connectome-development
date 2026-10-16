@@ -42,15 +42,28 @@ fn main() {
     let log_time_fmt =
         format_description::parse("[year]-[month]-[day] [hour]:[minute]:[second]").unwrap();
 
+    // Pre-release builds declare no updater endpoint or signing key, and the
+    // updater plugin refuses to initialize without them. Register it only
+    // when the build configuration carries an updater section.
+    let updater_configured = context
+        .config()
+        .plugins
+        .0
+        .get("updater")
+        .is_some_and(|config| !config.is_null());
+    let mut builder = tauri::Builder::default();
+    if updater_configured {
+        builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+    }
+
     // Build the Tauri instance
-    let tauri = tauri::Builder::default()
+    let tauri = builder
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_deep_link::init())
-        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_localhost::Builder::new(24454).build())
         .plugin(tauri_plugin_single_instance::init(|app, args, _| {
             info!("Single instance intercept: {:?}", args);
