@@ -694,6 +694,29 @@ fn ratio(id: &'static str, label: &'static str, part: u64, whole: u64) -> Option
     })
 }
 
+/// `524288` -> `524,288`.
+fn grouped(value: u64) -> String {
+    let digits = value.to_string();
+    let mut out = String::with_capacity(digits.len() + digits.len() / 3);
+    for (index, digit) in digits.chars().enumerate() {
+        if index > 0 && (digits.len() - index).is_multiple_of(3) {
+            out.push(',');
+        }
+        out.push(digit);
+    }
+    out
+}
+
+/// Exact binary units when the value divides evenly, otherwise bytes.
+fn binary_size(bytes: u64) -> String {
+    const UNITS: [(u64, &str); 3] = [(1 << 30, "GiB"), (1 << 20, "MiB"), (1 << 10, "KiB")];
+    UNITS
+        .iter()
+        .find(|(size, _)| bytes >= *size && bytes.is_multiple_of(*size))
+        .map(|(size, unit)| format!("{} {unit}", bytes / size))
+        .unwrap_or_else(|| format!("{} bytes", grouped(bytes)))
+}
+
 fn physical(storage: &DiagnosticStorageSnapshot) -> PhysicalStorageView {
     let (headline, groups) = storage
         .rrflow_kv
@@ -819,12 +842,20 @@ fn rrflow_kv_metrics(kv: &DiagnosticRrflowKvSnapshot) -> (Vec<MetricView>, Vec<M
         io_notes.push(format!("Last fallback: {reason}"));
     }
 
+    let mut cache_notes = Vec::new();
+    if kv.segment_set.segments == 0 {
+        cache_notes.push(format!(
+            "No segments yet: every read is served from the memtable until it reaches {} versions or the write-ahead log reaches {}; the page cache serves segment reads after that flush.",
+            grouped(kv.memtable.max_versions),
+            binary_size(kv.write_ahead_log.payload_max_bytes)
+        ));
+    }
     let groups = vec![
         MetricGroupView {
             id: "page_cache",
             label: "Page cache",
             metrics: page_cache,
-            notes: Vec::new(),
+            notes: cache_notes,
         },
         MetricGroupView {
             id: "memtable",
@@ -1178,6 +1209,32 @@ mod tests {
             .find(|group| group.id == "segment_io")
             .expect("segment I/O group");
         assert_eq!(io.notes, ["Requested read path: auto"]);
+    }
+
+    #[test]
+    fn idle_cache_explains_why_segment_reads_have_not_started() {
+        let mut fresh = rrflow_kv();
+        fresh.segment_set.segments = 0;
+        fresh.memtable.max_versions = 524_288;
+        fresh.write_ahead_log.payload_max_bytes = 64 << 20;
+        let view = physical(&DiagnosticStorageSnapshot {
+            observed_at_unix_ms: 7,
+            profile: StorageProfileKind::RrflowKv,
+            evidence_level: DiagnosticStorageEvidenceLevel::RrflowKvCounters,
+            rrflow_kv: Some(fresh),
+        });
+        let cache = view
+            .groups
+            .iter()
+            .find(|group| group.id == "page_cache")
+            .expect("page cache group");
+        assert_eq!(cache.notes.len(), 1);
+        assert!(cache.notes[0].contains("524,288 versions"));
+        assert!(cache.notes[0].contains("64 MiB"));
+        assert_eq!(grouped(0), "0");
+        assert_eq!(grouped(1_000), "1,000");
+        assert_eq!(binary_size(4 << 20), "4 MiB");
+        assert_eq!(binary_size(1_500), "1,500 bytes");
     }
 
     #[test]

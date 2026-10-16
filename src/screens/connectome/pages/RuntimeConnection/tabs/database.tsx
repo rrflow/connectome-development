@@ -8,13 +8,21 @@ import {
 	Loader,
 	Paper,
 	ScrollArea,
+	Select,
 	SimpleGrid,
 	Stack,
 	Table,
 	Text,
 	Textarea,
 } from "@mantine/core";
-import { Icon, iconErrorCircle, iconQuery, iconRefresh, iconRelation } from "@rrflow/ui";
+import {
+	Icon,
+	iconErrorCircle,
+	iconQuery,
+	iconRefresh,
+	iconRelation,
+	iconSearch,
+} from "@rrflow/ui";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Label } from "~/components/Label";
@@ -28,6 +36,8 @@ import type { RuntimeLensProps } from "../types";
 /** Default row bound for console queries; the estate's query budget still applies. */
 const CONSOLE_ROW_LIMIT = 50;
 const TRAVERSAL_DEPTH = 2;
+/** Widest console cell before truncation; the full value shows on hover. */
+const CONSOLE_CELL_WIDTH = 320;
 
 function recordTables(view: RrdDatabaseView) {
 	return view.tables.filter((table) => table.model === "relational");
@@ -77,6 +87,17 @@ export function DatabaseTab({ client, sessionKey }: RuntimeLensProps) {
 		};
 	}, [view, selected]);
 	const query = draft ?? (view ? defaultQuery(view) : "");
+	const recordOptions = useMemo(
+		() =>
+			view?.graph.nodes.map((candidate) => ({
+				value: candidate.id,
+				label:
+					candidate.label === candidate.key
+						? candidate.id
+						: `${candidate.label} — ${candidate.id}`,
+			})) ?? [],
+		[view],
+	);
 
 	if (database.isPending) {
 		return (
@@ -139,6 +160,19 @@ export function DatabaseTab({ client, sessionKey }: RuntimeLensProps) {
 						value={formatCount(view.graph.known_at_cursor)}
 					/>
 				</SimpleGrid>
+
+				<Select
+					mt="md"
+					searchable
+					clearable
+					limit={50}
+					placeholder="Find a record by title or identity"
+					nothingFoundMessage="No record matches"
+					leftSection={<Icon path={iconSearch} />}
+					data={recordOptions}
+					value={selected}
+					onChange={setSelected}
+				/>
 
 				<Grid mt="md">
 					<Grid.Col span={{ base: 12, lg: 8 }}>
@@ -362,11 +396,15 @@ export function DatabaseTab({ client, sessionKey }: RuntimeLensProps) {
 							>
 								{execution.data.canonical_query}
 							</Text>
-							<ScrollArea.Autosize mah={480}>
+							<ScrollArea.Autosize
+								mah={480}
+								type="auto"
+							>
 								<Table
 									fz="sm"
 									striped
 									stickyHeader
+									style={{ whiteSpace: "nowrap" }}
 								>
 									<Table.Thead>
 										<Table.Tr>
@@ -383,7 +421,12 @@ export function DatabaseTab({ client, sessionKey }: RuntimeLensProps) {
 												{execution.data.columns.map((column) => (
 													<Table.Td
 														key={column}
-														style={{ wordBreak: "break-word" }}
+														maw={CONSOLE_CELL_WIDTH}
+														title={row.values[column]}
+														style={{
+															overflow: "hidden",
+															textOverflow: "ellipsis",
+														}}
 													>
 														{row.values[column] ?? ""}
 													</Table.Td>

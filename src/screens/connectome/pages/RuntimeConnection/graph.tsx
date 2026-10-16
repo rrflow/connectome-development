@@ -118,10 +118,22 @@ export function RecordGraph({ graph, selected, onSelect, ...other }: RecordGraph
 	const edgeColor = isLight ? theme.colors.obsidian[2] : theme.colors.obsidian[6];
 	const labelColor = isLight ? theme.colors.obsidian[9] : theme.colors.obsidian[0];
 
+	// Selection may come from the graph or from the record search: highlight
+	// the record's neighbourhood and bring it into view either way.
 	useEffect(() => {
+		const instance = sigmaRef.current;
 		focusRef.current.selected = selected;
-		sigmaRef.current?.refresh({ skipIndexation: true });
-	}, [selected]);
+		focusRef.current.neighbours =
+			selected && layout.hasNode(selected) ? new Set(layout.neighbors(selected)) : new Set();
+		if (!instance) return;
+		instance.refresh({ skipIndexation: true });
+		const display = selected ? instance.getNodeDisplayData(selected) : undefined;
+		if (display) {
+			instance
+				.getCamera()
+				.animate({ x: display.x, y: display.y, ratio: 0.35 }, { duration: 400 });
+		}
+	}, [selected, layout]);
 
 	useEffect(() => {
 		if (!ref.current) return;
@@ -133,7 +145,9 @@ export function RecordGraph({ graph, selected, onSelect, ...other }: RecordGraph
 			labelColor: { color: labelColor },
 			labelFont: "JetBrains Mono",
 			labelSize: 10,
-			labelRenderedSizeThreshold: 9,
+			labelDensity: 0.35,
+			labelGridCellSize: 120,
+			labelRenderedSizeThreshold: 11,
 			stagePadding: 32,
 			nodeReducer: (node, data) => {
 				const display: Partial<NodeDisplayData> = { ...data };

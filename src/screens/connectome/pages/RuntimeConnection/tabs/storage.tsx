@@ -54,7 +54,12 @@ export function StorageTab({ client, sessionKey }: RuntimeLensProps) {
 	return (
 		<Stack gap="xl">
 			<Section
-				title={`${view.storage_profile} storage`}
+				title={
+					<Group gap="xs">
+						Storage
+						<Badge variant="light">{view.storage_profile}</Badge>
+					</Group>
+				}
 				description={`Commit, retention, and artifact state observed ${formatTime(view.observed_at_unix_ms)}; refreshes every ${STORAGE_REFRESH_MS / 1000} s.`}
 				rightSection={
 					<Button

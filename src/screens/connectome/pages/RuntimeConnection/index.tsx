@@ -68,6 +68,7 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 		staleTime: Number.POSITIVE_INFINITY,
 	});
 	const [lens, setLens] = useState<RuntimeLens>("database");
+	const [showIdentity, setShowIdentity] = useState(false);
 
 	if (connection?.target !== "runtime") {
 		return <Redirect to="/overview" />;
@@ -83,6 +84,8 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 	const session = ownsSession ? current : null;
 	const foreign = ownsSession ? null : current;
 	const sessionKey = session ? `${session.instance}:${session.connected_at_unix_ms}` : "";
+	// With a live session the lenses lead; the handshake evidence stays one click away.
+	const identityVisible = !session || showIdentity;
 	const stages = [
 		{
 			label: "HTTP transport",
@@ -165,14 +168,25 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 								{endpoint}
 							</Text>
 						</Box>
-						<Button
-							variant="light"
-							leftSection={<Icon path={iconRefresh} />}
-							onClick={() => query.refetch()}
-							loading={query.isFetching}
-						>
-							Reconnect
-						</Button>
+						<Group gap="xs">
+							{session && (
+								<Button
+									variant="subtle"
+									color="obsidian"
+									onClick={() => setShowIdentity((visible) => !visible)}
+								>
+									{showIdentity ? "Hide engine identity" : "Engine identity"}
+								</Button>
+							)}
+							<Button
+								variant="light"
+								leftSection={<Icon path={iconRefresh} />}
+								onClick={() => query.refetch()}
+								loading={query.isFetching}
+							>
+								Reconnect
+							</Button>
+						</Group>
 					</Group>
 
 					{query.isError && (
@@ -187,37 +201,41 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 						</Alert>
 					)}
 
-					<SimpleGrid cols={{ base: 1, md: 3 }}>
-						{stages.map((stage, index) => (
-							<Paper
-								key={stage.label}
-								p="lg"
-								className={classes.stage}
-							>
-								<Group justify="space-between">
-									<Text fw={650}>{stage.label}</Text>
-									<Badge
-										variant="light"
-										color={handshake ? "green" : query.isError ? "red" : "gray"}
-									>
-										{handshake
-											? "verified"
-											: query.isError
-												? "stopped"
-												: `${index + 1}/3`}
-									</Badge>
-								</Group>
-								<Text
-									fz="sm"
-									mt="sm"
+					{identityVisible && (
+						<SimpleGrid cols={{ base: 1, md: 3 }}>
+							{stages.map((stage, index) => (
+								<Paper
+									key={stage.label}
+									p="lg"
+									className={classes.stage}
 								>
-									{stage.detail}
-								</Text>
-							</Paper>
-						))}
-					</SimpleGrid>
+									<Group justify="space-between">
+										<Text fw={650}>{stage.label}</Text>
+										<Badge
+											variant="light"
+											color={
+												handshake ? "green" : query.isError ? "red" : "gray"
+											}
+										>
+											{handshake
+												? "verified"
+												: query.isError
+													? "stopped"
+													: `${index + 1}/3`}
+										</Badge>
+									</Group>
+									<Text
+										fz="sm"
+										mt="sm"
+									>
+										{stage.detail}
+									</Text>
+								</Paper>
+							))}
+						</SimpleGrid>
+					)}
 
-					{handshake && (
+					{identityVisible && handshake && (
 						<Paper
 							p="lg"
 							className={classes.identity}
@@ -347,96 +365,106 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 						</Tabs>
 					)}
 
-					<Box mt="md">
-						<Group justify="space-between">
-							<Box>
-								<Text
-									fz="xl"
-									fw={650}
-									c="bright"
-								>
-									Existing-project attunement
-								</Text>
-								<Text>
-									Designed as a resumable {ATTUNEMENT_ESTIMATE_MINUTES.minimum}–
-									{ATTUNEMENT_ESTIMATE_MINUTES.maximum} minute engine job.
-								</Text>
-							</Box>
-							<Badge
-								variant="outline"
-								color="gray"
-							>
-								Contract pending
-							</Badge>
-						</Group>
-						<Progress
-							value={handshake ? 100 / ATTUNEMENT_PHASES.length : 0}
-							mt="md"
-							color="violet"
-						/>
-					</Box>
-
-					<SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
-						{ATTUNEMENT_PHASES.map((phase) => (
-							<Paper
-								key={phase.id}
-								p="md"
-								className={classes.phase}
-							>
+					{!session && (
+						<>
+							<Box mt="md">
 								<Group justify="space-between">
-									<Text fw={650}>{phase.label}</Text>
+									<Box>
+										<Text
+											fz="xl"
+											fw={650}
+											c="bright"
+										>
+											Existing-project attunement
+										</Text>
+										<Text>
+											Designed as a resumable{" "}
+											{ATTUNEMENT_ESTIMATE_MINUTES.minimum}–
+											{ATTUNEMENT_ESTIMATE_MINUTES.maximum} minute engine job.
+										</Text>
+									</Box>
 									<Badge
-										variant="light"
-										color={phase.state === "implemented" ? "green" : "gray"}
+										variant="outline"
+										color="gray"
 									>
-										{phase.state === "implemented" ? "available" : "planned"}
+										Contract pending
 									</Badge>
 								</Group>
-								<Text
-									fz="sm"
-									mt="xs"
-								>
-									{phase.description}
-								</Text>
-							</Paper>
-						))}
-					</SimpleGrid>
-
-					<Paper
-						p="lg"
-						className={classes.boundary}
-					>
-						<Group justify="space-between">
-							<Box>
-								<Text
-									fz="lg"
-									fw={650}
-								>
-									Mesh discovery boundary
-								</Text>
-								<Text fz="sm">
-									Zuul Zero or shippin.ai mesh may resolve a devspace endpoint;
-									Connectome still performs this RRD HTTP handshake and never
-									treats network reachability as engine identity.
-								</Text>
+								<Progress
+									value={handshake ? 100 / ATTUNEMENT_PHASES.length : 0}
+									mt="md"
+									color="violet"
+								/>
 							</Box>
-							<Badge variant="outline">Adapter pending</Badge>
-						</Group>
-						<SimpleGrid
-							cols={{ base: 1, sm: 2, lg: 4 }}
-							mt="lg"
-						>
-							{AUTOMATION_PRIMITIVES.map((primitive) => (
-								<Box
-									key={primitive.name}
-									className={classes.primitive}
+
+							<SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
+								{ATTUNEMENT_PHASES.map((phase) => (
+									<Paper
+										key={phase.id}
+										p="md"
+										className={classes.phase}
+									>
+										<Group justify="space-between">
+											<Text fw={650}>{phase.label}</Text>
+											<Badge
+												variant="light"
+												color={
+													phase.state === "implemented" ? "green" : "gray"
+												}
+											>
+												{phase.state === "implemented"
+													? "available"
+													: "planned"}
+											</Badge>
+										</Group>
+										<Text
+											fz="sm"
+											mt="xs"
+										>
+											{phase.description}
+										</Text>
+									</Paper>
+								))}
+							</SimpleGrid>
+
+							<Paper
+								p="lg"
+								className={classes.boundary}
+							>
+								<Group justify="space-between">
+									<Box>
+										<Text
+											fz="lg"
+											fw={650}
+										>
+											Mesh discovery boundary
+										</Text>
+										<Text fz="sm">
+											Zuul Zero or shippin.ai mesh may resolve a devspace
+											endpoint; Connectome still performs this RRD HTTP
+											handshake and never treats network reachability as
+											engine identity.
+										</Text>
+									</Box>
+									<Badge variant="outline">Adapter pending</Badge>
+								</Group>
+								<SimpleGrid
+									cols={{ base: 1, sm: 2, lg: 4 }}
+									mt="lg"
 								>
-									<Text fw={650}>{primitive.name}</Text>
-									<Text fz="sm">{primitive.contract}</Text>
-								</Box>
-							))}
-						</SimpleGrid>
-					</Paper>
+									{AUTOMATION_PRIMITIVES.map((primitive) => (
+										<Box
+											key={primitive.name}
+											className={classes.primitive}
+										>
+											<Text fw={650}>{primitive.name}</Text>
+											<Text fz="sm">{primitive.contract}</Text>
+										</Box>
+									))}
+								</SimpleGrid>
+							</Paper>
+						</>
+					)}
 				</Stack>
 			</ScrollArea>
 		</Box>
