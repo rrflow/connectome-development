@@ -260,3 +260,27 @@ recorded inside the engine but not published by `diagnostics-read`; the
 Storage lens states that gap until the engine change lands. The wider
 Connectome UI still mixes `RRFlowQL` with RRFlow's own `rrflowQL` spelling in
 the engine README; Authority decision 4 governs this repository.
+
+### 2026-10-16 — rrflowKV storage lens and desktop launch fixes
+
+- `rrd-client` and `rrd-contract` move to
+  `rrflow/rrflow-development@c3e9b8c` (branch
+  `diagnostics/rrflowkv-storage-evidence`), whose `diagnostics-read` now
+  carries a `storage` section with `observation` authority. Re-pin to the
+  merged `main` revision before this branch merges.
+- `view.rs` projects those counters into generic metric groups (page cache,
+  memtable, write-ahead log, segments, flush and compaction, segment I/O,
+  sequences) plus headline gauges; the renderer formats by unit and shows
+  each cumulative counter's change since the previous refresh. A profile
+  without physical counters renders that fact instead of zeros.
+- Fixed: every desktop launch panicked because the updater plugin was
+  registered without an updater configuration; it now registers only when
+  the build declares one. Native CI never launches the binary, so this
+  survived green CI.
+- Fixed: the native session dialed the first resolved `localhost` address
+  (`::1` on Windows) while RRFlow listens on `127.0.0.1`; it now probes the
+  loopback addresses and dials the first that accepts.
+
+Verified locally: `pnpm check`, `cargo fmt --check`, strict Clippy, and
+`cargo test` (8 passed), all `--locked`; a headless launch stays up where the
+previous revision exited 101.

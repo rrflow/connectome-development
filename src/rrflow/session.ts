@@ -213,6 +213,35 @@ export interface RrdQueryIndexView {
 	definition_query: string;
 }
 
+export type RrdMetricUnit = "count" | "bytes" | "ratio";
+
+export interface RrdMetricView {
+	id: string;
+	label: string;
+	unit: RrdMetricUnit;
+	value: number;
+	/** Ceiling for a fill gauge, such as a cache capacity or a flush trigger. */
+	limit: number | null;
+	/** Cumulative since the engine process opened its store. */
+	cumulative: boolean;
+}
+
+export interface RrdMetricGroupView {
+	id: string;
+	label: string;
+	metrics: RrdMetricView[];
+	notes: string[];
+}
+
+/** The engine's process-local storage observation; not part of the read stamp. */
+export interface RrdPhysicalStorageView {
+	observed_at_unix_ms: number;
+	profile: string;
+	evidence_level: string;
+	headline: RrdMetricView[];
+	groups: RrdMetricGroupView[];
+}
+
 export interface RrdStorageView {
 	observed_at_unix_ms: number;
 	storage_profile: string;
@@ -230,6 +259,7 @@ export interface RrdStorageView {
 	audit_through_sequence: number;
 	vector_artifacts: RrdVectorArtifactView[];
 	query_indexes: RrdQueryIndexView[];
+	physical: RrdPhysicalStorageView;
 }
 
 export interface RrdConnectRequest {

@@ -3962,7 +3962,7 @@ dependencies = [
 [[package]]
 name = "rrd-client"
 version = "1.0.0"
-source = "git+https://github.com/rrflow/rrflow-development?rev=94c9aa9dcd37b9a6116d70095bb77d8cb2e49ee2#94c9aa9dcd37b9a6116d70095bb77d8cb2e49ee2"
+source = "git+https://github.com/rrflow/rrflow-development?rev=c3e9b8c01cf898b55e0a6375eb9a8188757e2a10#c3e9b8c01cf898b55e0a6375eb9a8188757e2a10"
 dependencies = [
  "bytes",
  "futures-util",
@@ -3981,7 +3981,7 @@ dependencies = [
 [[package]]
 name = "rrd-contract"
 version = "1.0.0"
-source = "git+https://github.com/rrflow/rrflow-development?rev=94c9aa9dcd37b9a6116d70095bb77d8cb2e49ee2#94c9aa9dcd37b9a6116d70095bb77d8cb2e49ee2"
+source = "git+https://github.com/rrflow/rrflow-development?rev=c3e9b8c01cf898b55e0a6375eb9a8188757e2a10#c3e9b8c01cf898b55e0a6375eb9a8188757e2a10"
 dependencies = [
  "base64 0.22.1",
  "schemars 1.2.1",
@@ -4630,7 +4630,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3a766e1110788c36f4fa1c2b71b387a7815aa65f88ce0229841826633d93723e"
 dependencies = [
  "libc",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

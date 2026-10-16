@@ -6,9 +6,9 @@
 //! larger than its preview.
 
 use rrd_contract::{
-    DataReference, DataVectorValue, DiagnosticRuntimeReference, DiagnosticSnapshot, QueryResult,
-    QueryValue, ServiceCapabilities, VectorCollectionCatalogueSnapshot, VectorPointPage,
-    VectorPointSnapshot, VectorSearchResult,
+    DataReference, DataVectorValue, DiagnosticRrflowKvSnapshot, DiagnosticRuntimeReference,
+    DiagnosticSnapshot, DiagnosticStorageSnapshot, QueryResult, QueryValue, ServiceCapabilities,
+    VectorCollectionCatalogueSnapshot, VectorPointPage, VectorPointSnapshot, VectorSearchResult,
 };
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
@@ -242,6 +242,47 @@ pub struct StorageView {
     pub audit_through_sequence: u64,
     pub vector_artifacts: Vec<VectorArtifactView>,
     pub query_indexes: Vec<QueryIndexView>,
+    pub physical: PhysicalStorageView,
+}
+
+/// How a physical metric renders. The renderer formats by unit and never
+/// interprets what a metric means.
+#[derive(Debug, Clone, Copy, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum MetricUnit {
+    Count,
+    Bytes,
+    Ratio,
+}
+
+#[derive(Debug, Serialize)]
+pub struct MetricView {
+    pub id: &'static str,
+    pub label: &'static str,
+    pub unit: MetricUnit,
+    pub value: f64,
+    /// Ceiling for a fill gauge: a cache capacity or a flush/compaction trigger.
+    pub limit: Option<f64>,
+    /// Cumulative since the engine process opened its store.
+    pub cumulative: bool,
+}
+
+#[derive(Debug, Serialize)]
+pub struct MetricGroupView {
+    pub id: &'static str,
+    pub label: &'static str,
+    pub metrics: Vec<MetricView>,
+    pub notes: Vec<String>,
+}
+
+/// The engine's process-local storage observation (`observation` authority).
+#[derive(Debug, Serialize)]
+pub struct PhysicalStorageView {
+    pub observed_at_unix_ms: u64,
+    pub profile: String,
+    pub evidence_level: String,
+    pub headline: Vec<MetricView>,
+    pub groups: Vec<MetricGroupView>,
 }
 
 #[derive(Debug, Serialize)]
@@ -607,5 +648,561 @@ pub fn storage(snapshot: &DiagnosticSnapshot, storage_profile: &str) -> StorageV
                 definition_query: index.definition_query.clone(),
             })
             .collect(),
+        physical: physical(&snapshot.storage),
+    }
+}
+
+fn gauge(id: &'static str, label: &'static str, unit: MetricUnit, value: u64) -> MetricView {
+    MetricView {
+        id,
+        label,
+        unit,
+        value: value as f64,
+        limit: None,
+        cumulative: false,
+    }
+}
+
+fn filled(
+    id: &'static str,
+    label: &'static str,
+    unit: MetricUnit,
+    value: u64,
+    limit: u64,
+) -> MetricView {
+    MetricView {
+        limit: Some(limit as f64),
+        ..gauge(id, label, unit, value)
+    }
+}
+
+fn cumulative(id: &'static str, label: &'static str, unit: MetricUnit, value: u64) -> MetricView {
+    MetricView {
+        cumulative: true,
+        ..gauge(id, label, unit, value)
+    }
+}
+
+fn ratio(id: &'static str, label: &'static str, part: u64, whole: u64) -> Option<MetricView> {
+    (whole > 0).then(|| MetricView {
+        id,
+        label,
+        unit: MetricUnit::Ratio,
+        value: part as f64 / whole as f64,
+        limit: Some(1.0),
+        cumulative: true,
+    })
+}
+
+fn physical(storage: &DiagnosticStorageSnapshot) -> PhysicalStorageView {
+    let (headline, groups) = storage
+        .rrflow_kv
+        .as_ref()
+        .map(rrflow_kv_metrics)
+        .unwrap_or_default();
+    PhysicalStorageView {
+        observed_at_unix_ms: storage.observed_at_unix_ms,
+        profile: label(&storage.profile),
+        evidence_level: label(&storage.evidence_level),
+        headline,
+        groups,
+    }
+}
+
+fn rrflow_kv_metrics(kv: &DiagnosticRrflowKvSnapshot) -> (Vec<MetricView>, Vec<MetricGroupView>) {
+    use MetricUnit::{Bytes, Count};
+    let cache = &kv.page_cache;
+    let lookups = cache.hits.saturating_add(cache.misses);
+    let mut headline = Vec::new();
+    headline.extend(ratio(
+        "page_cache_hit_ratio",
+        "Page cache hit ratio",
+        cache.hits,
+        lookups,
+    ));
+    headline.extend([
+        filled(
+            "page_cache_resident",
+            "Page cache resident",
+            Bytes,
+            cache.resident_bytes,
+            cache.capacity_bytes,
+        ),
+        filled(
+            "memtable_versions",
+            "Memtable versions",
+            Count,
+            kv.memtable.versions,
+            kv.memtable.max_versions,
+        ),
+        filled(
+            "wal_payload",
+            "Write-ahead log",
+            Bytes,
+            kv.write_ahead_log.payload_bytes,
+            kv.write_ahead_log.payload_max_bytes,
+        ),
+        filled(
+            "l0_segments",
+            "L0 segments",
+            Count,
+            kv.segment_set.l0_segments,
+            kv.segment_set.l0_compaction_trigger,
+        ),
+        gauge(
+            "compaction_debt",
+            "Compaction debt (segments)",
+            Count,
+            kv.segment_set.compaction_debt_segments,
+        ),
+    ]);
+
+    let mut page_cache = vec![
+        gauge("capacity", "Capacity", Bytes, cache.capacity_bytes),
+        filled(
+            "resident",
+            "Resident",
+            Bytes,
+            cache.resident_bytes,
+            cache.capacity_bytes,
+        ),
+        gauge("entries", "Entries", Count, cache.entries),
+        cumulative("hits", "Hits", Count, cache.hits),
+        cumulative("misses", "Misses", Count, cache.misses),
+        cumulative("evictions", "Evictions", Count, cache.evictions),
+        cumulative("page_loads", "Page loads", Count, cache.page_loads),
+        cumulative("bytes_read", "Bytes read", Bytes, cache.bytes_read),
+        cumulative("bytes_decoded", "Bytes decoded", Bytes, cache.bytes_decoded),
+        cumulative(
+            "bytes_decompressed",
+            "Bytes decompressed",
+            Bytes,
+            cache.bytes_decompressed,
+        ),
+        cumulative(
+            "bytes_borrowed",
+            "Bytes borrowed",
+            Bytes,
+            cache.bytes_borrowed,
+        ),
+        cumulative(
+            "bytes_allocated",
+            "Bytes allocated",
+            Bytes,
+            cache.bytes_allocated,
+        ),
+        cumulative("bytes_copied", "Bytes copied", Bytes, cache.bytes_copied),
+        cumulative("filter_checks", "Filter checks", Count, cache.filter_checks),
+        cumulative(
+            "filter_negatives",
+            "Filter negatives",
+            Count,
+            cache.filter_negatives,
+        ),
+    ];
+    page_cache.extend(ratio(
+        "filter_negative_ratio",
+        "Filter negative ratio",
+        cache.filter_negatives,
+        cache.filter_checks,
+    ));
+
+    let memtable = &kv.memtable;
+    let maintenance = &kv.maintenance;
+    let segments = &kv.segment_set;
+    let io = &kv.segment_io;
+    let mut io_notes = vec![format!(
+        "Requested read path: {}",
+        label(&io.requested_mode)
+    )];
+    if let Some(reason) = &io.last_fallback_reason {
+        io_notes.push(format!("Last fallback: {reason}"));
+    }
+
+    let groups = vec![
+        MetricGroupView {
+            id: "page_cache",
+            label: "Page cache",
+            metrics: page_cache,
+            notes: Vec::new(),
+        },
+        MetricGroupView {
+            id: "memtable",
+            label: "Memtable",
+            metrics: vec![
+                filled(
+                    "versions",
+                    "Versions",
+                    Count,
+                    memtable.versions,
+                    memtable.max_versions,
+                ),
+                gauge("keys", "Keys", Count, memtable.keys),
+                gauge("tombstones", "Tombstones", Count, memtable.tombstones),
+                gauge(
+                    "approximate_bytes",
+                    "Approximate size",
+                    Bytes,
+                    memtable.approximate_bytes,
+                ),
+                gauge(
+                    "key_payload_bytes",
+                    "Key payload",
+                    Bytes,
+                    memtable.key_payload_bytes,
+                ),
+                gauge(
+                    "value_payload_bytes",
+                    "Value payload",
+                    Bytes,
+                    memtable.value_payload_bytes,
+                ),
+                gauge(
+                    "version_record_bytes",
+                    "Version records",
+                    Bytes,
+                    memtable.version_record_bytes,
+                ),
+                gauge(
+                    "owned_bytes_lower_bound",
+                    "Owned bytes (lower bound)",
+                    Bytes,
+                    memtable.owned_bytes_lower_bound,
+                ),
+                gauge(
+                    "spilled_chains",
+                    "Spilled chains",
+                    Count,
+                    memtable.spilled_chains,
+                ),
+                gauge(
+                    "spilled_version_capacity",
+                    "Spilled version capacity",
+                    Count,
+                    memtable.spilled_version_capacity,
+                ),
+            ],
+            notes: Vec::new(),
+        },
+        MetricGroupView {
+            id: "write_ahead_log",
+            label: "Write-ahead log",
+            metrics: vec![filled(
+                "payload",
+                "Unflushed payload",
+                Bytes,
+                kv.write_ahead_log.payload_bytes,
+                kv.write_ahead_log.payload_max_bytes,
+            )],
+            notes: Vec::new(),
+        },
+        MetricGroupView {
+            id: "segments",
+            label: "Segments",
+            metrics: vec![
+                gauge("segments", "Segments", Count, segments.segments),
+                gauge(
+                    "segment_bytes",
+                    "Segment bytes",
+                    Bytes,
+                    segments.segment_bytes,
+                ),
+                filled(
+                    "l0_segments",
+                    "L0 segments",
+                    Count,
+                    segments.l0_segments,
+                    segments.l0_compaction_trigger,
+                ),
+                gauge(
+                    "compaction_debt_segments",
+                    "Compaction debt",
+                    Count,
+                    segments.compaction_debt_segments,
+                ),
+                gauge(
+                    "compaction_target_segment_bytes",
+                    "Compaction target segment",
+                    Bytes,
+                    segments.compaction_target_segment_bytes,
+                ),
+            ],
+            notes: Vec::new(),
+        },
+        MetricGroupView {
+            id: "maintenance",
+            label: "Flush and compaction",
+            metrics: vec![
+                cumulative(
+                    "automatic_flushes",
+                    "Automatic flushes",
+                    Count,
+                    maintenance.automatic_flushes,
+                ),
+                cumulative(
+                    "failed_flushes",
+                    "Failed flushes",
+                    Count,
+                    maintenance.failed_flushes,
+                ),
+                cumulative(
+                    "write_stalls",
+                    "Write stalls",
+                    Count,
+                    maintenance.write_stalls,
+                ),
+                cumulative(
+                    "oversized_batches",
+                    "Oversized batches",
+                    Count,
+                    maintenance.oversized_batches,
+                ),
+                cumulative(
+                    "automatic_compactions",
+                    "Automatic compactions",
+                    Count,
+                    maintenance.automatic_compactions,
+                ),
+                cumulative(
+                    "failed_compactions",
+                    "Failed compactions",
+                    Count,
+                    maintenance.failed_compactions,
+                ),
+                cumulative(
+                    "compaction_input_bytes",
+                    "Compaction input",
+                    Bytes,
+                    maintenance.compaction_input_bytes,
+                ),
+                cumulative(
+                    "compaction_output_bytes",
+                    "Compaction output",
+                    Bytes,
+                    maintenance.compaction_output_bytes,
+                ),
+                gauge(
+                    "peak_compaction_buffer_bytes",
+                    "Peak compaction buffer",
+                    Bytes,
+                    maintenance.peak_compaction_buffer_bytes,
+                ),
+            ],
+            notes: Vec::new(),
+        },
+        MetricGroupView {
+            id: "segment_io",
+            label: "Segment I/O",
+            metrics: vec![
+                cumulative("read_operations", "Reads", Count, io.read_operations),
+                cumulative("bytes_read", "Bytes read", Bytes, io.bytes_read),
+                cumulative("mmap_reads", "mmap reads", Count, io.mmap_reads),
+                cumulative("io_uring_reads", "io_uring reads", Count, io.io_uring_reads),
+                cumulative("bounded_reads", "Bounded reads", Count, io.bounded_reads),
+                gauge("mmap_segments", "mmap segments", Count, io.mmap_segments),
+                gauge(
+                    "io_uring_segments",
+                    "io_uring segments",
+                    Count,
+                    io.io_uring_segments,
+                ),
+                gauge(
+                    "bounded_segments",
+                    "Bounded segments",
+                    Count,
+                    io.bounded_segments,
+                ),
+                cumulative("fallbacks", "Fallbacks", Count, io.fallbacks),
+                filled(
+                    "peak_request_bytes",
+                    "Peak request",
+                    Bytes,
+                    io.peak_request_bytes,
+                    io.max_request_bytes,
+                ),
+            ],
+            notes: io_notes,
+        },
+        MetricGroupView {
+            id: "sequences",
+            label: "Sequences",
+            metrics: vec![
+                gauge(
+                    "physical_sequence",
+                    "Physical sequence",
+                    Count,
+                    kv.physical_sequence,
+                ),
+                gauge(
+                    "durable_sequence",
+                    "Durable sequence",
+                    Count,
+                    kv.durable_sequence,
+                ),
+                gauge(
+                    "manifest_generation",
+                    "Manifest generation",
+                    Count,
+                    kv.manifest_generation,
+                ),
+            ],
+            notes: Vec::new(),
+        },
+    ];
+    (headline, groups)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rrd_contract::{
+        DiagnosticMaintenanceSnapshot, DiagnosticMemtableSnapshot, DiagnosticPageCacheSnapshot,
+        DiagnosticSegmentIoMode, DiagnosticSegmentIoSnapshot, DiagnosticSegmentSetSnapshot,
+        DiagnosticStorageEvidenceLevel, DiagnosticWriteAheadLogSnapshot, StorageProfileKind,
+    };
+
+    fn rrflow_kv() -> DiagnosticRrflowKvSnapshot {
+        DiagnosticRrflowKvSnapshot {
+            physical_sequence: 40,
+            manifest_generation: 3,
+            durable_sequence: 38,
+            memtable: DiagnosticMemtableSnapshot {
+                versions: 16,
+                max_versions: 64,
+                approximate_bytes: 4_096,
+                keys: 12,
+                key_payload_bytes: 512,
+                value_payload_bytes: 2_048,
+                tombstones: 1,
+                spilled_chains: 0,
+                spilled_version_capacity: 0,
+                version_record_bytes: 1_024,
+                owned_bytes_lower_bound: 3_584,
+            },
+            write_ahead_log: DiagnosticWriteAheadLogSnapshot {
+                payload_bytes: 8_192,
+                payload_max_bytes: 65_536,
+            },
+            maintenance: DiagnosticMaintenanceSnapshot {
+                automatic_flushes: 2,
+                failed_flushes: 0,
+                write_stalls: 0,
+                oversized_batches: 0,
+                automatic_compactions: 1,
+                failed_compactions: 0,
+                compaction_input_bytes: 10_000,
+                compaction_output_bytes: 9_000,
+                peak_compaction_buffer_bytes: 4_096,
+            },
+            segment_set: DiagnosticSegmentSetSnapshot {
+                segments: 2,
+                segment_bytes: 20_000,
+                l0_segments: 1,
+                l0_compaction_trigger: 4,
+                compaction_debt_segments: 0,
+                compaction_target_segment_bytes: 1 << 26,
+            },
+            page_cache: DiagnosticPageCacheSnapshot {
+                capacity_bytes: 1 << 20,
+                resident_bytes: 1 << 18,
+                entries: 8,
+                hits: 90,
+                misses: 10,
+                evictions: 0,
+                page_loads: 10,
+                bytes_read: 40_960,
+                bytes_decoded: 40_960,
+                bytes_borrowed: 0,
+                bytes_allocated: 40_960,
+                bytes_copied: 0,
+                bytes_decompressed: 0,
+                filter_checks: 20,
+                filter_negatives: 5,
+            },
+            segment_io: DiagnosticSegmentIoSnapshot {
+                requested_mode: DiagnosticSegmentIoMode::Auto,
+                mmap_segments: 0,
+                io_uring_segments: 2,
+                bounded_segments: 0,
+                fallbacks: 0,
+                last_fallback_reason: None,
+                read_operations: 10,
+                mmap_reads: 0,
+                io_uring_reads: 10,
+                bounded_reads: 0,
+                bytes_read: 40_960,
+                max_request_bytes: 1 << 20,
+                peak_request_bytes: 4_096,
+            },
+        }
+    }
+
+    #[test]
+    fn rrflow_kv_counters_project_into_headline_gauges_and_groups() {
+        let view = physical(&DiagnosticStorageSnapshot {
+            observed_at_unix_ms: 7,
+            profile: StorageProfileKind::RrflowKv,
+            evidence_level: DiagnosticStorageEvidenceLevel::RrflowKvCounters,
+            rrflow_kv: Some(rrflow_kv()),
+        });
+        assert_eq!(view.profile, "rrflow_kv");
+        assert_eq!(view.evidence_level, "rrflow_kv_counters");
+        let hit_ratio = view
+            .headline
+            .iter()
+            .find(|metric| metric.id == "page_cache_hit_ratio")
+            .expect("hit ratio is defined once the cache served a lookup");
+        assert!((hit_ratio.value - 0.9).abs() < f64::EPSILON);
+        let resident = view
+            .headline
+            .iter()
+            .find(|metric| metric.id == "page_cache_resident")
+            .expect("cache residency gauge");
+        assert_eq!(resident.limit, Some((1u64 << 20) as f64));
+        let groups: Vec<&str> = view.groups.iter().map(|group| group.id).collect();
+        assert_eq!(
+            groups,
+            [
+                "page_cache",
+                "memtable",
+                "write_ahead_log",
+                "segments",
+                "maintenance",
+                "segment_io",
+                "sequences"
+            ]
+        );
+        let io = view
+            .groups
+            .iter()
+            .find(|group| group.id == "segment_io")
+            .expect("segment I/O group");
+        assert_eq!(io.notes, ["Requested read path: auto"]);
+    }
+
+    #[test]
+    fn idle_cache_and_logical_profiles_render_no_invented_values() {
+        let mut idle = rrflow_kv();
+        idle.page_cache.hits = 0;
+        idle.page_cache.misses = 0;
+        idle.page_cache.filter_checks = 0;
+        let view = physical(&DiagnosticStorageSnapshot {
+            observed_at_unix_ms: 7,
+            profile: StorageProfileKind::RrflowKv,
+            evidence_level: DiagnosticStorageEvidenceLevel::RrflowKvCounters,
+            rrflow_kv: Some(idle),
+        });
+        assert!(view
+            .headline
+            .iter()
+            .all(|metric| metric.id != "page_cache_hit_ratio"));
+        let logical = physical(&DiagnosticStorageSnapshot {
+            observed_at_unix_ms: 7,
+            profile: StorageProfileKind::RrflowMx,
+            evidence_level: DiagnosticStorageEvidenceLevel::LogicalOnly,
+            rrflow_kv: None,
+        });
+        assert!(logical.headline.is_empty() && logical.groups.is_empty());
+        assert_eq!(logical.evidence_level, "logical_only");
     }
 }

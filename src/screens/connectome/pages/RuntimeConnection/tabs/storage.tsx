@@ -11,10 +11,11 @@ import {
 	Table,
 	Text,
 } from "@mantine/core";
-import { Icon, iconErrorCircle, iconInfo, iconRefresh } from "@rrflow/ui";
+import { Icon, iconErrorCircle, iconRefresh } from "@rrflow/ui";
 import { useQuery } from "@tanstack/react-query";
 import { Section } from "~/components/Section";
 import { formatCount, formatSize, formatTime, shortDigest } from "../format";
+import { PhysicalStorage } from "../physical";
 import { Stat } from "../stat";
 import type { RuntimeLensProps } from "../types";
 
@@ -121,16 +122,10 @@ export function StorageTab({ client, sessionKey }: RuntimeLensProps) {
 			</Section>
 
 			<Section
-				title="rrflowKV cache and segments"
-				description="Page cache, memtable, write-ahead log, and compaction counters."
+				title="rrflowKV cache and storage engine"
+				description={`Page cache, memtable, write-ahead log, segments, compaction, and segment I/O observed ${formatTime(view.physical.observed_at_unix_ms)}.`}
 			>
-				<Alert
-					color="blue"
-					icon={<Icon path={iconInfo} />}
-				>
-					The engine records these counters internally but this RRD contract revision does
-					not publish them through diagnostics yet.
-				</Alert>
+				<PhysicalStorage view={view.physical} />
 			</Section>
 
 			<Section
