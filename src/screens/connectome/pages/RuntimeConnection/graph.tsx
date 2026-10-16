@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef } from "react";
 import Sigma from "sigma";
 import type { EdgeDisplayData, NodeDisplayData } from "sigma/types";
 import { ActionButton } from "~/components/ActionButton";
+import { drawHover, drawLabel } from "~/components/RelationGraph/drawing";
 import { useStable } from "~/hooks/stable";
 import { getIsLight, useIsLight } from "~/hooks/theme";
 import type { RrdGraphView } from "~/rrflow/session";
@@ -45,6 +46,8 @@ interface RelationEdge {
 
 export interface RecordGraphProps extends BoxProps {
 	graph: RrdGraphView;
+	/** Every record kind in the estate, so a kind keeps its color in any subgraph. */
+	kinds: string[];
 	selected: string | null;
 	onSelect: (record: string | null) => void;
 }
@@ -53,7 +56,7 @@ export interface RecordGraphProps extends BoxProps {
  * Records and relations from the diagnostic graph snapshot, laid out with
  * ForceAtlas2. Node size follows degree; color follows record kind.
  */
-export function RecordGraph({ graph, selected, onSelect, ...other }: RecordGraphProps) {
+export function RecordGraph({ graph, kinds, selected, onSelect, ...other }: RecordGraphProps) {
 	const ref = useRef<HTMLDivElement>(null);
 	const sigmaRef = useRef<Sigma<RecordNode, RelationEdge> | null>(null);
 	const focusRef = useRef({ hovered: "", neighbours: new Set<string>(), selected });
@@ -61,15 +64,16 @@ export function RecordGraph({ graph, selected, onSelect, ...other }: RecordGraph
 	const isLight = useIsLight();
 	const handleSelect = useStable(onSelect);
 
-	const kindColors = useMemo(() => {
-		const kinds = [...new Set(graph.nodes.map((node) => node.kind))].sort();
-		return new Map(
-			kinds.map((kind, index) => {
-				const name = KIND_COLORS[index % KIND_COLORS.length];
-				return [kind, theme.colors[name]?.[6] ?? theme.colors.obsidian[4]];
-			}),
-		);
-	}, [graph.nodes, theme.colors]);
+	const kindColors = useMemo(
+		() =>
+			new Map(
+				kinds.map((kind, index) => {
+					const name = KIND_COLORS[index % KIND_COLORS.length];
+					return [kind, theme.colors[name]?.[6] ?? theme.colors.obsidian[4]];
+				}),
+			),
+		[kinds, theme.colors],
+	);
 
 	const kindCounts = useMemo(() => {
 		const counts = new Map<string, number>();
@@ -149,6 +153,8 @@ export function RecordGraph({ graph, selected, onSelect, ...other }: RecordGraph
 			labelGridCellSize: 120,
 			labelRenderedSizeThreshold: 11,
 			stagePadding: 32,
+			defaultDrawNodeHover: drawHover,
+			defaultDrawNodeLabel: drawLabel,
 			nodeReducer: (node, data) => {
 				const display: Partial<NodeDisplayData> = { ...data };
 				const focus = focusRef.current;
@@ -252,25 +258,27 @@ export function RecordGraph({ graph, selected, onSelect, ...other }: RecordGraph
 				bg={isLight ? "obsidian.0" : "obsidian.8"}
 			>
 				<Stack gap={2}>
-					{[...kindColors.entries()].map(([kind, color]) => (
-						<Group
-							key={kind}
-							gap={6}
-						>
-							<Box
-								w={8}
-								h={8}
-								bg={color}
-								style={{ borderRadius: "50%" }}
-							/>
-							<Text
-								fz="xs"
-								ff="monospace"
+					{[...kindColors.entries()]
+						.filter(([kind]) => kindCounts.has(kind))
+						.map(([kind, color]) => (
+							<Group
+								key={kind}
+								gap={6}
 							>
-								{kind} · {kindCounts.get(kind) ?? 0}
-							</Text>
-						</Group>
-					))}
+								<Box
+									w={8}
+									h={8}
+									bg={color}
+									style={{ borderRadius: "50%" }}
+								/>
+								<Text
+									fz="xs"
+									ff="monospace"
+								>
+									{kind} · {kindCounts.get(kind) ?? 0}
+								</Text>
+							</Group>
+						))}
 				</Stack>
 			</Paper>
 		</Box>

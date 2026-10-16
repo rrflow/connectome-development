@@ -1,12 +1,17 @@
-import { NodeHoverDrawingFunction, NodeLabelDrawingFunction } from "sigma/rendering";
+import type { Settings } from "sigma/settings";
+import type { NodeDisplayData, PartialButFor } from "sigma/types";
 import { getIsLight } from "~/hooks/theme";
-import { RelationGraphEdge, RelationGraphNode } from "./types";
 
-export const drawHover: NodeHoverDrawingFunction<RelationGraphNode, RelationGraphEdge> = (
-	context,
-	data,
-	settings,
-) => {
+/** Display data sigma passes to label and hover renderers for any graph. */
+type LabelData = PartialButFor<NodeDisplayData, "x" | "y" | "size" | "label" | "color">;
+/** The renderers read only display settings, so they serve every graph type. */
+type AnySettings = Settings<any, any, any>;
+
+export function drawHover(
+	context: CanvasRenderingContext2D,
+	data: LabelData,
+	settings: AnySettings,
+): void {
 	const size = data.labelSize || settings.labelSize;
 	const font = settings.labelFont;
 	const weight = settings.labelWeight;
@@ -45,13 +50,13 @@ export const drawHover: NodeHoverDrawingFunction<RelationGraphNode, RelationGrap
 
 	// And finally we draw the label
 	drawLabel(context, display, settings);
-};
+}
 
-export const drawLabel: NodeLabelDrawingFunction<RelationGraphNode, RelationGraphEdge> = (
-	context,
-	data,
-	settings,
-) => {
+export function drawLabel(
+	context: CanvasRenderingContext2D,
+	data: LabelData,
+	settings: AnySettings,
+): void {
 	if (!data.label) return;
 
 	const size = data.labelSize || settings.labelSize;
@@ -63,4 +68,4 @@ export const drawLabel: NodeLabelDrawingFunction<RelationGraphNode, RelationGrap
 	context.font = `${weight} ${size}px ${font}`;
 
 	context.fillText(data.label, data.x + data.size + 3, data.y + size / 3);
-};
+}

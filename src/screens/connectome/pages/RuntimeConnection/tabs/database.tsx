@@ -6,8 +6,10 @@ import {
 	Grid,
 	Group,
 	Loader,
+	MultiSelect,
 	Paper,
 	ScrollArea,
+	SegmentedControl,
 	Select,
 	SimpleGrid,
 	Stack,
@@ -31,11 +33,13 @@ import type { RrdDatabaseView, RrdNodeView } from "~/rrflow/session";
 import { formatCount, formatSize, formatTime } from "../format";
 import { RecordGraph } from "../graph";
 import { Stat } from "../stat";
+import { type GraphDirection, type GraphScope, kinds, selectSubgraph } from "../subgraph";
 import type { RuntimeLensProps } from "../types";
 
 /** Default row bound for console queries; the estate's query budget still applies. */
 const CONSOLE_ROW_LIMIT = 50;
 const TRAVERSAL_DEPTH = 2;
+const NEIGHBOURHOOD_DEPTHS = ["1", "2", "3"];
 /** Widest console cell before truncation; the full value shows on hover. */
 const CONSOLE_CELL_WIDTH = 320;
 
@@ -69,6 +73,11 @@ export function DatabaseTab({ client, sessionKey }: RuntimeLensProps) {
 		staleTime: Number.POSITIVE_INFINITY,
 	});
 	const [selected, setSelected] = useState<string | null>(null);
+	const [scope, setScope] = useState<GraphScope>("estate");
+	const [depth, setDepth] = useState(1);
+	const [direction, setDirection] = useState<GraphDirection>("both");
+	const [recordKinds, setRecordKinds] = useState<string[]>([]);
+	const [relationKinds, setRelationKinds] = useState<string[]>([]);
 	const [draft, setDraft] = useState<string | null>(null);
 	const execution = useMutation({
 		mutationFn: (query: string) => client.query(query),
@@ -87,6 +96,22 @@ export function DatabaseTab({ client, sessionKey }: RuntimeLensProps) {
 		};
 	}, [view, selected]);
 	const query = draft ?? (view ? defaultQuery(view) : "");
+	const allRecordKinds = useMemo(() => (view ? kinds(view.graph.nodes) : []), [view]);
+	const allRelationKinds = useMemo(() => (view ? kinds(view.graph.edges) : []), [view]);
+	const drawn = useMemo(
+		() =>
+			view
+				? selectSubgraph(view.graph, {
+						scope,
+						focus: selected,
+						depth,
+						direction,
+						recordKinds,
+						relationKinds,
+					})
+				: null,
+		[view, scope, selected, depth, direction, recordKinds, relationKinds],
+	);
 	const recordOptions = useMemo(
 		() =>
 			view?.graph.nodes.map((candidate) => ({
@@ -174,16 +199,98 @@ export function DatabaseTab({ client, sessionKey }: RuntimeLensProps) {
 					onChange={setSelected}
 				/>
 
-				<Grid mt="md">
+				<Group
+					mt="md"
+					gap="sm"
+					align="flex-end"
+				>
+					<SegmentedControl
+						value={scope}
+						onChange={(value) => setScope(value as GraphScope)}
+						data={[
+							{ value: "estate", label: "Estate graph" },
+							{ value: "neighbourhood", label: "Record neighbourhood" },
+						]}
+					/>
+					{scope === "neighbourhood" && (
+						<>
+							<SegmentedControl
+								value={String(depth)}
+								onChange={(value) => setDepth(Number(value))}
+								data={NEIGHBOURHOOD_DEPTHS.map((value) => ({
+									value,
+									label: `${value} hop${value === "1" ? "" : "s"}`,
+								}))}
+							/>
+							<SegmentedControl
+								value={direction}
+								onChange={(value) => setDirection(value as GraphDirection)}
+								data={[
+									{ value: "both", label: "Both" },
+									{ value: "outgoing", label: "Outgoing" },
+									{ value: "incoming", label: "Incoming" },
+								]}
+							/>
+						</>
+					)}
+					<MultiSelect
+						flex={1}
+						miw={180}
+						clearable
+						placeholder={recordKinds.length ? undefined : "All record kinds"}
+						data={allRecordKinds}
+						value={recordKinds}
+						onChange={setRecordKinds}
+					/>
+					<MultiSelect
+						flex={1}
+						miw={180}
+						clearable
+						placeholder={relationKinds.length ? undefined : "All relation kinds"}
+						data={allRelationKinds}
+						value={relationKinds}
+						onChange={setRelationKinds}
+					/>
+				</Group>
+				<Text
+					fz="xs"
+					c="slate"
+					mt={6}
+				>
+					Drawing {formatCount(drawn?.nodes.length)} of{" "}
+					{formatCount(view.graph.nodes.length)} records and{" "}
+					{formatCount(drawn?.edges.length)} of {formatCount(view.graph.edges.length)}{" "}
+					relations
+					{scope === "neighbourhood" && node ? ` around ${node.label}` : ""}.
+				</Text>
+
+				<Grid mt="xs">
 					<Grid.Col span={{ base: 12, lg: 8 }}>
 						<Paper
 							h={560}
 							style={{ overflow: "hidden" }}
 						>
-							{view.graph.nodes.length > 0 ? (
+							{view.graph.nodes.length === 0 ? (
+								<Group
+									h="100%"
+									justify="center"
+								>
+									<Text c="slate">This instance holds no records yet.</Text>
+								</Group>
+							) : scope === "neighbourhood" && !node ? (
+								<Group
+									h="100%"
+									justify="center"
+								>
+									<Text c="slate">
+										Find or click a record to draw its neighbourhood.
+									</Text>
+								</Group>
+							) : drawn && drawn.nodes.length > 0 ? (
 								<RecordGraph
 									h="100%"
-									graph={view.graph}
+									graph={drawn}
+									kinds={allRecordKinds}
 									selected={selected}
 									onSelect={setSelected}
 								/>
@@ -192,7 +299,7 @@ export function DatabaseTab({ client, sessionKey }: RuntimeLensProps) {
 									h="100%"
 									justify="center"
 								>
-									<Text c="slate">This instance holds no records yet.</Text>
+									<Text c="slate">No record matches the selected kinds.</Text>
 								</Group>
 							)}
 						</Paper>
@@ -254,6 +361,16 @@ export function DatabaseTab({ client, sessionKey }: RuntimeLensProps) {
 										</Table>
 									</ScrollArea>
 									<Group gap="xs">
+										{scope === "estate" && (
+											<Button
+												size="xs"
+												variant="light"
+												leftSection={<Icon path={iconRelation} />}
+												onClick={() => setScope("neighbourhood")}
+											>
+												Open neighbourhood
+											</Button>
+										)}
 										<Button
 											size="xs"
 											variant="light"
@@ -417,7 +534,17 @@ export function DatabaseTab({ client, sessionKey }: RuntimeLensProps) {
 									<Table.Tbody>
 										{execution.data.rows.map((row) => (
 											<Table.Tr key={row.identity}>
-												<Table.Td ff="monospace">{row.identity}</Table.Td>
+												<Table.Td
+													ff="monospace"
+													maw={CONSOLE_CELL_WIDTH}
+													title={row.identity}
+													style={{
+														overflow: "hidden",
+														textOverflow: "ellipsis",
+													}}
+												>
+													{row.identity}
+												</Table.Td>
 												{execution.data.columns.map((column) => (
 													<Table.Td
 														key={column}
