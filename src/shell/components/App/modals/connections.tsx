@@ -9,7 +9,7 @@ import {
 	Text,
 	TextInput,
 } from "@mantine/core";
-import { Icon, iconCircle, iconCloud, iconServer } from "@rrflow/ui";
+import { Icon, iconCircle, iconCloud, iconServer } from "@surrealdb/ui";
 import clsx from "clsx";
 import { useMemo, useState } from "react";
 import { Entry, type EntryProps } from "~/components/Entry";

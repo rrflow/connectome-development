@@ -1,5 +1,5 @@
 import { Box, Center, Divider, Group, Paper, Stack, Text } from "@mantine/core";
-import { CodeBlock, Icon } from "@rrflow/ui";
+import { CodeBlock, Icon } from "@surrealdb/ui";
 import { type PropsWithChildren, type ReactNode, useMemo } from "react";
 import { dedent } from "~/shared/util/dedent";
 import { Spacer } from "../Spacer";

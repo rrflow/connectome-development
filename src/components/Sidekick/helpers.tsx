@@ -11,7 +11,7 @@ import {
 	iconStar,
 	iconTable,
 	iconTransfer,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { SidekickChat } from "~/types";
 import { RecordId } from "~/vendor/rrflow-client";
 import { GroupedChats } from "./types";

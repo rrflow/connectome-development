@@ -1,5 +1,5 @@
 import { Alert, Group } from "@mantine/core";
-import { Icon, iconDownload } from "@rrflow/ui";
+import { Icon, iconDownload } from "@surrealdb/ui";
 import { invoke } from "@tauri-apps/api/core";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { useState } from "react";

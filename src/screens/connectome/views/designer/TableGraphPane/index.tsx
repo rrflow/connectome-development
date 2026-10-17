@@ -26,7 +26,7 @@ import {
 	iconRefresh,
 	iconRelation,
 	iconReset,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import {
 	Background,
 	type Edge,

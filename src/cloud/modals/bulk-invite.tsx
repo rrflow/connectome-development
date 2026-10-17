@@ -1,7 +1,7 @@
 import { ActionIcon, Button, Group, Select, Stack, Text, TextInput } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
 import { closeModal, openModal } from "@mantine/modals";
-import { Icon, iconClose, iconOrganization, iconPlus, iconUpload } from "@rrflow/ui";
+import { Icon, iconClose, iconOrganization, iconPlus, iconUpload } from "@surrealdb/ui";
 import Papa from "papaparse";
 import { capitalize } from "radash";
 import { useMemo } from "react";

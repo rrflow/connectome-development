@@ -1,5 +1,5 @@
 import { BoxProps, Group, Text, ThemeIcon } from "@mantine/core";
-import { Icon } from "@rrflow/ui";
+import { Icon } from "@surrealdb/ui";
 import { ReactNode } from "react";
 
 export interface PropertyValueProps extends BoxProps {

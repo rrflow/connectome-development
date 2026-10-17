@@ -1,5 +1,5 @@
 import { Box, Button, Divider, Modal, Paper, Stack, Text } from "@mantine/core";
-import { Icon, iconChevronRight, iconClose } from "@rrflow/ui";
+import { Icon, iconChevronRight, iconClose } from "@surrealdb/ui";
 import { useEffect } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { SANDBOX } from "~/constants";

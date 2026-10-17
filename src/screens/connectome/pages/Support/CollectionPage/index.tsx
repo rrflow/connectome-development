@@ -1,5 +1,5 @@
 import { Box, Button, Center, Loader, ScrollArea, Stack, Text } from "@mantine/core";
-import { Icon, iconArrowLeft } from "@rrflow/ui";
+import { Icon, iconArrowLeft } from "@surrealdb/ui";
 import { navigate } from "wouter/use-browser-location";
 import { useSupportCollectionQuery } from "~/cloud/queries/context";
 import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";

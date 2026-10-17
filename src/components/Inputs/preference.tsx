@@ -1,5 +1,5 @@
 import { type BoxProps, Checkbox, NumberInput, Select, SimpleGrid, TextInput } from "@mantine/core";
-import { Icon } from "@rrflow/ui";
+import { Icon } from "@surrealdb/ui";
 import { isNumber } from "radash";
 import {
 	CheckboxController,

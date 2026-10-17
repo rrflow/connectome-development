@@ -1,5 +1,5 @@
 import { Anchor, Box, BoxProps, Group, Image, Paper, Text, UnstyledButton } from "@mantine/core";
-import { Icon, iconChevronRight } from "@rrflow/ui";
+import { Icon, iconChevronRight } from "@surrealdb/ui";
 import { useRef } from "react";
 import { Faint } from "~/components/Faint";
 

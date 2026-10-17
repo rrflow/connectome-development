@@ -1,5 +1,5 @@
 import { Indicator } from "@mantine/core";
-import { Icon, iconNewspaper } from "@rrflow/ui";
+import { Icon, iconNewspaper } from "@surrealdb/ui";
 import { useUnreadNewsPosts } from "~/hooks/newsfeed";
 import { dispatchIntent } from "~/shared/util/intents";
 import { ActionButton } from "../ActionButton";

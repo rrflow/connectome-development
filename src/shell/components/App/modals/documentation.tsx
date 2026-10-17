@@ -10,7 +10,7 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useDebouncedValue, useInputState } from "@mantine/hooks";
-import { Icon, iconBook } from "@rrflow/ui";
+import { Icon, iconBook } from "@surrealdb/ui";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { adapter } from "~/adapter";

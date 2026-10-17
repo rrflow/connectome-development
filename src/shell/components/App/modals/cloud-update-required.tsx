@@ -1,5 +1,5 @@
 import { ActionIcon, Box, Dialog, Group, Image, Text } from "@mantine/core";
-import { Icon, iconClose, pictoSDBCloud } from "@rrflow/ui";
+import { Icon, iconClose, pictoSDBCloud } from "@surrealdb/ui";
 import { type MouseEvent, useMemo } from "react";
 import { isDesktop } from "~/adapter";
 import { useStable } from "~/hooks/stable";

@@ -16,7 +16,7 @@ import {
 	TextInput,
 	Tooltip,
 } from "@mantine/core";
-import { Icon, iconCheck, iconCopy, iconHelp, pictoChatHeart } from "@rrflow/ui";
+import { Icon, iconCheck, iconCopy, iconHelp, pictoChatHeart } from "@surrealdb/ui";
 import { ReactNode } from "react";
 import { useCloudReferralCodeQuery, useCloudReferralQuery } from "~/cloud/queries/referral";
 import { CloudSplash } from "~/components/CloudSplash";

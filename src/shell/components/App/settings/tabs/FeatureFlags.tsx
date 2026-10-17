@@ -1,6 +1,6 @@
 import { Box, Group, ScrollArea, Select, Stack, Text, TextInput } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconReset, iconSearch } from "@rrflow/ui";
+import { Icon, iconReset, iconSearch } from "@surrealdb/ui";
 import { useMemo } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { Spacer } from "~/components/Spacer";

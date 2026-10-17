@@ -1,5 +1,5 @@
 import type { MantineColorScheme } from "@mantine/core";
-import { createWasmEngines } from "@rrflow/wasm";
+import { createWasmEngines } from "@surrealdb/wasm";
 import { ORIENTATIONS, RESULT_MODES } from "~/constants";
 import { executeQuery, executeUserQuery } from "~/screens/connectome/connection/connection";
 import { dedent } from "~/shared/util/dedent";

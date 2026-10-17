@@ -21,3 +21,40 @@
 	border-radius: var(--mantine-radius-md);
 	border: 1px solid color-mix(in srgb, var(--mantine-color-blue-6) 16%, transparent);
 }
+
+.session {
+	border: 1px solid color-mix(in srgb, var(--mantine-color-green-6) 26%, transparent);
+	background: color-mix(in srgb, var(--mantine-color-body) 94%, transparent);
+}
+
+.stat {
+	border: 1px solid color-mix(in srgb, var(--mantine-color-violet-6) 14%, transparent);
+	background: color-mix(in srgb, var(--mantine-color-body) 92%, transparent);
+}
+
+.row {
+	display: block;
+	width: 100%;
+	border-radius: var(--mantine-radius-sm);
+
+	&:hover {
+		background: color-mix(in srgb, var(--mantine-color-violet-6) 12%, transparent);
+	}
+}
+
+.lens {
+	border: 1px solid color-mix(in srgb, var(--mantine-color-violet-6) 14%, transparent);
+	background: color-mix(in srgb, var(--mantine-color-body) 92%, transparent);
+	transition: border-color 120ms ease;
+
+	&:hover {
+		border-color: color-mix(in srgb, var(--mantine-color-violet-6) 40%, transparent);
+	}
+
+	&[data-active] {
+		border-color: var(--mantine-color-violet-6);
+		background:
+			radial-gradient(circle at 100% 0%, rgba(139, 92, 246, 0.16), transparent 45%),
+			color-mix(in srgb, var(--mantine-color-body) 92%, transparent);
+	}
+}

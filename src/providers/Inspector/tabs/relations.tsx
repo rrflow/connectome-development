@@ -1,5 +1,5 @@
 import { Group, Paper, ScrollArea, Text } from "@mantine/core";
-import { Icon, iconCircle } from "@rrflow/ui";
+import { Icon, iconCircle } from "@surrealdb/ui";
 import { RecordLink } from "~/components/RecordLink";
 import type { RecordId } from "~/vendor/rrflow-client";
 

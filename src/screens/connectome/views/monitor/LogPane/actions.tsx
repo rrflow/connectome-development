@@ -1,5 +1,5 @@
 import { Group, Select, TextInput } from "@mantine/core";
-import { Icon, iconChevronDown, iconClock, iconRefresh, iconSearch } from "@rrflow/ui";
+import { Icon, iconChevronDown, iconClock, iconRefresh, iconSearch } from "@surrealdb/ui";
 import { Updater } from "use-immer";
 import { ActionButton } from "~/components/ActionButton";
 import { MetricsDuration } from "~/types";

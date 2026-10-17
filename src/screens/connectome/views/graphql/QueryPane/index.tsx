@@ -9,7 +9,7 @@ import {
 	iconOpen,
 	iconRefresh,
 	iconText,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { graphql, updateSchema } from "cm6-graphql";
 import { type GraphQLSchema, parse, print } from "graphql";
 import { useEffect, useMemo } from "react";

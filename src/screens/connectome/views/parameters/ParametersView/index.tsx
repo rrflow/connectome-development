@@ -1,6 +1,6 @@
 import { Box, Button, Group, Modal, Stack, Text, TextInput } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { Icon, iconChevronRight, iconOpen, iconPlus, iconVariable } from "@rrflow/ui";
+import { Icon, iconChevronRight, iconOpen, iconPlus, iconVariable } from "@surrealdb/ui";
 import { type ChangeEvent, memo, useRef, useState } from "react";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { useImmer } from "use-immer";

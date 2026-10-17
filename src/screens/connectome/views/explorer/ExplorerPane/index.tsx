@@ -23,7 +23,7 @@ import {
 	iconRefresh,
 	iconServer,
 	iconTable,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import clsx from "clsx";
 import { useContextMenu } from "mantine-contextmenu";
 import { type MouseEvent, useEffect, useLayoutEffect, useState } from "react";

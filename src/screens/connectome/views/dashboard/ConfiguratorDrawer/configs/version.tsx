@@ -1,5 +1,5 @@
 import { Box, Button, Divider, Group, ScrollArea, Stack, Text } from "@mantine/core";
-import { Icon, iconOpen } from "@rrflow/ui";
+import { Icon, iconOpen } from "@surrealdb/ui";
 import { useState } from "react";
 import { Tile } from "~/components/Tile";
 import { useStable } from "~/hooks/stable";

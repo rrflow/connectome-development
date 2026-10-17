@@ -1,4 +1,4 @@
-import { Icon, iconConsole, iconPlay, iconStop } from "@rrflow/ui";
+import { Icon, iconConsole, iconPlay, iconStop } from "@surrealdb/ui";
 import { useEffect, useState } from "react";
 import { adapter } from "~/adapter";
 import { useIntent } from "~/hooks/routing";

@@ -1,5 +1,5 @@
 import { Accordion, TextInput } from "@mantine/core";
-import { iconBullhorn } from "@rrflow/ui";
+import { iconBullhorn } from "@surrealdb/ui";
 import { CodeInput } from "~/components/Inputs";
 import { useStable } from "~/hooks/stable";
 import type { SchemaEvent } from "~/types";

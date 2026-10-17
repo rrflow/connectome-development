@@ -1,5 +1,5 @@
 import { Box, Divider, Flex, Group, Paper, ScrollArea, Stack, Text, Tooltip } from "@mantine/core";
-import { Icon, iconBullhorn, iconIndex, iconJSON } from "@rrflow/ui";
+import { Icon, iconBullhorn, iconIndex, iconJSON } from "@surrealdb/ui";
 import { Handle, Position } from "@xyflow/react";
 import {
 	createContext,

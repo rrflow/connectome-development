@@ -12,6 +12,8 @@ import {
 	Transition,
 	useMantineTheme,
 } from "@mantine/core";
+import { createEdgeCurveProgram } from "@sigma/edge-curve";
+import { createNodeBorderProgram } from "@sigma/node-border";
 import {
 	Icon,
 	iconAPI,
@@ -23,9 +25,7 @@ import {
 	iconPlay,
 	iconRelation,
 	iconReset,
-} from "@rrflow/ui";
-import { createEdgeCurveProgram } from "@sigma/edge-curve";
-import { createNodeBorderProgram } from "@sigma/node-border";
+} from "@surrealdb/ui";
 import { MultiDirectedGraph } from "graphology";
 import { useContextMenu } from "mantine-contextmenu";
 import { MouseEvent, useEffect, useRef } from "react";

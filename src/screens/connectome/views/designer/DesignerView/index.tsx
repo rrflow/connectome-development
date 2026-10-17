@@ -1,5 +1,5 @@
 import { Box, Button, Group, Text } from "@mantine/core";
-import { Icon, iconDesigner, iconEye, iconOpen, iconPlus } from "@rrflow/ui";
+import { Icon, iconDesigner, iconEye, iconOpen, iconPlus } from "@surrealdb/ui";
 import { ReactFlowProvider } from "@xyflow/react";
 import { memo, useEffect } from "react";
 import { Panel, PanelGroup } from "react-resizable-panels";

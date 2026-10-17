@@ -20,7 +20,7 @@ import {
 	iconDelete,
 	iconDesigner,
 	iconWarning,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { capitalize } from "radash";
 import { useState } from "react";
 import type { Updater } from "use-immer";

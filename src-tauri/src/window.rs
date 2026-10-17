@@ -17,13 +17,19 @@ pub async fn new_window(app: AppHandle) {
     open_new_window(&app).await;
 }
 
+/// Every application window label starts with this prefix. The capability in
+/// `capabilities/connectome.json` grants permissions to `connectome-*`; a
+/// window outside that pattern receives no core or plugin permission and the
+/// renderer cannot start.
+pub const WINDOW_LABEL_PREFIX: &str = "connectome-";
+
 pub async fn open_new_window(app: &AppHandle) {
     let current_time = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap()
         .as_secs();
 
-    let window_label = format!("connectome-{}", current_time);
+    let window_label = format!("{WINDOW_LABEL_PREFIX}{current_time}");
 
     #[allow(unused_mut)]
     let mut builder = tauri::WebviewWindowBuilder::new(app, &window_label, Default::default())
@@ -83,4 +89,34 @@ pub fn emit_last(app: &AppHandle, event: &str, payload: impl serde::Serialize + 
 
     app.emit_to(last_window.label(), event, payload)
         .expect("Failed to emit event");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::WINDOW_LABEL_PREFIX;
+
+    /// Tauri matches capability window patterns case-sensitively; a mismatch
+    /// leaves the window without permissions and renders a blank screen.
+    #[test]
+    fn application_windows_match_the_capability_window_pattern() {
+        let capability: serde_json::Value =
+            serde_json::from_str(include_str!("../capabilities/connectome.json"))
+                .expect("capability is JSON");
+        let label = format!("{WINDOW_LABEL_PREFIX}1792192224");
+        let patterns = capability["windows"]
+            .as_array()
+            .expect("capability names its windows");
+        assert!(
+            patterns
+                .iter()
+                .filter_map(|pattern| pattern.as_str())
+                .any(|pattern| {
+                    match pattern.strip_suffix('*') {
+                        Some(prefix) => label.starts_with(prefix),
+                        None => label == pattern,
+                    }
+                }),
+            "window label {label} matches none of {patterns:?}"
+        );
+    }
 }

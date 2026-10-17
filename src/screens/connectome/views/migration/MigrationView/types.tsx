@@ -7,7 +7,7 @@ import {
 	iconIndex,
 	iconJSON,
 	iconTable,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { ReactNode } from "react";
 import { MigrationDiagnosticResult, MigrationResourceType } from "~/types";
 

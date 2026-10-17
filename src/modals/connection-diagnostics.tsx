@@ -25,7 +25,7 @@ import {
 	iconServer,
 	iconTransfer,
 	iconWrench,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { formatDistanceToNow } from "date-fns";
 import { FC, memo, useMemo, useState } from "react";
 import { adapter } from "~/adapter";

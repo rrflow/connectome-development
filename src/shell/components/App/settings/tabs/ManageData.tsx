@@ -1,5 +1,5 @@
 import { Box, Button, Checkbox, Group, MultiSelect, ScrollArea, Stack, Text } from "@mantine/core";
-import { Icon, iconCheck, iconDownload, iconUpload } from "@rrflow/ui";
+import { Icon, iconCheck, iconDownload, iconUpload } from "@surrealdb/ui";
 import { assign } from "radash";
 import { useMemo, useState } from "react";
 import { adapter } from "~/adapter";

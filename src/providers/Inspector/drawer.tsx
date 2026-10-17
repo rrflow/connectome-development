@@ -1,6 +1,13 @@
 import { Center, Drawer, Group, Paper, SegmentedControl, Tabs, Text } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconArrowLeftFat, iconClose, iconDelete, iconRefresh, iconSearch } from "@rrflow/ui";
+import {
+	Icon,
+	iconArrowLeftFat,
+	iconClose,
+	iconDelete,
+	iconRefresh,
+	iconSearch,
+} from "@surrealdb/ui";
 import { useEffect, useState } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { DrawerResizer } from "~/components/DrawerResizer";

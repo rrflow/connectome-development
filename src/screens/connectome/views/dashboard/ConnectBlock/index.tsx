@@ -1,5 +1,5 @@
 import { Anchor, Box, Group, Paper, Skeleton, Stack, Text, ThemeIcon } from "@mantine/core";
-import { Icon, iconChevronRight, iconConsole, iconTransfer, iconXml } from "@rrflow/ui";
+import { Icon, iconChevronRight, iconConsole, iconTransfer, iconXml } from "@surrealdb/ui";
 import { openConnectCli } from "~/cloud/modals/connect-cli";
 import { openConnectCurl } from "~/cloud/modals/connect-curl";
 import { openConnectSdk } from "~/cloud/modals/connect-sdk";

@@ -13,7 +13,7 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconClose, iconPlus, iconWarning } from "@rrflow/ui";
+import { Icon, iconClose, iconPlus, iconWarning } from "@surrealdb/ui";
 import { omit } from "radash";
 import { useLayoutEffect, useMemo, useState } from "react";
 import { ActionButton } from "~/components/ActionButton";

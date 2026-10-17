@@ -1,5 +1,5 @@
 import { Accordion, Stack } from "@mantine/core";
-import { iconKey } from "@rrflow/ui";
+import { iconKey } from "@surrealdb/ui";
 import { PermissionInput } from "~/components/Inputs";
 import { type ElementProps, SectionTitle } from "../helpers";
 

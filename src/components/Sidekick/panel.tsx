@@ -1,4 +1,4 @@
-import { Icon, iconChat, iconChevronLeft, iconClose, iconList, iconSidekick } from "@rrflow/ui";
+import { Icon, iconChat, iconChevronLeft, iconClose, iconList, iconSidekick } from "@surrealdb/ui";
 import { Panel } from "react-resizable-panels";
 import { useIsAuthenticated } from "~/hooks/cloud";
 import { useSetting } from "~/hooks/config";

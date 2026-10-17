@@ -1,5 +1,5 @@
 import { Group, Paper, Stack, Text, ThemeIcon } from "@mantine/core";
-import { Icon, iconFile } from "@rrflow/ui";
+import { Icon, iconFile } from "@surrealdb/ui";
 import dayjs from "dayjs";
 import { CloudBackup } from "~/types";
 

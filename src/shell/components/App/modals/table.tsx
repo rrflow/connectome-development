@@ -9,7 +9,7 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconPlus, iconRelation, iconSearch, iconTable } from "@rrflow/ui";
+import { Icon, iconPlus, iconRelation, iconSearch, iconTable } from "@surrealdb/ui";
 import { useLayoutEffect, useMemo, useState } from "react";
 import { Form } from "~/components/Form";
 import { CodeInput } from "~/components/Inputs";

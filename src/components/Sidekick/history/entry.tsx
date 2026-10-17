@@ -1,5 +1,5 @@
 import { Text } from "@mantine/core";
-import { Icon, iconArrowUpRight, iconChevronRight, iconDelete, iconText } from "@rrflow/ui";
+import { Icon, iconArrowUpRight, iconChevronRight, iconDelete, iconText } from "@surrealdb/ui";
 import { useContextMenu } from "mantine-contextmenu";
 import { useState } from "react";
 import { EditableText } from "~/components/EditableText";

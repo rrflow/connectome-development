@@ -11,7 +11,7 @@ import {
 	ThemeIcon,
 	UnstyledButton,
 } from "@mantine/core";
-import { Icon, iconChat, iconChevronDown, iconFilter, iconTag, Spacer } from "@rrflow/ui";
+import { Icon, iconChat, iconChevronDown, iconFilter, iconTag, Spacer } from "@surrealdb/ui";
 import { useEffect, useMemo, useState } from "react";
 import { navigate } from "wouter/use-browser-location";
 import { useCloudOrganizationQuery } from "~/cloud/queries/organizations";

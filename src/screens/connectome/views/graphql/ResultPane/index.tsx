@@ -1,5 +1,5 @@
 import { Center, Stack, Text } from "@mantine/core";
-import { Icon, iconQuery } from "@rrflow/ui";
+import { Icon, iconQuery } from "@surrealdb/ui";
 import { useMemo } from "react";
 import { CodeEditor } from "~/components/CodeEditor";
 import { ContentPane } from "~/components/Pane";

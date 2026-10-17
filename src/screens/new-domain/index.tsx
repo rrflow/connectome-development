@@ -1,5 +1,5 @@
 import { Alert, Box, Button, Divider, Image, Paper, SimpleGrid, Stack, Text } from "@mantine/core";
-import { Icon, iconArrowUpRight, iconDownload, pictoBrain } from "@rrflow/ui";
+import { Icon, iconArrowUpRight, iconDownload, pictoBrain } from "@surrealdb/ui";
 import { useState } from "react";
 import { adapter } from "~/adapter";
 import { Link } from "~/components/Link";

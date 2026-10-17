@@ -8,7 +8,7 @@ import {
 	iconRelationIn,
 	iconRelationOut,
 	iconSearch,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { useQuery } from "@tanstack/react-query";
 import { ContextMenuDivider, ContextMenuItem } from "mantine-contextmenu";
 import { unique } from "radash";

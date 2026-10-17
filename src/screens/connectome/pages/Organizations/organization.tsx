@@ -11,7 +11,7 @@ import {
 	Tooltip,
 	UnstyledButton,
 } from "@mantine/core";
-import { Icon, iconDotsVertical, iconExitToAp, iconWarning } from "@rrflow/ui";
+import { Icon, iconDotsVertical, iconExitToAp, iconWarning } from "@surrealdb/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { PropsWithChildren, useMemo } from "react";
 import { isOrganisationRestricted, isOrganisationTerminated } from "~/cloud/helpers";

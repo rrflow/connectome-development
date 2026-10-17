@@ -7,7 +7,7 @@ import {
 	iconPin,
 	iconPinOff,
 	pictoSidekick,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { forwardRef, memo, useEffect, useImperativeHandle, useRef } from "react";
 import { openCloudAuthentication } from "~/cloud/api/auth";
 import { Spacer } from "~/components/Spacer";

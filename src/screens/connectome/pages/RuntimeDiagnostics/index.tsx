@@ -16,7 +16,7 @@ import {
 	Textarea,
 	UnstyledButton,
 } from "@mantine/core";
-import { Icon, iconErrorCircle, iconRefresh } from "@rrflow/ui";
+import { Icon, iconErrorCircle, iconRefresh } from "@surrealdb/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { Redirect } from "wouter";

@@ -1,6 +1,6 @@
 import { Stack, Text } from "@mantine/core";
 import { openModal } from "@mantine/modals";
-import { CodeBlock } from "@rrflow/ui";
+import { CodeBlock } from "@surrealdb/ui";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { executeQuerySingle } from "~/screens/connectome/connection/connection";
 import { showErrorNotification } from "~/shared/util/helpers";

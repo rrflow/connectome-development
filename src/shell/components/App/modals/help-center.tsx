@@ -10,7 +10,7 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useDebouncedValue, useInputState } from "@mantine/hooks";
-import { Icon, iconHelp } from "@rrflow/ui";
+import { Icon, iconHelp } from "@surrealdb/ui";
 import clsx from "clsx";
 import { navigate } from "wouter/use-browser-location";
 import { useSearchHelpArticlesQuery } from "~/cloud/queries/context";

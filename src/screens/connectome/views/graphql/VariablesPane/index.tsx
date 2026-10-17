@@ -1,5 +1,5 @@
 import { Badge, Group } from "@mantine/core";
-import { Icon, iconClose, iconDollar } from "@rrflow/ui";
+import { Icon, iconClose, iconDollar } from "@surrealdb/ui";
 import { useMemo } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { CodeEditor } from "~/components/CodeEditor";

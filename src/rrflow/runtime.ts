@@ -22,12 +22,32 @@ export interface RrdCapability {
 	limitation?: string;
 }
 
+export interface RrdDeploymentProfile {
+	contract_version: number;
+	deployment_form: string;
+	storage_profile: string;
+	endpoint_presentation: string;
+}
+
+export interface RrdInstalledEstate {
+	project_id: string;
+	estate_id: string;
+	instance_id: string;
+}
+
+export interface RrdEstateConfiguration {
+	revision: number;
+	configuration_sha256: string;
+}
+
 export interface RrdServiceCapabilities {
 	protocol: typeof RRD_PROTOCOL;
 	protocol_version: typeof RRD_PROTOCOL_VERSION;
 	implementation: string;
 	implementation_version: string;
-	deployment_mode: string;
+	deployment: RrdDeploymentProfile;
+	installed_estate?: RrdInstalledEstate;
+	configuration: RrdEstateConfiguration;
 	instance: {
 		kind: "instance";
 		id: string;
@@ -44,43 +64,7 @@ export interface RrdHandshake {
 	service: RrdServiceCapabilities;
 }
 
-export interface RrdConnectRequest {
-	endpoint: string;
-	instance: string;
-	principal: string;
-	api_key: string;
-	scope: string;
-}
-
-export interface RrdSessionSummary {
-	session_id: string;
-	issued_at_unix_ms: number;
-	idle_expires_at_unix_ms: number;
-	absolute_expires_at_unix_ms: number;
-}
-
-export interface RrdConnectionSummary {
-	endpoint: string;
-	instance: string;
-	principal: string;
-	scope: string;
-	connected_at_unix_ms: number;
-	session: RrdSessionSummary;
-	service: RrdServiceCapabilities;
-}
-
-export interface RrdContextRequest {
-	query: string;
-	seeds?: unknown[];
-	valid_at?: number;
-	max_graph_depth?: number;
-	max_items?: number;
-	max_output_bytes?: number;
-	max_scanned_changes?: number;
-}
-
 type JsonRecord = Record<string, unknown>;
-const DEPLOYMENT_MODES = ["memory", "embedded", "local_daemon", "edge", "remote", "distributed"];
 
 function record(value: unknown, label: string): JsonRecord {
 	if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -204,17 +188,39 @@ function parseCapabilities(value: unknown): RrdServiceCapabilities {
 	) {
 		throw new Error("RRD capability catalogue is not unique and canonically sorted");
 	}
-	const deploymentMode = text(payload.deployment_mode, "deployment mode");
-	if (!DEPLOYMENT_MODES.includes(deploymentMode)) {
-		throw new Error("RRD returned invalid deployment mode");
-	}
+	// Enumerated values stay with the contract: the native SDK validates them on
+	// every authenticated session. The public handshake checks the shape only.
+	const deployment = record(payload.deployment, "deployment profile");
+	const configuration = record(payload.configuration, "estate configuration");
+	const estate =
+		payload.installed_estate === undefined || payload.installed_estate === null
+			? undefined
+			: record(payload.installed_estate, "installed estate");
 
 	return {
 		protocol: RRD_PROTOCOL,
 		protocol_version: RRD_PROTOCOL_VERSION,
 		implementation: text(payload.implementation, "implementation"),
 		implementation_version: text(payload.implementation_version, "implementation version"),
-		deployment_mode: deploymentMode,
+		deployment: {
+			contract_version: integer(
+				deployment.contract_version,
+				"deployment contract_version",
+				true,
+			),
+			deployment_form: text(deployment.deployment_form, "deployment form"),
+			storage_profile: text(deployment.storage_profile, "storage profile"),
+			endpoint_presentation: text(deployment.endpoint_presentation, "endpoint presentation"),
+		},
+		installed_estate: estate && {
+			project_id: text(estate.project_id, "estate project_id"),
+			estate_id: text(estate.estate_id, "estate estate_id"),
+			instance_id: text(estate.instance_id, "estate instance_id"),
+		},
+		configuration: {
+			revision: integer(configuration.revision, "configuration revision", true),
+			configuration_sha256: text(configuration.configuration_sha256, "configuration sha256"),
+		},
 		instance: {
 			kind: "instance",
 			id: text(instance.id, "instance id"),
@@ -292,49 +298,5 @@ export class RrdRuntimeClient {
 			readiness,
 			service,
 		};
-	}
-}
-
-/**
- * Native authenticated RRD session. The API key and bearer token remain in
- * the Tauri process; the webview receives only the bounded public results.
- */
-export class RrdAuthenticatedClient {
-	private requireNative() {
-		if (!isTauri()) {
-			throw new Error("Authenticated RRD operations require the native Connectome client");
-		}
-	}
-
-	async connect(request: RrdConnectRequest): Promise<RrdConnectionSummary> {
-		this.requireNative();
-		const summary = await invoke<RrdConnectionSummary>("rrd_connect", { request });
-		if (
-			summary.instance !== request.instance ||
-			summary.service.instance.id !== request.instance
-		) {
-			throw new Error("RRD connection summary changed the requested instance identity");
-		}
-		return summary;
-	}
-
-	async capabilities(): Promise<RrdServiceCapabilities> {
-		this.requireNative();
-		return invoke<RrdServiceCapabilities>("rrd_capabilities");
-	}
-
-	async diagnosticSnapshot(): Promise<unknown> {
-		this.requireNative();
-		return invoke<unknown>("rrd_diagnostic_snapshot");
-	}
-
-	async assembleContext(request: RrdContextRequest): Promise<unknown> {
-		this.requireNative();
-		return invoke<unknown>("rrd_assemble_context", { request });
-	}
-
-	async disconnect(): Promise<void> {
-		this.requireNative();
-		await invoke<void>("rrd_disconnect");
 	}
 }

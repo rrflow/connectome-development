@@ -1,5 +1,5 @@
 import { Accordion, Group, Text } from "@mantine/core";
-import { Icon } from "@rrflow/ui";
+import { Icon } from "@surrealdb/ui";
 import { default as equals } from "fast-deep-equal";
 import { objectify } from "radash";
 import type { Updater } from "use-immer";

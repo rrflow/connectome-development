@@ -21,7 +21,7 @@ import {
 	iconHelp,
 	iconTag,
 	iconWarning,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { useEffect } from "react";
 import { navigate } from "wouter/use-browser-location";
 import { useConversationCreateMutation, useCreateTicketMutation } from "~/cloud/mutations/context";

@@ -6,7 +6,7 @@ import {
 	iconDesigner,
 	iconExplorer,
 	iconQuery,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { Link } from "wouter";
 import { Spacer } from "~/components/Spacer";
 import classes from "./style.module.scss";

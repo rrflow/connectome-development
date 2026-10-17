@@ -1,5 +1,5 @@
 import { Badge, Center, Drawer, Group, Paper, ScrollArea, Text } from "@mantine/core";
-import { Icon, iconClose, iconDelete } from "@rrflow/ui";
+import { Icon, iconClose, iconDelete } from "@surrealdb/ui";
 import AnsiToHtml from "ansi-to-html";
 import { useEffect, useMemo, useRef } from "react";
 import { ActionButton } from "~/components/ActionButton";

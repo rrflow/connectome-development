@@ -1,6 +1,6 @@
 import { Group, Stack, Text } from "@mantine/core";
 import { openModal } from "@mantine/modals";
-import { Icon, iconXml } from "@rrflow/ui";
+import { Icon, iconXml } from "@surrealdb/ui";
 import { useMemo, useState } from "react";
 import { CodeSnippet } from "~/components/CodeSnippet";
 import { DriverSelector } from "~/components/DriverSelector";

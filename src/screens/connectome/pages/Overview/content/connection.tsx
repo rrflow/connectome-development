@@ -19,7 +19,7 @@ import {
 	iconDotsVertical,
 	iconEdit,
 	Spacer,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { PropsWithChildren, useRef } from "react";
 import { SANDBOX } from "~/constants";
 import { useStable } from "~/hooks/stable";

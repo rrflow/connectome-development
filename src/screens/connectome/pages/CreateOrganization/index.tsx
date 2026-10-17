@@ -1,6 +1,6 @@
 import { Box, Button, Group, ScrollArea, Stack, TextInput } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconOrganization } from "@rrflow/ui";
+import { Icon, iconOrganization } from "@surrealdb/ui";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { fetchAPI } from "~/cloud/api";

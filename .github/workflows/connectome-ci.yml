@@ -93,3 +93,98 @@ jobs:
 
       - name: Lint native crate
         run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --locked -- -D warnings
+
+  # The gate's RRFlow generated-SDK check and the native client against a real
+  # RRD process, both at the RRFlow revision Cargo.lock pins. The process
+  # tests install a fresh estate, serve it on loopback, and drive every lens
+  # through the session (src-tauri/src/rrd/client/process.rs).
+  rrd-process:
+    name: RRFlow SDK and RRD process integration
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Resolve the pinned RRFlow revision
+        id: rrflow
+        run: |
+          rev=$(grep -m1 -oE 'rrflow-development\?rev=[0-9a-f]{40}' src-tauri/Cargo.lock | cut -d= -f2)
+          test -n "$rev"
+          echo "rev=$rev" >> "$GITHUB_OUTPUT"
+
+      - name: Install Tauri system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Setup Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      # The engine is saved only after its revision passed the surface check
+      # and built (see the save step), so a hit means both already held for
+      # this exact, immutable revision and neither is repeated.
+      - name: Restore the verified rrflow engine
+        id: rrflow-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.rrflow-engine
+          key: rrflow-engine-${{ steps.rrflow.outputs.rev }}-${{ runner.os }}-dev-opt1
+
+      - name: Checkout the pinned RRFlow engine
+        if: steps.rrflow-cache.outputs.cache-hit != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: rrflow/rrflow-development
+          ref: ${{ steps.rrflow.outputs.rev }}
+          path: rrflow-engine
+          persist-credentials: false
+
+      # RRFlow generates every SDK's operations and signal catalogue from one
+      # contract export. Its own parity check proves the pinned revision's
+      # generated SDK surfaces match the contract the native client builds on.
+      # It builds with the engine's profile below, so the build reuses its
+      # dependencies.
+      - name: Check the pinned SDK's generated surfaces
+        if: steps.rrflow-cache.outputs.cache-hit != 'true'
+        working-directory: rrflow-engine
+        env:
+          CARGO_PROFILE_DEV_DEBUG: "0"
+          CARGO_PROFILE_DEV_OPT_LEVEL: "1"
+        run: python3 scripts/ci/check_generated_surfaces.py --check
+
+      # The engine builds in its own checkout, so its own toolchain file and
+      # lockfile decide how. Without debug info and at opt-level 1 the binary
+      # stays small: install and serve hash the executable they pin, which takes
+      # about a minute per step on the 1.2 GB unoptimised debug build and under
+      # a second on this one.
+      - name: Build rrflow at the pinned revision
+        if: steps.rrflow-cache.outputs.cache-hit != 'true'
+        working-directory: rrflow-engine
+        env:
+          CARGO_PROFILE_DEV_DEBUG: "0"
+          CARGO_PROFILE_DEV_OPT_LEVEL: "1"
+        run: |
+          cargo build --locked --package rrflow-cli --bin rrflow
+          mkdir -p ~/.rrflow-engine
+          cp target/debug/rrflow ~/.rrflow-engine/rrflow
+
+      # Saved before the tests run, so a failing Connectome test does not cost
+      # another engine build.
+      - name: Save the verified rrflow engine
+        if: steps.rrflow-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.rrflow-engine
+          key: ${{ steps.rrflow-cache.outputs.cache-primary-key }}
+
+      - name: Run the RRD process tests
+        run: |
+          export RRFLOW_BIN="$HOME/.rrflow-engine/rrflow"
+          "$RRFLOW_BIN" version
+          cargo test --manifest-path src-tauri/Cargo.toml --locked rrd::client::process:: -- --ignored

@@ -1,5 +1,5 @@
 import { Box, Button, SimpleGrid, Skeleton, Stack, Text } from "@mantine/core";
-import { Icon, iconArrowUpRight } from "@rrflow/ui";
+import { Icon, iconArrowUpRight } from "@surrealdb/ui";
 import { useLayoutEffect } from "react";
 import { useSearchParams } from "wouter";
 import { isInstancePlan } from "~/cloud/helpers";

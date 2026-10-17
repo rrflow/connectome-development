@@ -39,14 +39,25 @@ test("creates an RRD HTTP runtime profile by default", async ({ page }) => {
 							observed_at_unix_ms: 2,
 							claim_sequence: 3,
 							runtime_cursor: 4,
-							backend: "rrd-lsm",
+							backend: "rrflow_kv",
 						}
 					: {
 							protocol: "rrd",
 							protocol_version: 1,
-							implementation: "rrd-server",
-							implementation_version: "0.1.0",
-							deployment_mode: "local_daemon",
+							implementation: "rrflow",
+							implementation_version: "1.0.0",
+							deployment: {
+								contract_version: 1,
+								deployment_form: "single_node_server",
+								storage_profile: "rrflow_kv",
+								endpoint_presentation: "loopback_http_websocket",
+							},
+							configuration: {
+								format_version: 1,
+								revision: 1,
+								configuration_sha256:
+									"bf8a4557c1465ab4bf0e8640be42f65b28e4d65dff5f3147b2892edfe9db31be",
+							},
 							instance: { kind: "instance", id: "rrd-smoke" },
 							capabilities: [
 								{

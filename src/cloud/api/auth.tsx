@@ -1,6 +1,6 @@
 import { shutdown } from "@intercom/messenger-js-sdk";
 import { showNotification } from "@mantine/notifications";
-import { Icon, iconCheck } from "@rrflow/ui";
+import { Icon, iconCheck } from "@surrealdb/ui";
 import { sleep } from "radash";
 import { adapter } from "~/adapter";
 import { tagEvent } from "~/shared/util/analytics";

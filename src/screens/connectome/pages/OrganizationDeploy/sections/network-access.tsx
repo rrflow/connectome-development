@@ -1,5 +1,5 @@
 import { Anchor, Badge, Group, Paper, SimpleGrid, Stack, Switch, Text } from "@mantine/core";
-import { Icon, iconAuth, iconTarget, Spacer, useStable } from "@rrflow/ui";
+import { Icon, iconAuth, iconTarget, Spacer, useStable } from "@surrealdb/ui";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { DeploySectionProps } from "../types";
 

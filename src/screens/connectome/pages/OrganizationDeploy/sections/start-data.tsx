@@ -1,5 +1,5 @@
 import { Anchor, Group, Paper, SimpleGrid, Stack, Text } from "@mantine/core";
-import { Icon } from "@rrflow/ui";
+import { Icon } from "@surrealdb/ui";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";
 import { useSearchParams } from "~/hooks/routing";

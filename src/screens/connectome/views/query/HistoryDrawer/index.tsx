@@ -20,7 +20,7 @@ import {
 	iconQuery,
 	iconSearch,
 	iconText,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import dayjs from "dayjs";
 import { capitalize } from "radash";
 import { memo, useMemo } from "react";

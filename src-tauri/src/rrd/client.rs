@@ -1,495 +1,261 @@
-use super::transport::{is_loopback_origin, rrd_origin};
-use reqwest::{redirect::Policy, Client, Method, Response};
-use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
-use std::collections::BTreeSet;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use url::Url;
+//! Authenticated native RRD session built on RRFlow's Rust SDK.
+//!
+//! `rrd-client` and `rrd-contract` own every request and response type and
+//! validate each response before Connectome projects it into a view model.
+//! The operator credential and the session bearer stay in this process; the
+//! webview receives only `view` projections.
+//!
+//! Lenses call in concurrently. Each request pins the current session lease
+//! until it completes, and the lease is renewed or replaced only while no
+//! request pins it, because a renewal rotates the bearer the engine accepts.
 
-const RRD_PROTOCOL: &str = "rrd";
-const RRD_PROTOCOL_VERSION: u64 = 1;
-const MAX_RRD_RESPONSE_BYTES: usize = 4 * 1024 * 1024;
-const MAX_CONTEXT_QUERY_BYTES: usize = 64 * 1024;
-const MAX_CONTEXT_SEEDS: usize = 256;
-const MAX_CONTEXT_ITEMS: u64 = 512;
-const MAX_CONTEXT_OUTPUT_BYTES: u64 = 768 * 1024;
-const MAX_CONTEXT_SCANNED_CHANGES: u64 = 1_000_000;
-const MAX_CONTEXT_GRAPH_DEPTH: u8 = 32;
-const SESSION_RENEWAL_MARGIN_MS: u64 = 30_000;
+use super::error::RrdError;
+use super::transport::{is_loopback_origin, rrd_origin};
+use super::view::{
+    self, ConnectionView, DatabaseView, MapLinkView, MapPointView, QueryView, ServiceView,
+    SessionView, StorageView, VectorCollectionsView, VectorMapProgressView, VectorMapView,
+    VectorPointsView, VectorSearchView,
+};
+use rrd_client::{ClientConfig, RequestOptions, RrdClient, Session};
+use rrd_contract::{
+    CanonicalId, CloseSession, CreateSession, DataReference, DataVectorValue, DiagnosticSnapshot,
+    ExecuteQuery, ListVectorCollections, QueryBudget, ReadDiagnosticSnapshot, RenewSession,
+    RetrieveVectorPoints, ScrollVectorPoints, SearchVectors, ServiceCapabilities, SessionLimits,
+    VectorPointBatch, VectorPointPage, VectorPointSnapshot, VectorSearchHit, VectorSearchMode,
+    VectorSearchQuery, VectorSearchResult, MAX_DIAGNOSTIC_RUNTIME_SCANNED_CHANGES, MAX_QUERY_BYTES,
+    MAX_VECTOR_POINT_PAGE, MAX_VECTOR_SEARCH_TOP_K, MAX_VECTOR_STORAGE_KEYS,
+};
+use serde::Deserialize;
+use std::collections::HashMap;
+use std::fmt;
+use std::future::Future;
+use std::net::{SocketAddr, ToSocketAddrs};
+use std::path::Path;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use tokio::net::TcpStream;
+use tokio::sync::{RwLock, RwLockReadGuard};
+use tokio::task::JoinSet;
+use uuid::Uuid;
+
+// Connectome's own session policy; the engine enforces its own ceilings.
+const SESSION_IDLE_TIMEOUT_MS: u64 = 900_000;
+const SESSION_ABSOLUTE_TIMEOUT_MS: u64 = 3_600_000;
+const REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
+/// A request pins the lease it was sent with until it completes, so a lease is
+/// handed out only while it outlives the longest request with room to spare.
+const SESSION_RENEWAL_MARGIN: Duration = Duration::from_secs(60);
+const _: () = assert!(SESSION_RENEWAL_MARGIN.as_secs() > REQUEST_TIMEOUT.as_secs());
+const SESSION_CLOSED: &str = "the RRD session is closed";
+const LOOPBACK_PROBE_TIMEOUT: Duration = Duration::from_secs(2);
+/// The diagnostic read always carries a change-feed page and an audit page,
+/// read forward from the given position. The lenses render neither, only the
+/// read stamp and the head positions, so they ask for the smallest page the
+/// contract accepts.
+const DIAGNOSTIC_CHANGE_PAGE: u64 = 1;
+const DIAGNOSTIC_AUDIT_PAGE: u16 = 1;
+const MAX_CREDENTIAL_FILE_BYTES: u64 = 16 * 1024;
+/// Points the similarity map draws at most; each costs one exact engine search.
+const MAX_VECTOR_MAP_POINTS: usize = 600;
+/// Nearest neighbours the engine returns for each point on the similarity map.
+const VECTOR_MAP_NEIGHBOURS: u64 = 5;
+/// Exact searches in flight at once while the similarity map is built.
+const VECTOR_MAP_CONCURRENCY: usize = 8;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct RrdConnectRequest {
+    /// Loopback HTTP origin of the RRD service, for example `http://127.0.0.1:9477`.
     pub endpoint: String,
+    /// Instance identity confirmed by the public capability handshake.
     pub instance: String,
-    pub principal: String,
-    pub api_key: String,
-    pub scope: String,
+    /// Installed operator credential file (`.rrflow/credentials/<principal>.json`).
+    pub credential_path: String,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct RrdContextRequest {
+pub struct RrdQueryRequest {
     pub query: String,
-    #[serde(default)]
-    pub seeds: Vec<Value>,
-    #[serde(default)]
-    pub valid_at: Option<u64>,
-    #[serde(default = "default_graph_depth")]
-    pub max_graph_depth: u8,
-    #[serde(default = "default_max_items")]
-    pub max_items: u64,
-    #[serde(default = "default_output_bytes")]
-    pub max_output_bytes: u64,
-    #[serde(default = "default_scanned_changes")]
-    pub max_scanned_changes: u64,
 }
 
-#[derive(Debug, Clone, Serialize)]
-pub struct RrdSessionSummary {
-    pub session_id: String,
-    pub issued_at_unix_ms: u64,
-    pub idle_expires_at_unix_ms: u64,
-    pub absolute_expires_at_unix_ms: u64,
-}
-
-#[derive(Debug, Serialize)]
-pub struct RrdConnectionSummary {
-    pub endpoint: String,
-    pub instance: String,
-    pub principal: String,
-    pub scope: String,
-    pub connected_at_unix_ms: u64,
-    pub session: RrdSessionSummary,
-    pub service: Value,
-}
-
-#[derive(Clone, Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct SessionLease {
-    session_id: String,
-    token: String,
-    issued_at_unix_ms: u64,
-    idle_expires_at_unix_ms: u64,
-    absolute_expires_at_unix_ms: u64,
-    limits: Value,
+pub struct RrdVectorPointsRequest {
+    pub collection_id: String,
+    pub vector_name: String,
+    #[serde(default)]
+    pub after: Option<RrdReference>,
+    pub limit: u64,
 }
 
-impl SessionLease {
-    fn validate(&self) -> Result<(), String> {
-        validate_correlation_id(&self.session_id, "session id")?;
-        validate_correlation_id(&self.token, "session token")?;
-        if self.issued_at_unix_ms == 0
-            || self.idle_expires_at_unix_ms <= self.issued_at_unix_ms
-            || self.absolute_expires_at_unix_ms < self.idle_expires_at_unix_ms
-            || !self.limits.is_object()
-        {
-            return Err("RRD returned an invalid session lease".into());
-        }
-        Ok(())
-    }
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RrdVectorSearchRequest {
+    pub collection_id: String,
+    pub vector_name: String,
+    /// Query by example: the stored point whose vector is the query.
+    pub example: RrdReference,
+    pub top_k: u64,
+}
 
-    fn summary(&self) -> RrdSessionSummary {
-        RrdSessionSummary {
-            session_id: self.session_id.clone(),
-            issued_at_unix_ms: self.issued_at_unix_ms,
-            idle_expires_at_unix_ms: self.idle_expires_at_unix_ms,
-            absolute_expires_at_unix_ms: self.absolute_expires_at_unix_ms,
-        }
-    }
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RrdVectorMapRequest {
+    pub collection_id: String,
+    pub vector_name: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RrdReference {
+    pub kind: String,
+    pub id: String,
+}
+
+/// The installed operator credential document. Only the two fields used here
+/// are read; the engine owns and validates the rest of its format.
+#[derive(Deserialize)]
+struct OperatorCredential {
+    principal_id: String,
+    credential: String,
 }
 
 struct Secret(String);
 
-pub struct NativeRrdClient {
-    http: Client,
-    endpoint: Url,
-    instance: String,
-    principal: String,
-    api_key: Secret,
-    scope: String,
-    session: Option<SessionLease>,
-    sequence: u64,
+impl fmt::Debug for Secret {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("[REDACTED]")
+    }
 }
 
-impl NativeRrdClient {
-    pub async fn connect(
-        request: RrdConnectRequest,
-    ) -> Result<(Self, RrdConnectionSummary), String> {
-        let endpoint = rrd_origin(&request.endpoint)?;
-        if endpoint.scheme() != "http" || !is_loopback_origin(&endpoint) {
-            return Err(
-                "authenticated RRD connections currently require loopback HTTP; remote mode requires the future mutual-TLS adapter"
-                    .into(),
-            );
+/// Correlation identifiers for one connection: a random run prefix plus a
+/// counter. The engine derives a session's identity from the idempotency key
+/// that created it and answers a repeated key with the first result, so keys
+/// must never repeat across connections or app launches.
+struct RequestIds {
+    run: String,
+    sequence: AtomicU64,
+}
+
+impl RequestIds {
+    fn new() -> Self {
+        Self {
+            run: Uuid::new_v4().simple().to_string(),
+            sequence: AtomicU64::new(0),
         }
-        validate_canonical_id(&request.instance, "instance")?;
-        validate_canonical_id(&request.principal, "principal")?;
-        validate_scope(&request.scope)?;
-        if request.api_key.is_empty() || request.api_key.as_bytes().contains(&0) {
-            return Err("RRD API key is empty or contains NUL".into());
-        }
-        let http = Client::builder()
-            .connect_timeout(Duration::from_secs(4))
-            .timeout(Duration::from_secs(15))
-            .redirect(Policy::none())
-            .build()
-            .map_err(|error| format!("cannot build RRD HTTP client: {error}"))?;
-        let mut client = Self {
-            http,
-            endpoint,
-            instance: request.instance,
-            principal: request.principal,
-            api_key: Secret(request.api_key),
-            scope: request.scope,
-            session: None,
-            sequence: 0,
-        };
-        let service = client.public_get("/v1/capabilities").await?;
-        validate_service_capabilities(&service, &client.instance)?;
-        let session = client.create_session().await?;
-        let summary = RrdConnectionSummary {
-            endpoint: client.endpoint.as_str().trim_end_matches('/').to_owned(),
-            instance: client.instance.clone(),
-            principal: client.principal.clone(),
-            scope: client.scope.clone(),
-            connected_at_unix_ms: now_unix_ms()?,
-            session: session.summary(),
-            service,
-        };
-        client.session = Some(session);
-        Ok((client, summary))
     }
 
-    pub async fn capabilities(&self) -> Result<Value, String> {
-        let service = self.public_get("/v1/capabilities").await?;
-        validate_service_capabilities(&service, &self.instance)?;
-        Ok(service)
-    }
-
-    pub async fn diagnostic_snapshot(&mut self) -> Result<Value, String> {
-        self.ensure_session().await?;
-        let now = now_unix_ms()?;
-        let payload = json!({
-            "scope": self.scope,
-            "graph_valid_at_unix_ms": now,
-            "graph_known_at_cursor": null,
-            "graph_compare_cursor": 0,
-            "runtime_max_scanned_changes": 1_000_000,
-            "changes_after_cursor": 0,
-            "change_limit": 4_096,
-            "audit_after_sequence": 0,
-            "audit_limit": 1_024,
-        });
-        self.authenticated_call(Method::POST, "/v1/diagnostics/read", payload, false)
-            .await
-    }
-
-    pub async fn assemble_context(&mut self, request: RrdContextRequest) -> Result<Value, String> {
-        request.validate()?;
-        self.ensure_session().await?;
-        let payload = json!({
-            "scope": self.scope,
-            "query": request.query,
-            "valid_at": request.valid_at.unwrap_or(now_unix_ms()?),
-            "seeds": request.seeds,
-            "max_graph_depth": request.max_graph_depth,
-            "max_items": request.max_items,
-            "max_output_bytes": request.max_output_bytes,
-            "max_scanned_changes": request.max_scanned_changes,
-        });
-        self.authenticated_call(Method::POST, "/v1/context/assemble", payload, false)
-            .await
-    }
-
-    pub async fn close(mut self) -> Result<(), String> {
-        self.ensure_session().await?;
-        let path = format!("/v1/sessions/{}", self.session()?.session_id);
-        self.authenticated_call(Method::DELETE, &path, json!({}), true)
-            .await?;
-        Ok(())
-    }
-
-    async fn ensure_session(&mut self) -> Result<(), String> {
-        let renewal_boundary = now_unix_ms()?.saturating_add(SESSION_RENEWAL_MARGIN_MS);
-        let session = self.session()?;
-        if renewal_boundary >= session.idle_expires_at_unix_ms
-            || renewal_boundary >= session.absolute_expires_at_unix_ms
-        {
-            self.session = Some(self.create_session().await?);
-        }
-        Ok(())
-    }
-
-    async fn create_session(&mut self) -> Result<SessionLease, String> {
-        let (request_id, operation_id, idempotency_key) = self.next_context(true)?;
-        let envelope = self.envelope(
-            json!({
-                "limits": {
-                    "idle_timeout_ms": 900_000,
-                    "absolute_timeout_ms": 3_600_000,
-                    "max_open_transactions": 4,
-                }
-            }),
-            &request_id,
-            &operation_id,
-            idempotency_key.as_deref(),
-        );
-        let response = self
-            .http
-            .post(self.api_url("/v1/sessions"))
-            .header("Accept", "application/json")
-            .header("Content-Type", "application/json")
-            .header("X-RRD-Principal", &self.principal)
-            .header("Authorization", format!("ApiKey {}", self.api_key.0))
-            .body(
-                serde_json::to_vec(&envelope)
-                    .map_err(|error| format!("cannot encode RRD session request: {error}"))?,
-            )
-            .send()
-            .await
-            .map_err(|error| format!("RRD session request failed: {error}"))?;
-        let payload = response_payload(response, Some((&request_id, &operation_id))).await?;
-        let lease: SessionLease = serde_json::from_value(payload)
-            .map_err(|error| format!("RRD returned an invalid session lease: {error}"))?;
-        lease.validate()?;
-        Ok(lease)
-    }
-
-    async fn authenticated_call(
-        &mut self,
-        method: Method,
-        path: &str,
-        payload: Value,
-        mutation: bool,
-    ) -> Result<Value, String> {
-        let (session_id, token) = {
-            let session = self.session()?;
-            (session.session_id.clone(), session.token.clone())
-        };
-        let (request_id, operation_id, idempotency_key) = self.next_context(mutation)?;
-        let envelope = self.envelope(
-            payload,
-            &request_id,
-            &operation_id,
-            idempotency_key.as_deref(),
-        );
-        let response = self
-            .http
-            .request(method, self.api_url(path))
-            .header("Accept", "application/json")
-            .header("Content-Type", "application/json")
-            .header("X-RRD-Session", session_id)
-            .header("Authorization", format!("Bearer {token}"))
-            .body(
-                serde_json::to_vec(&envelope)
-                    .map_err(|error| format!("cannot encode RRD request: {error}"))?,
-            )
-            .send()
-            .await
-            .map_err(|error| format!("RRD authenticated request failed: {error}"))?;
-        response_payload(response, Some((&request_id, &operation_id))).await
-    }
-
-    async fn public_get(&self, path: &str) -> Result<Value, String> {
-        let response = self
-            .http
-            .get(self.api_url(path))
-            .header("Accept", "application/json")
-            .send()
-            .await
-            .map_err(|error| format!("RRD HTTP request failed: {error}"))?;
-        response_payload(response, None).await
-    }
-
-    fn next_context(&mut self, mutation: bool) -> Result<(String, String, Option<String>), String> {
-        self.sequence = self
+    /// Options for the next request; a mutation also carries an idempotency key.
+    fn next(&self, mutation: bool) -> Result<RequestOptions, RrdError> {
+        let sequence = self
             .sequence
-            .checked_add(1)
-            .ok_or("Connectome RRD request sequence exhausted")?;
-        let request_id = format!("connectome-request-{}", self.sequence);
-        let operation_id = format!("connectome-operation-{}", self.sequence);
-        let idempotency_key = mutation.then(|| format!("connectome-key-{}", self.sequence));
-        Ok((request_id, operation_id, idempotency_key))
+            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |value| {
+                value.checked_add(1)
+            })
+            .map_err(|_| "Connectome RRD request sequence exhausted")?
+            + 1;
+        let prefix = format!("connectome-{}", self.run);
+        let request = format!("{prefix}-request-{sequence}");
+        let operation = format!("{prefix}-operation-{sequence}");
+        let options = if mutation {
+            RequestOptions::mutation(&request, &operation, &format!("{prefix}-key-{sequence}"))
+        } else {
+            RequestOptions::read(&request, &operation)
+        };
+        options.map_err(RrdError::sdk)
     }
+}
 
-    fn envelope(
-        &self,
-        payload: Value,
-        request_id: &str,
-        operation_id: &str,
-        idempotency_key: Option<&str>,
-    ) -> Value {
-        json!({
-            "protocol": RRD_PROTOCOL,
-            "protocol_version": RRD_PROTOCOL_VERSION,
-            "context": {
-                "request_id": request_id,
-                "operation_id": operation_id,
-                "idempotency_key": idempotency_key,
-                "deadline_unix_ms": null,
-            },
-            "resource": {
-                "segments": [{"kind": "instance", "id": self.instance}],
-            },
-            "payload": payload,
+/// When a session lapses, on this process's monotonic clock. Each deadline is
+/// measured from before the request that granted it, so it passes no later
+/// than the engine's own deadline whatever either wall clock reads; the
+/// engine's expiry timestamps are never compared with this machine's time.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Deadlines {
+    idle: Instant,
+    absolute: Instant,
+}
+
+impl Deadlines {
+    fn granted(requested_at: Instant, limits: &SessionLimits) -> Result<Self, String> {
+        Ok(Self {
+            idle: after(requested_at, limits.idle_timeout_ms)?,
+            absolute: after(requested_at, limits.absolute_timeout_ms)?,
         })
     }
 
-    fn api_url(&self, path: &str) -> Url {
-        let mut url = self.endpoint.clone();
-        url.set_path(path);
-        url
-    }
-
-    fn session(&self) -> Result<&SessionLease, String> {
-        self.session
-            .as_ref()
-            .ok_or_else(|| "Connectome has no authenticated RRD session".into())
-    }
-}
-
-impl RrdContextRequest {
-    fn validate(&self) -> Result<(), String> {
-        if self.query.len() > MAX_CONTEXT_QUERY_BYTES || self.query.as_bytes().contains(&0) {
-            return Err("context query exceeds its byte bound or contains NUL".into());
-        }
-        if self.seeds.is_empty() && self.query.trim().is_empty() {
-            return Err("context request requires a query or at least one seed".into());
-        }
-        if self.seeds.len() > MAX_CONTEXT_SEEDS {
-            return Err("context request exceeds its seed bound".into());
-        }
-        let unique = self
-            .seeds
-            .iter()
-            .map(Value::to_string)
-            .collect::<BTreeSet<_>>();
-        if unique.len() != self.seeds.len() {
-            return Err("context seeds must be unique".into());
-        }
-        if self.valid_at == Some(0)
-            || self.max_graph_depth > MAX_CONTEXT_GRAPH_DEPTH
-            || self.max_items == 0
-            || self.max_items > MAX_CONTEXT_ITEMS
-            || self.max_output_bytes == 0
-            || self.max_output_bytes > MAX_CONTEXT_OUTPUT_BYTES
-            || self.max_scanned_changes == 0
-            || self.max_scanned_changes > MAX_CONTEXT_SCANNED_CHANGES
-        {
-            return Err("context request exceeds the public RRD bounds".into());
-        }
-        Ok(())
-    }
-}
-
-async fn response_payload(
-    mut response: Response,
-    expected: Option<(&str, &str)>,
-) -> Result<Value, String> {
-    let status = response.status();
-    if response
-        .content_length()
-        .is_some_and(|length| length > MAX_RRD_RESPONSE_BYTES as u64)
-    {
-        return Err("RRD response exceeds four MiB".into());
-    }
-    let mut bytes = Vec::new();
-    while let Some(chunk) = response
-        .chunk()
-        .await
-        .map_err(|error| format!("cannot read RRD response: {error}"))?
-    {
-        if bytes.len().saturating_add(chunk.len()) > MAX_RRD_RESPONSE_BYTES {
-            return Err("RRD response exceeds four MiB".into());
-        }
-        bytes.extend_from_slice(&chunk);
-    }
-    let envelope: Value = serde_json::from_slice(&bytes)
-        .map_err(|error| format!("RRD returned invalid JSON: {error}"))?;
-    if envelope["protocol"] != RRD_PROTOCOL || envelope["protocol_version"] != RRD_PROTOCOL_VERSION
-    {
-        return Err("endpoint does not implement RRD protocol v1".into());
-    }
-    let request_id = envelope["request_id"]
-        .as_str()
-        .ok_or("RRD response has no request identity")?;
-    let operation_id = envelope["operation_id"]
-        .as_str()
-        .ok_or("RRD response has no operation identity")?;
-    if let Some((expected_request, expected_operation)) = expected {
-        if request_id != expected_request || operation_id != expected_operation {
-            return Err("RRD response request/operation identity differs".into());
-        }
-    }
-    let outcome = envelope["outcome"]
-        .as_object()
-        .ok_or("RRD response has no outcome")?;
-    if outcome.get("status").and_then(Value::as_str) == Some("ok") && status.is_success() {
-        return outcome
-            .get("payload")
-            .cloned()
-            .ok_or_else(|| "RRD success response has no payload".into());
-    }
-    let message = outcome
-        .get("error")
-        .and_then(|error| error.get("message"))
-        .and_then(Value::as_str)
-        .unwrap_or("RRD rejected the request");
-    Err(format!("RRD returned {status}: {message}"))
-}
-
-fn validate_canonical_id(value: &str, label: &str) -> Result<(), String> {
-    if value.is_empty()
-        || value.len() > 256
-        || !value.bytes().enumerate().all(|(index, byte)| {
-            byte.is_ascii_lowercase()
-                || byte.is_ascii_digit()
-                || (index > 0 && matches!(byte, b'-' | b'_' | b'.'))
+    /// A renewal restarts the idle timer; the absolute deadline never moves.
+    fn renewed(self, requested_at: Instant, limits: &SessionLimits) -> Result<Self, String> {
+        Ok(Self {
+            idle: after(requested_at, limits.idle_timeout_ms)?,
+            absolute: self.absolute,
         })
-    {
-        return Err(format!("{label} is not a canonical RRD identifier"));
     }
-    Ok(())
+
+    /// Whether a request sent at `now` completes before the session can lapse.
+    fn outlive_request(self, now: Instant) -> bool {
+        self.idle.min(self.absolute).saturating_duration_since(now) > SESSION_RENEWAL_MARGIN
+    }
+
+    /// Whether renewing at `now` still buys a request's worth of time; past
+    /// this point only a new session can.
+    fn renewable(self, now: Instant) -> bool {
+        self.absolute.saturating_duration_since(now) > SESSION_RENEWAL_MARGIN
+    }
 }
 
-fn validate_correlation_id(value: &str, label: &str) -> Result<(), String> {
-    if value.is_empty()
-        || value.len() > 256
-        || !value
-            .bytes()
-            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.' | b':'))
-    {
-        return Err(format!("RRD returned an invalid {label}"));
-    }
-    Ok(())
+fn after(start: Instant, millis: u64) -> Result<Instant, String> {
+    start
+        .checked_add(Duration::from_millis(millis))
+        .ok_or_else(|| "the RRD session limits do not fit this clock".into())
 }
 
-fn validate_scope(value: &str) -> Result<(), String> {
-    if value.is_empty() || value.len() > 256 || value.as_bytes().contains(&0) {
-        return Err("RRD scope must be a non-empty bounded string without NUL".into());
-    }
-    Ok(())
+struct Lease {
+    session: Session,
+    deadlines: Deadlines,
 }
 
-fn validate_service_capabilities(service: &Value, expected_instance: &str) -> Result<(), String> {
-    if service["protocol"] != RRD_PROTOCOL
-        || service["protocol_version"] != RRD_PROTOCOL_VERSION
-        || service["instance"]["kind"] != "instance"
-        || !service["capabilities"].is_array()
-        || !service["product_capabilities"].is_object()
-    {
-        return Err("RRD returned an invalid service capability contract".into());
+impl Lease {
+    async fn open(
+        client: &RrdClient,
+        principal: &CanonicalId,
+        api_key: &Secret,
+        ids: &RequestIds,
+    ) -> Result<Self, RrdError> {
+        let request = CreateSession {
+            limits: SessionLimits {
+                idle_timeout_ms: SESSION_IDLE_TIMEOUT_MS,
+                absolute_timeout_ms: SESSION_ABSOLUTE_TIMEOUT_MS,
+                max_open_transactions: 1,
+            },
+        };
+        let requested_at = Instant::now();
+        let session = client
+            .create_session(principal.clone(), &api_key.0, request, ids.next(true)?)
+            .await
+            .map_err(RrdError::sdk)?;
+        let deadlines = Deadlines::granted(requested_at, session.limits())?;
+        Ok(Self { session, deadlines })
     }
-    let observed_instance = service["instance"]["id"]
-        .as_str()
-        .ok_or("RRD capability response has no instance identity")?;
-    if observed_instance != expected_instance {
-        return Err(format!(
-            "RRD instance mismatch: expected {expected_instance}, received {observed_instance}"
-        ));
-    }
-    Ok(())
+}
+
+pub struct NativeRrdClient {
+    client: RrdClient,
+    endpoint: String,
+    instance: CanonicalId,
+    principal: CanonicalId,
+    api_key: Secret,
+    connected_at_unix_ms: u64,
+    service: ServiceView,
+    /// The estate's configured query budget, read from its capability document.
+    query_budget: QueryBudget,
+    /// The session policy the engine granted when the connection opened.
+    limits: SessionLimits,
+    ids: RequestIds,
+    /// `None` once the operator closed the session.
+    lease: RwLock<Option<Lease>>,
 }
 
 fn now_unix_ms() -> Result<u64, String> {
@@ -500,238 +266,749 @@ fn now_unix_ms() -> Result<u64, String> {
     u64::try_from(millis).map_err(|_| "system clock does not fit RRD time".into())
 }
 
-const fn default_graph_depth() -> u8 {
-    2
+fn canonical(value: &str, label: &str) -> Result<CanonicalId, String> {
+    CanonicalId::new(value)
+        .map_err(|error| format!("{label} is not a canonical RRD identifier: {error}"))
 }
 
-const fn default_max_items() -> u64 {
-    32
+fn data_reference(reference: &RrdReference) -> Result<DataReference, String> {
+    Ok(DataReference {
+        kind: canonical(&reference.kind, "reference kind")?,
+        id: canonical(&reference.id, "reference id")?,
+    })
 }
 
-const fn default_output_bytes() -> u64 {
-    256 * 1024
+/// The validated loopback origin plus every loopback socket address it names.
+fn loopback_candidates(endpoint: &str) -> Result<(String, Vec<SocketAddr>), String> {
+    let origin = rrd_origin(endpoint)?;
+    if origin.scheme() != "http" || !is_loopback_origin(&origin) {
+        return Err(
+            "authenticated RRD connections currently require loopback HTTP; remote mode requires the mutual-TLS profile"
+                .into(),
+        );
+    }
+    let host = origin.host_str().ok_or("RRD endpoint has no host")?;
+    let port = origin
+        .port_or_known_default()
+        .ok_or("RRD endpoint has no port")?;
+    let candidates: Vec<SocketAddr> = (host.trim_matches(|c| c == '[' || c == ']'), port)
+        .to_socket_addrs()
+        .map_err(|error| format!("cannot resolve RRD loopback endpoint: {error}"))?
+        .filter(|address| address.ip().is_loopback())
+        .collect();
+    if candidates.is_empty() {
+        return Err("RRD endpoint does not resolve to a loopback address".into());
+    }
+    Ok((origin.as_str().trim_end_matches('/').to_owned(), candidates))
 }
 
-const fn default_scanned_changes() -> u64 {
-    100_000
+/// `localhost` names both `::1` and `127.0.0.1`, and RRD may listen on only
+/// one family. The SDK dials a single address, so pick the first that accepts.
+async fn reachable_loopback(candidates: &[SocketAddr]) -> Result<SocketAddr, String> {
+    for address in candidates {
+        let probe = tokio::time::timeout(LOOPBACK_PROBE_TIMEOUT, TcpStream::connect(address));
+        if matches!(probe.await, Ok(Ok(_))) {
+            return Ok(*address);
+        }
+    }
+    Err(format!(
+        "no RRD service accepts connections at {}",
+        candidates
+            .iter()
+            .map(SocketAddr::to_string)
+            .collect::<Vec<_>>()
+            .join(" or ")
+    ))
 }
+
+fn read_credential(path: &str) -> Result<(CanonicalId, Secret), String> {
+    let path = Path::new(path);
+    let metadata = std::fs::metadata(path)
+        .map_err(|error| format!("cannot read the RRD credential file: {error}"))?;
+    if !metadata.is_file() || metadata.len() > MAX_CREDENTIAL_FILE_BYTES {
+        return Err("the RRD credential path is not a bounded credential file".into());
+    }
+    let bytes = std::fs::read(path)
+        .map_err(|error| format!("cannot read the RRD credential file: {error}"))?;
+    let document: OperatorCredential = serde_json::from_slice(&bytes).map_err(|_| {
+        "the RRD credential file is not an installed operator credential".to_owned()
+    })?;
+    if document.credential.is_empty() || document.credential.contains('\0') {
+        return Err("the RRD credential file holds an empty credential".into());
+    }
+    Ok((
+        canonical(&document.principal_id, "credential principal")?,
+        Secret(document.credential),
+    ))
+}
+
+fn reference_key(reference: &DataReference) -> (String, String) {
+    (
+        reference.kind.as_str().to_owned(),
+        reference.id.as_str().to_owned(),
+    )
+}
+
+/// The first `limit` hits that are drawn on the map and are not the query
+/// point itself, ranked from 1 in the engine's result order.
+fn neighbour_links(
+    from: usize,
+    hits: &[VectorSearchHit],
+    drawn: &HashMap<(String, String), usize>,
+    limit: u64,
+) -> Vec<MapLinkView> {
+    hits.iter()
+        .filter_map(|hit| {
+            drawn
+                .get(&reference_key(&hit.reference))
+                .map(|&to| (to, hit.score))
+        })
+        .filter(|&(to, _)| to != from)
+        .take(usize::try_from(limit).unwrap_or(usize::MAX))
+        .enumerate()
+        .map(|(rank, (to, score))| MapLinkView {
+            from,
+            to,
+            rank: rank + 1,
+            score,
+        })
+        .collect()
+}
+
+/// The lowest and highest cursor seen across the reads that built one view.
+fn widen(range: Option<(u64, u64)>, cursor: u64) -> (u64, u64) {
+    range.map_or((cursor, cursor), |(low, high)| {
+        (low.min(cursor), high.max(cursor))
+    })
+}
+
+impl NativeRrdClient {
+    pub async fn connect(request: RrdConnectRequest) -> Result<Self, RrdError> {
+        let (endpoint, candidates) = loopback_candidates(&request.endpoint)?;
+        let address = reachable_loopback(&candidates).await?;
+        let instance = canonical(&request.instance, "instance")?;
+        let (principal, api_key) = read_credential(&request.credential_path)?;
+        let config = ClientConfig {
+            request_timeout: REQUEST_TIMEOUT,
+            ..ClientConfig::default()
+        };
+        let client =
+            RrdClient::connect_local(address, instance.clone(), config).map_err(RrdError::sdk)?;
+        // The SDK validates the capability contract and the exact instance identity.
+        let capabilities = client.capabilities().await.map_err(RrdError::sdk)?;
+        let ids = RequestIds::new();
+        let lease = Lease::open(&client, &principal, &api_key, &ids).await?;
+        Ok(Self {
+            limits: lease.session.limits().clone(),
+            lease: RwLock::new(Some(lease)),
+            client,
+            endpoint,
+            instance,
+            principal,
+            api_key,
+            connected_at_unix_ms: now_unix_ms()?,
+            service: view::service(&capabilities),
+            query_budget: capabilities.configuration.query.clone(),
+            ids,
+        })
+    }
+
+    /// The connection as the webview may see it: identities, session policy,
+    /// and service. Bearers and engine-clock expiry instants stay native.
+    pub fn connection(&self) -> ConnectionView {
+        ConnectionView {
+            endpoint: self.endpoint.clone(),
+            instance: self.instance.as_str().into(),
+            principal: self.principal.as_str().into(),
+            connected_at_unix_ms: self.connected_at_unix_ms,
+            session: SessionView {
+                idle_timeout_ms: self.limits.idle_timeout_ms,
+                absolute_timeout_ms: self.limits.absolute_timeout_ms,
+            },
+            service: self.service.clone(),
+        }
+    }
+
+    fn scope(&self) -> String {
+        format!("instance:{}", self.instance.as_str())
+    }
+
+    /// The current session, pinned until the guard drops. A session that would
+    /// not outlive a request is first renewed, or replaced once renewal cannot
+    /// help, under the write lock, so no in-flight request holds the bearer
+    /// that the renewal rotates or the replacement closes.
+    async fn lease(&self) -> Result<RwLockReadGuard<'_, Lease>, RrdError> {
+        {
+            let current = self.lease.read().await;
+            let fresh = current
+                .as_ref()
+                .ok_or(SESSION_CLOSED)?
+                .deadlines
+                .outlive_request(Instant::now());
+            if fresh {
+                return RwLockReadGuard::try_map(current, Option::as_ref)
+                    .map_err(|_| SESSION_CLOSED.into());
+            }
+        }
+        let mut current = self.lease.write().await;
+        let stale = !current
+            .as_ref()
+            .ok_or(SESSION_CLOSED)?
+            .deadlines
+            .outlive_request(Instant::now());
+        // Another request may have refreshed the session while this one waited.
+        if stale {
+            let refreshed = self
+                .refresh(current.as_ref().ok_or(SESSION_CLOSED)?)
+                .await?;
+            *current = Some(refreshed);
+        }
+        RwLockReadGuard::try_map(current.downgrade(), Option::as_ref)
+            .map_err(|_| SESSION_CLOSED.into())
+    }
+
+    /// Renews `current`, or opens a new session when renewal cannot outlast a
+    /// request or the engine refuses it (the session lapsed while Connectome
+    /// sat idle, or used up its renewals).
+    async fn refresh(&self, current: &Lease) -> Result<Lease, RrdError> {
+        if current.deadlines.renewable(Instant::now()) {
+            let requested_at = Instant::now();
+            match self
+                .client
+                .renew_session(&current.session, RenewSession {}, self.ids.next(true)?)
+                .await
+            {
+                Ok(session) => {
+                    let deadlines = current.deadlines.renewed(requested_at, session.limits())?;
+                    return Ok(Lease { session, deadlines });
+                }
+                Err(error) => {
+                    log::info!("RRD session renewal refused ({error}); opening a new session")
+                }
+            }
+        }
+        let replacement =
+            Lease::open(&self.client, &self.principal, &self.api_key, &self.ids).await?;
+        // Best effort: the old session may already have lapsed on the engine.
+        let _ = self
+            .client
+            .close_session(&current.session, CloseSession {}, self.ids.next(true)?)
+            .await;
+        Ok(replacement)
+    }
+
+    /// Sends one request with the current session pinned until it completes.
+    async fn send<T, Fut>(
+        &self,
+        mutation: bool,
+        request: impl FnOnce(Session, RequestOptions) -> Fut,
+    ) -> Result<T, RrdError>
+    where
+        Fut: Future<Output = rrd_client::Result<T>>,
+    {
+        let lease = self.lease().await?;
+        let options = self.ids.next(mutation)?;
+        let result = request(lease.session.clone(), options).await;
+        drop(lease);
+        result.map_err(RrdError::sdk)
+    }
+
+    pub async fn capabilities(&self) -> Result<ServiceCapabilities, RrdError> {
+        self.client.capabilities().await.map_err(RrdError::sdk)
+    }
+
+    async fn diagnostic_snapshot(&self) -> Result<DiagnosticSnapshot, RrdError> {
+        let request = ReadDiagnosticSnapshot {
+            scope: self.scope(),
+            graph_valid_at_unix_ms: now_unix_ms()?,
+            graph_known_at_cursor: None,
+            graph_compare_cursor: 0,
+            runtime_max_scanned_changes: MAX_DIAGNOSTIC_RUNTIME_SCANNED_CHANGES,
+            changes_after_cursor: 0,
+            change_limit: DIAGNOSTIC_CHANGE_PAGE,
+            audit_after_sequence: 0,
+            audit_limit: DIAGNOSTIC_AUDIT_PAGE,
+        };
+        self.send(false, |session, options| async move {
+            self.client
+                .read_diagnostic_snapshot(&session, request, options)
+                .await
+        })
+        .await
+    }
+
+    async fn scroll(&self, request: ScrollVectorPoints) -> Result<VectorPointPage, RrdError> {
+        self.send(false, |session, options| async move {
+            self.client
+                .scroll_vector_points(&session, request, options)
+                .await
+        })
+        .await
+    }
+
+    async fn retrieve(&self, request: RetrieveVectorPoints) -> Result<VectorPointBatch, RrdError> {
+        self.send(false, |session, options| async move {
+            self.client
+                .retrieve_vector_points(&session, request, options)
+                .await
+        })
+        .await
+    }
+
+    async fn search(&self, request: SearchVectors) -> Result<VectorSearchResult, RrdError> {
+        self.send(false, |session, options| async move {
+            self.client.search_vectors(&session, request, options).await
+        })
+        .await
+    }
+
+    pub async fn database(&self) -> Result<DatabaseView, RrdError> {
+        Ok(view::database(&self.diagnostic_snapshot().await?))
+    }
+
+    pub async fn storage(&self) -> Result<StorageView, RrdError> {
+        let snapshot = self.diagnostic_snapshot().await?;
+        Ok(view::storage(&snapshot, &self.service.storage_profile))
+    }
+
+    pub async fn query(&self, request: RrdQueryRequest) -> Result<QueryView, RrdError> {
+        if request.query.trim().is_empty()
+            || request.query.len() > MAX_QUERY_BYTES
+            || request.query.contains('\0')
+        {
+            return Err(format!(
+                "RRFlowQL query must be non-empty, at most {MAX_QUERY_BYTES} bytes, and free of NUL"
+            )
+            .into());
+        }
+        let request = ExecuteQuery {
+            scope: self.scope(),
+            query: request.query,
+            parameters: Default::default(),
+            budget: self.query_budget.clone(),
+        };
+        let result = self
+            .send(false, |session, options| async move {
+                self.client.execute_query(&session, request, options).await
+            })
+            .await?;
+        Ok(view::query(&result))
+    }
+
+    pub async fn vector_collections(&self) -> Result<VectorCollectionsView, RrdError> {
+        let request = ListVectorCollections {
+            scope: self.scope(),
+        };
+        let catalogue = self
+            .send(false, |session, options| async move {
+                self.client
+                    .list_vector_collections(&session, request, options)
+                    .await
+            })
+            .await?;
+        Ok(view::collections(&catalogue))
+    }
+
+    pub async fn vector_points(
+        &self,
+        request: RrdVectorPointsRequest,
+    ) -> Result<VectorPointsView, RrdError> {
+        if request.limit == 0 || request.limit > MAX_VECTOR_POINT_PAGE {
+            return Err(format!("vector page size must be in 1..={MAX_VECTOR_POINT_PAGE}").into());
+        }
+        let request = ScrollVectorPoints {
+            scope: self.scope(),
+            collection_id: canonical(&request.collection_id, "collection")?,
+            vector_name: canonical(&request.vector_name, "vector name")?,
+            valid_at: now_unix_ms()?,
+            after_reference: request.after.as_ref().map(data_reference).transpose()?,
+            limit: request.limit,
+            max_storage_keys: MAX_VECTOR_STORAGE_KEYS,
+            filter: None,
+        };
+        Ok(view::points(&self.scroll(request).await?))
+    }
+
+    /// Query by example: retrieve one stored dense vector, then search its collection.
+    pub async fn vector_search(
+        &self,
+        request: RrdVectorSearchRequest,
+    ) -> Result<VectorSearchView, RrdError> {
+        if request.top_k == 0 || request.top_k > MAX_VECTOR_SEARCH_TOP_K {
+            return Err(format!("top_k must be in 1..={MAX_VECTOR_SEARCH_TOP_K}").into());
+        }
+        let collection_id = canonical(&request.collection_id, "collection")?;
+        let vector_name = canonical(&request.vector_name, "vector name")?;
+        let example = data_reference(&request.example)?;
+        let valid_at = now_unix_ms()?;
+        let batch = self
+            .retrieve(RetrieveVectorPoints {
+                scope: self.scope(),
+                collection_id: collection_id.clone(),
+                vector_name: vector_name.clone(),
+                valid_at,
+                references: vec![example.clone()],
+                max_storage_keys: MAX_VECTOR_STORAGE_KEYS,
+            })
+            .await?;
+        let point = batch
+            .points
+            .into_iter()
+            .find(|point| point.reference == example)
+            .ok_or("the example vector is not visible at the current read stamp")?;
+        let DataVectorValue::Dense { values } = point.value else {
+            return Err("query by example currently supports dense vectors only".into());
+        };
+        let result = self
+            .search(SearchVectors {
+                scope: self.scope(),
+                valid_at,
+                collection_id: Some(collection_id),
+                vector_name: Some(vector_name),
+                field: None,
+                query: VectorSearchQuery::Dense { values },
+                filter: None,
+                metric: None,
+                top_k: request.top_k,
+                mode: VectorSearchMode::Exact,
+                max_storage_keys: MAX_VECTOR_STORAGE_KEYS,
+            })
+            .await?;
+        Ok(view::search(&example, &result))
+    }
+
+    /// The similarity map: scroll the collection's points up to the map bound,
+    /// then ask the engine for every point's nearest neighbours with one exact
+    /// search each. Every link is an engine search hit; values stay native.
+    /// `progress` hears how many of the searches have finished.
+    pub async fn vector_map(
+        self: &Arc<Self>,
+        request: RrdVectorMapRequest,
+        progress: impl Fn(VectorMapProgressView),
+    ) -> Result<VectorMapView, RrdError> {
+        let started = Instant::now();
+        let collection_id = canonical(&request.collection_id, "collection")?;
+        let vector_name = canonical(&request.vector_name, "vector name")?;
+        let valid_at = now_unix_ms()?;
+
+        let mut points: Vec<VectorPointSnapshot> = Vec::new();
+        let mut after: Option<DataReference> = None;
+        let mut keys_examined = 0u64;
+        let mut cursors = None;
+        let mut truncated = false;
+        loop {
+            let remaining = u64::try_from(MAX_VECTOR_MAP_POINTS - points.len())
+                .map_err(|_| "similarity map bound does not fit a page size")?;
+            let page = self
+                .scroll(ScrollVectorPoints {
+                    scope: self.scope(),
+                    collection_id: collection_id.clone(),
+                    vector_name: vector_name.clone(),
+                    valid_at,
+                    after_reference: after.clone(),
+                    limit: remaining.min(MAX_VECTOR_POINT_PAGE),
+                    max_storage_keys: MAX_VECTOR_STORAGE_KEYS,
+                    filter: None,
+                })
+                .await?;
+            keys_examined = keys_examined.saturating_add(page.read_evidence.keys_examined);
+            cursors = Some(widen(cursors, page.known_at_cursor));
+            let progressed = !page.points.is_empty();
+            points.extend(page.points);
+            match page.next_after {
+                None => break,
+                Some(_) if points.len() >= MAX_VECTOR_MAP_POINTS => {
+                    truncated = true;
+                    break;
+                }
+                Some(next) if progressed || after.as_ref() != Some(&next) => after = Some(next),
+                Some(_) => return Err("the vector point scroll stopped advancing".into()),
+            }
+        }
+
+        let drawn: HashMap<(String, String), usize> = points
+            .iter()
+            .enumerate()
+            .map(|(position, point)| (reference_key(&point.reference), position))
+            .collect();
+        let queries = points
+            .iter()
+            .enumerate()
+            .filter_map(|(position, point)| match &point.value {
+                DataVectorValue::Dense { values } => Some((position, values.clone())),
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        let unsearchable = points.len() - queries.len();
+        let total = u64::try_from(queries.len()).map_err(|_| "too many map points")?;
+        let drawn_points: Vec<MapPointView> = points
+            .iter()
+            .map(|point| MapPointView {
+                reference: view::reference(&point.reference),
+                subject: view::reference(&point.subject),
+            })
+            .collect();
+        progress(VectorMapProgressView {
+            searched: 0,
+            total,
+            points: Some(drawn_points.clone()),
+            truncated,
+        });
+
+        let mut queries = queries.into_iter();
+        let mut tasks = JoinSet::new();
+        let mut links = Vec::new();
+        let mut searches = 0u64;
+        let mut exact = true;
+        loop {
+            while tasks.len() < VECTOR_MAP_CONCURRENCY {
+                let Some((from, values)) = queries.next() else {
+                    break;
+                };
+                let search = SearchVectors {
+                    scope: self.scope(),
+                    valid_at,
+                    collection_id: Some(collection_id.clone()),
+                    vector_name: Some(vector_name.clone()),
+                    field: None,
+                    query: VectorSearchQuery::Dense { values },
+                    filter: None,
+                    metric: None,
+                    // The query point is its own best match.
+                    top_k: VECTOR_MAP_NEIGHBOURS + 1,
+                    mode: VectorSearchMode::Exact,
+                    max_storage_keys: MAX_VECTOR_STORAGE_KEYS,
+                };
+                let client = Arc::clone(self);
+                tasks.spawn(async move { (from, client.search(search).await) });
+            }
+            let Some(joined) = tasks.join_next().await else {
+                break;
+            };
+            let (from, result) =
+                joined.map_err(|error| format!("a similarity search task failed: {error}"))?;
+            let result = result?;
+            searches += 1;
+            exact &= result.exact;
+            keys_examined = keys_examined.saturating_add(result.read_evidence.keys_examined);
+            cursors = Some(widen(cursors, result.known_at_cursor));
+            links.extend(neighbour_links(
+                from,
+                &result.hits,
+                &drawn,
+                VECTOR_MAP_NEIGHBOURS,
+            ));
+            progress(VectorMapProgressView {
+                searched: searches,
+                total,
+                points: None,
+                truncated,
+            });
+        }
+        links.sort_by_key(|link| (link.from, link.rank));
+        let (known_at_cursor_min, known_at_cursor_max) = cursors.unwrap_or_default();
+
+        Ok(VectorMapView {
+            collection_id: collection_id.as_str().into(),
+            vector_name: vector_name.as_str().into(),
+            points: drawn_points,
+            links,
+            neighbours: VECTOR_MAP_NEIGHBOURS,
+            truncated,
+            unsearchable,
+            searches,
+            exact,
+            keys_examined,
+            known_at_cursor_min,
+            known_at_cursor_max,
+            elapsed_ms: u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX),
+        })
+    }
+
+    /// Closes the session once no request pins it; later requests fail closed.
+    pub async fn close(&self) -> Result<(), RrdError> {
+        let Some(lease) = self.lease.write().await.take() else {
+            return Ok(());
+        };
+        self.client
+            .close_session(&lease.session, CloseSession {}, self.ids.next(true)?)
+            .await
+            .map(|_| ())
+            .map_err(RrdError::sdk)
+    }
+}
+
+#[cfg(test)]
+mod process;
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::BTreeMap;
-    use std::io::{Read, Write};
-    use std::net::{TcpListener, TcpStream};
-    use std::thread;
 
     #[test]
-    fn request_validation_matches_the_public_rrd_bounds() {
-        assert!(validate_canonical_id("project-one", "instance").is_ok());
-        assert!(validate_canonical_id("Project-One", "instance").is_err());
-        assert!(validate_scope("instance:project-one").is_ok());
-        assert!(RrdContextRequest {
-            query: String::new(),
-            seeds: Vec::new(),
-            valid_at: Some(1),
-            max_graph_depth: 2,
-            max_items: 32,
-            max_output_bytes: 4096,
-            max_scanned_changes: 100,
-        }
-        .validate()
-        .is_err());
-
-        let remote = tauri::async_runtime::block_on(NativeRrdClient::connect(RrdConnectRequest {
-            endpoint: "https://runtime.example.com".into(),
-            instance: "instance-one".into(),
-            principal: "connectome-client".into(),
-            api_key: "must-not-leave-over-server-auth-only".into(),
-            scope: "instance:instance-one".into(),
-        }));
-        assert!(matches!(remote, Err(error) if error.contains("mutual-TLS")));
-    }
-
-    #[test]
-    fn authenticated_client_uses_one_native_rrd_session_for_diagnostics_and_context() {
-        let listener = TcpListener::bind("127.0.0.1:0").expect("bind fake RRD");
-        let address = listener.local_addr().expect("read fake RRD address");
-        let server = thread::spawn(move || {
-            respond(
-                listener.accept().expect("accept capability request").0,
-                "server-request",
-                "server-operation",
-                json!({
-                    "protocol": "rrd",
-                    "protocol_version": 1,
-                    "instance": {"kind": "instance", "id": "instance-one"},
-                    "capabilities": [],
-                    "product_capabilities": {"contract_version": 1, "capabilities": []},
-                }),
-                |request, _, body| {
-                    assert_eq!(request, "GET /v1/capabilities HTTP/1.1");
-                    assert_eq!(body, &Value::Null);
-                },
-            );
-            respond(
-                listener.accept().expect("accept session request").0,
-                "connectome-request-1",
-                "connectome-operation-1",
-                json!({
-                    "session_id": "session-one",
-                    "token": "token-one",
-                    "issued_at_unix_ms": 1,
-                    "idle_expires_at_unix_ms": u64::MAX - 1,
-                    "absolute_expires_at_unix_ms": u64::MAX,
-                    "limits": {
-                        "idle_timeout_ms": 900_000,
-                        "absolute_timeout_ms": 3_600_000,
-                        "max_open_transactions": 4,
-                    }
-                }),
-                |request, headers, body| {
-                    assert_eq!(request, "POST /v1/sessions HTTP/1.1");
-                    assert_eq!(headers["x-rrd-principal"], "connectome-client");
-                    assert_eq!(headers["authorization"], "ApiKey test-api-key");
-                    assert_eq!(body["protocol"], "rrd");
-                    assert_eq!(body["resource"]["segments"][0]["id"], "instance-one");
-                    assert_eq!(body["context"]["idempotency_key"], "connectome-key-1");
-                },
-            );
-            respond(
-                listener.accept().expect("accept diagnostic request").0,
-                "connectome-request-2",
-                "connectome-operation-2",
-                json!({"format_version": 1, "scope": "instance:instance-one"}),
-                |request, headers, body| {
-                    assert_eq!(request, "POST /v1/diagnostics/read HTTP/1.1");
-                    assert_eq!(headers["x-rrd-session"], "session-one");
-                    assert_eq!(headers["authorization"], "Bearer token-one");
-                    assert_eq!(body["payload"]["scope"], "instance:instance-one");
-                    assert_eq!(body["context"]["idempotency_key"], Value::Null);
-                },
-            );
-            respond(
-                listener.accept().expect("accept context request").0,
-                "connectome-request-3",
-                "connectome-operation-3",
-                json!({"contract_version": 1, "items": []}),
-                |request, headers, body| {
-                    assert_eq!(request, "POST /v1/context/assemble HTTP/1.1");
-                    assert_eq!(headers["x-rrd-session"], "session-one");
-                    assert_eq!(headers["authorization"], "Bearer token-one");
-                    assert_eq!(body["payload"]["query"], "find alpha");
-                    assert_eq!(body["payload"]["max_graph_depth"], 2);
-                },
-            );
-            respond(
-                listener.accept().expect("accept close request").0,
-                "connectome-request-4",
-                "connectome-operation-4",
-                json!({"state": "closed"}),
-                |request, headers, body| {
-                    assert_eq!(request, "DELETE /v1/sessions/session-one HTTP/1.1");
-                    assert_eq!(headers["authorization"], "Bearer token-one");
-                    assert_eq!(body["context"]["idempotency_key"], "connectome-key-4");
-                },
-            );
-        });
-
-        let (mut client, summary) =
-            tauri::async_runtime::block_on(NativeRrdClient::connect(RrdConnectRequest {
-                endpoint: format!("http://{address}"),
-                instance: "instance-one".into(),
-                principal: "connectome-client".into(),
-                api_key: "test-api-key".into(),
-                scope: "instance:instance-one".into(),
-            }))
-            .expect("connect to fake native RRD");
-        assert_eq!(summary.instance, "instance-one");
-        assert_eq!(summary.session.session_id, "session-one");
-        let encoded_summary = serde_json::to_string(&summary).expect("encode public summary");
-        assert!(!encoded_summary.contains("test-api-key"));
-        assert!(!encoded_summary.contains("token-one"));
-
-        let snapshot = tauri::async_runtime::block_on(client.diagnostic_snapshot())
-            .expect("read diagnostic snapshot");
-        assert_eq!(snapshot["format_version"], 1);
-        let packet = tauri::async_runtime::block_on(client.assemble_context(RrdContextRequest {
-            query: "find alpha".into(),
-            seeds: Vec::new(),
-            valid_at: Some(100),
-            max_graph_depth: 2,
-            max_items: 32,
-            max_output_bytes: 4096,
-            max_scanned_changes: 100,
-        }))
-        .expect("assemble context");
-        assert_eq!(packet["contract_version"], 1);
-        tauri::async_runtime::block_on(client.close()).expect("close session");
-        server.join().expect("join fake RRD");
-    }
-
-    fn read_request(mut stream: TcpStream) -> (String, BTreeMap<String, String>, Value) {
-        stream
-            .set_read_timeout(Some(Duration::from_secs(5)))
-            .expect("set request timeout");
-        let mut bytes = Vec::new();
-        let header_end = loop {
-            let mut chunk = [0_u8; 4096];
-            let read = stream.read(&mut chunk).expect("read fake RRD request");
-            assert!(read > 0, "request ended before HTTP headers");
-            bytes.extend_from_slice(&chunk[..read]);
-            if let Some(offset) = bytes.windows(4).position(|window| window == b"\r\n\r\n") {
-                break offset + 4;
-            }
-        };
-        let head = std::str::from_utf8(&bytes[..header_end]).expect("HTTP headers are UTF-8");
-        let mut lines = head.split("\r\n");
-        let request = lines.next().expect("request line").to_owned();
-        let headers = lines
-            .filter_map(|line| line.split_once(':'))
-            .map(|(name, value)| (name.to_ascii_lowercase(), value.trim().to_owned()))
-            .collect::<BTreeMap<_, _>>();
-        let content_length = headers
-            .get("content-length")
-            .map(|value| value.parse::<usize>().expect("valid content length"))
-            .unwrap_or_default();
-        while bytes.len() - header_end < content_length {
-            let mut chunk = [0_u8; 4096];
-            let read = stream.read(&mut chunk).expect("read fake RRD body");
-            assert!(read > 0, "request ended before HTTP body");
-            bytes.extend_from_slice(&chunk[..read]);
-        }
-        let body = if content_length == 0 {
-            Value::Null
-        } else {
-            serde_json::from_slice(&bytes[header_end..header_end + content_length])
-                .expect("request body is JSON")
-        };
-        (request, headers, body)
-    }
-
-    fn respond(
-        mut stream: TcpStream,
-        request_id: &str,
-        operation_id: &str,
-        payload: Value,
-        inspect: impl FnOnce(&str, &BTreeMap<String, String>, &Value),
-    ) {
-        let (request, headers, body) = read_request(stream.try_clone().expect("clone test stream"));
-        inspect(&request, &headers, &body);
-        let response = json!({
-            "protocol": "rrd",
-            "protocol_version": 1,
-            "request_id": request_id,
-            "operation_id": operation_id,
-            "outcome": {"status": "ok", "payload": payload},
+    fn endpoint_and_identity_validation_fail_closed() {
+        assert!(loopback_candidates("http://127.0.0.1:9477").is_ok());
+        assert!(loopback_candidates("http://localhost:9477").is_ok());
+        assert!(loopback_candidates("https://runtime.example.com").is_err());
+        assert!(loopback_candidates("http://runtime.example.com:9477").is_err());
+        assert!(canonical("instance-one", "instance").is_ok());
+        assert!(canonical("Instance-One", "instance").is_err());
+        assert!(data_reference(&RrdReference {
+            kind: "document".into(),
+            id: "readme".into()
         })
-        .to_string();
-        write!(
-            stream,
-            "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
-            response.len(),
-            response
+        .is_ok());
+        assert!(data_reference(&RrdReference {
+            kind: "Document".into(),
+            id: "readme".into()
+        })
+        .is_err());
+    }
+
+    #[test]
+    fn request_ids_never_repeat_across_connections() {
+        let first = RequestIds::new();
+        let second = RequestIds::new();
+        let a = first.next(true).expect("valid mutation options");
+        let b = first.next(true).expect("valid mutation options");
+        let c = second.next(true).expect("valid mutation options");
+        // Every connection's first session request used to carry the same key,
+        // so the engine answered it with the session an earlier launch opened.
+        assert_ne!(a.idempotency_key, b.idempotency_key);
+        assert_ne!(a.idempotency_key, c.idempotency_key);
+        assert_ne!(a.request_id, c.request_id);
+        assert_ne!(a.operation_id, c.operation_id);
+        assert!(a.request_id.as_str().ends_with("-request-1"));
+        assert!(c.request_id.as_str().ends_with("-request-1"));
+        let read = second.next(false).expect("valid read options");
+        assert!(read.idempotency_key.is_none());
+        assert!(read.request_id.as_str().ends_with("-request-2"));
+    }
+
+    #[test]
+    fn request_ids_fail_closed_when_the_sequence_is_exhausted() {
+        let ids = RequestIds {
+            run: "run".into(),
+            sequence: AtomicU64::new(u64::MAX),
+        };
+        assert!(ids.next(false).is_err());
+    }
+
+    fn limits(idle_ms: u64, absolute_ms: u64) -> SessionLimits {
+        SessionLimits {
+            idle_timeout_ms: idle_ms,
+            absolute_timeout_ms: absolute_ms,
+            max_open_transactions: 1,
+        }
+    }
+
+    #[test]
+    fn a_lease_is_handed_out_only_while_it_outlives_a_request() {
+        let start = Instant::now();
+        let deadlines = Deadlines::granted(start, &limits(900_000, 3_600_000)).expect("deadlines");
+        let margin = SESSION_RENEWAL_MARGIN;
+        let idle = Duration::from_millis(900_000);
+        assert!(deadlines.outlive_request(start));
+        assert!(deadlines.outlive_request(start + idle - margin - Duration::from_millis(1)));
+        assert!(!deadlines.outlive_request(start + idle - margin));
+        assert!(!deadlines.outlive_request(start + idle + idle));
+    }
+
+    #[test]
+    fn renewal_restarts_the_idle_timer_but_never_the_absolute_one() {
+        let start = Instant::now();
+        let session = limits(900_000, 3_600_000);
+        let deadlines = Deadlines::granted(start, &session).expect("deadlines");
+        let later = start + Duration::from_millis(850_000);
+        assert!(!deadlines.outlive_request(later));
+        assert!(deadlines.renewable(later));
+        let renewed = deadlines.renewed(later, &session).expect("renewed");
+        assert!(renewed.outlive_request(later));
+        assert_eq!(renewed.absolute, deadlines.absolute);
+        // Near the absolute deadline only a new session can help.
+        let late = deadlines.absolute - SESSION_RENEWAL_MARGIN;
+        assert!(!deadlines.renewable(late));
+        assert!(!renewed.outlive_request(late));
+    }
+
+    fn hit(id: &str, score: f64) -> VectorSearchHit {
+        let reference = DataReference {
+            kind: canonical("embedding", "kind").expect("kind"),
+            id: canonical(id, "id").expect("id"),
+        };
+        VectorSearchHit {
+            subject: reference.clone(),
+            reference,
+            source_cursor: 1,
+            score,
+        }
+    }
+
+    #[test]
+    fn map_links_rank_drawn_neighbours_and_skip_the_query_point() {
+        let drawn: HashMap<(String, String), usize> = ["a", "b", "c", "d"]
+            .iter()
+            .enumerate()
+            .map(|(position, id)| (("embedding".to_owned(), (*id).to_owned()), position))
+            .collect();
+        // The query point leads its own hits; "x" is outside the drawn bound.
+        let hits = [
+            hit("a", 1.0),
+            hit("c", 0.9),
+            hit("x", 0.8),
+            hit("b", 0.7),
+            hit("d", 0.6),
+        ];
+        let links = neighbour_links(0, &hits, &drawn, 2);
+        let pairs: Vec<(usize, usize, usize)> = links
+            .iter()
+            .map(|link| (link.from, link.to, link.rank))
+            .collect();
+        assert_eq!(pairs, [(0, 2, 1), (0, 1, 2)]);
+        assert!((links[0].score - 0.9).abs() < f64::EPSILON);
+        assert!(neighbour_links(3, &[], &drawn, 5).is_empty());
+    }
+
+    #[test]
+    fn cursor_ranges_widen_across_reads() {
+        let range = widen(None, 7);
+        assert_eq!(range, (7, 7));
+        let range = widen(Some(range), 4);
+        assert_eq!(widen(Some(range), 9), (4, 9));
+    }
+
+    #[test]
+    fn localhost_resolves_to_the_loopback_family_that_listens() {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("bind IPv4 loopback");
+        let listening = listener.local_addr().expect("listener address");
+        let refused = std::net::TcpListener::bind("127.0.0.1:0")
+            .and_then(|closed| closed.local_addr())
+            .expect("reserve a closed port");
+        let chosen = tauri::async_runtime::block_on(reachable_loopback(&[refused, listening]))
+            .expect("one loopback address accepts");
+        assert_eq!(chosen, listening);
+        assert!(tauri::async_runtime::block_on(reachable_loopback(&[refused])).is_err());
+    }
+
+    #[test]
+    fn credential_file_is_read_natively_and_redacted() {
+        let directory = std::env::temp_dir().join(format!(
+            "connectome-credential-{}",
+            now_unix_ms().expect("clock")
+        ));
+        std::fs::create_dir_all(&directory).expect("create credential directory");
+        let path = directory.join("local-operator.json");
+        std::fs::write(
+            &path,
+            r#"{"format_version":1,"plan_sha256":"00","principal_id":"local-operator","credential_bytes":32,"credential":"secret-value"}"#,
         )
-        .expect("write fake RRD response");
+        .expect("write credential");
+        let (principal, secret) =
+            read_credential(path.to_str().expect("utf-8 path")).expect("read credential");
+        assert_eq!(principal.as_str(), "local-operator");
+        assert_eq!(format!("{secret:?}"), "[REDACTED]");
+        std::fs::write(&path, r#"{"principal_id":"Local","credential":"x"}"#).expect("rewrite");
+        assert!(read_credential(path.to_str().expect("utf-8 path")).is_err());
+        std::fs::remove_dir_all(directory).expect("remove credential directory");
     }
 }

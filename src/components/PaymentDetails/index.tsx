@@ -11,7 +11,7 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useWindowEvent } from "@mantine/hooks";
-import { Icon, iconCreditCard } from "@rrflow/ui";
+import { Icon, iconCreditCard } from "@surrealdb/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { capitalize } from "radash";
 import { useRef, useState } from "react";

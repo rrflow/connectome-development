@@ -32,7 +32,7 @@ import {
 	iconSearch,
 	iconWarning,
 	iconWrench,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import dayjs from "dayjs";
 import { useMemo, useState } from "react";
 import { adapter, isBrowser } from "~/adapter";

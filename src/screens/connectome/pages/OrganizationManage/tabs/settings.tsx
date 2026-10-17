@@ -1,6 +1,6 @@
 import { ActionIcon, Box, Button, CopyButton, Stack, TextInput } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconCheck, iconCopy } from "@rrflow/ui";
+import { Icon, iconCheck, iconCopy } from "@surrealdb/ui";
 import { useUpdateOrganizationMutation } from "~/cloud/mutations/update";
 import { Section } from "~/components/Section";
 import { useStable } from "~/hooks/stable";

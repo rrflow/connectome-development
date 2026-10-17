@@ -1,4 +1,4 @@
-import { iconHistory, iconNamespace, iconRelation, iconUpload } from "@rrflow/ui";
+import { iconHistory, iconNamespace, iconRelation, iconUpload } from "@surrealdb/ui";
 import { StartingData } from "~/types";
 import { StartingDataInfo } from "./types";
 

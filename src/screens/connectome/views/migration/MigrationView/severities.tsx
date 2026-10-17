@@ -1,4 +1,4 @@
-import { iconErrorCircle, iconHelp, iconWarning } from "@rrflow/ui";
+import { iconErrorCircle, iconHelp, iconWarning } from "@surrealdb/ui";
 import { MigrationSeverity } from "~/types";
 
 export const severityMeta: Record<

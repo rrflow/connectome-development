@@ -1,5 +1,5 @@
 import { Box, Center, Divider, Group, Stack, Text } from "@mantine/core";
-import { Icon, iconTable } from "@rrflow/ui";
+import { Icon, iconTable } from "@surrealdb/ui";
 import { isArray, isObject } from "radash";
 import { useLayoutEffect, useMemo } from "react";
 import { DataTable } from "~/components/DataTable";

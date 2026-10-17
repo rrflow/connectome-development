@@ -9,7 +9,7 @@ import {
 	ThemeIcon,
 	Tooltip,
 } from "@mantine/core";
-import { Icon, iconWarning } from "@rrflow/ui";
+import { Icon, iconWarning } from "@surrealdb/ui";
 import { compareVersions, satisfies } from "compare-versions";
 import equal from "fast-deep-equal";
 import { useMemo, useState } from "react";

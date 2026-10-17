@@ -29,7 +29,7 @@ import {
 	pictoHandsOn,
 	pictoPlay,
 	pictoSDBCloud,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { memo, useEffect, useState } from "react";
 import { useImmer } from "use-immer";
 import { Redirect } from "wouter";

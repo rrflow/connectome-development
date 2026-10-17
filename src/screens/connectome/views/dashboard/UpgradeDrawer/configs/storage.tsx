@@ -1,5 +1,5 @@
 import { Alert, Box, Button, Divider, Group, ScrollArea, Slider, Stack, Text } from "@mantine/core";
-import { Icon, iconChevronRight, iconClock, iconHelp, iconWarning } from "@rrflow/ui";
+import { Icon, iconChevronRight, iconClock, iconHelp, iconWarning } from "@surrealdb/ui";
 import { add, formatDistance } from "date-fns";
 import { useMemo, useState } from "react";
 import { useUpdateConfirmation } from "~/cloud/hooks/confirm";

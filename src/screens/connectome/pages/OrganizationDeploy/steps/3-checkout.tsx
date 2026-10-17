@@ -25,7 +25,7 @@ import {
 	iconRelation,
 	iconTag,
 	pictoSDBCloud,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { ChangeEvent } from "react";
 import { navigate } from "wouter/use-browser-location";
 import {

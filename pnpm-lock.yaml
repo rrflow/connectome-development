@@ -104,18 +104,6 @@ importers:
       '@replit/codemirror-indentation-markers':
         specifier: ^6.5.0
         version: 6.5.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.40.0)
-      '@rrflow/cbor':
-        specifier: npm:@surrealdb/cbor@^2.0.0-alpha.1
-        version: '@surrealdb/cbor@2.0.0-alpha.1'
-      '@rrflow/client':
-        specifier: npm:surrealdb@^2.0.2
-        version: surrealdb@2.0.3(tslib@2.8.1)(typescript@5.9.3)
-      '@rrflow/ui':
-        specifier: npm:@surrealdb/ui@^1.0.87
-        version: '@surrealdb/ui@1.0.93(eda51b6b61a1d08c817afd9b0978ea7d)'
-      '@rrflow/wasm':
-        specifier: npm:@surrealdb/wasm@^3.0.3
-        version: '@surrealdb/wasm@3.0.3(surrealdb@2.0.3(tslib@2.8.1)(typescript@5.9.3))'
       '@sigma/edge-curve':
         specifier: ^3.1.0
         version: 3.1.0(sigma@3.0.2(graphology-types@0.24.8))
@@ -134,12 +122,18 @@ importers:
       '@surrealdb/ql-wasm-v3':
         specifier: npm:@surrealdb/ql-wasm@0.3.1
         version: '@surrealdb/ql-wasm@0.3.1'
+      '@surrealdb/ui':
+        specifier: ^1.0.87
+        version: 1.0.93(eda51b6b61a1d08c817afd9b0978ea7d)
+      '@surrealdb/wasm':
+        specifier: ^3.0.3
+        version: 3.0.3(surrealdb@2.0.3(tslib@2.8.1)(typescript@5.9.3))
       '@tanstack/react-query':
         specifier: ^5.37.1
         version: 5.95.2(react@18.3.1)
       '@tauri-apps/api':
-        specifier: 2.4.0
-        version: 2.4.0
+        specifier: 2.10.1
+        version: 2.10.1
       '@tauri-apps/plugin-deep-link':
         specifier: 2.2.0
         version: 2.2.0
@@ -293,6 +287,9 @@ importers:
       sigma:
         specifier: ^3.0.0
         version: 3.0.2(graphology-types@0.24.8)
+      surrealdb:
+        specifier: ^2.0.2
+        version: 2.0.3(tslib@2.8.1)(typescript@5.9.3)
       turndown:
         specifier: ^7.2.1
         version: 7.2.2
@@ -1578,10 +1575,6 @@ packages:
   '@standard-schema/utils@0.3.0':
     resolution: {integrity: sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g==}
 
-  '@surrealdb/cbor@2.0.0-alpha.1':
-    resolution: {integrity: sha512-QtahOKhxOZZJOFnIBs7dR7UO6hNT+5Wv2uqLEDUvm5hBYq3lV2BR3TY6mrkvi6/wABcTnuJmu1e3P3GqXE6ltA==}
-    engines: {node: '>=18.0.0'}
-
   '@surrealdb/cbor@2.0.0-alpha.4':
     resolution: {integrity: sha512-l/hNZ3ZCOJq8rzwx1y5ZV/8b2bYCWdhGqRVY33Pu50NAHyAW5qLsMn3ZBkZow77mAKwNCsbDsRGnyYEuU95mjw==}
     engines: {node: '>=18.0.0'}
@@ -1641,8 +1634,8 @@ packages:
     peerDependencies:
       react: ^18 || ^19
 
-  '@tauri-apps/api@2.4.0':
-    resolution: {integrity: sha512-F1zXTsmwcCp+ocg6fbzD/YL0OHeSG1eynCag1UNlX2tD5+dlXy7eRbTu9cAcscPjcR7Nix7by2wiv/+VfWUieg==}
+  '@tauri-apps/api@2.10.1':
+    resolution: {integrity: sha512-hKL/jWf293UDSUN09rR69hrToyIXBb8CjGaWC7gfinvnQrBVvnLr08FeFi38gxtugAVyVcTa5/FD/Xnkb1siBw==}
 
   '@tauri-apps/cli-darwin-arm64@2.4.0':
     resolution: {integrity: sha512-MVzYrahJBgDyzUJ2gNEU8H+0oCVEucN115+CVorFnidHcJ6DtDRMCaKLkpjOZNfJyag1WQ25fu7imvZSe0mz/g==}
@@ -4467,8 +4460,6 @@ snapshots:
 
   '@standard-schema/utils@0.3.0': {}
 
-  '@surrealdb/cbor@2.0.0-alpha.1': {}
-
   '@surrealdb/cbor@2.0.0-alpha.4': {}
 
   '@surrealdb/codemirror@1.0.3':
@@ -4552,7 +4543,7 @@ snapshots:
       '@tanstack/query-core': 5.95.2
       react: 18.3.1
 
-  '@tauri-apps/api@2.4.0': {}
+  '@tauri-apps/api@2.10.1': {}
 
   '@tauri-apps/cli-darwin-arm64@2.4.0':
     optional: true
@@ -4603,35 +4594,35 @@ snapshots:
 
   '@tauri-apps/plugin-deep-link@2.2.0':
     dependencies:
-      '@tauri-apps/api': 2.4.0
+      '@tauri-apps/api': 2.10.1
 
   '@tauri-apps/plugin-dialog@2.2.0':
     dependencies:
-      '@tauri-apps/api': 2.4.0
+      '@tauri-apps/api': 2.10.1
 
   '@tauri-apps/plugin-fs@2.2.0':
     dependencies:
-      '@tauri-apps/api': 2.4.0
+      '@tauri-apps/api': 2.10.1
 
   '@tauri-apps/plugin-log@2.3.1':
     dependencies:
-      '@tauri-apps/api': 2.4.0
+      '@tauri-apps/api': 2.10.1
 
   '@tauri-apps/plugin-os@2.2.1':
     dependencies:
-      '@tauri-apps/api': 2.4.0
+      '@tauri-apps/api': 2.10.1
 
   '@tauri-apps/plugin-process@2.2.0':
     dependencies:
-      '@tauri-apps/api': 2.4.0
+      '@tauri-apps/api': 2.10.1
 
   '@tauri-apps/plugin-shell@2.2.1':
     dependencies:
-      '@tauri-apps/api': 2.4.0
+      '@tauri-apps/api': 2.10.1
 
   '@tauri-apps/plugin-updater@2.6.1':
     dependencies:
-      '@tauri-apps/api': 2.4.0
+      '@tauri-apps/api': 2.10.1
 
   '@theopensource-company/feature-flags@0.4.6(typescript@5.9.3)':
     dependencies:

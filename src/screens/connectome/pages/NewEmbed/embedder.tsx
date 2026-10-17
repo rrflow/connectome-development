@@ -8,7 +8,7 @@ import {
 	Text,
 	Tooltip,
 } from "@mantine/core";
-import { Icon, iconHelp } from "@rrflow/ui";
+import { Icon, iconHelp } from "@surrealdb/ui";
 import { type PropsWithChildren, type ReactNode, useEffect, useLayoutEffect, useMemo } from "react";
 import { useImmer } from "use-immer";
 import { CodeInput } from "~/components/Inputs";

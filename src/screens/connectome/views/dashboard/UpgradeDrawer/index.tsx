@@ -1,5 +1,5 @@
 import { Drawer, Group, Tabs } from "@mantine/core";
-import { Icon, iconArrowDownFat, iconClose } from "@rrflow/ui";
+import { Icon, iconArrowDownFat, iconClose } from "@surrealdb/ui";
 import { useState } from "react";
 import { INSTANCE_CATEGORY_PLANS } from "~/cloud/helpers";
 import { ActionButton } from "~/components/ActionButton";

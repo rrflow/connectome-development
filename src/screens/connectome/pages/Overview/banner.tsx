@@ -1,5 +1,5 @@
 import { Alert, MantineColor } from "@mantine/core";
-import { Icon, iconBullhorn, iconWarning } from "@rrflow/ui";
+import { Icon, iconBullhorn, iconWarning } from "@surrealdb/ui";
 import { BannerType, CloudBanner } from "~/types";
 
 const BANNER_INFO: Record<BannerType, [MantineColor, string, string]> = {

@@ -150,6 +150,8 @@ export interface Connection {
 	name: string;
 	target?: "runtime" | "diagnostics" | "control-plane";
 	runtimeInstance?: string;
+	/** Path to the installed RRD operator credential file. A reference only: the native process reads it. */
+	runtimeCredential?: string;
 	icon: number;
 	labels?: string[];
 	instance?: boolean;

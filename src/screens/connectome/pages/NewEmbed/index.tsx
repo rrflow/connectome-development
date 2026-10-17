@@ -14,7 +14,7 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useDebouncedState, useDisclosure } from "@mantine/hooks";
-import { Icon, iconCheck, iconClose, iconTransfer, iconXml } from "@rrflow/ui";
+import { Icon, iconCheck, iconClose, iconTransfer, iconXml } from "@surrealdb/ui";
 import { useMemo, useRef, useState } from "react";
 import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
 import { PrimaryTitle } from "~/components/PrimaryTitle";

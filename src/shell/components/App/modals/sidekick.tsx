@@ -1,6 +1,6 @@
 import { Drawer } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { Icon, iconClose } from "@rrflow/ui";
+import { Icon, iconClose } from "@surrealdb/ui";
 import { useRef, useState } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { DrawerResizer } from "~/components/DrawerResizer";

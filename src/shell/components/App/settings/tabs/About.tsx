@@ -1,5 +1,5 @@
 import { Box, Button, Stack, Text } from "@mantine/core";
-import { Icon, iconCheck, iconReset, iconWrench } from "@rrflow/ui";
+import { Icon, iconCheck, iconReset, iconWrench } from "@surrealdb/ui";
 import { format } from "date-fns";
 import { useMemo, useState } from "react";
 import { adapter, isDesktop } from "~/adapter";

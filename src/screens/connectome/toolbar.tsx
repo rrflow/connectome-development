@@ -19,7 +19,7 @@ import {
 	iconReset,
 	iconStar,
 	iconTable,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { useEffect, useState } from "react";
 import { openCloudAuthentication } from "~/cloud/api/auth";
 import { INSTANCE_PLAN_SUGGESTIONS, isOrganisationBillable } from "~/cloud/helpers";
