@@ -325,7 +325,6 @@ export interface RrdStorageView {
 	oldest_retained_cursor: number | null;
 	retention_leases: number;
 	retention_pins: number;
-	audit_through_sequence: number;
 	vector_artifacts: RrdVectorArtifactView[];
 	query_indexes: RrdQueryIndexView[];
 	physical: RrdPhysicalStorageView;

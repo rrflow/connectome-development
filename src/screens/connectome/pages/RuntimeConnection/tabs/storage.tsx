@@ -173,10 +173,6 @@ export function StorageTab({ client, sessionKey }: RuntimeLensProps) {
 								value={formatCount(view.retention_pins)}
 							/>
 							<Stat
-								label="Audit through"
-								value={formatCount(view.audit_through_sequence)}
-							/>
-							<Stat
 								label="Runtime manifest"
 								value={shortDigest(view.runtime_manifest_sha256)}
 								title={view.runtime_manifest_sha256}

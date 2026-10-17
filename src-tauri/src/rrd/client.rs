@@ -49,9 +49,12 @@ const SESSION_RENEWAL_MARGIN: Duration = Duration::from_secs(60);
 const _: () = assert!(SESSION_RENEWAL_MARGIN.as_secs() > REQUEST_TIMEOUT.as_secs());
 const SESSION_CLOSED: &str = "the RRD session is closed";
 const LOOPBACK_PROBE_TIMEOUT: Duration = Duration::from_secs(2);
-/// Most recent change-feed and audit records the Storage lens renders.
-const RECENT_CHANGES: u64 = 64;
-const RECENT_AUDIT_RECORDS: u16 = 64;
+/// The diagnostic read always carries a change-feed page and an audit page,
+/// read forward from the given position. The lenses render neither, only the
+/// read stamp and the head positions, so they ask for the smallest page the
+/// contract accepts.
+const DIAGNOSTIC_CHANGE_PAGE: u64 = 1;
+const DIAGNOSTIC_AUDIT_PAGE: u16 = 1;
 const MAX_CREDENTIAL_FILE_BYTES: u64 = 16 * 1024;
 /// Points the similarity map draws at most; each costs one exact engine search.
 const MAX_VECTOR_MAP_POINTS: usize = 600;
@@ -522,9 +525,9 @@ impl NativeRrdClient {
             graph_compare_cursor: 0,
             runtime_max_scanned_changes: MAX_DIAGNOSTIC_RUNTIME_SCANNED_CHANGES,
             changes_after_cursor: 0,
-            change_limit: RECENT_CHANGES,
+            change_limit: DIAGNOSTIC_CHANGE_PAGE,
             audit_after_sequence: 0,
-            audit_limit: RECENT_AUDIT_RECORDS,
+            audit_limit: DIAGNOSTIC_AUDIT_PAGE,
         };
         self.send(false, |session, options| async move {
             self.client

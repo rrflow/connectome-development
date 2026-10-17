@@ -308,7 +308,6 @@ pub struct StorageView {
     pub oldest_retained_cursor: Option<u64>,
     pub retention_leases: usize,
     pub retention_pins: usize,
-    pub audit_through_sequence: u64,
     pub vector_artifacts: Vec<VectorArtifactView>,
     pub query_indexes: Vec<QueryIndexView>,
     pub physical: PhysicalStorageView,
@@ -755,7 +754,6 @@ pub fn storage(snapshot: &DiagnosticSnapshot, storage_profile: &str) -> StorageV
         oldest_retained_cursor: snapshot.retention.oldest_retained_cursor,
         retention_leases: snapshot.retention.leases.len(),
         retention_pins: snapshot.retention.pins.len(),
-        audit_through_sequence: snapshot.audit.through_sequence,
         vector_artifacts: snapshot
             .vector_artifacts
             .artifacts
