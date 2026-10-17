@@ -12,6 +12,9 @@ import classes from "./style.module.scss";
  * assigns; a missing metric renders as "not reported", never as zero.
  */
 
+/** Two lines of purpose text, so every stage's reading starts at one height. */
+const PURPOSE_HEIGHT = 44;
+
 function metric(view: RrdPhysicalStorageView, group: string, id: string) {
 	return view.groups
 		.find((candidate) => candidate.id === group)
@@ -74,6 +77,7 @@ function Stage({ step, term, title, purpose, reading, gauge, details }: StagePro
 				<Text
 					fz="sm"
 					c="slate"
+					mih={PURPOSE_HEIGHT}
 				>
 					{purpose}
 				</Text>
@@ -82,7 +86,6 @@ function Stage({ step, term, title, purpose, reading, gauge, details }: StagePro
 					fw={700}
 					ff="monospace"
 					c="bright"
-					mt="auto"
 				>
 					{reading}
 				</Text>

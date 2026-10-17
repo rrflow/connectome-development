@@ -1,6 +1,7 @@
 import {
 	Box,
 	type BoxProps,
+	Collapse,
 	Group,
 	Paper,
 	ScrollArea,
@@ -11,6 +12,8 @@ import {
 } from "@mantine/core";
 import {
 	Icon,
+	iconChevronDown,
+	iconChevronUp,
 	iconFullscreen,
 	iconMagnifyMinus,
 	iconMagnifyPlus,
@@ -33,10 +36,23 @@ import type { ColorGroup } from "./groups";
 const LAYOUT_ITERATIONS = 300;
 /** Barnes-Hut approximation pays off once the graph is this large. */
 const BARNES_HUT_THRESHOLD = 500;
+/**
+ * LinLog attraction with strong gravity keeps clusters visibly apart and
+ * unlinked records near the middle. On RRFlow's own 271-document estate it
+ * removed every overlapping node (300 before) and doubled the median gap.
+ */
+const LAYOUT_SETTINGS = { linLogMode: true, strongGravityMode: true, gravity: 1 } as const;
 /** Longest label drawn on the canvas; the hover card shows the full text. */
 const MAX_CANVAS_LABEL = 40;
 /** More lit nodes than this keep sigma's own label thinning instead of forced labels. */
 const MAX_FORCED_LABELS = 30;
+/** Camera ratio when the focus is a single node; 1 shows the whole graph. */
+const SINGLE_FOCUS_RATIO = 0.5;
+/** Room around focused nodes, and the closest the camera zooms to a group. */
+const FOCUS_PADDING = 1.4;
+const MIN_FOCUS_RATIO = 0.2;
+/** Legend rows are fixed width so long group names truncate instead of pushing counts out. */
+const LEGEND_ROW_WIDTH = 264;
 const HOVER_OFFSET = 14;
 const HOVER_WIDTH = 300;
 /** Room kept below a hover card so it stays inside the canvas. */
@@ -67,6 +83,8 @@ interface EdgeAttributes {
 	weight: number;
 	size: number;
 }
+
+const EMPTY: ReadonlySet<string> = new Set();
 
 interface Focus {
 	hovered: string;
@@ -118,11 +136,27 @@ export interface GraphCanvasProps extends BoxProps {
 	hint: string;
 }
 
-function bringIntoView(instance: Sigma<NodeAttributes, EdgeAttributes>, node: string) {
-	const display = instance.getNodeDisplayData(node);
-	if (display) {
-		instance.getCamera().animate({ x: display.x, y: display.y, ratio: 0.5 }, { duration: 400 });
-	}
+/** Frames the focused nodes: one node closely, a group with room around it. */
+function bringIntoView(instance: Sigma<NodeAttributes, EdgeAttributes>, nodes: Iterable<string>) {
+	const points = [...nodes].flatMap((node) => {
+		const display = instance.getNodeDisplayData(node);
+		return display ? [display] : [];
+	});
+	if (points.length === 0) return;
+	const xs = points.map((point) => point.x);
+	const ys = points.map((point) => point.y);
+	const [minX, maxX, minY, maxY] = [
+		Math.min(...xs),
+		Math.max(...xs),
+		Math.min(...ys),
+		Math.max(...ys),
+	];
+	const extent = Math.max(maxX - minX, maxY - minY) * FOCUS_PADDING;
+	const ratio =
+		points.length === 1 ? SINGLE_FOCUS_RATIO : Math.min(1, Math.max(MIN_FOCUS_RATIO, extent));
+	instance
+		.getCamera()
+		.animate({ x: (minX + maxX) / 2, y: (minY + maxY) / 2, ratio }, { duration: 400 });
 }
 
 function canvasLabel(label: string): string {
@@ -157,6 +191,7 @@ export function GraphCanvas({
 	const [hover, setHover] = useState<{ id: string; left: number; top: number } | null>(null);
 	const [activeGroup, setActiveGroup] = useState<string | null>(null);
 	const [expanded, setExpanded] = useState(false);
+	const [legendOpen, setLegendOpen] = useState(true);
 
 	const colors = useMemo(
 		() =>
@@ -172,7 +207,7 @@ export function GraphCanvas({
 	const focusRef = useRef<Focus>({
 		hovered: "",
 		selected,
-		highlighted: highlighted ?? new Set(),
+		highlighted: highlighted ?? EMPTY,
 		dimUnselected,
 		activeGroup,
 		groupOf,
@@ -212,6 +247,7 @@ export function GraphCanvas({
 				iterations: LAYOUT_ITERATIONS,
 				settings: {
 					...inferSettings(model),
+					...LAYOUT_SETTINGS,
 					barnesHutOptimize: model.order > BARNES_HUT_THRESHOLD,
 					edgeWeightInfluence: 1,
 				},
@@ -238,9 +274,12 @@ export function GraphCanvas({
 	// a new selection is brought into view.
 	useEffect(() => {
 		const focus = focusRef.current;
-		const moved = focus.selected !== selected;
+		const nextHighlights = highlighted ?? EMPTY;
+		const moved =
+			focus.selected !== selected ||
+			(selected !== null && focus.highlighted !== nextHighlights);
 		focus.selected = selected;
-		focus.highlighted = highlighted ?? new Set();
+		focus.highlighted = nextHighlights;
 		focus.dimUnselected = dimUnselected;
 		focus.activeGroup = activeGroup;
 		focus.groupOf = groupOf;
@@ -249,7 +288,7 @@ export function GraphCanvas({
 		const instance = sigmaRef.current;
 		if (!instance) return;
 		instance.refresh({ skipIndexation: true });
-		if (moved && selected) bringIntoView(instance, selected);
+		if (moved && selected) bringIntoView(instance, focus.lit ?? [selected]);
 	}, [layout, selected, highlighted, dimUnselected, activeGroup, groupOf, colors]);
 
 	useEffect(() => {
@@ -262,10 +301,11 @@ export function GraphCanvas({
 			defaultEdgeType: directed ? "arrow" : "line",
 			defaultEdgeColor: edgeColor,
 			labelColor: { color: labelColor },
-			labelFont: "JetBrains Mono",
-			labelSize: 11,
-			labelDensity: 0.5,
-			labelGridCellSize: 110,
+			labelFont: theme.fontFamily ?? "sans-serif",
+			labelSize: 12,
+			labelWeight: "500",
+			labelDensity: 0.4,
+			labelGridCellSize: 160,
 			labelRenderedSizeThreshold: 9,
 			stagePadding: 32,
 			zIndex: true,
@@ -344,13 +384,14 @@ export function GraphCanvas({
 		instance.getCamera().on("updated", () => setHover(null));
 
 		sigmaRef.current = instance;
-		const selection = focusRef.current.selected;
-		if (selection) bringIntoView(instance, selection);
+		// A neighbourhood subgraph is already framed by the initial camera.
+		const { selected: selection, dimUnselected: dimming, lit } = focusRef.current;
+		if (selection && dimming) bringIntoView(instance, lit ?? [selection]);
 		return () => {
 			instance.kill();
 			sigmaRef.current = null;
 		};
-	}, [layout, directed, edgeColor, labelColor, theme.colors.obsidian]);
+	}, [layout, directed, edgeColor, labelColor, theme.colors.obsidian, theme.fontFamily]);
 
 	// The canvas fills the window while expanded; Escape restores it.
 	useEffect(() => {
@@ -442,65 +483,96 @@ export function GraphCanvas({
 					bottom={8}
 					left={8}
 					p={6}
-					maw={300}
+					w={290}
 					bg={isLight ? "obsidian.0" : "obsidian.8"}
 				>
-					<Text
-						fz="xs"
-						fw={600}
+					<UnstyledButton
 						px={4}
-						mb={2}
+						mb={legendOpen ? 2 : 0}
+						onClick={() => setLegendOpen((open) => !open)}
+						title={legendOpen ? "Hide the legend" : "Show the legend"}
 					>
-						{legendTitle}
-					</Text>
-					<ScrollArea.Autosize mah={220}>
-						<Stack gap={0}>
-							{legend.map((group) => {
-								const active = activeGroup === group.id;
-								return (
-									<UnstyledButton
-										key={group.id}
-										px={4}
-										py={2}
-										title={
-											active ? "Show every group" : `Show only ${group.label}`
-										}
-										onClick={() => setActiveGroup(active ? null : group.id)}
-										style={{
-											borderRadius: "var(--mantine-radius-sm)",
-											opacity: activeGroup && !active ? 0.5 : 1,
-										}}
-									>
-										<Group
-											gap={6}
-											wrap="nowrap"
+						<Group
+							gap={6}
+							wrap="nowrap"
+						>
+							<Text
+								fz="xs"
+								fw={600}
+							>
+								{legendTitle}
+							</Text>
+							<Icon
+								path={legendOpen ? iconChevronDown : iconChevronUp}
+								size="sm"
+							/>
+						</Group>
+					</UnstyledButton>
+					<Collapse in={legendOpen}>
+						<ScrollArea.Autosize
+							mah={200}
+							scrollbars="y"
+							type="auto"
+							offsetScrollbars="y"
+						>
+							<Stack
+								gap={0}
+								w={LEGEND_ROW_WIDTH}
+							>
+								{legend.map((group) => {
+									const active = activeGroup === group.id;
+									return (
+										<UnstyledButton
+											key={group.id}
+											display="block"
+											w="100%"
+											px={4}
+											py={2}
+											title={
+												active
+													? "Show every group"
+													: `Show only ${group.label}`
+											}
+											onClick={() => setActiveGroup(active ? null : group.id)}
+											style={{
+												borderRadius: "var(--mantine-radius-sm)",
+												opacity: activeGroup && !active ? 0.5 : 1,
+											}}
 										>
-											<Box
-												w={9}
-												h={9}
-												bg={colors.get(group.id)}
-												style={{ borderRadius: "50%", flexShrink: 0 }}
-											/>
-											<Text
-												fz="xs"
-												truncate
-												fw={active ? 700 : undefined}
+											<Group
+												gap={6}
+												wrap="nowrap"
 											>
-												{group.label}
-											</Text>
-											<Text
-												fz="xs"
-												c="slate"
-												ml="auto"
-											>
-												{group.drawn}
-											</Text>
-										</Group>
-									</UnstyledButton>
-								);
-							})}
-						</Stack>
-					</ScrollArea.Autosize>
+												<Box
+													w={9}
+													h={9}
+													bg={colors.get(group.id)}
+													style={{ borderRadius: "50%", flexShrink: 0 }}
+												/>
+												<Text
+													fz="xs"
+													truncate
+													flex={1}
+													miw={0}
+													fw={active ? 700 : undefined}
+												>
+													{group.label}
+												</Text>
+												<Text
+													fz="xs"
+													c="slate"
+													ml="auto"
+													style={{ flexShrink: 0 }}
+												>
+													{group.drawn}
+												</Text>
+											</Group>
+										</UnstyledButton>
+									);
+								})}
+							</Stack>
+						</ScrollArea.Autosize>
+					</Collapse>
 				</Paper>
 			)}
 

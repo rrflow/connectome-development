@@ -347,12 +347,18 @@ export function VectorsTab({
 						/>
 					)}
 					<Group gap={6}>
-						<Badge variant="light">{vector.name}</Badge>
+						<Badge
+							variant="light"
+							tt="none"
+						>
+							{vector.name}
+						</Badge>
 						<Badge variant="light">{formatCount(vector.dimensions)} numbers each</Badge>
 						<Badge variant="light">{vector.metric}</Badge>
 						<Badge variant="light">{vector.memory_tier} tier</Badge>
 						<Badge
 							variant="outline"
+							tt="none"
 							title={vector.embedding_model_digest ?? undefined}
 							maw={420}
 						>
@@ -458,7 +464,17 @@ export function VectorsTab({
 									gap="sm"
 								>
 									<Box>
-										<Label>Selected record</Label>
+										<Group justify="space-between">
+											<Label mb={0}>Selected record</Label>
+											<Button
+												variant="subtle"
+												size="compact-xs"
+												color="obsidian"
+												onClick={() => onSelect(null)}
+											>
+												Clear
+											</Button>
+										</Group>
 										<Text
 											fw={700}
 											fz="lg"

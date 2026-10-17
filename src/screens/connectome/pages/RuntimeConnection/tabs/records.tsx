@@ -358,8 +358,8 @@ export function RecordsTab({
 						value={selected}
 						onChange={onSelect}
 					/>
-					<Box>
-						<Label>Show</Label>
+					<Stack gap={4}>
+						<Label mb={0}>Show</Label>
 						<SegmentedControl
 							value={scope}
 							onChange={(value) => setScope(value as GraphScope)}
@@ -368,19 +368,19 @@ export function RecordsTab({
 								{ value: "neighbourhood", label: "Around the selection" },
 							]}
 						/>
-					</Box>
+					</Stack>
 					{scope === "neighbourhood" && (
 						<>
-							<Box>
-								<Label>Steps away</Label>
+							<Stack gap={4}>
+								<Label mb={0}>Steps away</Label>
 								<SegmentedControl
 									value={String(depth)}
 									onChange={(value) => setDepth(Number(value))}
 									data={NEIGHBOURHOOD_DEPTHS}
 								/>
-							</Box>
-							<Box>
-								<Label>Follow links</Label>
+							</Stack>
+							<Stack gap={4}>
+								<Label mb={0}>Follow links</Label>
 								<SegmentedControl
 									value={direction}
 									onChange={(value) => setDirection(value as GraphDirection)}
@@ -390,7 +390,7 @@ export function RecordsTab({
 										{ value: "incoming", label: "In" },
 									]}
 								/>
-							</Box>
+							</Stack>
 						</>
 					)}
 					<Select
