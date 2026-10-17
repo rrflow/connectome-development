@@ -1,4 +1,4 @@
-import { invoke, isTauri } from "@tauri-apps/api/core";
+import { Channel, invoke, isTauri } from "@tauri-apps/api/core";
 
 /*
  * Authenticated RRD session views.
@@ -15,11 +15,14 @@ export interface RrdReference {
 	id: string;
 }
 
+/**
+ * The session policy the engine granted. The native client renews the session
+ * before the idle limit passes and opens a new one before the absolute limit,
+ * timed on its own monotonic clock, so no expiry instant crosses the boundary.
+ */
 export interface RrdSessionView {
-	session_id: string;
-	issued_at_unix_ms: number;
-	idle_expires_at_unix_ms: number;
-	absolute_expires_at_unix_ms: number;
+	idle_timeout_ms: number;
+	absolute_timeout_ms: number;
 }
 
 export interface RrdCapabilityView {
@@ -245,6 +248,21 @@ export interface RrdVectorMapView {
 	elapsed_ms: number;
 }
 
+/** Progress of a similarity-map build, streamed while its searches run. */
+export interface RrdVectorMapProgressView {
+	/** Exact searches finished. */
+	searched: number;
+	/** Exact searches the map needs: one per searchable point. */
+	total: number;
+	/**
+	 * The points the map draws, sent once with the first message, so a lens can
+	 * resolve its records to points before the searches finish.
+	 */
+	points: RrdMapPointView[] | null;
+	/** The collection holds more points than the map draws. */
+	truncated: boolean;
+}
+
 export interface RrdVectorArtifactView {
 	kind: string;
 	projection_id: string;
@@ -402,10 +420,18 @@ export class RrdSessionClient {
 		return invoke<RrdVectorSearchView>("rrd_vector_search", { request });
 	}
 
-	/** Nearest neighbours of every drawn point; one exact engine search each. */
-	async vectorMap(request: RrdVectorMapRequest): Promise<RrdVectorMapView> {
+	/**
+	 * Nearest neighbours of every drawn point; one exact engine search each.
+	 * `onProgress` hears each finished search while the map builds.
+	 */
+	async vectorMap(
+		request: RrdVectorMapRequest,
+		onProgress?: (progress: RrdVectorMapProgressView) => void,
+	): Promise<RrdVectorMapView> {
 		this.requireNative();
-		return invoke<RrdVectorMapView>("rrd_vector_map", { request });
+		const progress = new Channel<RrdVectorMapProgressView>();
+		if (onProgress) progress.onmessage = onProgress;
+		return invoke<RrdVectorMapView>("rrd_vector_map", { request, onProgress: progress });
 	}
 
 	async disconnect(): Promise<void> {

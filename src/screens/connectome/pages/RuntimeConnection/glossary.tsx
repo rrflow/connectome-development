@@ -9,6 +9,7 @@ import type { ReactNode } from "react";
 
 export type GlossaryTerm =
 	| "rrd"
+	| "session"
 	| "estate"
 	| "record"
 	| "relation"
@@ -43,6 +44,11 @@ export const GLOSSARY: Record<GlossaryTerm, GlossaryEntry> = {
 		term: "RRD",
 		meaning:
 			"The RRFlow daemon: the server process that hosts the estate and answers Connectome's requests.",
+	},
+	session: {
+		term: "Session",
+		meaning:
+			"Connectome's signed-in connection to the estate, opened with the operator credential the estate created when it was installed. Connectome renews it on its own, so you sign in only once.",
 	},
 	estate: {
 		term: "Estate (rrflowDB)",
@@ -161,6 +167,7 @@ const SECTIONS: { title: string; terms: GlossaryTerm[] }[] = [
 		title: "The estate",
 		terms: [
 			"rrd",
+			"session",
 			"estate",
 			"record",
 			"relation",
@@ -196,12 +203,17 @@ export interface TermProps {
 	children?: ReactNode;
 }
 
-/** A term with its plain-language meaning one hover away. */
-export function Term({ id, children }: TermProps) {
-	const entry = GLOSSARY[id];
+export interface HintProps {
+	/** What the text means, shown on hover. */
+	label: ReactNode;
+	children: ReactNode;
+}
+
+/** Dotted-underlined text that explains itself on hover. */
+export function Hint({ label, children }: HintProps) {
 	return (
 		<Tooltip
-			label={entry.meaning}
+			label={label}
 			multiline
 			w={300}
 			withArrow
@@ -216,10 +228,16 @@ export function Term({ id, children }: TermProps) {
 					cursor: "help",
 				}}
 			>
-				{children ?? entry.term}
+				{children}
 			</Text>
 		</Tooltip>
 	);
+}
+
+/** A term with its plain-language meaning one hover away. */
+export function Term({ id, children }: TermProps) {
+	const entry = GLOSSARY[id];
+	return <Hint label={entry.meaning}>{children ?? entry.term}</Hint>;
 }
 
 export interface GlossaryDrawerProps {

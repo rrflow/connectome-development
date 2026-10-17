@@ -8,7 +8,8 @@ import type { RrdHandshake } from "~/rrflow/runtime";
 import type { RrdConnectionView, RrdSessionClient } from "~/rrflow/session";
 import { useConfigStore } from "~/shell/stores/config";
 import type { Connection } from "~/types";
-import { formatTime } from "./format";
+import { formatMoment, formatSpan } from "./format";
+import { Hint, Term } from "./glossary";
 import classes from "./style.module.scss";
 
 export const SESSION_QUERY_KEY = ["rrd-session"] as const;
@@ -126,7 +127,7 @@ export function SessionPanel({
 							variant="dot"
 							color="green"
 						>
-							Session open
+							<Term id="session">Session</Term> open
 						</Badge>
 						<Text fz="sm">
 							Signed in as{" "}
@@ -137,8 +138,12 @@ export function SessionPanel({
 							>
 								{session.principal}
 							</Text>{" "}
-							· renews automatically · idle expiry{" "}
-							{formatTime(session.session.idle_expires_at_unix_ms)}
+							since {formatMoment(session.connected_at_unix_ms)} ·{" "}
+							<Hint
+								label={`The engine ends a session after ${formatSpan(session.session.idle_timeout_ms)} without a renewal, and after ${formatSpan(session.session.absolute_timeout_ms)} in any case. Connectome renews it, or opens a fresh one, before either happens.`}
+							>
+								renews automatically
+							</Hint>
 						</Text>
 					</Group>
 					<Button

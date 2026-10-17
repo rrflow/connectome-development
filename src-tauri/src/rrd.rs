@@ -1,7 +1,8 @@
 use reqwest::{redirect::Policy, Client};
 use serde_json::Value;
+use std::sync::Arc;
 use std::time::Duration;
-use tauri::State;
+use tauri::{ipc::Channel, State};
 
 mod client;
 mod cluster;
@@ -15,29 +16,41 @@ use client::{
 use transport::public_rrd_url;
 use view::{
     ConnectionView, DatabaseView, QueryView, ServiceView, StorageView, VectorCollectionsView,
-    VectorMapView, VectorPointsView, VectorSearchView,
+    VectorMapProgressView, VectorMapView, VectorPointsView, VectorSearchView,
 };
 
 const MAX_RRD_RESPONSE_BYTES: u64 = 1024 * 1024;
 const NOT_CONNECTED: &str = "Connectome is not connected to RRD";
 
-/// The one authenticated native RRD session. Every lens borrows it in turn, so
-/// session renewal and request sequencing stay single-writer.
+/// The one authenticated native RRD connection. A command takes a handle and
+/// releases this lock before any request, so lenses run concurrently; the
+/// client itself pins its session for each request it sends.
 #[derive(Default)]
-pub struct RrdClientState(tokio::sync::Mutex<Option<NativeRrdClient>>);
+pub struct RrdClientState(tokio::sync::Mutex<Option<Arc<NativeRrdClient>>>);
+
+impl RrdClientState {
+    async fn client(&self) -> Result<Arc<NativeRrdClient>, String> {
+        self.0
+            .lock()
+            .await
+            .clone()
+            .ok_or_else(|| NOT_CONNECTED.into())
+    }
+}
 
 #[tauri::command]
 pub async fn rrd_connect(
     request: RrdConnectRequest,
     state: State<'_, RrdClientState>,
 ) -> Result<ConnectionView, String> {
+    // Held across the handshake so two windows cannot open two sessions.
     let mut guard = state.0.lock().await;
     if guard.is_some() {
         return Err("Connectome is already connected to RRD; disconnect first".into());
     }
     let client = NativeRrdClient::connect(request).await?;
     let connection = client.connection();
-    *guard = Some(client);
+    *guard = Some(Arc::new(client));
     Ok(connection)
 }
 
@@ -46,27 +59,27 @@ pub async fn rrd_connect(
 pub async fn rrd_session(
     state: State<'_, RrdClientState>,
 ) -> Result<Option<ConnectionView>, String> {
-    let guard = state.0.lock().await;
-    Ok(guard.as_ref().map(NativeRrdClient::connection))
+    Ok(state
+        .0
+        .lock()
+        .await
+        .as_ref()
+        .map(|client| client.connection()))
 }
 
 #[tauri::command]
 pub async fn rrd_capabilities(state: State<'_, RrdClientState>) -> Result<ServiceView, String> {
-    let guard = state.0.lock().await;
-    let client = guard.as_ref().ok_or(NOT_CONNECTED)?;
-    Ok(view::service(&client.capabilities().await?))
+    Ok(view::service(&state.client().await?.capabilities().await?))
 }
 
 #[tauri::command]
 pub async fn rrd_database(state: State<'_, RrdClientState>) -> Result<DatabaseView, String> {
-    let mut guard = state.0.lock().await;
-    guard.as_mut().ok_or(NOT_CONNECTED)?.database().await
+    state.client().await?.database().await
 }
 
 #[tauri::command]
 pub async fn rrd_storage(state: State<'_, RrdClientState>) -> Result<StorageView, String> {
-    let mut guard = state.0.lock().await;
-    guard.as_mut().ok_or(NOT_CONNECTED)?.storage().await
+    state.client().await?.storage().await
 }
 
 #[tauri::command]
@@ -74,20 +87,14 @@ pub async fn rrd_query(
     request: RrdQueryRequest,
     state: State<'_, RrdClientState>,
 ) -> Result<QueryView, String> {
-    let mut guard = state.0.lock().await;
-    guard.as_mut().ok_or(NOT_CONNECTED)?.query(request).await
+    state.client().await?.query(request).await
 }
 
 #[tauri::command]
 pub async fn rrd_vector_collections(
     state: State<'_, RrdClientState>,
 ) -> Result<VectorCollectionsView, String> {
-    let mut guard = state.0.lock().await;
-    guard
-        .as_mut()
-        .ok_or(NOT_CONNECTED)?
-        .vector_collections()
-        .await
+    state.client().await?.vector_collections().await
 }
 
 #[tauri::command]
@@ -95,12 +102,7 @@ pub async fn rrd_vector_points(
     request: RrdVectorPointsRequest,
     state: State<'_, RrdClientState>,
 ) -> Result<VectorPointsView, String> {
-    let mut guard = state.0.lock().await;
-    guard
-        .as_mut()
-        .ok_or(NOT_CONNECTED)?
-        .vector_points(request)
-        .await
+    state.client().await?.vector_points(request).await
 }
 
 #[tauri::command]
@@ -108,26 +110,24 @@ pub async fn rrd_vector_search(
     request: RrdVectorSearchRequest,
     state: State<'_, RrdClientState>,
 ) -> Result<VectorSearchView, String> {
-    let mut guard = state.0.lock().await;
-    guard
-        .as_mut()
-        .ok_or(NOT_CONNECTED)?
-        .vector_search(request)
-        .await
+    state.client().await?.vector_search(request).await
 }
 
 /// Nearest neighbours of every point the similarity map draws, one exact
-/// engine search per point.
+/// engine search per point. `on_progress` hears each finished search.
 #[tauri::command]
 pub async fn rrd_vector_map(
     request: RrdVectorMapRequest,
+    on_progress: Channel<VectorMapProgressView>,
     state: State<'_, RrdClientState>,
 ) -> Result<VectorMapView, String> {
-    let mut guard = state.0.lock().await;
-    guard
-        .as_mut()
-        .ok_or(NOT_CONNECTED)?
-        .vector_map(request)
+    state
+        .client()
+        .await?
+        .vector_map(request, |progress| {
+            // A closed window stops only the progress display, never the map.
+            let _ = on_progress.send(progress);
+        })
         .await
 }
 

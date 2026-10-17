@@ -19,12 +19,13 @@ const VECTOR_PREVIEW_COMPONENTS: usize = 8;
 /// Longest property text rendered before truncation.
 const MAX_DISPLAY_TEXT: usize = 2048;
 
+/// The session policy the engine granted. Connectome renews the session before
+/// the idle limit passes and opens a new one before the absolute limit, so the
+/// webview shows the policy, never expiry instants read from another clock.
 #[derive(Debug, Clone, Serialize)]
 pub struct SessionView {
-    pub session_id: String,
-    pub issued_at_unix_ms: u64,
-    pub idle_expires_at_unix_ms: u64,
-    pub absolute_expires_at_unix_ms: u64,
+    pub idle_timeout_ms: u64,
+    pub absolute_timeout_ms: u64,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -263,7 +264,21 @@ pub struct VectorMapView {
     pub elapsed_ms: u64,
 }
 
+/// Progress of a similarity-map build, streamed while its searches run.
 #[derive(Debug, Serialize)]
+pub struct VectorMapProgressView {
+    /// Exact searches finished.
+    pub searched: u64,
+    /// Exact searches the map needs: one per searchable point.
+    pub total: u64,
+    /// The points the map draws, sent once with the first message, so a lens
+    /// can resolve its records to points before the searches finish.
+    pub points: Option<Vec<MapPointView>>,
+    /// The collection holds more points than the map draws.
+    pub truncated: bool,
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub struct MapPointView {
     pub reference: ReferenceView,
     pub subject: ReferenceView,

@@ -4,35 +4,49 @@
 //! validate each response before Connectome projects it into a view model.
 //! The operator credential and the session bearer stay in this process; the
 //! webview receives only `view` projections.
+//!
+//! Lenses call in concurrently. Each request pins the current session lease
+//! until it completes, and the lease is renewed or replaced only while no
+//! request pins it, because a renewal rotates the bearer the engine accepts.
 
 use super::transport::{is_loopback_origin, rrd_origin};
 use super::view::{
     self, ConnectionView, DatabaseView, MapLinkView, MapPointView, QueryView, ServiceView,
-    SessionView, StorageView, VectorCollectionsView, VectorMapView, VectorPointsView,
-    VectorSearchView,
+    SessionView, StorageView, VectorCollectionsView, VectorMapProgressView, VectorMapView,
+    VectorPointsView, VectorSearchView,
 };
 use rrd_client::{ClientConfig, RequestOptions, RrdClient, Session};
 use rrd_contract::{
     CanonicalId, CloseSession, CreateSession, DataReference, DataVectorValue, DiagnosticSnapshot,
-    ExecuteQuery, ListVectorCollections, QueryBudget, ReadDiagnosticSnapshot, RetrieveVectorPoints,
-    ScrollVectorPoints, SearchVectors, ServiceCapabilities, SessionLimits, VectorPointSnapshot,
-    VectorSearchHit, VectorSearchMode, VectorSearchQuery, MAX_DIAGNOSTIC_RUNTIME_SCANNED_CHANGES,
-    MAX_QUERY_BYTES, MAX_VECTOR_POINT_PAGE, MAX_VECTOR_SEARCH_TOP_K, MAX_VECTOR_STORAGE_KEYS,
+    ExecuteQuery, ListVectorCollections, QueryBudget, ReadDiagnosticSnapshot, RenewSession,
+    RetrieveVectorPoints, ScrollVectorPoints, SearchVectors, ServiceCapabilities, SessionLimits,
+    VectorPointBatch, VectorPointPage, VectorPointSnapshot, VectorSearchHit, VectorSearchMode,
+    VectorSearchQuery, VectorSearchResult, MAX_DIAGNOSTIC_RUNTIME_SCANNED_CHANGES, MAX_QUERY_BYTES,
+    MAX_VECTOR_POINT_PAGE, MAX_VECTOR_SEARCH_TOP_K, MAX_VECTOR_STORAGE_KEYS,
 };
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fmt;
+use std::future::Future;
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::path::Path;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tokio::net::TcpStream;
+use tokio::sync::{RwLock, RwLockReadGuard};
 use tokio::task::JoinSet;
+use uuid::Uuid;
 
 // Connectome's own session policy; the engine enforces its own ceilings.
 const SESSION_IDLE_TIMEOUT_MS: u64 = 900_000;
 const SESSION_ABSOLUTE_TIMEOUT_MS: u64 = 3_600_000;
-const SESSION_RENEWAL_MARGIN_MS: u64 = 30_000;
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
+/// A request pins the lease it was sent with until it completes, so a lease is
+/// handed out only while it outlives the longest request with room to spare.
+const SESSION_RENEWAL_MARGIN: Duration = Duration::from_secs(60);
+const _: () = assert!(SESSION_RENEWAL_MARGIN.as_secs() > REQUEST_TIMEOUT.as_secs());
+const SESSION_CLOSED: &str = "the RRD session is closed";
 const LOOPBACK_PROBE_TIMEOUT: Duration = Duration::from_secs(2);
 /// Most recent change-feed and audit records the Storage lens renders.
 const RECENT_CHANGES: u64 = 64;
@@ -112,18 +126,132 @@ impl fmt::Debug for Secret {
     }
 }
 
+/// Correlation identifiers for one connection: a random run prefix plus a
+/// counter. The engine derives a session's identity from the idempotency key
+/// that created it and answers a repeated key with the first result, so keys
+/// must never repeat across connections or app launches.
+struct RequestIds {
+    run: String,
+    sequence: AtomicU64,
+}
+
+impl RequestIds {
+    fn new() -> Self {
+        Self {
+            run: Uuid::new_v4().simple().to_string(),
+            sequence: AtomicU64::new(0),
+        }
+    }
+
+    /// Options for the next request; a mutation also carries an idempotency key.
+    fn next(&self, mutation: bool) -> Result<RequestOptions, String> {
+        let sequence = self
+            .sequence
+            .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |value| {
+                value.checked_add(1)
+            })
+            .map_err(|_| "Connectome RRD request sequence exhausted")?
+            + 1;
+        let prefix = format!("connectome-{}", self.run);
+        let request = format!("{prefix}-request-{sequence}");
+        let operation = format!("{prefix}-operation-{sequence}");
+        let options = if mutation {
+            RequestOptions::mutation(&request, &operation, &format!("{prefix}-key-{sequence}"))
+        } else {
+            RequestOptions::read(&request, &operation)
+        };
+        options.map_err(sdk_error)
+    }
+}
+
+/// When a session lapses, on this process's monotonic clock. Each deadline is
+/// measured from before the request that granted it, so it passes no later
+/// than the engine's own deadline whatever either wall clock reads; the
+/// engine's expiry timestamps are never compared with this machine's time.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Deadlines {
+    idle: Instant,
+    absolute: Instant,
+}
+
+impl Deadlines {
+    fn granted(requested_at: Instant, limits: &SessionLimits) -> Result<Self, String> {
+        Ok(Self {
+            idle: after(requested_at, limits.idle_timeout_ms)?,
+            absolute: after(requested_at, limits.absolute_timeout_ms)?,
+        })
+    }
+
+    /// A renewal restarts the idle timer; the absolute deadline never moves.
+    fn renewed(self, requested_at: Instant, limits: &SessionLimits) -> Result<Self, String> {
+        Ok(Self {
+            idle: after(requested_at, limits.idle_timeout_ms)?,
+            absolute: self.absolute,
+        })
+    }
+
+    /// Whether a request sent at `now` completes before the session can lapse.
+    fn outlive_request(self, now: Instant) -> bool {
+        self.idle.min(self.absolute).saturating_duration_since(now) > SESSION_RENEWAL_MARGIN
+    }
+
+    /// Whether renewing at `now` still buys a request's worth of time; past
+    /// this point only a new session can.
+    fn renewable(self, now: Instant) -> bool {
+        self.absolute.saturating_duration_since(now) > SESSION_RENEWAL_MARGIN
+    }
+}
+
+fn after(start: Instant, millis: u64) -> Result<Instant, String> {
+    start
+        .checked_add(Duration::from_millis(millis))
+        .ok_or_else(|| "the RRD session limits do not fit this clock".into())
+}
+
+struct Lease {
+    session: Session,
+    deadlines: Deadlines,
+}
+
+impl Lease {
+    async fn open(
+        client: &RrdClient,
+        principal: &CanonicalId,
+        api_key: &Secret,
+        ids: &RequestIds,
+    ) -> Result<Self, String> {
+        let request = CreateSession {
+            limits: SessionLimits {
+                idle_timeout_ms: SESSION_IDLE_TIMEOUT_MS,
+                absolute_timeout_ms: SESSION_ABSOLUTE_TIMEOUT_MS,
+                max_open_transactions: 1,
+            },
+        };
+        let requested_at = Instant::now();
+        let session = client
+            .create_session(principal.clone(), &api_key.0, request, ids.next(true)?)
+            .await
+            .map_err(sdk_error)?;
+        let deadlines = Deadlines::granted(requested_at, session.limits())?;
+        Ok(Self { session, deadlines })
+    }
+}
+
 pub struct NativeRrdClient {
     client: RrdClient,
     endpoint: String,
     instance: CanonicalId,
     principal: CanonicalId,
     api_key: Secret,
-    session: Session,
     connected_at_unix_ms: u64,
     service: ServiceView,
     /// The estate's configured query budget, read from its capability document.
     query_budget: QueryBudget,
-    sequence: u64,
+    /// The session policy the engine granted when the connection opened.
+    limits: SessionLimits,
+    ids: RequestIds,
+    /// `None` once the operator closed the session.
+    lease: RwLock<Option<Lease>>,
 }
 
 fn now_unix_ms() -> Result<u64, String> {
@@ -250,56 +378,8 @@ fn widen(range: Option<(u64, u64)>, cursor: u64) -> (u64, u64) {
     })
 }
 
-fn session_view(session: &Session) -> SessionView {
-    SessionView {
-        session_id: session.session_id().as_str().into(),
-        issued_at_unix_ms: session.issued_at_unix_ms(),
-        idle_expires_at_unix_ms: session.idle_expires_at_unix_ms(),
-        absolute_expires_at_unix_ms: session.absolute_expires_at_unix_ms(),
-    }
-}
-
 fn sdk_error(error: rrd_client::Error) -> String {
     error.to_string()
-}
-
-/// Per-connection request correlation; mutations also carry an idempotency key.
-fn request_options(sequence: &mut u64, mutation: bool) -> Result<RequestOptions, String> {
-    *sequence = sequence
-        .checked_add(1)
-        .ok_or("Connectome RRD request sequence exhausted")?;
-    let request = format!("connectome-request-{sequence}");
-    let operation = format!("connectome-operation-{sequence}");
-    let options = if mutation {
-        RequestOptions::mutation(&request, &operation, &format!("connectome-key-{sequence}"))
-    } else {
-        RequestOptions::read(&request, &operation)
-    };
-    options.map_err(sdk_error)
-}
-
-async fn create_session(
-    client: &RrdClient,
-    principal: &CanonicalId,
-    api_key: &Secret,
-    sequence: &mut u64,
-) -> Result<Session, String> {
-    let request = CreateSession {
-        limits: SessionLimits {
-            idle_timeout_ms: SESSION_IDLE_TIMEOUT_MS,
-            absolute_timeout_ms: SESSION_ABSOLUTE_TIMEOUT_MS,
-            max_open_transactions: 1,
-        },
-    };
-    client
-        .create_session(
-            principal.clone(),
-            &api_key.0,
-            request,
-            request_options(sequence, true)?,
-        )
-        .await
-        .map_err(sdk_error)
 }
 
 impl NativeRrdClient {
@@ -316,30 +396,35 @@ impl NativeRrdClient {
             RrdClient::connect_local(address, instance.clone(), config).map_err(sdk_error)?;
         // The SDK validates the capability contract and the exact instance identity.
         let capabilities = client.capabilities().await.map_err(sdk_error)?;
-        let mut sequence = 0;
-        let session = create_session(&client, &principal, &api_key, &mut sequence).await?;
+        let ids = RequestIds::new();
+        let lease = Lease::open(&client, &principal, &api_key, &ids).await?;
         Ok(Self {
+            limits: lease.session.limits().clone(),
+            lease: RwLock::new(Some(lease)),
             client,
             endpoint,
             instance,
             principal,
             api_key,
-            session,
             connected_at_unix_ms: now_unix_ms()?,
             service: view::service(&capabilities),
             query_budget: capabilities.configuration.query.clone(),
-            sequence,
+            ids,
         })
     }
 
-    /// The session as the webview may see it: identities, expiry, and service.
+    /// The connection as the webview may see it: identities, session policy,
+    /// and service. Bearers and engine-clock expiry instants stay native.
     pub fn connection(&self) -> ConnectionView {
         ConnectionView {
             endpoint: self.endpoint.clone(),
             instance: self.instance.as_str().into(),
             principal: self.principal.as_str().into(),
             connected_at_unix_ms: self.connected_at_unix_ms,
-            session: session_view(&self.session),
+            session: SessionView {
+                idle_timeout_ms: self.limits.idle_timeout_ms,
+                absolute_timeout_ms: self.limits.absolute_timeout_ms,
+            },
             service: self.service.clone(),
         }
     }
@@ -348,33 +433,91 @@ impl NativeRrdClient {
         format!("instance:{}", self.instance.as_str())
     }
 
-    fn options(&mut self, mutation: bool) -> Result<RequestOptions, String> {
-        request_options(&mut self.sequence, mutation)
+    /// The current session, pinned until the guard drops. A session that would
+    /// not outlive a request is first renewed, or replaced once renewal cannot
+    /// help, under the write lock, so no in-flight request holds the bearer
+    /// that the renewal rotates or the replacement closes.
+    async fn lease(&self) -> Result<RwLockReadGuard<'_, Lease>, String> {
+        {
+            let current = self.lease.read().await;
+            let fresh = current
+                .as_ref()
+                .ok_or(SESSION_CLOSED)?
+                .deadlines
+                .outlive_request(Instant::now());
+            if fresh {
+                return RwLockReadGuard::try_map(current, Option::as_ref)
+                    .map_err(|_| SESSION_CLOSED.into());
+            }
+        }
+        let mut current = self.lease.write().await;
+        let stale = !current
+            .as_ref()
+            .ok_or(SESSION_CLOSED)?
+            .deadlines
+            .outlive_request(Instant::now());
+        // Another request may have refreshed the session while this one waited.
+        if stale {
+            let refreshed = self
+                .refresh(current.as_ref().ok_or(SESSION_CLOSED)?)
+                .await?;
+            *current = Some(refreshed);
+        }
+        RwLockReadGuard::try_map(current.downgrade(), Option::as_ref)
+            .map_err(|_| SESSION_CLOSED.into())
     }
 
-    /// Replace the session before it can expire mid-request.
-    async fn ensure_session(&mut self) -> Result<(), String> {
-        let boundary = now_unix_ms()?.saturating_add(SESSION_RENEWAL_MARGIN_MS);
-        if boundary >= self.session.idle_expires_at_unix_ms()
-            || boundary >= self.session.absolute_expires_at_unix_ms()
-        {
-            self.session = create_session(
-                &self.client,
-                &self.principal,
-                &self.api_key,
-                &mut self.sequence,
-            )
-            .await?;
+    /// Renews `current`, or opens a new session when renewal cannot outlast a
+    /// request or the engine refuses it (the session lapsed while Connectome
+    /// sat idle, or used up its renewals).
+    async fn refresh(&self, current: &Lease) -> Result<Lease, String> {
+        if current.deadlines.renewable(Instant::now()) {
+            let requested_at = Instant::now();
+            match self
+                .client
+                .renew_session(&current.session, RenewSession {}, self.ids.next(true)?)
+                .await
+            {
+                Ok(session) => {
+                    let deadlines = current.deadlines.renewed(requested_at, session.limits())?;
+                    return Ok(Lease { session, deadlines });
+                }
+                Err(error) => {
+                    log::info!("RRD session renewal refused ({error}); opening a new session")
+                }
+            }
         }
-        Ok(())
+        let replacement =
+            Lease::open(&self.client, &self.principal, &self.api_key, &self.ids).await?;
+        // Best effort: the old session may already have lapsed on the engine.
+        let _ = self
+            .client
+            .close_session(&current.session, CloseSession {}, self.ids.next(true)?)
+            .await;
+        Ok(replacement)
+    }
+
+    /// Sends one request with the current session pinned until it completes.
+    async fn send<T, Fut>(
+        &self,
+        mutation: bool,
+        request: impl FnOnce(Session, RequestOptions) -> Fut,
+    ) -> Result<T, String>
+    where
+        Fut: Future<Output = rrd_client::Result<T>>,
+    {
+        let lease = self.lease().await?;
+        let options = self.ids.next(mutation)?;
+        let result = request(lease.session.clone(), options).await;
+        drop(lease);
+        result.map_err(sdk_error)
     }
 
     pub async fn capabilities(&self) -> Result<ServiceCapabilities, String> {
         self.client.capabilities().await.map_err(sdk_error)
     }
 
-    async fn diagnostic_snapshot(&mut self) -> Result<DiagnosticSnapshot, String> {
-        self.ensure_session().await?;
+    async fn diagnostic_snapshot(&self) -> Result<DiagnosticSnapshot, String> {
         let request = ReadDiagnosticSnapshot {
             scope: self.scope(),
             graph_valid_at_unix_ms: now_unix_ms()?,
@@ -386,23 +529,49 @@ impl NativeRrdClient {
             audit_after_sequence: 0,
             audit_limit: RECENT_AUDIT_RECORDS,
         };
-        let options = self.options(false)?;
-        self.client
-            .read_diagnostic_snapshot(&self.session, request, options)
-            .await
-            .map_err(sdk_error)
+        self.send(false, |session, options| async move {
+            self.client
+                .read_diagnostic_snapshot(&session, request, options)
+                .await
+        })
+        .await
     }
 
-    pub async fn database(&mut self) -> Result<DatabaseView, String> {
+    async fn scroll(&self, request: ScrollVectorPoints) -> Result<VectorPointPage, String> {
+        self.send(false, |session, options| async move {
+            self.client
+                .scroll_vector_points(&session, request, options)
+                .await
+        })
+        .await
+    }
+
+    async fn retrieve(&self, request: RetrieveVectorPoints) -> Result<VectorPointBatch, String> {
+        self.send(false, |session, options| async move {
+            self.client
+                .retrieve_vector_points(&session, request, options)
+                .await
+        })
+        .await
+    }
+
+    async fn search(&self, request: SearchVectors) -> Result<VectorSearchResult, String> {
+        self.send(false, |session, options| async move {
+            self.client.search_vectors(&session, request, options).await
+        })
+        .await
+    }
+
+    pub async fn database(&self) -> Result<DatabaseView, String> {
         Ok(view::database(&self.diagnostic_snapshot().await?))
     }
 
-    pub async fn storage(&mut self) -> Result<StorageView, String> {
+    pub async fn storage(&self) -> Result<StorageView, String> {
         let snapshot = self.diagnostic_snapshot().await?;
         Ok(view::storage(&snapshot, &self.service.storage_profile))
     }
 
-    pub async fn query(&mut self, request: RrdQueryRequest) -> Result<QueryView, String> {
+    pub async fn query(&self, request: RrdQueryRequest) -> Result<QueryView, String> {
         if request.query.trim().is_empty()
             || request.query.len() > MAX_QUERY_BYTES
             || request.query.contains('\0')
@@ -411,38 +580,36 @@ impl NativeRrdClient {
                 "RRFlowQL query must be non-empty, at most {MAX_QUERY_BYTES} bytes, and free of NUL"
             ));
         }
-        self.ensure_session().await?;
         let request = ExecuteQuery {
             scope: self.scope(),
             query: request.query,
             parameters: Default::default(),
             budget: self.query_budget.clone(),
         };
-        let options = self.options(false)?;
         let result = self
-            .client
-            .execute_query(&self.session, request, options)
-            .await
-            .map_err(sdk_error)?;
+            .send(false, |session, options| async move {
+                self.client.execute_query(&session, request, options).await
+            })
+            .await?;
         Ok(view::query(&result))
     }
 
-    pub async fn vector_collections(&mut self) -> Result<VectorCollectionsView, String> {
-        self.ensure_session().await?;
+    pub async fn vector_collections(&self) -> Result<VectorCollectionsView, String> {
         let request = ListVectorCollections {
             scope: self.scope(),
         };
-        let options = self.options(false)?;
         let catalogue = self
-            .client
-            .list_vector_collections(&self.session, request, options)
-            .await
-            .map_err(sdk_error)?;
+            .send(false, |session, options| async move {
+                self.client
+                    .list_vector_collections(&session, request, options)
+                    .await
+            })
+            .await?;
         Ok(view::collections(&catalogue))
     }
 
     pub async fn vector_points(
-        &mut self,
+        &self,
         request: RrdVectorPointsRequest,
     ) -> Result<VectorPointsView, String> {
         if request.limit == 0 || request.limit > MAX_VECTOR_POINT_PAGE {
@@ -450,7 +617,6 @@ impl NativeRrdClient {
                 "vector page size must be in 1..={MAX_VECTOR_POINT_PAGE}"
             ));
         }
-        self.ensure_session().await?;
         let request = ScrollVectorPoints {
             scope: self.scope(),
             collection_id: canonical(&request.collection_id, "collection")?,
@@ -461,42 +627,31 @@ impl NativeRrdClient {
             max_storage_keys: MAX_VECTOR_STORAGE_KEYS,
             filter: None,
         };
-        let options = self.options(false)?;
-        let page = self
-            .client
-            .scroll_vector_points(&self.session, request, options)
-            .await
-            .map_err(sdk_error)?;
-        Ok(view::points(&page))
+        Ok(view::points(&self.scroll(request).await?))
     }
 
     /// Query by example: retrieve one stored dense vector, then search its collection.
     pub async fn vector_search(
-        &mut self,
+        &self,
         request: RrdVectorSearchRequest,
     ) -> Result<VectorSearchView, String> {
         if request.top_k == 0 || request.top_k > MAX_VECTOR_SEARCH_TOP_K {
             return Err(format!("top_k must be in 1..={MAX_VECTOR_SEARCH_TOP_K}"));
         }
-        self.ensure_session().await?;
         let collection_id = canonical(&request.collection_id, "collection")?;
         let vector_name = canonical(&request.vector_name, "vector name")?;
         let example = data_reference(&request.example)?;
         let valid_at = now_unix_ms()?;
-        let retrieve = RetrieveVectorPoints {
-            scope: self.scope(),
-            collection_id: collection_id.clone(),
-            vector_name: vector_name.clone(),
-            valid_at,
-            references: vec![example.clone()],
-            max_storage_keys: MAX_VECTOR_STORAGE_KEYS,
-        };
-        let options = self.options(false)?;
         let batch = self
-            .client
-            .retrieve_vector_points(&self.session, retrieve, options)
-            .await
-            .map_err(sdk_error)?;
+            .retrieve(RetrieveVectorPoints {
+                scope: self.scope(),
+                collection_id: collection_id.clone(),
+                vector_name: vector_name.clone(),
+                valid_at,
+                references: vec![example.clone()],
+                max_storage_keys: MAX_VECTOR_STORAGE_KEYS,
+            })
+            .await?;
         let point = batch
             .points
             .into_iter()
@@ -505,37 +660,34 @@ impl NativeRrdClient {
         let DataVectorValue::Dense { values } = point.value else {
             return Err("query by example currently supports dense vectors only".into());
         };
-        let search = SearchVectors {
-            scope: self.scope(),
-            valid_at,
-            collection_id: Some(collection_id),
-            vector_name: Some(vector_name),
-            field: None,
-            query: VectorSearchQuery::Dense { values },
-            filter: None,
-            metric: None,
-            top_k: request.top_k,
-            mode: VectorSearchMode::Exact,
-            max_storage_keys: MAX_VECTOR_STORAGE_KEYS,
-        };
-        let options = self.options(false)?;
         let result = self
-            .client
-            .search_vectors(&self.session, search, options)
-            .await
-            .map_err(sdk_error)?;
+            .search(SearchVectors {
+                scope: self.scope(),
+                valid_at,
+                collection_id: Some(collection_id),
+                vector_name: Some(vector_name),
+                field: None,
+                query: VectorSearchQuery::Dense { values },
+                filter: None,
+                metric: None,
+                top_k: request.top_k,
+                mode: VectorSearchMode::Exact,
+                max_storage_keys: MAX_VECTOR_STORAGE_KEYS,
+            })
+            .await?;
         Ok(view::search(&example, &result))
     }
 
     /// The similarity map: scroll the collection's points up to the map bound,
     /// then ask the engine for every point's nearest neighbours with one exact
     /// search each. Every link is an engine search hit; values stay native.
+    /// `progress` hears how many of the searches have finished.
     pub async fn vector_map(
-        &mut self,
+        self: &Arc<Self>,
         request: RrdVectorMapRequest,
+        progress: impl Fn(VectorMapProgressView),
     ) -> Result<VectorMapView, String> {
         let started = Instant::now();
-        self.ensure_session().await?;
         let collection_id = canonical(&request.collection_id, "collection")?;
         let vector_name = canonical(&request.vector_name, "vector name")?;
         let valid_at = now_unix_ms()?;
@@ -548,22 +700,18 @@ impl NativeRrdClient {
         loop {
             let remaining = u64::try_from(MAX_VECTOR_MAP_POINTS - points.len())
                 .map_err(|_| "similarity map bound does not fit a page size")?;
-            let scroll = ScrollVectorPoints {
-                scope: self.scope(),
-                collection_id: collection_id.clone(),
-                vector_name: vector_name.clone(),
-                valid_at,
-                after_reference: after.clone(),
-                limit: remaining.min(MAX_VECTOR_POINT_PAGE),
-                max_storage_keys: MAX_VECTOR_STORAGE_KEYS,
-                filter: None,
-            };
-            let options = self.options(false)?;
             let page = self
-                .client
-                .scroll_vector_points(&self.session, scroll, options)
-                .await
-                .map_err(sdk_error)?;
+                .scroll(ScrollVectorPoints {
+                    scope: self.scope(),
+                    collection_id: collection_id.clone(),
+                    vector_name: vector_name.clone(),
+                    valid_at,
+                    after_reference: after.clone(),
+                    limit: remaining.min(MAX_VECTOR_POINT_PAGE),
+                    max_storage_keys: MAX_VECTOR_STORAGE_KEYS,
+                    filter: None,
+                })
+                .await?;
             keys_examined = keys_examined.saturating_add(page.read_evidence.keys_examined);
             cursors = Some(widen(cursors, page.known_at_cursor));
             let progressed = !page.points.is_empty();
@@ -584,17 +732,31 @@ impl NativeRrdClient {
             .enumerate()
             .map(|(position, point)| (reference_key(&point.reference), position))
             .collect();
-        let mut queries = points
+        let queries = points
             .iter()
             .enumerate()
             .filter_map(|(position, point)| match &point.value {
                 DataVectorValue::Dense { values } => Some((position, values.clone())),
                 _ => None,
             })
-            .collect::<Vec<_>>()
-            .into_iter();
+            .collect::<Vec<_>>();
         let unsearchable = points.len() - queries.len();
+        let total = u64::try_from(queries.len()).map_err(|_| "too many map points")?;
+        let drawn_points: Vec<MapPointView> = points
+            .iter()
+            .map(|point| MapPointView {
+                reference: view::reference(&point.reference),
+                subject: view::reference(&point.subject),
+            })
+            .collect();
+        progress(VectorMapProgressView {
+            searched: 0,
+            total,
+            points: Some(drawn_points.clone()),
+            truncated,
+        });
 
+        let mut queries = queries.into_iter();
         let mut tasks = JoinSet::new();
         let mut links = Vec::new();
         let mut searches = 0u64;
@@ -618,19 +780,15 @@ impl NativeRrdClient {
                     mode: VectorSearchMode::Exact,
                     max_storage_keys: MAX_VECTOR_STORAGE_KEYS,
                 };
-                let options = self.options(false)?;
-                let client = self.client.clone();
-                let session = self.session.clone();
-                tasks.spawn(async move {
-                    (from, client.search_vectors(&session, search, options).await)
-                });
+                let client = Arc::clone(self);
+                tasks.spawn(async move { (from, client.search(search).await) });
             }
             let Some(joined) = tasks.join_next().await else {
                 break;
             };
             let (from, result) =
                 joined.map_err(|error| format!("a similarity search task failed: {error}"))?;
-            let result = result.map_err(sdk_error)?;
+            let result = result?;
             searches += 1;
             exact &= result.exact;
             keys_examined = keys_examined.saturating_add(result.read_evidence.keys_examined);
@@ -641,6 +799,12 @@ impl NativeRrdClient {
                 &drawn,
                 VECTOR_MAP_NEIGHBOURS,
             ));
+            progress(VectorMapProgressView {
+                searched: searches,
+                total,
+                points: None,
+                truncated,
+            });
         }
         links.sort_by_key(|link| (link.from, link.rank));
         let (known_at_cursor_min, known_at_cursor_max) = cursors.unwrap_or_default();
@@ -648,13 +812,7 @@ impl NativeRrdClient {
         Ok(VectorMapView {
             collection_id: collection_id.as_str().into(),
             vector_name: vector_name.as_str().into(),
-            points: points
-                .iter()
-                .map(|point| MapPointView {
-                    reference: view::reference(&point.reference),
-                    subject: view::reference(&point.subject),
-                })
-                .collect(),
+            points: drawn_points,
             links,
             neighbours: VECTOR_MAP_NEIGHBOURS,
             truncated,
@@ -668,10 +826,13 @@ impl NativeRrdClient {
         })
     }
 
-    pub async fn close(mut self) -> Result<(), String> {
-        let options = self.options(true)?;
+    /// Closes the session once no request pins it; later requests fail closed.
+    pub async fn close(&self) -> Result<(), String> {
+        let Some(lease) = self.lease.write().await.take() else {
+            return Ok(());
+        };
         self.client
-            .close_session(&self.session, CloseSession {}, options)
+            .close_session(&lease.session, CloseSession {}, self.ids.next(true)?)
             .await
             .map(|_| ())
             .map_err(sdk_error)
@@ -700,6 +861,72 @@ mod tests {
             id: "readme".into()
         })
         .is_err());
+    }
+
+    #[test]
+    fn request_ids_never_repeat_across_connections() {
+        let first = RequestIds::new();
+        let second = RequestIds::new();
+        let a = first.next(true).expect("valid mutation options");
+        let b = first.next(true).expect("valid mutation options");
+        let c = second.next(true).expect("valid mutation options");
+        // Every connection's first session request used to carry the same key,
+        // so the engine answered it with the session an earlier launch opened.
+        assert_ne!(a.idempotency_key, b.idempotency_key);
+        assert_ne!(a.idempotency_key, c.idempotency_key);
+        assert_ne!(a.request_id, c.request_id);
+        assert_ne!(a.operation_id, c.operation_id);
+        assert!(a.request_id.as_str().ends_with("-request-1"));
+        assert!(c.request_id.as_str().ends_with("-request-1"));
+        let read = second.next(false).expect("valid read options");
+        assert!(read.idempotency_key.is_none());
+        assert!(read.request_id.as_str().ends_with("-request-2"));
+    }
+
+    #[test]
+    fn request_ids_fail_closed_when_the_sequence_is_exhausted() {
+        let ids = RequestIds {
+            run: "run".into(),
+            sequence: AtomicU64::new(u64::MAX),
+        };
+        assert!(ids.next(false).is_err());
+    }
+
+    fn limits(idle_ms: u64, absolute_ms: u64) -> SessionLimits {
+        SessionLimits {
+            idle_timeout_ms: idle_ms,
+            absolute_timeout_ms: absolute_ms,
+            max_open_transactions: 1,
+        }
+    }
+
+    #[test]
+    fn a_lease_is_handed_out_only_while_it_outlives_a_request() {
+        let start = Instant::now();
+        let deadlines = Deadlines::granted(start, &limits(900_000, 3_600_000)).expect("deadlines");
+        let margin = SESSION_RENEWAL_MARGIN;
+        let idle = Duration::from_millis(900_000);
+        assert!(deadlines.outlive_request(start));
+        assert!(deadlines.outlive_request(start + idle - margin - Duration::from_millis(1)));
+        assert!(!deadlines.outlive_request(start + idle - margin));
+        assert!(!deadlines.outlive_request(start + idle + idle));
+    }
+
+    #[test]
+    fn renewal_restarts_the_idle_timer_but_never_the_absolute_one() {
+        let start = Instant::now();
+        let session = limits(900_000, 3_600_000);
+        let deadlines = Deadlines::granted(start, &session).expect("deadlines");
+        let later = start + Duration::from_millis(850_000);
+        assert!(!deadlines.outlive_request(later));
+        assert!(deadlines.renewable(later));
+        let renewed = deadlines.renewed(later, &session).expect("renewed");
+        assert!(renewed.outlive_request(later));
+        assert_eq!(renewed.absolute, deadlines.absolute);
+        // Near the absolute deadline only a new session can help.
+        let late = deadlines.absolute - SESSION_RENEWAL_MARGIN;
+        assert!(!deadlines.renewable(late));
+        assert!(!renewed.outlive_request(late));
     }
 
     fn hit(id: &str, score: f64) -> VectorSearchHit {
