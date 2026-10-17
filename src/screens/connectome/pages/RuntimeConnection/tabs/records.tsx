@@ -42,9 +42,11 @@ import { formatCount, formatSize, formatTime } from "../format";
 import { Term } from "../glossary";
 import { type CanvasEdge, type CanvasNode, GraphCanvas } from "../graph";
 import { colorOptions, degrees, grouping } from "../groups";
+import { ReadNotice } from "../notice";
+import { databaseQuery } from "../queries";
 import classes from "../style.module.scss";
 import { type GraphDirection, type GraphScope, kinds, selectSubgraph } from "../subgraph";
-import { databaseQueryKey, type RecordFocusProps, type RuntimeLensProps } from "../types";
+import type { RecordFocusProps, RuntimeLensProps } from "../types";
 
 /** Default row bound for console queries; the estate's query budget still applies. */
 const CONSOLE_ROW_LIMIT = 50;
@@ -181,11 +183,7 @@ export function RecordsTab({
 	onColorBy,
 	onOpenLens,
 }: RuntimeLensProps & RecordFocusProps) {
-	const database = useQuery({
-		queryKey: databaseQueryKey(sessionKey),
-		queryFn: () => client.database(),
-		staleTime: Number.POSITIVE_INFINITY,
-	});
+	const database = useQuery(databaseQuery(client, sessionKey));
 	const [scope, setScope] = useState<GraphScope>("estate");
 	const [depth, setDepth] = useState(1);
 	const [direction, setDirection] = useState<GraphDirection>("both");
@@ -280,13 +278,14 @@ export function RecordsTab({
 
 	if (database.isPending) {
 		return (
-			<Group justify="center">
+			<Stack align="center">
 				<Loader />
-			</Group>
+				<ReadNotice query={database} />
+			</Stack>
 		);
 	}
 
-	if (database.isError || !view || !graph || !groups) {
+	if (!view || !graph || !groups) {
 		return (
 			<Alert
 				color="red"
@@ -342,6 +341,10 @@ export function RecordsTab({
 					</Button>
 				}
 			>
+				<ReadNotice
+					query={database}
+					observedAt={view.observed_at_unix_ms}
+				/>
 				<Group
 					gap="sm"
 					align="flex-end"

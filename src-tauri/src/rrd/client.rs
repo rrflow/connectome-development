@@ -9,6 +9,7 @@
 //! until it completes, and the lease is renewed or replaced only while no
 //! request pins it, because a renewal rotates the bearer the engine accepts.
 
+use super::error::RrdError;
 use super::transport::{is_loopback_origin, rrd_origin};
 use super::view::{
     self, ConnectionView, DatabaseView, MapLinkView, MapPointView, QueryView, ServiceView,
@@ -144,7 +145,7 @@ impl RequestIds {
     }
 
     /// Options for the next request; a mutation also carries an idempotency key.
-    fn next(&self, mutation: bool) -> Result<RequestOptions, String> {
+    fn next(&self, mutation: bool) -> Result<RequestOptions, RrdError> {
         let sequence = self
             .sequence
             .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |value| {
@@ -160,7 +161,7 @@ impl RequestIds {
         } else {
             RequestOptions::read(&request, &operation)
         };
-        options.map_err(sdk_error)
+        options.map_err(RrdError::sdk)
     }
 }
 
@@ -219,7 +220,7 @@ impl Lease {
         principal: &CanonicalId,
         api_key: &Secret,
         ids: &RequestIds,
-    ) -> Result<Self, String> {
+    ) -> Result<Self, RrdError> {
         let request = CreateSession {
             limits: SessionLimits {
                 idle_timeout_ms: SESSION_IDLE_TIMEOUT_MS,
@@ -231,7 +232,7 @@ impl Lease {
         let session = client
             .create_session(principal.clone(), &api_key.0, request, ids.next(true)?)
             .await
-            .map_err(sdk_error)?;
+            .map_err(RrdError::sdk)?;
         let deadlines = Deadlines::granted(requested_at, session.limits())?;
         Ok(Self { session, deadlines })
     }
@@ -378,12 +379,8 @@ fn widen(range: Option<(u64, u64)>, cursor: u64) -> (u64, u64) {
     })
 }
 
-fn sdk_error(error: rrd_client::Error) -> String {
-    error.to_string()
-}
-
 impl NativeRrdClient {
-    pub async fn connect(request: RrdConnectRequest) -> Result<Self, String> {
+    pub async fn connect(request: RrdConnectRequest) -> Result<Self, RrdError> {
         let (endpoint, candidates) = loopback_candidates(&request.endpoint)?;
         let address = reachable_loopback(&candidates).await?;
         let instance = canonical(&request.instance, "instance")?;
@@ -393,9 +390,9 @@ impl NativeRrdClient {
             ..ClientConfig::default()
         };
         let client =
-            RrdClient::connect_local(address, instance.clone(), config).map_err(sdk_error)?;
+            RrdClient::connect_local(address, instance.clone(), config).map_err(RrdError::sdk)?;
         // The SDK validates the capability contract and the exact instance identity.
-        let capabilities = client.capabilities().await.map_err(sdk_error)?;
+        let capabilities = client.capabilities().await.map_err(RrdError::sdk)?;
         let ids = RequestIds::new();
         let lease = Lease::open(&client, &principal, &api_key, &ids).await?;
         Ok(Self {
@@ -437,7 +434,7 @@ impl NativeRrdClient {
     /// not outlive a request is first renewed, or replaced once renewal cannot
     /// help, under the write lock, so no in-flight request holds the bearer
     /// that the renewal rotates or the replacement closes.
-    async fn lease(&self) -> Result<RwLockReadGuard<'_, Lease>, String> {
+    async fn lease(&self) -> Result<RwLockReadGuard<'_, Lease>, RrdError> {
         {
             let current = self.lease.read().await;
             let fresh = current
@@ -470,7 +467,7 @@ impl NativeRrdClient {
     /// Renews `current`, or opens a new session when renewal cannot outlast a
     /// request or the engine refuses it (the session lapsed while Connectome
     /// sat idle, or used up its renewals).
-    async fn refresh(&self, current: &Lease) -> Result<Lease, String> {
+    async fn refresh(&self, current: &Lease) -> Result<Lease, RrdError> {
         if current.deadlines.renewable(Instant::now()) {
             let requested_at = Instant::now();
             match self
@@ -502,7 +499,7 @@ impl NativeRrdClient {
         &self,
         mutation: bool,
         request: impl FnOnce(Session, RequestOptions) -> Fut,
-    ) -> Result<T, String>
+    ) -> Result<T, RrdError>
     where
         Fut: Future<Output = rrd_client::Result<T>>,
     {
@@ -510,14 +507,14 @@ impl NativeRrdClient {
         let options = self.ids.next(mutation)?;
         let result = request(lease.session.clone(), options).await;
         drop(lease);
-        result.map_err(sdk_error)
+        result.map_err(RrdError::sdk)
     }
 
-    pub async fn capabilities(&self) -> Result<ServiceCapabilities, String> {
-        self.client.capabilities().await.map_err(sdk_error)
+    pub async fn capabilities(&self) -> Result<ServiceCapabilities, RrdError> {
+        self.client.capabilities().await.map_err(RrdError::sdk)
     }
 
-    async fn diagnostic_snapshot(&self) -> Result<DiagnosticSnapshot, String> {
+    async fn diagnostic_snapshot(&self) -> Result<DiagnosticSnapshot, RrdError> {
         let request = ReadDiagnosticSnapshot {
             scope: self.scope(),
             graph_valid_at_unix_ms: now_unix_ms()?,
@@ -537,7 +534,7 @@ impl NativeRrdClient {
         .await
     }
 
-    async fn scroll(&self, request: ScrollVectorPoints) -> Result<VectorPointPage, String> {
+    async fn scroll(&self, request: ScrollVectorPoints) -> Result<VectorPointPage, RrdError> {
         self.send(false, |session, options| async move {
             self.client
                 .scroll_vector_points(&session, request, options)
@@ -546,7 +543,7 @@ impl NativeRrdClient {
         .await
     }
 
-    async fn retrieve(&self, request: RetrieveVectorPoints) -> Result<VectorPointBatch, String> {
+    async fn retrieve(&self, request: RetrieveVectorPoints) -> Result<VectorPointBatch, RrdError> {
         self.send(false, |session, options| async move {
             self.client
                 .retrieve_vector_points(&session, request, options)
@@ -555,30 +552,31 @@ impl NativeRrdClient {
         .await
     }
 
-    async fn search(&self, request: SearchVectors) -> Result<VectorSearchResult, String> {
+    async fn search(&self, request: SearchVectors) -> Result<VectorSearchResult, RrdError> {
         self.send(false, |session, options| async move {
             self.client.search_vectors(&session, request, options).await
         })
         .await
     }
 
-    pub async fn database(&self) -> Result<DatabaseView, String> {
+    pub async fn database(&self) -> Result<DatabaseView, RrdError> {
         Ok(view::database(&self.diagnostic_snapshot().await?))
     }
 
-    pub async fn storage(&self) -> Result<StorageView, String> {
+    pub async fn storage(&self) -> Result<StorageView, RrdError> {
         let snapshot = self.diagnostic_snapshot().await?;
         Ok(view::storage(&snapshot, &self.service.storage_profile))
     }
 
-    pub async fn query(&self, request: RrdQueryRequest) -> Result<QueryView, String> {
+    pub async fn query(&self, request: RrdQueryRequest) -> Result<QueryView, RrdError> {
         if request.query.trim().is_empty()
             || request.query.len() > MAX_QUERY_BYTES
             || request.query.contains('\0')
         {
             return Err(format!(
                 "RRFlowQL query must be non-empty, at most {MAX_QUERY_BYTES} bytes, and free of NUL"
-            ));
+            )
+            .into());
         }
         let request = ExecuteQuery {
             scope: self.scope(),
@@ -594,7 +592,7 @@ impl NativeRrdClient {
         Ok(view::query(&result))
     }
 
-    pub async fn vector_collections(&self) -> Result<VectorCollectionsView, String> {
+    pub async fn vector_collections(&self) -> Result<VectorCollectionsView, RrdError> {
         let request = ListVectorCollections {
             scope: self.scope(),
         };
@@ -611,11 +609,9 @@ impl NativeRrdClient {
     pub async fn vector_points(
         &self,
         request: RrdVectorPointsRequest,
-    ) -> Result<VectorPointsView, String> {
+    ) -> Result<VectorPointsView, RrdError> {
         if request.limit == 0 || request.limit > MAX_VECTOR_POINT_PAGE {
-            return Err(format!(
-                "vector page size must be in 1..={MAX_VECTOR_POINT_PAGE}"
-            ));
+            return Err(format!("vector page size must be in 1..={MAX_VECTOR_POINT_PAGE}").into());
         }
         let request = ScrollVectorPoints {
             scope: self.scope(),
@@ -634,9 +630,9 @@ impl NativeRrdClient {
     pub async fn vector_search(
         &self,
         request: RrdVectorSearchRequest,
-    ) -> Result<VectorSearchView, String> {
+    ) -> Result<VectorSearchView, RrdError> {
         if request.top_k == 0 || request.top_k > MAX_VECTOR_SEARCH_TOP_K {
-            return Err(format!("top_k must be in 1..={MAX_VECTOR_SEARCH_TOP_K}"));
+            return Err(format!("top_k must be in 1..={MAX_VECTOR_SEARCH_TOP_K}").into());
         }
         let collection_id = canonical(&request.collection_id, "collection")?;
         let vector_name = canonical(&request.vector_name, "vector name")?;
@@ -686,7 +682,7 @@ impl NativeRrdClient {
         self: &Arc<Self>,
         request: RrdVectorMapRequest,
         progress: impl Fn(VectorMapProgressView),
-    ) -> Result<VectorMapView, String> {
+    ) -> Result<VectorMapView, RrdError> {
         let started = Instant::now();
         let collection_id = canonical(&request.collection_id, "collection")?;
         let vector_name = canonical(&request.vector_name, "vector name")?;
@@ -827,7 +823,7 @@ impl NativeRrdClient {
     }
 
     /// Closes the session once no request pins it; later requests fail closed.
-    pub async fn close(&self) -> Result<(), String> {
+    pub async fn close(&self) -> Result<(), RrdError> {
         let Some(lease) = self.lease.write().await.take() else {
             return Ok(());
         };
@@ -835,7 +831,7 @@ impl NativeRrdClient {
             .close_session(&lease.session, CloseSession {}, self.ids.next(true)?)
             .await
             .map(|_| ())
-            .map_err(sdk_error)
+            .map_err(RrdError::sdk)
     }
 }
 

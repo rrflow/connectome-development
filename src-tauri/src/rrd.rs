@@ -6,6 +6,7 @@ use tauri::{ipc::Channel, State};
 
 mod client;
 mod cluster;
+mod error;
 mod transport;
 mod view;
 
@@ -13,6 +14,7 @@ use client::{
     NativeRrdClient, RrdConnectRequest, RrdQueryRequest, RrdVectorMapRequest,
     RrdVectorPointsRequest, RrdVectorSearchRequest,
 };
+use error::RrdError;
 use transport::public_rrd_url;
 use view::{
     ConnectionView, DatabaseView, QueryView, ServiceView, StorageView, VectorCollectionsView,
@@ -29,7 +31,7 @@ const NOT_CONNECTED: &str = "Connectome is not connected to RRD";
 pub struct RrdClientState(tokio::sync::Mutex<Option<Arc<NativeRrdClient>>>);
 
 impl RrdClientState {
-    async fn client(&self) -> Result<Arc<NativeRrdClient>, String> {
+    async fn client(&self) -> Result<Arc<NativeRrdClient>, RrdError> {
         self.0
             .lock()
             .await
@@ -42,7 +44,7 @@ impl RrdClientState {
 pub async fn rrd_connect(
     request: RrdConnectRequest,
     state: State<'_, RrdClientState>,
-) -> Result<ConnectionView, String> {
+) -> Result<ConnectionView, RrdError> {
     // Held across the handshake so two windows cannot open two sessions.
     let mut guard = state.0.lock().await;
     if guard.is_some() {
@@ -58,7 +60,7 @@ pub async fn rrd_connect(
 #[tauri::command]
 pub async fn rrd_session(
     state: State<'_, RrdClientState>,
-) -> Result<Option<ConnectionView>, String> {
+) -> Result<Option<ConnectionView>, RrdError> {
     Ok(state
         .0
         .lock()
@@ -68,17 +70,17 @@ pub async fn rrd_session(
 }
 
 #[tauri::command]
-pub async fn rrd_capabilities(state: State<'_, RrdClientState>) -> Result<ServiceView, String> {
+pub async fn rrd_capabilities(state: State<'_, RrdClientState>) -> Result<ServiceView, RrdError> {
     Ok(view::service(&state.client().await?.capabilities().await?))
 }
 
 #[tauri::command]
-pub async fn rrd_database(state: State<'_, RrdClientState>) -> Result<DatabaseView, String> {
+pub async fn rrd_database(state: State<'_, RrdClientState>) -> Result<DatabaseView, RrdError> {
     state.client().await?.database().await
 }
 
 #[tauri::command]
-pub async fn rrd_storage(state: State<'_, RrdClientState>) -> Result<StorageView, String> {
+pub async fn rrd_storage(state: State<'_, RrdClientState>) -> Result<StorageView, RrdError> {
     state.client().await?.storage().await
 }
 
@@ -86,14 +88,14 @@ pub async fn rrd_storage(state: State<'_, RrdClientState>) -> Result<StorageView
 pub async fn rrd_query(
     request: RrdQueryRequest,
     state: State<'_, RrdClientState>,
-) -> Result<QueryView, String> {
+) -> Result<QueryView, RrdError> {
     state.client().await?.query(request).await
 }
 
 #[tauri::command]
 pub async fn rrd_vector_collections(
     state: State<'_, RrdClientState>,
-) -> Result<VectorCollectionsView, String> {
+) -> Result<VectorCollectionsView, RrdError> {
     state.client().await?.vector_collections().await
 }
 
@@ -101,7 +103,7 @@ pub async fn rrd_vector_collections(
 pub async fn rrd_vector_points(
     request: RrdVectorPointsRequest,
     state: State<'_, RrdClientState>,
-) -> Result<VectorPointsView, String> {
+) -> Result<VectorPointsView, RrdError> {
     state.client().await?.vector_points(request).await
 }
 
@@ -109,7 +111,7 @@ pub async fn rrd_vector_points(
 pub async fn rrd_vector_search(
     request: RrdVectorSearchRequest,
     state: State<'_, RrdClientState>,
-) -> Result<VectorSearchView, String> {
+) -> Result<VectorSearchView, RrdError> {
     state.client().await?.vector_search(request).await
 }
 
@@ -120,7 +122,7 @@ pub async fn rrd_vector_map(
     request: RrdVectorMapRequest,
     on_progress: Channel<VectorMapProgressView>,
     state: State<'_, RrdClientState>,
-) -> Result<VectorMapView, String> {
+) -> Result<VectorMapView, RrdError> {
     state
         .client()
         .await?
@@ -132,7 +134,7 @@ pub async fn rrd_vector_map(
 }
 
 #[tauri::command]
-pub async fn rrd_disconnect(state: State<'_, RrdClientState>) -> Result<(), String> {
+pub async fn rrd_disconnect(state: State<'_, RrdClientState>) -> Result<(), RrdError> {
     let client = state.0.lock().await.take();
     match client {
         Some(client) => client.close().await,

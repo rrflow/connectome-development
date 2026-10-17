@@ -37,12 +37,13 @@ import { RrdSessionClient } from "~/rrflow/session";
 import { useConfigStore } from "~/shell/stores/config";
 import { formatCount } from "./format";
 import { GlossaryDrawer, Term } from "./glossary";
+import { databaseQuery } from "./queries";
 import { SESSION_QUERY_KEY, SessionPanel } from "./session";
 import classes from "./style.module.scss";
 import { RecordsTab } from "./tabs/records";
 import { StorageTab } from "./tabs/storage";
 import { VectorsTab } from "./tabs/vectors";
-import { databaseQueryKey, type RuntimeLens } from "./types";
+import type { RuntimeLens } from "./types";
 
 interface LensCardProps {
 	active: boolean;
@@ -146,10 +147,8 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 
 	// The lens cards read the same cached snapshots the lenses render.
 	const database = useQuery({
-		queryKey: databaseQueryKey(sessionKey),
+		...databaseQuery(sessionClient, sessionKey),
 		enabled: Boolean(session),
-		queryFn: () => sessionClient.database(),
-		staleTime: Number.POSITIVE_INFINITY,
 	});
 	const catalogue = useQuery({
 		queryKey: ["rrd-vector-collections", sessionKey],

@@ -18,8 +18,10 @@ import { useState } from "react";
 import { Section } from "~/components/Section";
 import { formatCount, formatSize, formatTime, shortDigest } from "../format";
 import { Term } from "../glossary";
+import { ReadNotice } from "../notice";
 import { PhysicalStorage } from "../physical";
 import { StoragePipeline } from "../pipeline";
+import { busyRetry } from "../queries";
 import { Stat } from "../stat";
 import type { RuntimeLensProps } from "../types";
 
@@ -31,19 +33,21 @@ export function StorageTab({ client, sessionKey }: RuntimeLensProps) {
 		queryKey: ["rrd-storage", sessionKey],
 		queryFn: () => client.storage(),
 		refetchInterval: STORAGE_REFRESH_MS,
+		...busyRetry,
 	});
 	const [countersOpen, setCountersOpen] = useState(false);
 	const [historyOpen, setHistoryOpen] = useState(false);
 
 	if (storage.isPending) {
 		return (
-			<Group justify="center">
+			<Stack align="center">
 				<Loader />
-			</Group>
+				<ReadNotice query={storage} />
+			</Stack>
 		);
 	}
 
-	if (storage.isError) {
+	if (!storage.data) {
 		return (
 			<Alert
 				color="red"
@@ -83,6 +87,10 @@ export function StorageTab({ client, sessionKey }: RuntimeLensProps) {
 					</Button>
 				}
 			>
+				<ReadNotice
+					query={storage}
+					observedAt={view.physical.observed_at_unix_ms}
+				/>
 				<StoragePipeline view={view.physical} />
 				<Group>
 					<Button

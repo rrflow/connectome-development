@@ -1,4 +1,4 @@
-import { Channel, invoke, isTauri } from "@tauri-apps/api/core";
+import { Channel, type InvokeArgs, invoke, isTauri } from "@tauri-apps/api/core";
 
 /*
  * Authenticated RRD session views.
@@ -359,6 +359,39 @@ export interface RrdVectorSearchRequest {
 	top_k: number;
 }
 
+/**
+ * A failed native RRD command. `retryable` is the engine's own classification:
+ * it marks a transient storage conflict retryable, such as a diagnostic read
+ * that requests landing meanwhile kept changing.
+ */
+export class RrdCommandError extends Error {
+	readonly retryable: boolean;
+
+	constructor(message: string, retryable: boolean) {
+		super(message);
+		this.name = "RrdCommandError";
+		this.retryable = retryable;
+	}
+}
+
+/** Whether a failure is the engine asking to be asked again later. */
+export function isRetryable(error: unknown): boolean {
+	return error instanceof RrdCommandError && error.retryable;
+}
+
+/** Invokes a native RRD command, turning its error into an `Error`. */
+async function call<T>(command: string, args?: InvokeArgs): Promise<T> {
+	try {
+		return await invoke<T>(command, args);
+	} catch (error) {
+		if (typeof error === "object" && error !== null && "message" in error) {
+			const retryable = "retryable" in error && error.retryable === true;
+			throw new RrdCommandError(String(error.message), retryable);
+		}
+		throw error instanceof Error ? error : new Error(String(error));
+	}
+}
+
 /** One authenticated RRD session held by Connectome's native process. */
 export class RrdSessionClient {
 	private requireNative() {
@@ -369,7 +402,7 @@ export class RrdSessionClient {
 
 	async connect(request: RrdConnectRequest): Promise<RrdConnectionView> {
 		this.requireNative();
-		const connection = await invoke<RrdConnectionView>("rrd_connect", { request });
+		const connection = await call<RrdConnectionView>("rrd_connect", { request });
 		if (
 			connection.instance !== request.instance ||
 			connection.service.instance !== request.instance
@@ -382,42 +415,42 @@ export class RrdSessionClient {
 	/** The live native session, if one survives from an earlier visit. */
 	async current(): Promise<RrdConnectionView | null> {
 		this.requireNative();
-		return invoke<RrdConnectionView | null>("rrd_session");
+		return call<RrdConnectionView | null>("rrd_session");
 	}
 
 	async capabilities(): Promise<RrdServiceView> {
 		this.requireNative();
-		return invoke<RrdServiceView>("rrd_capabilities");
+		return call<RrdServiceView>("rrd_capabilities");
 	}
 
 	async database(): Promise<RrdDatabaseView> {
 		this.requireNative();
-		return invoke<RrdDatabaseView>("rrd_database");
+		return call<RrdDatabaseView>("rrd_database");
 	}
 
 	async storage(): Promise<RrdStorageView> {
 		this.requireNative();
-		return invoke<RrdStorageView>("rrd_storage");
+		return call<RrdStorageView>("rrd_storage");
 	}
 
 	async query(query: string): Promise<RrdQueryView> {
 		this.requireNative();
-		return invoke<RrdQueryView>("rrd_query", { request: { query } });
+		return call<RrdQueryView>("rrd_query", { request: { query } });
 	}
 
 	async vectorCollections(): Promise<RrdVectorCollectionsView> {
 		this.requireNative();
-		return invoke<RrdVectorCollectionsView>("rrd_vector_collections");
+		return call<RrdVectorCollectionsView>("rrd_vector_collections");
 	}
 
 	async vectorPoints(request: RrdVectorPointsRequest): Promise<RrdVectorPointsView> {
 		this.requireNative();
-		return invoke<RrdVectorPointsView>("rrd_vector_points", { request });
+		return call<RrdVectorPointsView>("rrd_vector_points", { request });
 	}
 
 	async vectorSearch(request: RrdVectorSearchRequest): Promise<RrdVectorSearchView> {
 		this.requireNative();
-		return invoke<RrdVectorSearchView>("rrd_vector_search", { request });
+		return call<RrdVectorSearchView>("rrd_vector_search", { request });
 	}
 
 	/**
@@ -431,11 +464,11 @@ export class RrdSessionClient {
 		this.requireNative();
 		const progress = new Channel<RrdVectorMapProgressView>();
 		if (onProgress) progress.onmessage = onProgress;
-		return invoke<RrdVectorMapView>("rrd_vector_map", { request, onProgress: progress });
+		return call<RrdVectorMapView>("rrd_vector_map", { request, onProgress: progress });
 	}
 
 	async disconnect(): Promise<void> {
 		this.requireNative();
-		await invoke<void>("rrd_disconnect");
+		await call<void>("rrd_disconnect");
 	}
 }

@@ -40,8 +40,9 @@ import { formatCount, formatTime } from "../format";
 import { Term } from "../glossary";
 import { type CanvasEdge, type CanvasNode, GraphCanvas } from "../graph";
 import { type ColorGroup, colorOptions, grouping } from "../groups";
+import { databaseQuery } from "../queries";
 import classes from "../style.module.scss";
-import { databaseQueryKey, type RecordFocusProps, type RuntimeLensProps } from "../types";
+import type { RecordFocusProps, RuntimeLensProps } from "../types";
 
 /** Points requested per page while browsing; the contract bounds the maximum natively. */
 const POINT_PAGE_SIZE = 50;
@@ -157,11 +158,7 @@ export function VectorsTab({
 		queryKey: ["rrd-vector-collections", sessionKey],
 		queryFn: () => client.vectorCollections(),
 	});
-	const database = useQuery({
-		queryKey: databaseQueryKey(sessionKey),
-		queryFn: () => client.database(),
-		staleTime: Number.POSITIVE_INFINITY,
-	});
+	const database = useQuery(databaseQuery(client, sessionKey));
 	const [collectionId, setCollectionId] = useState<string | null>(null);
 	const [vectorName, setVectorName] = useState<string | null>(null);
 	const [similarCount, setSimilarCount] = useState("10");
