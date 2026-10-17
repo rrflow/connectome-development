@@ -284,3 +284,32 @@ the engine README; Authority decision 4 governs this repository.
 Verified locally: `pnpm check`, `cargo fmt --check`, strict Clippy, and
 `cargo test` (8 passed), all `--locked`; a headless launch stays up where the
 previous revision exited 101.
+
+### 2026-10-16 — desktop renderer, neighbourhood graphs, and the merged SDK pin
+
+- Fixed (`f412398`): the desktop renderer was a blank white window. Window
+  labels are `connectome-*` but the capability granted `Connectome-*`, and
+  Tauri matches window patterns case-sensitively, so no IPC was permitted.
+  The capability file is now `capabilities/connectome.json`, and
+  `application_windows_match_the_capability_window_pattern` reads that file
+  and fails if the window label prefix stops matching it.
+- The runtime page leads with its lenses once a session is open; engine
+  identity, attunement, and mesh details sit behind a toggle (`61b5a34`).
+- The Database lens draws either the whole estate or one record's
+  neighbourhood (1–3 hops, outgoing, incoming, or both), filters by record and
+  relation kind, and keeps the drawn neighbourhood lit while the focus is
+  selected; nested query values render as plain lists and maps (`3cb07d8`,
+  `d53584f`).
+- The render smoke fixture now answers with the current capability contract;
+  the smoke had failed since `5a75034` on the retired `deployment_mode`
+  field (`28f5662`).
+- `rrd-client` and `rrd-contract` now pin
+  `rrflow/rrflow-development@b275792`, the merge of pull request #3 into
+  `main`; the storage section the Storage lens renders is merged engine
+  contract, not a branch.
+
+Verified: Connectome CI passed all four jobs at `28f5662`. At the new pin,
+strict Clippy and `cargo test` (11 passed), both `--locked`. The Windows
+desktop app was driven through WebView2 DevTools against a live estate on the
+development server (270 records, 986 relations, 270 vectors), and every lens
+was reviewed by screenshot.
