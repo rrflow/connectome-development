@@ -15,7 +15,7 @@
 		"dev": "vite",
 		"preview": "vite preview",
 		"test:smoke": "playwright test",
-		"check": "biome check . && node scripts/check-retired-identities.mjs && tsc --noEmit",
+		"check": "biome check . && node scripts/check-retired-identities.mjs && node scripts/check-dependency-authority.mjs && tsc --noEmit",
 		"check:identity": "node scripts/check-retired-identities.mjs",
 		"qc": "biome check .",
 		"qa": "biome check . --write --formatter-enabled=true",
