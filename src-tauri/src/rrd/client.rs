@@ -839,6 +839,9 @@ impl NativeRrdClient {
 }
 
 #[cfg(test)]
+mod process;
+
+#[cfg(test)]
 mod tests {
     use super::*;
 
