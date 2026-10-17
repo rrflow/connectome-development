@@ -78,6 +78,21 @@ export interface RrdNodeView {
 	label: string;
 	valid_from_unix_ms: number;
 	properties: Record<string, string>;
+	/** Index into `RrdGraphView.clusters`. */
+	cluster: number;
+}
+
+/**
+ * A group of records linked more densely to each other than to the rest of
+ * the estate. Connectome computes clusters from the relations to color the
+ * graph; they are not estate data.
+ */
+export interface RrdClusterView {
+	id: number;
+	size: number;
+	/** The member with the most relations, which names the cluster. */
+	anchor: string;
+	label: string;
 }
 
 export interface RrdEdgeView {
@@ -92,6 +107,8 @@ export interface RrdGraphView {
 	known_at_cursor: number;
 	nodes: RrdNodeView[];
 	edges: RrdEdgeView[];
+	/** Largest first. */
+	clusters: RrdClusterView[];
 }
 
 export interface RrdSectionView {
@@ -194,6 +211,40 @@ export interface RrdVectorSearchView {
 	hits: RrdHitView[];
 }
 
+export interface RrdMapPointView {
+	reference: RrdReference;
+	subject: RrdReference;
+}
+
+export interface RrdMapLinkView {
+	/** Indexes into `RrdVectorMapView.points`; `to` is among `from`'s nearest. */
+	from: number;
+	to: number;
+	/** 1 for the nearest neighbour. */
+	rank: number;
+	score: number;
+}
+
+/** Every drawn point with its nearest neighbours from the engine's exact search. */
+export interface RrdVectorMapView {
+	collection_id: string;
+	vector_name: string;
+	points: RrdMapPointView[];
+	links: RrdMapLinkView[];
+	/** Neighbours requested for each point. */
+	neighbours: number;
+	/** The collection holds more points than the map draws. */
+	truncated: boolean;
+	/** Points whose value kind cannot be searched by example. */
+	unsearchable: number;
+	searches: number;
+	exact: boolean;
+	keys_examined: number;
+	known_at_cursor_min: number;
+	known_at_cursor_max: number;
+	elapsed_ms: number;
+}
+
 export interface RrdVectorArtifactView {
 	kind: string;
 	projection_id: string;
@@ -278,6 +329,11 @@ export interface RrdVectorPointsRequest {
 	limit: number;
 }
 
+export interface RrdVectorMapRequest {
+	collection_id: string;
+	vector_name: string;
+}
+
 export interface RrdVectorSearchRequest {
 	collection_id: string;
 	vector_name: string;
@@ -344,6 +400,12 @@ export class RrdSessionClient {
 	async vectorSearch(request: RrdVectorSearchRequest): Promise<RrdVectorSearchView> {
 		this.requireNative();
 		return invoke<RrdVectorSearchView>("rrd_vector_search", { request });
+	}
+
+	/** Nearest neighbours of every drawn point; one exact engine search each. */
+	async vectorMap(request: RrdVectorMapRequest): Promise<RrdVectorMapView> {
+		this.requireNative();
+		return invoke<RrdVectorMapView>("rrd_vector_map", { request });
 	}
 
 	async disconnect(): Promise<void> {

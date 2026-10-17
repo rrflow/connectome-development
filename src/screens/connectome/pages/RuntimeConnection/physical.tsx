@@ -5,7 +5,7 @@ import type { RrdMetricView, RrdPhysicalStorageView } from "~/rrflow/session";
 import { formatCount, formatSize } from "./format";
 import classes from "./style.module.scss";
 
-function formatMetric(unit: RrdMetricView["unit"], value: number): string {
+export function formatMetric(unit: RrdMetricView["unit"], value: number): string {
 	switch (unit) {
 		case "bytes":
 			return formatSize(value);
@@ -16,12 +16,12 @@ function formatMetric(unit: RrdMetricView["unit"], value: number): string {
 	}
 }
 
-function fill(metric: RrdMetricView): number | null {
+export function fill(metric: RrdMetricView): number | null {
 	if (metric.limit === null || metric.limit <= 0) return null;
 	return Math.min(100, (metric.value / metric.limit) * 100);
 }
 
-function fillColor(percent: number): string {
+export function fillColor(percent: number): string {
 	return percent >= 90 ? "red" : percent >= 70 ? "orange" : "violet";
 }
 

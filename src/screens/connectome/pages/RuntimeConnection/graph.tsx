@@ -1,121 +1,204 @@
-import { Box, type BoxProps, Group, Paper, Stack, Text, useMantineTheme } from "@mantine/core";
-import { Icon, iconFullscreen, iconMagnifyMinus, iconMagnifyPlus } from "@rrflow/ui";
-import { MultiDirectedGraph } from "graphology";
+import {
+	Box,
+	type BoxProps,
+	Group,
+	Paper,
+	ScrollArea,
+	Stack,
+	Text,
+	UnstyledButton,
+	useMantineTheme,
+} from "@mantine/core";
+import {
+	Icon,
+	iconFullscreen,
+	iconMagnifyMinus,
+	iconMagnifyPlus,
+	iconMaximize,
+	iconMinimize,
+} from "@rrflow/ui";
+import Graph from "graphology";
 import { circular } from "graphology-layout";
 import forceAtlas2, { inferSettings } from "graphology-layout-forceatlas2";
-import { useEffect, useMemo, useRef } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import Sigma from "sigma";
 import type { EdgeDisplayData, NodeDisplayData } from "sigma/types";
 import { ActionButton } from "~/components/ActionButton";
 import { drawHover, drawLabel } from "~/components/RelationGraph/drawing";
 import { useStable } from "~/hooks/stable";
 import { getIsLight, useIsLight } from "~/hooks/theme";
-import type { RrdGraphView } from "~/rrflow/session";
+import type { ColorGroup } from "./groups";
 
 /** Iterations of ForceAtlas2 applied before the first frame; the graph is static afterwards. */
 const LAYOUT_ITERATIONS = 300;
-/** Barnes-Hut approximation pays off once the record set is this large. */
+/** Barnes-Hut approximation pays off once the graph is this large. */
 const BARNES_HUT_THRESHOLD = 500;
-const KIND_COLORS = [
-	"violet",
-	"blue",
-	"teal",
-	"orange",
-	"pink",
-	"cyan",
-	"yellow",
-	"grape",
-	"green",
-	"red",
-	"indigo",
-];
+/** Longest label drawn on the canvas; the hover card shows the full text. */
+const MAX_CANVAS_LABEL = 40;
+/** More lit nodes than this keep sigma's own label thinning instead of forced labels. */
+const MAX_FORCED_LABELS = 30;
+const HOVER_OFFSET = 14;
+const HOVER_WIDTH = 300;
+/** Room kept below a hover card so it stays inside the canvas. */
+const HOVER_HEIGHT = 150;
 
-interface RecordNode {
+export interface CanvasNode {
+	id: string;
 	label: string;
-	kind: string;
+}
+
+export interface CanvasEdge {
+	id: string;
+	from: string;
+	to: string;
+	/** Layout pull between the two nodes; 1 when omitted. */
+	weight?: number;
+}
+
+interface NodeAttributes {
+	label: string;
 	x: number;
 	y: number;
 	size: number;
 	color: string;
 }
 
-interface RelationEdge {
-	kind: string;
+interface EdgeAttributes {
+	weight: number;
 	size: number;
 }
 
-export interface RecordGraphProps extends BoxProps {
-	graph: RrdGraphView;
-	/** Every record kind in the estate, so a kind keeps its color in any subgraph. */
-	kinds: string[];
+interface Focus {
+	hovered: string;
 	selected: string | null;
+	highlighted: ReadonlySet<string>;
+	dimUnselected: boolean;
+	activeGroup: string | null;
+	groupOf: ReadonlyMap<string, string>;
+	colors: ReadonlyMap<string, string>;
+	/** Nodes the focus keeps lit; `null` lights every node. */
+	lit: ReadonlySet<string> | null;
+}
+
+/** Hovering lights a neighbourhood; otherwise highlights, then the selection. */
+function litNodes(layout: Graph<NodeAttributes, EdgeAttributes>, focus: Focus) {
+	if (focus.hovered && layout.hasNode(focus.hovered)) {
+		return new Set([focus.hovered, ...layout.neighbors(focus.hovered)]);
+	}
+	if (focus.highlighted.size > 0) {
+		return new Set([...focus.highlighted, ...(focus.selected ? [focus.selected] : [])]);
+	}
+	if (focus.dimUnselected && focus.selected && layout.hasNode(focus.selected)) {
+		return new Set([focus.selected, ...layout.neighbors(focus.selected)]);
+	}
+	return null;
+}
+
+export interface GraphCanvasProps extends BoxProps {
+	nodes: CanvasNode[];
+	edges: CanvasEdge[];
+	directed: boolean;
+	/** Node id to color group id. */
+	groupOf: ReadonlyMap<string, string>;
+	groups: ColorGroup[];
+	/** Legend heading, such as "Color: Cluster". */
+	legendTitle: string;
+	selected: string | null;
+	/** Nodes to keep lit and labelled around the selection. */
+	highlighted?: ReadonlySet<string>;
 	/**
-	 * Dim records outside the selection's direct neighbourhood. A neighbourhood
-	 * subgraph is already the context, so it keeps every drawn record lit.
+	 * Dim nodes outside the selection's direct neighbourhood. A neighbourhood
+	 * subgraph is already the context, so it keeps every drawn node lit.
 	 */
 	dimUnselected: boolean;
-	onSelect: (record: string | null) => void;
+	onSelect: (id: string | null) => void;
+	/** Content of the card shown while the pointer rests on a node. */
+	renderHover: (id: string) => ReactNode;
+	/** One line telling a first-time reader how to use the canvas. */
+	hint: string;
+}
+
+function bringIntoView(instance: Sigma<NodeAttributes, EdgeAttributes>, node: string) {
+	const display = instance.getNodeDisplayData(node);
+	if (display) {
+		instance.getCamera().animate({ x: display.x, y: display.y, ratio: 0.5 }, { duration: 400 });
+	}
+}
+
+function canvasLabel(label: string): string {
+	return label.length > MAX_CANVAS_LABEL ? `${label.slice(0, MAX_CANVAS_LABEL - 1)}…` : label;
 }
 
 /**
- * Records and relations from the diagnostic graph snapshot, laid out with
- * ForceAtlas2. Node size follows degree; color follows record kind.
+ * A ForceAtlas2 layout of nodes and edges drawn with sigma. Node size follows
+ * degree; color follows the caller's grouping. Hovering a node lights its
+ * neighbourhood and shows a card; clicking selects it.
  */
-export function RecordGraph({
-	graph,
-	kinds,
+export function GraphCanvas({
+	nodes,
+	edges,
+	directed,
+	groupOf,
+	groups,
+	legendTitle,
 	selected,
+	highlighted,
 	dimUnselected,
 	onSelect,
+	renderHover,
+	hint,
 	...other
-}: RecordGraphProps) {
+}: GraphCanvasProps) {
 	const ref = useRef<HTMLDivElement>(null);
-	const sigmaRef = useRef<Sigma<RecordNode, RelationEdge> | null>(null);
-	const focusRef = useRef({
-		hovered: "",
-		neighbours: new Set<string>(),
-		selected,
-		dimUnselected,
-	});
+	const sigmaRef = useRef<Sigma<NodeAttributes, EdgeAttributes> | null>(null);
 	const theme = useMantineTheme();
 	const isLight = useIsLight();
 	const handleSelect = useStable(onSelect);
+	const [hover, setHover] = useState<{ id: string; left: number; top: number } | null>(null);
+	const [activeGroup, setActiveGroup] = useState<string | null>(null);
+	const [expanded, setExpanded] = useState(false);
 
-	const kindColors = useMemo(
+	const colors = useMemo(
 		() =>
 			new Map(
-				kinds.map((kind, index) => {
-					const name = KIND_COLORS[index % KIND_COLORS.length];
-					return [kind, theme.colors[name]?.[6] ?? theme.colors.obsidian[4]];
-				}),
+				groups.map((group) => [
+					group.id,
+					(group.palette && theme.colors[group.palette]?.[6]) || theme.colors.obsidian[4],
+				]),
 			),
-		[kinds, theme.colors],
+		[groups, theme.colors],
 	);
 
-	const kindCounts = useMemo(() => {
-		const counts = new Map<string, number>();
-		for (const node of graph.nodes) {
-			counts.set(node.kind, (counts.get(node.kind) ?? 0) + 1);
-		}
-		return counts;
-	}, [graph.nodes]);
+	const focusRef = useRef<Focus>({
+		hovered: "",
+		selected,
+		highlighted: highlighted ?? new Set(),
+		dimUnselected,
+		activeGroup,
+		groupOf,
+		colors,
+		lit: null,
+	});
 
 	const layout = useMemo(() => {
-		const model = new MultiDirectedGraph<RecordNode, RelationEdge>();
-		for (const node of graph.nodes) {
+		const model = new Graph<NodeAttributes, EdgeAttributes>({
+			multi: true,
+			type: directed ? "directed" : "undirected",
+			allowSelfLoops: true,
+		});
+		for (const node of nodes) {
 			model.addNode(node.id, {
-				label: node.label,
-				kind: node.kind,
+				label: canvasLabel(node.label),
 				x: 0,
 				y: 0,
 				size: 3,
-				color: kindColors.get(node.kind) ?? theme.colors.obsidian[4],
+				color: "",
 			});
 		}
-		for (const edge of graph.edges) {
+		for (const edge of edges) {
 			if (model.hasNode(edge.from) && model.hasNode(edge.to)) {
-				model.addDirectedEdgeWithKey(edge.id, edge.from, edge.to, {
-					kind: edge.kind,
+				model.addEdgeWithKey(edge.id, edge.from, edge.to, {
+					weight: edge.weight ?? 1,
 					size: 1,
 				});
 			}
@@ -130,115 +213,193 @@ export function RecordGraph({
 				settings: {
 					...inferSettings(model),
 					barnesHutOptimize: model.order > BARNES_HUT_THRESHOLD,
+					edgeWeightInfluence: 1,
 				},
 			});
 		}
 		return model;
-	}, [graph.nodes, graph.edges, kindColors, theme.colors.obsidian]);
+	}, [nodes, edges, directed]);
+
+	const legend = useMemo(() => {
+		const drawn = new Map<string, number>();
+		for (const node of nodes) {
+			const group = groupOf.get(node.id);
+			if (group) drawn.set(group, (drawn.get(group) ?? 0) + 1);
+		}
+		return groups
+			.filter((group) => drawn.has(group.id))
+			.map((group) => ({ ...group, drawn: drawn.get(group.id) ?? 0 }));
+	}, [nodes, groupOf, groups]);
 
 	const edgeColor = isLight ? theme.colors.obsidian[2] : theme.colors.obsidian[6];
 	const labelColor = isLight ? theme.colors.obsidian[9] : theme.colors.obsidian[0];
 
-	// Selection may come from the graph or from the record search: highlight
-	// the record's neighbourhood and bring it into view either way.
+	// Selection, highlights, grouping, and legend focus repaint without relayout;
+	// a new selection is brought into view.
 	useEffect(() => {
+		const focus = focusRef.current;
+		const moved = focus.selected !== selected;
+		focus.selected = selected;
+		focus.highlighted = highlighted ?? new Set();
+		focus.dimUnselected = dimUnselected;
+		focus.activeGroup = activeGroup;
+		focus.groupOf = groupOf;
+		focus.colors = colors;
+		focus.lit = litNodes(layout, focus);
 		const instance = sigmaRef.current;
-		focusRef.current.selected = selected;
-		focusRef.current.dimUnselected = dimUnselected;
-		focusRef.current.neighbours =
-			selected && layout.hasNode(selected) ? new Set(layout.neighbors(selected)) : new Set();
 		if (!instance) return;
 		instance.refresh({ skipIndexation: true });
-		const display = selected ? instance.getNodeDisplayData(selected) : undefined;
-		if (display) {
-			instance
-				.getCamera()
-				.animate({ x: display.x, y: display.y, ratio: 0.35 }, { duration: 400 });
-		}
-	}, [selected, dimUnselected, layout]);
+		if (moved && selected) bringIntoView(instance, selected);
+	}, [layout, selected, highlighted, dimUnselected, activeGroup, groupOf, colors]);
 
 	useEffect(() => {
 		if (!ref.current) return;
+		const dimmed = () => (getIsLight() ? theme.colors.obsidian[1] : theme.colors.obsidian[7]);
+		focusRef.current.lit = litNodes(layout, focusRef.current);
 
-		const instance = new Sigma<RecordNode, RelationEdge>(layout, ref.current, {
+		const instance = new Sigma<NodeAttributes, EdgeAttributes>(layout, ref.current, {
 			allowInvalidContainer: true,
-			defaultEdgeType: "arrow",
+			defaultEdgeType: directed ? "arrow" : "line",
 			defaultEdgeColor: edgeColor,
 			labelColor: { color: labelColor },
 			labelFont: "JetBrains Mono",
-			labelSize: 10,
-			labelDensity: 0.35,
-			labelGridCellSize: 120,
-			labelRenderedSizeThreshold: 11,
+			labelSize: 11,
+			labelDensity: 0.5,
+			labelGridCellSize: 110,
+			labelRenderedSizeThreshold: 9,
 			stagePadding: 32,
+			zIndex: true,
 			defaultDrawNodeHover: drawHover,
 			defaultDrawNodeLabel: drawLabel,
 			nodeReducer: (node, data) => {
-				const display: Partial<NodeDisplayData> = { ...data };
 				const focus = focusRef.current;
-				const anchor = focus.hovered || (focus.dimUnselected ? focus.selected : "");
-				if (anchor && node !== anchor && !focus.neighbours.has(node)) {
+				const display: Partial<NodeDisplayData> = { ...data };
+				const group = focus.groupOf.get(node);
+				display.color = (group && focus.colors.get(group)) || theme.colors.obsidian[4];
+				const inGroup = !focus.activeGroup || group === focus.activeGroup;
+				const lit = focus.lit;
+				const isLit = (!lit || lit.has(node)) && (inGroup || node === focus.selected);
+				if (!isLit) {
 					display.label = "";
-					display.color = getIsLight()
-						? theme.colors.obsidian[1]
-						: theme.colors.obsidian[7];
+					display.color = dimmed();
+					display.zIndex = 0;
+					return display;
 				}
-				if (node === focus.selected) {
+				display.zIndex = 1;
+				// graphology's `order` counts nodes (`size` counts edges).
+				if ((lit ? lit.size : layout.order) <= MAX_FORCED_LABELS) {
+					display.forceLabel = true;
+				}
+				if (node === focus.selected || node === focus.hovered) {
 					display.highlighted = true;
+					display.forceLabel = true;
+					display.zIndex = 2;
 				}
 				return display;
 			},
 			edgeReducer: (edge, data) => {
 				const display: Partial<EdgeDisplayData> = { ...data };
 				const focus = focusRef.current;
-				const anchor = focus.hovered || (focus.dimUnselected ? focus.selected : "");
-				if (anchor && !layout.extremities(edge).includes(anchor)) {
+				const [from, to] = layout.extremities(edge);
+				const ends = [from, to].map((node) => focus.groupOf.get(node));
+				const inGroup =
+					!focus.activeGroup || ends.every((group) => group === focus.activeGroup);
+				if (!inGroup) {
 					display.hidden = true;
+				} else if (focus.hovered) {
+					display.hidden = from !== focus.hovered && to !== focus.hovered;
+				} else if (focus.lit) {
+					display.hidden = !(focus.lit.has(from) && focus.lit.has(to));
 				}
 				return display;
 			},
 		});
-
-		const focusOn = (node: string) => {
-			focusRef.current.neighbours = new Set(layout.neighbors(node));
+		const repaint = () => {
+			focusRef.current.lit = litNodes(layout, focusRef.current);
+			instance.refresh({ skipIndexation: true });
 		};
 
 		instance.on("enterNode", ({ node }) => {
 			focusRef.current.hovered = node;
-			focusOn(node);
-			instance.refresh({ skipIndexation: true });
+			repaint();
+			const display = instance.getNodeDisplayData(node);
+			if (display) {
+				const position = instance.framedGraphToViewport(display);
+				const width = ref.current?.offsetWidth ?? HOVER_WIDTH;
+				const height = ref.current?.offsetHeight ?? HOVER_HEIGHT;
+				setHover({
+					id: node,
+					left: Math.max(8, Math.min(position.x + HOVER_OFFSET, width - HOVER_WIDTH - 8)),
+					top: Math.max(8, Math.min(position.y + HOVER_OFFSET, height - HOVER_HEIGHT)),
+				});
+			}
 		});
 		instance.on("leaveNode", () => {
 			focusRef.current.hovered = "";
-			const current = focusRef.current.selected;
-			focusRef.current.neighbours = current ? new Set(layout.neighbors(current)) : new Set();
-			instance.refresh({ skipIndexation: true });
+			repaint();
+			setHover(null);
 		});
-		instance.on("clickNode", ({ node }) => {
-			focusOn(node);
-			handleSelect(node);
-		});
-		instance.on("clickStage", () => {
-			focusRef.current.neighbours = new Set();
-			handleSelect(null);
-		});
+		instance.on("clickNode", ({ node }) => handleSelect(node));
+		instance.on("clickStage", () => handleSelect(null));
+		instance.getCamera().on("updated", () => setHover(null));
 
 		sigmaRef.current = instance;
+		const selection = focusRef.current.selected;
+		if (selection) bringIntoView(instance, selection);
 		return () => {
 			instance.kill();
 			sigmaRef.current = null;
 		};
-	}, [layout, edgeColor, labelColor, theme.colors.obsidian]);
+	}, [layout, directed, edgeColor, labelColor, theme.colors.obsidian]);
+
+	// The canvas fills the window while expanded; Escape restores it.
+	useEffect(() => {
+		sigmaRef.current?.refresh();
+		if (!expanded) return;
+		const onKey = (event: KeyboardEvent) => {
+			if (event.key === "Escape") setExpanded(false);
+		};
+		window.addEventListener("keydown", onKey);
+		return () => window.removeEventListener("keydown", onKey);
+	}, [expanded]);
 
 	return (
 		<Box
-			pos="relative"
+			pos={expanded ? "fixed" : "relative"}
 			{...other}
+			{...(expanded && {
+				inset: 16,
+				h: "auto",
+				style: {
+					zIndex: 250,
+					background: "var(--mantine-color-body)",
+					borderRadius: "var(--mantine-radius-md)",
+					boxShadow: "var(--mantine-shadow-xl)",
+				},
+			})}
 		>
 			<Box
 				ref={ref}
 				h="100%"
 			/>
+
+			<Paper
+				pos="absolute"
+				top={8}
+				left={8}
+				px="sm"
+				py={4}
+				bg={isLight ? "obsidian.0" : "obsidian.8"}
+				style={{ pointerEvents: "none" }}
+			>
+				<Text
+					fz="xs"
+					c="slate"
+				>
+					{hint}
+				</Text>
+			</Paper>
+
 			<Group
 				gap={4}
 				pos="absolute"
@@ -260,45 +421,103 @@ export function RecordGraph({
 					<Icon path={iconMagnifyMinus} />
 				</ActionButton>
 				<ActionButton
-					label="Fit graph"
+					label="Fit to view"
 					variant="subtle"
 					onClick={() => sigmaRef.current?.getCamera().animatedReset()}
 				>
 					<Icon path={iconFullscreen} />
 				</ActionButton>
+				<ActionButton
+					label={expanded ? "Shrink (Esc)" : "Expand"}
+					variant="subtle"
+					onClick={() => setExpanded((value) => !value)}
+				>
+					<Icon path={expanded ? iconMinimize : iconMaximize} />
+				</ActionButton>
 			</Group>
-			<Paper
-				pos="absolute"
-				bottom={8}
-				left={8}
-				px="sm"
-				py={6}
-				bg={isLight ? "obsidian.0" : "obsidian.8"}
-			>
-				<Stack gap={2}>
-					{[...kindColors.entries()]
-						.filter(([kind]) => kindCounts.has(kind))
-						.map(([kind, color]) => (
-							<Group
-								key={kind}
-								gap={6}
-							>
-								<Box
-									w={8}
-									h={8}
-									bg={color}
-									style={{ borderRadius: "50%" }}
-								/>
-								<Text
-									fz="xs"
-									ff="monospace"
-								>
-									{kind} · {kindCounts.get(kind) ?? 0}
-								</Text>
-							</Group>
-						))}
-				</Stack>
-			</Paper>
+
+			{legend.length > 0 && (
+				<Paper
+					pos="absolute"
+					bottom={8}
+					left={8}
+					p={6}
+					maw={300}
+					bg={isLight ? "obsidian.0" : "obsidian.8"}
+				>
+					<Text
+						fz="xs"
+						fw={600}
+						px={4}
+						mb={2}
+					>
+						{legendTitle}
+					</Text>
+					<ScrollArea.Autosize mah={220}>
+						<Stack gap={0}>
+							{legend.map((group) => {
+								const active = activeGroup === group.id;
+								return (
+									<UnstyledButton
+										key={group.id}
+										px={4}
+										py={2}
+										title={
+											active ? "Show every group" : `Show only ${group.label}`
+										}
+										onClick={() => setActiveGroup(active ? null : group.id)}
+										style={{
+											borderRadius: "var(--mantine-radius-sm)",
+											opacity: activeGroup && !active ? 0.5 : 1,
+										}}
+									>
+										<Group
+											gap={6}
+											wrap="nowrap"
+										>
+											<Box
+												w={9}
+												h={9}
+												bg={colors.get(group.id)}
+												style={{ borderRadius: "50%", flexShrink: 0 }}
+											/>
+											<Text
+												fz="xs"
+												truncate
+												fw={active ? 700 : undefined}
+											>
+												{group.label}
+											</Text>
+											<Text
+												fz="xs"
+												c="slate"
+												ml="auto"
+											>
+												{group.drawn}
+											</Text>
+										</Group>
+									</UnstyledButton>
+								);
+							})}
+						</Stack>
+					</ScrollArea.Autosize>
+				</Paper>
+			)}
+
+			{hover && (
+				<Paper
+					pos="absolute"
+					left={hover.left}
+					top={hover.top}
+					w={HOVER_WIDTH}
+					p="sm"
+					shadow="md"
+					withBorder
+					style={{ pointerEvents: "none", zIndex: 5 }}
+				>
+					{renderHover(hover.id)}
+				</Paper>
+			)}
 		</Box>
 	);
 }

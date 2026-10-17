@@ -4,17 +4,18 @@ use std::time::Duration;
 use tauri::State;
 
 mod client;
+mod cluster;
 mod transport;
 mod view;
 
 use client::{
-    NativeRrdClient, RrdConnectRequest, RrdQueryRequest, RrdVectorPointsRequest,
-    RrdVectorSearchRequest,
+    NativeRrdClient, RrdConnectRequest, RrdQueryRequest, RrdVectorMapRequest,
+    RrdVectorPointsRequest, RrdVectorSearchRequest,
 };
 use transport::public_rrd_url;
 use view::{
     ConnectionView, DatabaseView, QueryView, ServiceView, StorageView, VectorCollectionsView,
-    VectorPointsView, VectorSearchView,
+    VectorMapView, VectorPointsView, VectorSearchView,
 };
 
 const MAX_RRD_RESPONSE_BYTES: u64 = 1024 * 1024;
@@ -112,6 +113,21 @@ pub async fn rrd_vector_search(
         .as_mut()
         .ok_or(NOT_CONNECTED)?
         .vector_search(request)
+        .await
+}
+
+/// Nearest neighbours of every point the similarity map draws, one exact
+/// engine search per point.
+#[tauri::command]
+pub async fn rrd_vector_map(
+    request: RrdVectorMapRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<VectorMapView, String> {
+    let mut guard = state.0.lock().await;
+    guard
+        .as_mut()
+        .ok_or(NOT_CONNECTED)?
+        .vector_map(request)
         .await
 }
 

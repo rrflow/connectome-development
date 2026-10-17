@@ -3,27 +3,27 @@ import {
 	Badge,
 	Box,
 	Button,
-	Divider,
 	Group,
 	Paper,
 	Progress,
 	ScrollArea,
 	SimpleGrid,
 	Stack,
-	Tabs,
 	Text,
+	UnstyledButton,
 } from "@mantine/core";
 import {
 	Icon,
-	iconDatabase,
+	iconBook,
 	iconErrorCircle,
 	iconMemory,
 	iconRefresh,
 	iconRelation,
+	iconTarget,
 } from "@rrflow/ui";
 import { useQuery } from "@tanstack/react-query";
 import { isTauri } from "@tauri-apps/api/core";
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import { Redirect } from "wouter";
 import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
@@ -35,13 +35,73 @@ import {
 import { RrdRuntimeClient } from "~/rrflow/runtime";
 import { RrdSessionClient } from "~/rrflow/session";
 import { useConfigStore } from "~/shell/stores/config";
+import { formatCount } from "./format";
+import { GlossaryDrawer, Term } from "./glossary";
 import { SESSION_QUERY_KEY, SessionPanel } from "./session";
 import classes from "./style.module.scss";
-import { DatabaseTab } from "./tabs/database";
+import { RecordsTab } from "./tabs/records";
 import { StorageTab } from "./tabs/storage";
 import { VectorsTab } from "./tabs/vectors";
+import { databaseQueryKey, type RuntimeLens } from "./types";
 
-type RuntimeLens = "database" | "vectors" | "storage";
+interface LensCardProps {
+	active: boolean;
+	icon: string;
+	title: string;
+	purpose: string;
+	reading: ReactNode;
+	onOpen: () => void;
+}
+
+function LensCard({ active, icon, title, purpose, reading, onOpen }: LensCardProps) {
+	return (
+		<UnstyledButton
+			onClick={onOpen}
+			aria-pressed={active}
+		>
+			<Paper
+				p="md"
+				h="100%"
+				className={classes.lens}
+				data-active={active || undefined}
+			>
+				<Group
+					gap="sm"
+					wrap="nowrap"
+					align="flex-start"
+				>
+					<Box
+						c={active ? "violet" : "slate"}
+						mt={2}
+					>
+						<Icon path={icon} />
+					</Box>
+					<Box miw={0}>
+						<Text
+							fw={700}
+							c="bright"
+						>
+							{title}
+						</Text>
+						<Text
+							fz="sm"
+							c="slate"
+						>
+							{purpose}
+						</Text>
+						<Text
+							fz="sm"
+							fw={600}
+							mt={6}
+						>
+							{reading}
+						</Text>
+					</Box>
+				</Group>
+			</Paper>
+		</UnstyledButton>
+	);
+}
 
 export function RuntimeConnectionPage({ id }: { id: string }) {
 	const connection = useConfigStore((state) =>
@@ -67,12 +127,11 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 		queryFn: () => sessionClient.current(),
 		staleTime: Number.POSITIVE_INFINITY,
 	});
-	const [lens, setLens] = useState<RuntimeLens>("database");
+	const [lens, setLens] = useState<RuntimeLens>("records");
+	const [selected, setSelected] = useState<string | null>(null);
+	const [colorBy, setColorBy] = useState("cluster");
 	const [showIdentity, setShowIdentity] = useState(false);
-
-	if (connection?.target !== "runtime") {
-		return <Redirect to="/overview" />;
-	}
+	const [glossaryOpen, setGlossaryOpen] = useState(false);
 
 	const handshake = query.data;
 	const current = nativeSession.data ?? null;
@@ -84,6 +143,24 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 	const session = ownsSession ? current : null;
 	const foreign = ownsSession ? null : current;
 	const sessionKey = session ? `${session.instance}:${session.connected_at_unix_ms}` : "";
+
+	// The lens cards read the same cached snapshots the lenses render.
+	const database = useQuery({
+		queryKey: databaseQueryKey(sessionKey),
+		enabled: Boolean(session),
+		queryFn: () => sessionClient.database(),
+		staleTime: Number.POSITIVE_INFINITY,
+	});
+	const catalogue = useQuery({
+		queryKey: ["rrd-vector-collections", sessionKey],
+		enabled: Boolean(session),
+		queryFn: () => sessionClient.vectorCollections(),
+	});
+
+	if (connection?.target !== "runtime") {
+		return <Redirect to="/overview" />;
+	}
+
 	// With a live session the lenses lead; the handshake evidence stays one click away.
 	const identityVisible = !session || showIdentity;
 	const stages = [
@@ -104,6 +181,20 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 				: "Awaiting capability negotiation",
 		},
 	];
+	const graph = database.data?.graph;
+	const collections = catalogue.data?.collections;
+	const namedVectors =
+		collections?.reduce((count, collection) => count + collection.vectors.length, 0) ?? 0;
+	const storageProfile = session?.service.storage_profile;
+	const lensProps = {
+		client: sessionClient,
+		sessionKey,
+		selected,
+		onSelect: setSelected,
+		colorBy,
+		onColorBy: setColorBy,
+		onOpenLens: setLens,
+	};
 
 	return (
 		<Box
@@ -120,7 +211,7 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 					px="xl"
 					py="lg"
 					mx="auto"
-					maw={1320}
+					maw={1400}
 					pb={72}
 				>
 					<PageBreadcrumbs
@@ -136,39 +227,49 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 						justify="space-between"
 					>
 						<Box>
-							<Group gap="xs">
-								<Badge
-									variant="dot"
-									color={handshake ? "green" : query.isError ? "red" : "gray"}
-								>
-									{handshake
-										? "RRD connected"
-										: query.isError
-											? "Rejected"
-											: "Negotiating"}
-								</Badge>
-								<Badge
-									variant="light"
-									color="violet"
-								>
-									HTTP first
-								</Badge>
-							</Group>
+							<Badge
+								variant="dot"
+								color={handshake ? "green" : query.isError ? "red" : "gray"}
+							>
+								{handshake
+									? "RRD connected"
+									: query.isError
+										? "Rejected"
+										: "Negotiating"}
+							</Badge>
 							<PrimaryTitle
 								fz={32}
 								mt="xs"
 							>
-								{handshake?.service.instance.id ?? connection.name}
+								{connection.name}
 							</PrimaryTitle>
-							<Text
-								ff="monospace"
-								fz="sm"
+							<Group
+								gap={6}
 								mt={4}
 							>
-								{endpoint}
-							</Text>
+								<Text
+									ff="monospace"
+									fz="sm"
+								>
+									{handshake?.service.instance.id ?? "instance not confirmed"}
+								</Text>
+								<Text
+									fz="sm"
+									c="slate"
+								>
+									· {endpoint}
+								</Text>
+							</Group>
 						</Box>
 						<Group gap="xs">
+							<Button
+								variant="subtle"
+								color="obsidian"
+								leftSection={<Icon path={iconBook} />}
+								onClick={() => setGlossaryOpen(true)}
+							>
+								What do these words mean?
+							</Button>
 							{session && (
 								<Button
 									variant="subtle"
@@ -294,75 +395,82 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 						</Paper>
 					)}
 
-					{connection && (
-						<SessionPanel
-							client={sessionClient}
-							connection={connection}
-							endpoint={endpoint}
-							handshake={handshake}
-							session={session}
-							foreign={foreign}
-						/>
-					)}
+					<SessionPanel
+						client={sessionClient}
+						connection={connection}
+						endpoint={endpoint}
+						handshake={handshake}
+						session={session}
+						foreign={foreign}
+						ready={nativeSession.isFetched}
+					/>
 
 					{session && (
-						<Tabs
-							variant="gradient"
-							value={lens}
-							onChange={(value) => value && setLens(value as RuntimeLens)}
-						>
-							<Tabs.List
-								mb="md"
-								bg="transparent"
-								bd="none"
-							>
-								<Tabs.Tab
-									px="xl"
-									value="database"
-									leftSection={<Icon path={iconRelation} />}
-								>
-									Database
-								</Tabs.Tab>
-								<Tabs.Tab
-									px="xl"
-									value="vectors"
-									leftSection={<Icon path={iconDatabase} />}
-								>
-									Vectors
-								</Tabs.Tab>
-								<Tabs.Tab
-									px="xl"
-									value="storage"
-									leftSection={<Icon path={iconMemory} />}
-								>
-									Storage
-								</Tabs.Tab>
-							</Tabs.List>
-							<Divider mb="xl" />
-							<Tabs.Panel value="database">
-								<DatabaseTab
-									client={sessionClient}
-									connection={session}
-									sessionKey={sessionKey}
+						<>
+							<Text>
+								One <Term id="estate">estate</Term>, one database: RRFlow keeps the
+								records, the relations between them, and their vectors together in
+								rrflowDB, and stores all of it with{" "}
+								<Term id="rrflowKV">rrflowKV</Term>. The three views below are three
+								ways into the same data.
+							</Text>
+							<SimpleGrid cols={{ base: 1, md: 3 }}>
+								<LensCard
+									active={lens === "records"}
+									icon={iconRelation}
+									title="Records & relations"
+									purpose="What the estate knows and how it links together."
+									reading={
+										graph
+											? `${formatCount(graph.nodes.length)} records · ${formatCount(graph.edges.length)} relations`
+											: "Reading…"
+									}
+									onOpen={() => setLens("records")}
 								/>
-							</Tabs.Panel>
-							<Tabs.Panel value="vectors">
-								<VectorsTab
-									client={sessionClient}
-									connection={session}
-									sessionKey={sessionKey}
+								<LensCard
+									active={lens === "vectors"}
+									icon={iconTarget}
+									title="Vectors"
+									purpose="Find records with similar content by comparing their vectors."
+									reading={
+										collections
+											? `${formatCount(collections.length)} collection${collections.length === 1 ? "" : "s"} · ${formatCount(namedVectors)} named vector${namedVectors === 1 ? "" : "s"}`
+											: "Reading…"
+									}
+									onOpen={() => setLens("vectors")}
 								/>
-							</Tabs.Panel>
-							<Tabs.Panel value="storage">
+								<LensCard
+									active={lens === "storage"}
+									icon={iconMemory}
+									title="Storage engine"
+									purpose="How the data is kept safe on disk and quick in memory."
+									reading={`${storageProfile === "rrflow_kv" ? "rrflowKV" : storageProfile} · live counters`}
+									onOpen={() => setLens("storage")}
+								/>
+							</SimpleGrid>
+
+							<Box mt="md">
+								{lens === "records" && (
+									<RecordsTab
+										connection={session}
+										{...lensProps}
+									/>
+								)}
+								{lens === "vectors" && (
+									<VectorsTab
+										connection={session}
+										{...lensProps}
+									/>
+								)}
 								{lens === "storage" && (
 									<StorageTab
-										client={sessionClient}
 										connection={session}
+										client={sessionClient}
 										sessionKey={sessionKey}
 									/>
 								)}
-							</Tabs.Panel>
-						</Tabs>
+							</Box>
+						</>
 					)}
 
 					{!session && (
@@ -467,6 +575,10 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 					)}
 				</Stack>
 			</ScrollArea>
+			<GlossaryDrawer
+				opened={glossaryOpen}
+				onClose={() => setGlossaryOpen(false)}
+			/>
 		</Box>
 	);
 }

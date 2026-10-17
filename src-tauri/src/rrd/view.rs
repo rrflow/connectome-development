@@ -5,6 +5,7 @@
 //! wire type and never receives a credential, token, or raw vector payload
 //! larger than its preview.
 
+use super::cluster;
 use rrd_contract::{
     DataReference, DataVectorValue, DiagnosticRrflowKvSnapshot, DiagnosticRuntimeReference,
     DiagnosticSnapshot, DiagnosticStorageSnapshot, QueryResult, QueryValue, ServiceCapabilities,
@@ -98,6 +99,8 @@ pub struct GraphView {
     pub known_at_cursor: u64,
     pub nodes: Vec<NodeView>,
     pub edges: Vec<EdgeView>,
+    /// Connectome-computed clusters, largest first; not estate data.
+    pub clusters: Vec<ClusterView>,
 }
 
 #[derive(Debug, Serialize)]
@@ -108,6 +111,18 @@ pub struct NodeView {
     pub label: String,
     pub valid_from_unix_ms: u64,
     pub properties: BTreeMap<String, String>,
+    /// Index into `GraphView::clusters`.
+    pub cluster: usize,
+}
+
+/// A group of records linked more densely to each other than to the rest.
+#[derive(Debug, Serialize)]
+pub struct ClusterView {
+    pub id: usize,
+    pub size: usize,
+    /// The member with the most relations, which names the cluster.
+    pub anchor: String,
+    pub label: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -222,6 +237,45 @@ pub struct HitView {
     pub subject: ReferenceView,
     pub score: f64,
     pub source_cursor: u64,
+}
+
+/// The similarity map: stored points plus each point's nearest neighbours as
+/// returned by the engine's exact search. Vector values stay native.
+#[derive(Debug, Serialize)]
+pub struct VectorMapView {
+    pub collection_id: String,
+    pub vector_name: String,
+    /// Points in reference order, at most the map bound.
+    pub points: Vec<MapPointView>,
+    /// `to` is one of `from`'s nearest neighbours; both index `points`.
+    pub links: Vec<MapLinkView>,
+    /// Neighbours requested for each point.
+    pub neighbours: u64,
+    /// The collection holds more points than the map draws.
+    pub truncated: bool,
+    /// Points whose value kind cannot be searched by example.
+    pub unsearchable: usize,
+    pub searches: u64,
+    pub exact: bool,
+    pub keys_examined: u64,
+    pub known_at_cursor_min: u64,
+    pub known_at_cursor_max: u64,
+    pub elapsed_ms: u64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct MapPointView {
+    pub reference: ReferenceView,
+    pub subject: ReferenceView,
+}
+
+#[derive(Debug, Serialize)]
+pub struct MapLinkView {
+    pub from: usize,
+    pub to: usize,
+    /// 1 for the nearest neighbour.
+    pub rank: usize,
+    pub score: f64,
 }
 
 #[derive(Debug, Serialize)]
@@ -405,6 +459,44 @@ pub fn service(capabilities: &ServiceCapabilities) -> ServiceView {
     }
 }
 
+/// Assigns each node its cluster and names every cluster after its member with
+/// the most relations (ties go to the earlier record).
+fn cluster_views(nodes: &mut [NodeView], links: &[(usize, usize)]) -> Vec<ClusterView> {
+    let membership = cluster::clusters(nodes.len(), links);
+    let mut degree = vec![0usize; nodes.len()];
+    for &(from, to) in links {
+        degree[from] += 1;
+        degree[to] += 1;
+    }
+    let count = membership.iter().max().map_or(0, |last| last + 1);
+    let mut sizes = vec![0usize; count];
+    let mut anchors: Vec<Option<usize>> = vec![None; count];
+    for (position, &cluster) in membership.iter().enumerate() {
+        sizes[cluster] += 1;
+        let anchor = &mut anchors[cluster];
+        if anchor.is_none_or(|current| degree[position] > degree[current]) {
+            *anchor = Some(position);
+        }
+    }
+    for (node, &cluster) in nodes.iter_mut().zip(&membership) {
+        node.cluster = cluster;
+    }
+    anchors
+        .into_iter()
+        .zip(sizes)
+        .enumerate()
+        .filter_map(|(id, (anchor, size))| {
+            let anchor = &nodes[anchor?];
+            Some(ClusterView {
+                id,
+                size,
+                anchor: anchor.id.clone(),
+                label: anchor.label.clone(),
+            })
+        })
+        .collect()
+}
+
 pub fn database(snapshot: &DiagnosticSnapshot) -> DatabaseView {
     let tables = snapshot
         .schema
@@ -421,7 +513,7 @@ pub fn database(snapshot: &DiagnosticSnapshot) -> DatabaseView {
                 .collect()
         })
         .unwrap_or_default();
-    let nodes: Vec<NodeView> = snapshot
+    let mut nodes: Vec<NodeView> = snapshot
         .graph
         .records
         .iter()
@@ -439,11 +531,16 @@ pub fn database(snapshot: &DiagnosticSnapshot) -> DatabaseView {
                 label,
                 valid_from_unix_ms: record.valid_from_unix_ms,
                 properties,
+                cluster: 0,
             }
         })
         .collect();
-    let known: BTreeSet<&str> = nodes.iter().map(|node| node.id.as_str()).collect();
-    let edges = snapshot
+    let index: BTreeMap<&str, usize> = nodes
+        .iter()
+        .enumerate()
+        .map(|(position, node)| (node.id.as_str(), position))
+        .collect();
+    let edges: Vec<EdgeView> = snapshot
         .graph
         .relations
         .iter()
@@ -455,8 +552,15 @@ pub fn database(snapshot: &DiagnosticSnapshot) -> DatabaseView {
         })
         // A relation whose endpoint is outside the bounded record set is not
         // drawn as a dangling edge; the coverage section reports the bound.
-        .filter(|edge| known.contains(edge.from.as_str()) && known.contains(edge.to.as_str()))
+        .filter(|edge| {
+            index.contains_key(edge.from.as_str()) && index.contains_key(edge.to.as_str())
+        })
         .collect();
+    let links: Vec<(usize, usize)> = edges
+        .iter()
+        .map(|edge| (index[edge.from.as_str()], index[edge.to.as_str()]))
+        .collect();
+    let clusters = cluster_views(&mut nodes, &links);
     DatabaseView {
         observed_at_unix_ms: snapshot.observed_at_unix_ms,
         runtime_cursor: snapshot.read.runtime_cursor,
@@ -479,6 +583,7 @@ pub fn database(snapshot: &DiagnosticSnapshot) -> DatabaseView {
             known_at_cursor: snapshot.graph.known_at_cursor,
             nodes,
             edges,
+            clusters,
         },
         sections: snapshot
             .sections
@@ -1224,6 +1329,38 @@ mod tests {
             .find(|group| group.id == "segment_io")
             .expect("segment I/O group");
         assert_eq!(io.notes, ["Requested read path: auto"]);
+    }
+
+    fn node(id: &str, label: &str) -> NodeView {
+        NodeView {
+            id: format!("document:{id}"),
+            kind: "document".into(),
+            key: id.into(),
+            label: label.into(),
+            valid_from_unix_ms: 1,
+            properties: BTreeMap::new(),
+            cluster: usize::MAX,
+        }
+    }
+
+    #[test]
+    fn clusters_are_named_after_their_most_linked_record() {
+        let mut nodes: Vec<NodeView> = ["hub", "a", "b", "lone", "x", "y"]
+            .iter()
+            .map(|id| node(id, &id.to_uppercase()))
+            .collect();
+        // hub links to a and b, which also link to each other; x and y pair up.
+        let links = [(0, 1), (0, 2), (1, 2), (2, 0), (4, 5)];
+        let clusters = cluster_views(&mut nodes, &links);
+        let names: Vec<(usize, usize, &str)> = clusters
+            .iter()
+            .map(|cluster| (cluster.id, cluster.size, cluster.label.as_str()))
+            .collect();
+        assert_eq!(names, [(0, 3, "HUB"), (1, 2, "X"), (2, 1, "LONE")]);
+        assert_eq!(clusters[0].anchor, "document:hub");
+        let membership: Vec<usize> = nodes.iter().map(|node| node.cluster).collect();
+        assert_eq!(membership, [0, 0, 0, 2, 1, 1]);
+        assert!(cluster_views(&mut [], &[]).is_empty());
     }
 
     #[test]

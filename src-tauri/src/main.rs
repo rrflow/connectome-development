@@ -121,6 +121,7 @@ fn main() {
             rrd::rrd_vector_collections,
             rrd::rrd_vector_points,
             rrd::rrd_vector_search,
+            rrd::rrd_vector_map,
             rrd::rrd_disconnect,
             window::toggle_devtools,
             window::new_window,
