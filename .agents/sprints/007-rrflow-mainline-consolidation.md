@@ -313,3 +313,75 @@ strict Clippy and `cargo test` (11 passed), both `--locked`. The Windows
 desktop app was driven through WebView2 DevTools against a live estate on the
 development server (270 records, 986 relations, 270 vectors), and every lens
 was reviewed by screenshot.
+
+### 2026-10-16 — plain-language lenses, verified in the desktop app
+
+Branch `agent/layman-lenses-wip`, from `61d9c6a`, through `abc549c`.
+
+- The runtime page explains itself to a first-time reader. Three lens
+  cards (Records & relations, Vectors, Storage engine) lead; every RRFlow
+  term is dotted-underlined with a plain meaning, and "What do these words
+  mean?" opens the whole glossary. Terms stay canonical; only the
+  explanations are plain.
+- Records & relations colours the estate by cluster (deterministic Louvain
+  over the relations, computed natively in `src-tauri/src/rrd/cluster.rs`
+  and named after each cluster's most linked record), kind, folder, or
+  field. It adds hover cards, "Start here", a selection panel with links in
+  and out, the neighbourhood view, and a collapsible RRFlowQL console.
+- Vectors draws a similarity map in which every line is an engine
+  exact-search hit (`rrd_vector_map`, five nearest per point), coloured like
+  Records. Selecting a record lists its most similar records from the
+  engine, with scores.
+- Storage engine draws rrflowKV's write path as four stages (write-ahead
+  log, memtable, segments, page cache) with live readings and a plain status
+  sentence; every engine counter is one click away.
+- Graph labels are placed per frame without overlap (`labels.ts`): highest
+  priority first, right of the node or else left of it, clear of the canvas
+  edges, its controls, and the selected or hovered node.
+
+Defects found by driving the real app, and fixed:
+
+- A sign-in replayed a lapsed session (`6f28488`). Correlation ids counted
+  from 1 on every launch, so each launch's first `CreateSession` carried
+  `connectome-key-1`. The engine derives a session's identity from that key
+  and answers a repeated key with the first result, so every launch got the
+  session an earlier launch opened (the strip showed "idle expiry 4:29 PM"
+  at 7:12 PM with both clocks in sync). Ids now carry a random
+  per-connection prefix; deadlines run on the local monotonic clock; a
+  lapsing session is renewed in place, or replaced and closed, under a
+  write lock, so no in-flight request loses its bearer.
+- Every lens call held the native mutex for its whole round trip, so the
+  similarity map blocked every other lens while it built. Commands now
+  release the state lock before any request.
+- Map progress never appeared (`8ba7163`). `tauri` resolves to 2.10.3 while
+  `@tauri-apps/api` was pinned at 2.4.0: the crate sends channel messages as
+  `{ message, index }`, the 2.4 `Channel` reads `{ message, id }` and parked
+  every message. The JS API now matches the crate's minor (2.10.1).
+- Opened during a map build, Storage engine waited about 47 s, then could
+  fail. The engine's diagnostic snapshot re-assembles until a before/after
+  stamp matches; the stamp includes the control sequence, which every
+  audited request advances, so under the map's steady searches all three
+  attempts change and the engine answers 409 `StorageConflict`, marked
+  retryable (`abc549c`). Session commands now return
+  `{ message, retryable }`; diagnostic reads retry retryable conflicts with
+  backoff and say "The engine is busy" in plain words, keeping their last
+  reading on screen. The engine-side cause is an RRFlow deficiency, not
+  fixed here.
+- The selected record said it had no vector until the map finished, map
+  progress was lost on a lens switch, and the console read "1 ROWS"
+  (`d98dda1`, `00ef348`, `df82883`).
+
+Known, not fixed here: the map costs one exact search per point, and each
+search re-reads the change log from cursor 0 (RRFlow plan step 2b). On the
+live demo estate: 270 searches, 1,320,583 keys examined, 46.9 s (57.1 s
+while the Storage lens retried its busy reads).
+
+Verified: `pnpm check`, render smoke, `cargo fmt --check`, strict Clippy,
+and `cargo test` (23 passed), all `--locked`; Connectome CI green at
+`df82883`, `00ef348`, `8ba7163`, and `abc549c`. The Windows desktop app was
+driven through WebView2 DevTools against the live estate (271 records, 986
+relations, 270 vectors): the strip reads "Signed in as local-operator since
+8:24 PM · renews automatically"; similar records showed 1.4 s after opening
+Vectors with the map still building; Storage explained the busy engine
+3.4 s into the build; progress survived a lens switch ("40 of 270 searches
+done · about 57 s left"); every lens state was reviewed by screenshot.
