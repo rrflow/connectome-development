@@ -1,4 +1,4 @@
-import { iconFunction, iconTable, iconVariable } from "@rrflow/ui";
+import { iconFunction, iconTable, iconVariable } from "@surrealdb/ui";
 
 type TypeIcon = { type: string; icon: string; color: string };
 

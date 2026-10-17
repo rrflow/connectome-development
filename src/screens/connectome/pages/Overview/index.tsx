@@ -33,7 +33,7 @@ import {
 	pictoSDBCloud,
 	pictoSidekick,
 	pictoUniversity,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { MouseEvent, useState } from "react";
 import { Link } from "wouter";
 import { adapter } from "~/adapter";

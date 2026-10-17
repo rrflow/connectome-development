@@ -1,5 +1,5 @@
 import { Box, BoxProps, Button, Divider, Group, Paper, Skeleton, Stack, Text } from "@mantine/core";
-import { Icon, iconAccount } from "@rrflow/ui";
+import { Icon, iconAccount } from "@surrealdb/ui";
 import { hasOrganizationRoles, ORG_ROLES_OWNER } from "~/cloud/helpers";
 import { openBillingDetails } from "~/cloud/modals/billing";
 import { useCloudBillingQuery } from "~/cloud/queries/billing";

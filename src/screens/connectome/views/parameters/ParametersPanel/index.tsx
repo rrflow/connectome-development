@@ -1,6 +1,6 @@
 import { Badge, ScrollArea, Stack, Text, TextInput } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconCopy, iconDelete, iconPlus, iconSearch, iconVariable } from "@rrflow/ui";
+import { Icon, iconCopy, iconDelete, iconPlus, iconSearch, iconVariable } from "@surrealdb/ui";
 import { useContextMenu } from "mantine-contextmenu";
 import { useMemo } from "react";
 import { ActionButton } from "~/components/ActionButton";

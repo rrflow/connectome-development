@@ -1,5 +1,5 @@
 import { BoxProps, Image, Paper, Stack, Text } from "@mantine/core";
-import { pictoSDBCloud } from "@rrflow/ui";
+import { pictoSDBCloud } from "@surrealdb/ui";
 import { PropsWithChildren, ReactNode } from "react";
 import glowImage from "~/shared/assets/images/glow.png";
 import classes from "./style.module.scss";

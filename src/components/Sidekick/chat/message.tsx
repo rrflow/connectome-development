@@ -19,7 +19,7 @@ import {
 	iconChevronUp,
 	iconCopy,
 	Markdown,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { useState } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { Link } from "~/components/Link";

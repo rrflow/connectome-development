@@ -4,7 +4,7 @@ import "@mantine/notifications/styles.css";
 import "@mantine/charts/styles.css";
 import "@mantine/dates/styles.css";
 import "mantine-contextmenu/styles.layer.css";
-import "@rrflow/ui/styles.css";
+import "@surrealdb/ui/styles.css";
 
 import "~/shared/assets/styles/layers.scss";
 import "~/shared/assets/styles/fonts.scss";

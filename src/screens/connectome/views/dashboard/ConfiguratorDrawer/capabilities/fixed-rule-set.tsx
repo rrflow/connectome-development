@@ -10,7 +10,14 @@ import {
 	Tooltip,
 	UnstyledButton,
 } from "@mantine/core";
-import { Icon, iconCancel, iconCheck, iconChevronDown, iconChevronUp, iconHelp } from "@rrflow/ui";
+import {
+	Icon,
+	iconCancel,
+	iconCheck,
+	iconChevronDown,
+	iconChevronUp,
+	iconHelp,
+} from "@surrealdb/ui";
 import { useEffect, useState } from "react";
 import { Spacer } from "~/components/Spacer";
 import { useBoolean } from "~/hooks/boolean";

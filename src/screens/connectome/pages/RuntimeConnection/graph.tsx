@@ -19,7 +19,7 @@ import {
 	iconMagnifyPlus,
 	iconMaximize,
 	iconMinimize,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import Graph from "graphology";
 import { circular } from "graphology-layout";
 import forceAtlas2, { inferSettings } from "graphology-layout-forceatlas2";

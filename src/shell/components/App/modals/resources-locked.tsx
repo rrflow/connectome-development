@@ -1,6 +1,6 @@
 import { Button, Group, Stack, Text } from "@mantine/core";
 import { closeModal, openModal } from "@mantine/modals";
-import { Icon, iconAuth } from "@rrflow/ui";
+import { Icon, iconAuth } from "@surrealdb/ui";
 import { Spacer } from "~/components/Spacer";
 import { dispatchIntent } from "~/shared/util/intents";
 import { CloudOrganization } from "~/types";

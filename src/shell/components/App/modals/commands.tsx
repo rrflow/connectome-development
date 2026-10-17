@@ -1,6 +1,6 @@
 import { Box, Divider, Group, Modal, ScrollArea, Stack, Text, TextInput } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconSearch } from "@rrflow/ui";
+import { Icon, iconSearch } from "@surrealdb/ui";
 import clsx from "clsx";
 import { type KeyboardEvent, useMemo, useRef } from "react";
 import { Entry } from "~/components/Entry";

@@ -1,5 +1,5 @@
 import { type BoxProps, type ElementProps, Group } from "@mantine/core";
-import { Icon, iconArrowUpRight } from "@rrflow/ui";
+import { Icon, iconArrowUpRight } from "@surrealdb/ui";
 import type { MouseEvent } from "react";
 import { useEffect, useState } from "react";
 import { useStable } from "~/hooks/stable";

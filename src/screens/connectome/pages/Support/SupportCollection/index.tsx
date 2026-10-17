@@ -1,5 +1,5 @@
 import { Anchor, Box, Group, Image, Paper, Text } from "@mantine/core";
-import { pictoBrain } from "@rrflow/ui";
+import { pictoBrain } from "@surrealdb/ui";
 import { navigate } from "wouter/use-browser-location";
 import { IntercomSupportCollectionShallow } from "~/types";
 

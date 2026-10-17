@@ -20,7 +20,7 @@ import {
 	iconChevronLeft,
 	iconClose,
 	iconDownload,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { useMemo } from "react";
 import { adapter } from "~/adapter";
 import { ActionButton } from "~/components/ActionButton";

@@ -1,6 +1,6 @@
 import { Box, Button, Group, Menu, Modal, Stack, Text, TextInput } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconChevronRight, iconCog, iconExitToAp, iconOrganization } from "@rrflow/ui";
+import { Icon, iconChevronRight, iconCog, iconExitToAp, iconOrganization } from "@surrealdb/ui";
 import { useState } from "react";
 import { fetchAPI } from "~/cloud/api";
 import { destroySession, openCloudAuthentication } from "~/cloud/api/auth";

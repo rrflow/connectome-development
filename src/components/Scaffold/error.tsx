@@ -7,7 +7,7 @@ import {
 	iconCopy,
 	iconRefresh,
 	iconWarning,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import type { FallbackProps } from "react-error-boundary";
 import { adapter } from "~/adapter";
 import { useVersionCopy } from "~/hooks/debug";

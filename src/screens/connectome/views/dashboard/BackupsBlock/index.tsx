@@ -1,5 +1,5 @@
 import { Button, Center, Group, Paper, Skeleton, Stack, Text } from "@mantine/core";
-import { Icon, iconChevronRight, iconKeyboardShift } from "@rrflow/ui";
+import { Icon, iconChevronRight, iconKeyboardShift } from "@surrealdb/ui";
 import { formatDistance } from "date-fns";
 import { hasOrganizationRoles, ORG_ROLES_ADMIN } from "~/cloud/helpers";
 import { useStable } from "~/hooks/stable";

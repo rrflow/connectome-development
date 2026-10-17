@@ -1,5 +1,5 @@
 import { Button, Group, Text } from "@mantine/core";
-import { Icon, iconDownload, iconModuleML, iconOpen } from "@rrflow/ui";
+import { Icon, iconDownload, iconModuleML, iconOpen } from "@surrealdb/ui";
 import { useMemo } from "react";
 import { adapter } from "~/adapter";
 import { Introduction } from "~/components/Introduction";

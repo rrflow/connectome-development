@@ -8,7 +8,7 @@ import {
 	Stack,
 	Text,
 } from "@mantine/core";
-import { Icon, iconNamespace, iconPlus, iconTrash } from "@rrflow/ui";
+import { Icon, iconNamespace, iconPlus, iconTrash } from "@surrealdb/ui";
 import { useMutation } from "@tanstack/react-query";
 import { type SyntheticEvent, useMemo } from "react";
 import { ActionButton } from "~/components/ActionButton";

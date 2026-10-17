@@ -10,7 +10,7 @@ import {
 	iconPlus,
 	iconReset,
 	iconSearch,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { type ContextMenuItemOptions, useContextMenu } from "mantine-contextmenu";
 import { sort } from "radash";
 import { useMemo } from "react";

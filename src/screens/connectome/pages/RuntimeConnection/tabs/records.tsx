@@ -31,7 +31,7 @@ import {
 	iconRelation,
 	iconSearch,
 	iconTarget,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useMemo, useRef, useState } from "react";
 import { Label } from "~/components/Label";

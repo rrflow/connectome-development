@@ -1,5 +1,5 @@
 import { Box, Divider, Group, MantineSize, Paper, type PaperProps, Text } from "@mantine/core";
-import { Icon } from "@rrflow/ui";
+import { Icon } from "@surrealdb/ui";
 import clsx from "clsx";
 import type { HTMLAttributes } from "react";
 import { useIsLight } from "~/hooks/theme";

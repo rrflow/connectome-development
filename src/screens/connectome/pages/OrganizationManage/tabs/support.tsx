@@ -1,5 +1,5 @@
 import { Box, Button, Group, Paper, Stack, Text } from "@mantine/core";
-import { Icon, iconOpen, iconPlus, pictoHealthChat } from "@rrflow/ui";
+import { Icon, iconOpen, iconPlus, pictoHealthChat } from "@surrealdb/ui";
 import { navigate } from "wouter/use-browser-location";
 import { adapter } from "~/adapter";
 import { useCloudOrganizationTicketsQuery } from "~/cloud/queries/context";

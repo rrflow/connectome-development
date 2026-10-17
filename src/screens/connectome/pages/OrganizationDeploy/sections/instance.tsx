@@ -1,5 +1,5 @@
 import { Badge, Group, Image, Select, Stack, TextInput } from "@mantine/core";
-import { Icon, iconCheck } from "@rrflow/ui";
+import { Icon, iconCheck } from "@surrealdb/ui";
 import { ChangeEvent, useLayoutEffect } from "react";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { REGION_FLAGS } from "~/constants";

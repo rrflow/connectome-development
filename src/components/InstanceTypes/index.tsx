@@ -1,5 +1,5 @@
 import { Badge, Box, Divider, Group, Paper, Stack, Text, Tooltip } from "@mantine/core";
-import { Icon, iconAuth } from "@rrflow/ui";
+import { Icon, iconAuth } from "@surrealdb/ui";
 import { useMemo } from "react";
 import { INSTANCE_PLAN_CATEGORIES } from "~/cloud/helpers";
 import { TypeVariant, useInstanceTypeRegistry } from "~/cloud/hooks/types";

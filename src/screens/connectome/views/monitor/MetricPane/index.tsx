@@ -1,5 +1,5 @@
 import { Paper, ScrollArea, Stack } from "@mantine/core";
-import { Icon, iconChart, iconChevronRight } from "@rrflow/ui";
+import { Icon, iconChart, iconChevronRight } from "@surrealdb/ui";
 import { ActionButton } from "~/components/ActionButton";
 import { ContentPane } from "~/components/Pane";
 import { CloudMetrics } from "~/types";

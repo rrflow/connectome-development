@@ -1,6 +1,6 @@
 import { Group, SimpleGrid, Stack, Text } from "@mantine/core";
 import { openModal } from "@mantine/modals";
-import { Icon, iconCreditCard } from "@rrflow/ui";
+import { Icon, iconCreditCard } from "@surrealdb/ui";
 import { useEffect } from "react";
 import {
 	getBillingProviderAction,

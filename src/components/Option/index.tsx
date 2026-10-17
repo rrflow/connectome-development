@@ -1,5 +1,5 @@
 import { Box, BoxProps, Text, Transition, UnstyledButton } from "@mantine/core";
-import { Icon, iconCheck } from "@rrflow/ui";
+import { Icon, iconCheck } from "@surrealdb/ui";
 import { FC, ReactNode } from "react";
 import classes from "./style.module.scss";
 

@@ -1,5 +1,5 @@
 import { Group, Stack, Text, ThemeIcon } from "@mantine/core";
-import { Icon, iconTag } from "@rrflow/ui";
+import { Icon, iconTag } from "@surrealdb/ui";
 import { formatRelativeDate } from "~/shared/util/helpers";
 import { IntercomTicket } from "~/types";
 

@@ -1,5 +1,5 @@
 import { Button, Center, Group, Image, Stack, Text } from "@mantine/core";
-import { pictoSDBCloud } from "@rrflow/ui";
+import { pictoSDBCloud } from "@surrealdb/ui";
 import { PropsWithChildren } from "react";
 import { navigate } from "wouter/use-browser-location";
 import { hasOrganizationRoles, ORG_ROLES_ADMIN } from "~/cloud/helpers";

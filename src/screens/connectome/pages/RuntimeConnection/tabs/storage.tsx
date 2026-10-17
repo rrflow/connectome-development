@@ -12,7 +12,7 @@ import {
 	Table,
 	Text,
 } from "@mantine/core";
-import { Icon, iconChevronDown, iconChevronUp, iconErrorCircle, iconRefresh } from "@rrflow/ui";
+import { Icon, iconChevronDown, iconChevronUp, iconErrorCircle, iconRefresh } from "@surrealdb/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Section } from "~/components/Section";

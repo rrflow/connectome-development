@@ -24,7 +24,7 @@ import {
 	pictoPlay,
 	pictoSidekick,
 	pictoUniversity,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { useEffect } from "react";
 import { navigate } from "wouter/use-browser-location";
 import { adapter } from "~/adapter";

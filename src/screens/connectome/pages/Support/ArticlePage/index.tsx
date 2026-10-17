@@ -11,7 +11,7 @@ import {
 	Text,
 	UnstyledButton,
 } from "@mantine/core";
-import { Icon, iconArrowLeft, iconOpen } from "@rrflow/ui";
+import { Icon, iconArrowLeft, iconOpen } from "@surrealdb/ui";
 import { navigate } from "wouter/use-browser-location";
 import { adapter } from "~/adapter";
 import { useSupportArticleQuery } from "~/cloud/queries/context";

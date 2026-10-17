@@ -11,7 +11,7 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconEdit, iconPlus, iconSearch } from "@rrflow/ui";
+import { Icon, iconEdit, iconPlus, iconSearch } from "@surrealdb/ui";
 import equal from "fast-deep-equal";
 import { Fragment, useMemo, useState } from "react";
 import { ActionButton } from "~/components/ActionButton";

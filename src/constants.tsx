@@ -33,7 +33,7 @@ import {
 	iconVariable,
 	iconWarning,
 	iconXml,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { satisfies } from "compare-versions";
 import flagIE from "flag-icons/flags/4x3/ie.svg";
 import flagIN from "flag-icons/flags/4x3/in.svg";

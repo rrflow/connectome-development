@@ -1,5 +1,5 @@
 import { ActionIcon, Box, Dialog, Group, Text, ThemeIcon } from "@mantine/core";
-import { Icon, iconClose, iconWarning } from "@rrflow/ui";
+import { Icon, iconClose, iconWarning } from "@surrealdb/ui";
 import { useStable } from "~/hooks/stable";
 import { useCloudStore } from "~/stores/cloud";
 import classes from "../style.module.scss";

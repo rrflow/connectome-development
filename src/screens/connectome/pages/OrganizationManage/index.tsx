@@ -9,7 +9,7 @@ import {
 	iconOrganization,
 	iconProgressClock,
 	iconServer,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { useMemo } from "react";
 import { Redirect, useLocation } from "wouter";
 import {

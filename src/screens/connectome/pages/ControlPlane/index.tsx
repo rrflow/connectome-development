@@ -12,7 +12,7 @@ import {
 	Text,
 	ThemeIcon,
 } from "@mantine/core";
-import { Icon, iconDatabase, iconErrorCircle, iconRefresh } from "@rrflow/ui";
+import { Icon, iconDatabase, iconErrorCircle, iconRefresh } from "@surrealdb/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { Link, Redirect } from "wouter";

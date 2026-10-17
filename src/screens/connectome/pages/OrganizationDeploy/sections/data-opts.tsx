@@ -1,5 +1,5 @@
 import { Alert, Box, Button, Group, Select, Stack, Text } from "@mantine/core";
-import { Icon, iconArrowDownFat, iconHelp, iconInfo, useStable } from "@rrflow/ui";
+import { Icon, iconArrowDownFat, iconHelp, iconInfo, useStable } from "@surrealdb/ui";
 import dayjs from "dayjs";
 import { isDistributedPlan } from "~/cloud/helpers";
 import { DeploySectionProps } from "../types";

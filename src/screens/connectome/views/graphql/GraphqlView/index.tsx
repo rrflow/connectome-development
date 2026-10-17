@@ -1,6 +1,6 @@
 import type { EditorView } from "@codemirror/view";
 import { ActionIcon, Button, Center, Group, Paper, Stack, Text } from "@mantine/core";
-import { Icon, iconCursor, iconGraphql, iconOpen, iconWarning } from "@rrflow/ui";
+import { Icon, iconCursor, iconGraphql, iconOpen, iconWarning } from "@surrealdb/ui";
 import clsx from "clsx";
 import { memo, useMemo, useState } from "react";
 import { Panel, PanelGroup } from "react-resizable-panels";

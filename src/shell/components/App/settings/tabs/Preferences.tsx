@@ -1,6 +1,6 @@
 import { Box, Divider, Flex, ScrollArea, Stack, Text, TextInput } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconSearch } from "@rrflow/ui";
+import { Icon, iconSearch } from "@surrealdb/ui";
 import { Fragment, useMemo } from "react";
 import { PreferenceInput } from "~/components/Inputs/preference";
 import { Spacer } from "~/components/Spacer";

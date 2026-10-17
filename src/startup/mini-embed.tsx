@@ -1,6 +1,6 @@
 import "@mantine/core/styles.layer.css";
 import "@mantine/notifications/styles.css";
-import "@rrflow/ui/styles.css";
+import "@surrealdb/ui/styles.css";
 
 import "~/shared/assets/styles/layers.scss";
 import "~/shared/assets/styles/fonts.scss";

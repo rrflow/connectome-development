@@ -1,5 +1,5 @@
 import { Button, Group, type GroupProps, Notification, Portal } from "@mantine/core";
-import { Icon, iconCheck, iconHelp } from "@rrflow/ui";
+import { Icon, iconCheck, iconHelp } from "@surrealdb/ui";
 import { clsx } from "clsx";
 import { capitalize } from "radash";
 import type { ReactNode } from "react";

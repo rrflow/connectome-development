@@ -93,8 +93,8 @@ export default defineConfig(({ mode }) => {
 						],
 						mantime: ["@mantine/core", "@mantine/hooks", "@mantine/notifications"],
 						rrflow: [
-							"@rrflow/client",
-							"@rrflow/wasm",
+							"surrealdb",
+							"@surrealdb/wasm",
 							"@surrealdb/ql-wasm-v2",
 							"@surrealdb/ql-wasm-v3",
 						],
@@ -131,13 +131,13 @@ export default defineConfig(({ mode }) => {
 			"import.meta.env.GTM_ID": JSON.stringify(""),
 		},
 		optimizeDeps: {
-			exclude: ["@rrflow/wasm", "@surrealdb/ql-wasm-v2", "@surrealdb/ql-wasm-v3"],
+			exclude: ["@surrealdb/wasm", "@surrealdb/ql-wasm-v2", "@surrealdb/ql-wasm-v3"],
 			esbuildOptions: {
 				target: "esnext",
 			},
 		},
 		assetsInclude: [
-			"**/@rrflow/wasm/dist/*.wasm",
+			"**/@surrealdb/wasm/dist/*.wasm",
 			"**/@surrealdb/ql-wasm-v2/dist/*.wasm",
 			"**/@surrealdb/ql-wasm-v3/dist/*.wasm",
 		],

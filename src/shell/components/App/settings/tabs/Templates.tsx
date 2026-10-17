@@ -1,6 +1,6 @@
 import { ActionIcon, Box, Button, Group, Menu, Modal, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { Icon, iconCopy, iconDelete, iconDotsVertical, iconPlus } from "@rrflow/ui";
+import { Icon, iconCopy, iconDelete, iconDotsVertical, iconPlus } from "@surrealdb/ui";
 import { type HTMLAttributes, type MouseEvent, useState } from "react";
 import { useImmer } from "use-immer";
 import { ConnectionAddressDetails } from "~/components/ConnectionDetails/address";

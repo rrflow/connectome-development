@@ -1,4 +1,4 @@
-import { CodeBlock, CodeBlockProps } from "@rrflow/ui";
+import { CodeBlock, CodeBlockProps } from "@surrealdb/ui";
 import { useMemo } from "react";
 import { dedent } from "~/shared/util/dedent";
 import type { CodeLang, Snippets } from "~/types";

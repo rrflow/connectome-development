@@ -1,5 +1,5 @@
 import { Alert, Paper } from "@mantine/core";
-import { Icon, iconWarning } from "@rrflow/ui";
+import { Icon, iconWarning } from "@surrealdb/ui";
 import { useMemo } from "react";
 import { CodeEditor } from "~/components/CodeEditor";
 import { SaveBox } from "~/components/SaveBox";

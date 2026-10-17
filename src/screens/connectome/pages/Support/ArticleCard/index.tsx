@@ -1,5 +1,5 @@
 import { Anchor, Group, Paper, Stack, Text } from "@mantine/core";
-import { Icon, iconChevronRight } from "@rrflow/ui";
+import { Icon, iconChevronRight } from "@surrealdb/ui";
 import { navigate } from "wouter/use-browser-location";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";

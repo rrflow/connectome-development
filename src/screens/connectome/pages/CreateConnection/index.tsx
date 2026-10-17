@@ -23,7 +23,7 @@ import {
 	iconHomePlus,
 	iconQuery,
 	iconRelation,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { useMemo } from "react";
 import { useImmer } from "use-immer";
 import { Link, useLocation } from "wouter";

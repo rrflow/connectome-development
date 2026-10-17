@@ -1,5 +1,5 @@
 import { Alert, Badge, Button, Group, Paper, Text, TextInput } from "@mantine/core";
-import { Icon, iconErrorCircle, iconKey, iconOpenFolder, iconPower } from "@rrflow/ui";
+import { Icon, iconErrorCircle, iconKey, iconOpenFolder, iconPower } from "@surrealdb/ui";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { isTauri } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";

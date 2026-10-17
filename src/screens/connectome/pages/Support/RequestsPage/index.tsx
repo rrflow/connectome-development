@@ -1,5 +1,5 @@
 import { Box, Button, Center, Group, Loader, ScrollArea, Stack } from "@mantine/core";
-import { Icon, iconPlus } from "@rrflow/ui";
+import { Icon, iconPlus } from "@surrealdb/ui";
 import { useConversationsQuery } from "~/cloud/queries/context";
 import { AuthGuard } from "~/components/AuthGuard";
 import { ConversationTable } from "~/components/ConversationTable";

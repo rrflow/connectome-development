@@ -1,6 +1,6 @@
 import { ActionIcon, Box, Drawer, Group, Stack } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconClose, iconMarker } from "@rrflow/ui";
+import { Icon, iconClose, iconMarker } from "@surrealdb/ui";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { DrawerResizer } from "~/components/DrawerResizer";
 import { Label } from "~/components/Label";

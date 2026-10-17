@@ -10,7 +10,7 @@ import {
 	iconLive,
 	iconQuery,
 	iconUpload,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import dayjs from "dayjs";
 import { unparse } from "papaparse";
 import { isArray, isObject } from "radash";

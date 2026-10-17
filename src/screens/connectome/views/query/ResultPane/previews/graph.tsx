@@ -11,8 +11,8 @@ import {
 	Stack,
 	Text,
 } from "@mantine/core";
-import { Icon, iconBraces, iconFilter, iconRelation, iconTag } from "@rrflow/ui";
 import { indexParallelEdgesIndex } from "@sigma/edge-curve";
+import { Icon, iconBraces, iconFilter, iconRelation, iconTag } from "@surrealdb/ui";
 import { inferSettings } from "graphology-layout-forceatlas2";
 import FA2LayoutSupervisor from "graphology-layout-forceatlas2/worker";
 import iwanthue, { ColorSpaceArray } from "iwanthue";

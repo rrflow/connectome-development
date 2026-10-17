@@ -1,5 +1,5 @@
 import { Box, BoxProps, Button, Image, Paper, Stack, Text } from "@mantine/core";
-import { Icon, iconChevronRight } from "@rrflow/ui";
+import { Icon, iconChevronRight } from "@surrealdb/ui";
 import { PropsWithChildren } from "react";
 import glow from "~/shared/assets/images/radial-glow.png";
 import classes from "../style.module.scss";

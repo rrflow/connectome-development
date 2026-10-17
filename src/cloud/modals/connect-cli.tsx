@@ -1,6 +1,6 @@
 import { Group, Skeleton, Text } from "@mantine/core";
 import { openModal } from "@mantine/modals";
-import { CodeBlock, Icon, iconConsole } from "@rrflow/ui";
+import { CodeBlock, Icon, iconConsole } from "@surrealdb/ui";
 import { useEffect } from "react";
 import { LearnMore } from "~/components/LearnMore";
 import { Link } from "~/components/Link";

@@ -1,6 +1,6 @@
 import { Box, Group, Paper, Stack, Text } from "@mantine/core";
 import { openModal } from "@mantine/modals";
-import { Icon, iconCircleFilled } from "@rrflow/ui";
+import { Icon, iconCircleFilled } from "@surrealdb/ui";
 import dayjs from "dayjs";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { executeQuerySingle } from "~/screens/connectome/connection/connection";

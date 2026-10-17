@@ -1,6 +1,6 @@
 import { ActionIcon, Collapse, Group, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { Icon, iconChevronDown, iconChevronUp, iconOpen } from "@rrflow/ui";
+import { Icon, iconChevronDown, iconChevronUp, iconOpen } from "@surrealdb/ui";
 import { adapter } from "~/adapter";
 import { Entry } from "~/components/Entry";
 import { Spacer } from "~/components/Spacer";

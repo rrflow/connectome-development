@@ -1,5 +1,5 @@
 import { Button, Center, Group, Image, Stack, Text } from "@mantine/core";
-import { Icon, iconChevronRight, iconOpen, pictoSDBCloud } from "@rrflow/ui";
+import { Icon, iconChevronRight, iconOpen, pictoSDBCloud } from "@surrealdb/ui";
 import { adapter } from "~/adapter";
 import { openCloudAuthentication } from "~/cloud/api/auth";
 import { useThemeImage } from "~/hooks/theme";

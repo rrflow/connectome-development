@@ -1,4 +1,4 @@
-import { EditorStateSnapshot } from "@rrflow/ui";
+import { EditorStateSnapshot } from "@surrealdb/ui";
 import { omit } from "radash";
 import { create } from "zustand";
 

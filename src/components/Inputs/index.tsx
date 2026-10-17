@@ -18,7 +18,7 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { clamp, useInputState } from "@mantine/hooks";
-import { Icon, iconCancel, iconCheck } from "@rrflow/ui";
+import { Icon, iconCancel, iconCheck } from "@surrealdb/ui";
 import clsx from "clsx";
 import {
 	type FocusEvent,

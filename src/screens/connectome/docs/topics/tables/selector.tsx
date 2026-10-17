@@ -1,5 +1,5 @@
 import { Alert, Group, Select, Text } from "@mantine/core";
-import { Icon, iconWarning } from "@rrflow/ui";
+import { Icon, iconWarning } from "@surrealdb/ui";
 import { useMemo } from "react";
 import { useTableNames } from "~/hooks/schema";
 import { useInterfaceStore } from "~/shell/stores/interface";

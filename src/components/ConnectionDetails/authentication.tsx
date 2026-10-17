@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 
 import { useDisclosure } from "@mantine/hooks";
-import { Icon, iconClose, iconPlus, iconWarning } from "@rrflow/ui";
+import { Icon, iconClose, iconPlus, iconWarning } from "@surrealdb/ui";
 import dayjs from "dayjs";
 import { useMemo } from "react";
 import { Updater } from "use-immer";

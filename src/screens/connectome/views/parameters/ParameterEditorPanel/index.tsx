@@ -1,6 +1,6 @@
 import { EditorView } from "@codemirror/view";
 import { Alert, Badge, Box, Stack } from "@mantine/core";
-import { Icon, iconTune, iconWarning } from "@rrflow/ui";
+import { Icon, iconTune, iconWarning } from "@surrealdb/ui";
 import { useMemo, useState } from "react";
 import type { Updater } from "use-immer";
 import { CodeEditor } from "~/components/CodeEditor";

@@ -25,7 +25,7 @@ import {
 	iconErrorCircle,
 	iconRefresh,
 	iconRelation,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { skipToken, useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Label } from "~/components/Label";

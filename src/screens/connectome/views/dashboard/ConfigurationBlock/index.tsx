@@ -10,7 +10,7 @@ import {
 	iconQuery,
 	iconRelation,
 	iconTag,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { hasOrganizationRoles, ORG_ROLES_ADMIN } from "~/cloud/helpers";
 import { PropertyValue } from "~/components/PropertyValue";
 import { useStable } from "~/hooks/stable";

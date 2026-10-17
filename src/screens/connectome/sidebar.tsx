@@ -10,7 +10,7 @@ import {
 	Text,
 	UnstyledButton,
 } from "@mantine/core";
-import { iconArrowLeft, iconCog, iconHelp, iconSearch, pictoBrain } from "@rrflow/ui";
+import { iconArrowLeft, iconCog, iconHelp, iconSearch, pictoBrain } from "@surrealdb/ui";
 import clsx from "clsx";
 import { Fragment, useMemo } from "react";
 import { useCloudUnreadConversationsQuery } from "~/cloud/queries/context";

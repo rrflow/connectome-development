@@ -1,5 +1,5 @@
 import { Box, Button, Divider, Drawer, Group, ScrollArea, Stack, Text } from "@mantine/core";
-import { Icon, iconClose, iconHistory } from "@rrflow/ui";
+import { Icon, iconClose, iconHistory } from "@surrealdb/ui";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { navigate } from "wouter/use-browser-location";

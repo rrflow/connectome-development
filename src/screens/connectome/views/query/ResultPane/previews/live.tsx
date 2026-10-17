@@ -10,7 +10,7 @@ import {
 	iconHammer,
 	iconHelp,
 	iconPlus,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { useContextMenu } from "mantine-contextmenu";
 import { useEffect, useMemo, useState } from "react";
 import { CodeEditor } from "~/components/CodeEditor";

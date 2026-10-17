@@ -1,5 +1,5 @@
 import { ActionIcon, Box, Button, Group, Modal, Stack, Text } from "@mantine/core";
-import { Icon, iconCircleFilled, iconClose, iconPlus } from "@rrflow/ui";
+import { Icon, iconCircleFilled, iconClose, iconPlus } from "@surrealdb/ui";
 import { klona } from "klona";
 import { replace } from "radash";
 import { type ReactNode, useState } from "react";

@@ -1,5 +1,5 @@
 import { Group, Paper, Stack, Text, ThemeIcon } from "@mantine/core";
-import { Icon, iconClose, iconFile, iconPackageClosed, iconPlay } from "@rrflow/ui";
+import { Icon, iconClose, iconFile, iconPackageClosed, iconPlay } from "@surrealdb/ui";
 import { adapter } from "~/adapter";
 import { formatFileSize, formatRelativeDate } from "~/shared/util/helpers";
 import { IntercomAttachment, IntercomConversation, IntercomConversationPart } from "~/types";

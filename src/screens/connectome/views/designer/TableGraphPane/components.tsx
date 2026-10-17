@@ -1,5 +1,5 @@
 import { Group, Text } from "@mantine/core";
-import { Icon, iconBraces, iconRelation } from "@rrflow/ui";
+import { Icon, iconBraces, iconRelation } from "@surrealdb/ui";
 import { useIsLight } from "~/hooks/theme";
 import type { GraphWarning } from "./helpers";
 

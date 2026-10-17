@@ -10,7 +10,7 @@ import {
 	ThemeIcon,
 	UnstyledButton,
 } from "@mantine/core";
-import { Icon, iconCloud, iconDotsVertical, Spacer } from "@rrflow/ui";
+import { Icon, iconCloud, iconDotsVertical, Spacer } from "@surrealdb/ui";
 import { PropsWithChildren, useMemo, useRef } from "react";
 import { Faint } from "~/components/Faint";
 import { InstanceActions } from "~/components/InstanceActions";

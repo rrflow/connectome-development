@@ -104,18 +104,6 @@ importers:
       '@replit/codemirror-indentation-markers':
         specifier: ^6.5.0
         version: 6.5.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.40.0)
-      '@rrflow/cbor':
-        specifier: npm:@surrealdb/cbor@^2.0.0-alpha.1
-        version: '@surrealdb/cbor@2.0.0-alpha.1'
-      '@rrflow/client':
-        specifier: npm:surrealdb@^2.0.2
-        version: surrealdb@2.0.3(tslib@2.8.1)(typescript@5.9.3)
-      '@rrflow/ui':
-        specifier: npm:@surrealdb/ui@^1.0.87
-        version: '@surrealdb/ui@1.0.93(eda51b6b61a1d08c817afd9b0978ea7d)'
-      '@rrflow/wasm':
-        specifier: npm:@surrealdb/wasm@^3.0.3
-        version: '@surrealdb/wasm@3.0.3(surrealdb@2.0.3(tslib@2.8.1)(typescript@5.9.3))'
       '@sigma/edge-curve':
         specifier: ^3.1.0
         version: 3.1.0(sigma@3.0.2(graphology-types@0.24.8))
@@ -134,6 +122,12 @@ importers:
       '@surrealdb/ql-wasm-v3':
         specifier: npm:@surrealdb/ql-wasm@0.3.1
         version: '@surrealdb/ql-wasm@0.3.1'
+      '@surrealdb/ui':
+        specifier: ^1.0.87
+        version: 1.0.93(eda51b6b61a1d08c817afd9b0978ea7d)
+      '@surrealdb/wasm':
+        specifier: ^3.0.3
+        version: 3.0.3(surrealdb@2.0.3(tslib@2.8.1)(typescript@5.9.3))
       '@tanstack/react-query':
         specifier: ^5.37.1
         version: 5.95.2(react@18.3.1)
@@ -293,6 +287,9 @@ importers:
       sigma:
         specifier: ^3.0.0
         version: 3.0.2(graphology-types@0.24.8)
+      surrealdb:
+        specifier: ^2.0.2
+        version: 2.0.3(tslib@2.8.1)(typescript@5.9.3)
       turndown:
         specifier: ^7.2.1
         version: 7.2.2
@@ -1577,10 +1574,6 @@ packages:
 
   '@standard-schema/utils@0.3.0':
     resolution: {integrity: sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g==}
-
-  '@surrealdb/cbor@2.0.0-alpha.1':
-    resolution: {integrity: sha512-QtahOKhxOZZJOFnIBs7dR7UO6hNT+5Wv2uqLEDUvm5hBYq3lV2BR3TY6mrkvi6/wABcTnuJmu1e3P3GqXE6ltA==}
-    engines: {node: '>=18.0.0'}
 
   '@surrealdb/cbor@2.0.0-alpha.4':
     resolution: {integrity: sha512-l/hNZ3ZCOJq8rzwx1y5ZV/8b2bYCWdhGqRVY33Pu50NAHyAW5qLsMn3ZBkZow77mAKwNCsbDsRGnyYEuU95mjw==}
@@ -4466,8 +4459,6 @@ snapshots:
   '@standard-schema/spec@1.1.0': {}
 
   '@standard-schema/utils@0.3.0': {}
-
-  '@surrealdb/cbor@2.0.0-alpha.1': {}
 
   '@surrealdb/cbor@2.0.0-alpha.4': {}
 

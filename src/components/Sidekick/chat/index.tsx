@@ -13,7 +13,7 @@ import {
 	ThemeIcon,
 	Title,
 } from "@mantine/core";
-import { Icon, iconChevronRight, iconCursor, iconOpen, pictoSidekick } from "@rrflow/ui";
+import { Icon, iconChevronRight, iconCursor, iconOpen, pictoSidekick } from "@surrealdb/ui";
 import { shuffle } from "radash";
 import { useEffect, useMemo, useRef } from "react";
 import { adapter } from "~/adapter";

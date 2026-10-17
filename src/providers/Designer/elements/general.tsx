@@ -1,5 +1,5 @@
 import { Accordion, Checkbox, MultiSelect, Select, Stack } from "@mantine/core";
-import { iconCog } from "@rrflow/ui";
+import { iconCog } from "@surrealdb/ui";
 import { useTableNames } from "~/hooks/schema";
 import type { Selectable, TableType } from "~/types";
 import { type ElementProps, SectionTitle } from "../helpers";

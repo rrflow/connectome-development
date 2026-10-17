@@ -1,5 +1,5 @@
 import { Box } from "@mantine/core";
-import { iconDatabaseSecure, iconFolderSecure, iconServerSecure } from "@rrflow/ui";
+import { iconDatabaseSecure, iconFolderSecure, iconServerSecure } from "@surrealdb/ui";
 import { memo, useMemo } from "react";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { PanelDragger } from "~/components/Pane/dragger";

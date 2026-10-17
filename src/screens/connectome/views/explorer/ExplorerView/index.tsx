@@ -10,7 +10,7 @@ import {
 	iconPlus,
 	iconTable,
 	iconUpload,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { memo, useState } from "react";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { adapter } from "~/adapter";

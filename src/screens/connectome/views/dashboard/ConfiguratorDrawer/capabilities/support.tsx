@@ -8,7 +8,7 @@ import {
 	Tooltip,
 	UnstyledButton,
 } from "@mantine/core";
-import { Icon, iconChevronDown, iconChevronUp, iconDownload, iconHelp } from "@rrflow/ui";
+import { Icon, iconChevronDown, iconChevronUp, iconDownload, iconHelp } from "@surrealdb/ui";
 import { Spacer } from "~/components/Spacer";
 import { useBoolean } from "~/hooks/boolean";
 import { useIsLight } from "~/hooks/theme";

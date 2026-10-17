@@ -1,5 +1,5 @@
 import { ActionIcon, Button, Center, Paper, Stack, Text, Tooltip } from "@mantine/core";
-import { Icon, iconPause, iconPlay } from "@rrflow/ui";
+import { Icon, iconPause, iconPlay } from "@surrealdb/ui";
 import { hasOrganizationRoles, ORG_ROLES_OWNER } from "~/cloud/helpers";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { useResumeInstance } from "~/hooks/cloud";

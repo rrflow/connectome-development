@@ -10,7 +10,7 @@ import {
 	Text,
 	Textarea,
 } from "@mantine/core";
-import { Icon, iconCheck, iconCopy, iconDelete, iconList, iconPlus } from "@rrflow/ui";
+import { Icon, iconCheck, iconCopy, iconDelete, iconList, iconPlus } from "@surrealdb/ui";
 import { Updater } from "use-immer";
 import { ActionButton } from "~/components/ActionButton";
 import { PermissionInput } from "~/components/Inputs";

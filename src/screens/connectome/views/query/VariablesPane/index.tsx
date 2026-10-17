@@ -1,7 +1,7 @@
 import { Prec } from "@codemirror/state";
 import { type EditorView, keymap } from "@codemirror/view";
 import { Badge, Group } from "@mantine/core";
-import { Icon, iconClose, iconDollar, iconReset } from "@rrflow/ui";
+import { Icon, iconClose, iconDollar, iconReset } from "@surrealdb/ui";
 import { useEffect, useMemo, useState } from "react";
 import { type HtmlPortalNode, OutPortal } from "react-reverse-portal";
 import { ActionButton } from "~/components/ActionButton";

@@ -2,7 +2,7 @@ import type { SelectionRange } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { Box, Button, Group, Modal, Stack, TagsInput, Text, TextInput } from "@mantine/core";
 import { useDisclosure, useInputState } from "@mantine/hooks";
-import { Icon, iconCheck } from "@rrflow/ui";
+import { Icon, iconCheck } from "@surrealdb/ui";
 import { memo, useState } from "react";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { Form } from "~/components/Form";

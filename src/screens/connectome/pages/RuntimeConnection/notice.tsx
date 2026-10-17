@@ -1,5 +1,5 @@
 import { Alert } from "@mantine/core";
-import { Icon, iconErrorCircle } from "@rrflow/ui";
+import { Icon, iconErrorCircle } from "@surrealdb/ui";
 import type { UseQueryResult } from "@tanstack/react-query";
 import { isRetryable } from "~/rrflow/session";
 import { formatMoment } from "./format";

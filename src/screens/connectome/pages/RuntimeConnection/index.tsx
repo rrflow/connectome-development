@@ -20,7 +20,7 @@ import {
 	iconRefresh,
 	iconRelation,
 	iconTarget,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { useQuery } from "@tanstack/react-query";
 import { isTauri } from "@tauri-apps/api/core";
 import { type ReactNode, useMemo, useState } from "react";

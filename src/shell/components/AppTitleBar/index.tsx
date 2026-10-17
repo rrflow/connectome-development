@@ -1,5 +1,12 @@
 import { Box, Group, Image, Menu, Text } from "@mantine/core";
-import { Icon, iconClose, iconMaximize, iconMinimize, iconRestore, pictoBrain } from "@rrflow/ui";
+import {
+	Icon,
+	iconClose,
+	iconMaximize,
+	iconMinimize,
+	iconRestore,
+	pictoBrain,
+} from "@surrealdb/ui";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useState } from "react";
 import { ActionButton } from "~/components/ActionButton";

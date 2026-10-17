@@ -1,5 +1,5 @@
 import { Accordion, Checkbox, Flex, Text, TextInput } from "@mantine/core";
-import { iconBraces } from "@rrflow/ui";
+import { iconBraces } from "@surrealdb/ui";
 import { CodeInput, FieldKindInput, PermissionInput } from "~/components/Inputs";
 import { useStable } from "~/hooks/stable";
 import type { SchemaField } from "~/types";

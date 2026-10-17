@@ -1,7 +1,7 @@
 import { Button, Group, Stack, Text, TextInput } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
 import { closeModal, openModal } from "@mantine/modals";
-import { Icon, iconPlus } from "@rrflow/ui";
+import { Icon, iconPlus } from "@surrealdb/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { Form } from "~/components/Form";

@@ -8,7 +8,7 @@ import {
 	Stack,
 	Text,
 } from "@mantine/core";
-import { Icon, iconChart, iconChevronLeft, iconList } from "@rrflow/ui";
+import { Icon, iconChart, iconChevronLeft, iconList } from "@surrealdb/ui";
 import { group } from "radash";
 import { ActionButton } from "~/components/ActionButton";
 import { Entry } from "~/components/Entry";

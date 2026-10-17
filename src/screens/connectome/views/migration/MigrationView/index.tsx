@@ -10,7 +10,7 @@ import {
 	Text,
 	Title,
 } from "@mantine/core";
-import { Icon, iconDownload, iconReset, iconTransfer, pictoBadgeAccess } from "@rrflow/ui";
+import { Icon, iconDownload, iconReset, iconTransfer, pictoBadgeAccess } from "@surrealdb/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { LearnMore } from "~/components/LearnMore";

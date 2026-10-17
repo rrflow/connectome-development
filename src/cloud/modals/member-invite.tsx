@@ -1,7 +1,7 @@
 import { Button, Group, Select, Stack, Text, TextInput } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
 import { closeModal, openModal } from "@mantine/modals";
-import { Icon, iconAccountPlus } from "@rrflow/ui";
+import { Icon, iconAccountPlus } from "@surrealdb/ui";
 import { capitalize } from "radash";
 import { useMemo, useState } from "react";
 import { Form } from "~/components/Form";

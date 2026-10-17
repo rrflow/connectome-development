@@ -1,6 +1,6 @@
 import { Button, Group, Modal, PasswordInput, Table, Text, TextInput } from "@mantine/core";
-import { Icon, iconAccountPlus } from "@rrflow/ui";
 import { parser } from "@surrealdb/lezer";
+import { Icon, iconAccountPlus } from "@surrealdb/ui";
 import { useState } from "react";
 import { useImmer } from "use-immer";
 import { adapter } from "~/adapter";

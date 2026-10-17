@@ -5,7 +5,7 @@ import {
 	iconKeyboardControl,
 	iconKeyboardOption,
 	iconKeyboardShift,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { capitalize } from "radash";
 import { Fragment } from "react/jsx-runtime";
 import { adapter } from "~/adapter";

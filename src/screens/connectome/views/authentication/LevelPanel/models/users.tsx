@@ -13,7 +13,7 @@ import {
 } from "@mantine/core";
 
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconCheck, iconPlus } from "@rrflow/ui";
+import { Icon, iconCheck, iconPlus } from "@surrealdb/ui";
 import { useLayoutEffect, useState } from "react";
 import { Form } from "~/components/Form";
 import { CodeInput } from "~/components/Inputs";

@@ -1,5 +1,5 @@
 import { Box, Button, Divider, Group, Paper, ScrollArea, Stack, Text } from "@mantine/core";
-import { Icon, iconDownload, iconUpload } from "@rrflow/ui";
+import { Icon, iconDownload, iconUpload } from "@surrealdb/ui";
 import { useState } from "react";
 import { adapter } from "~/adapter";
 import { useUpdateConfirmation } from "~/cloud/hooks/confirm";

@@ -1,5 +1,5 @@
 import { Box, Button, Paper, Text, Title } from "@mantine/core";
-import { Icon, iconOpen } from "@rrflow/ui";
+import { Icon, iconOpen } from "@surrealdb/ui";
 import { adapter } from "~/adapter";
 import { DriverSelector } from "~/components/DriverSelector";
 import { DRIVERS } from "~/constants";

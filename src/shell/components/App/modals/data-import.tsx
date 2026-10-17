@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
 import { showNotification, updateNotification } from "@mantine/notifications";
-import { Icon, iconCheck, iconFile, iconUpload, iconWarning } from "@rrflow/ui";
+import { Icon, iconCheck, iconFile, iconUpload, iconWarning } from "@surrealdb/ui";
 import papaparse from "papaparse";
 import { cluster, isArray, isObject, unique } from "radash";
 import { ChangeEvent, MutableRefObject, useEffect, useMemo, useRef, useState } from "react";

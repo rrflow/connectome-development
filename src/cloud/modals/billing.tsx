@@ -1,6 +1,6 @@
 import { Alert, Button, Group, Select, SimpleGrid, Stack, Text, TextInput } from "@mantine/core";
 import { closeModal, openModal } from "@mantine/modals";
-import { Icon, iconAccount } from "@rrflow/ui";
+import { Icon, iconAccount } from "@surrealdb/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { shake } from "radash";
 import { useState } from "react";

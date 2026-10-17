@@ -7,7 +7,7 @@ import {
 	TextInput,
 	type TextInputProps,
 } from "@mantine/core";
-import { Icon, iconCancel, iconCheck, useStable } from "@rrflow/ui";
+import { Icon, iconCancel, iconCheck, useStable } from "@surrealdb/ui";
 import type { ReactNode } from "react";
 import type { CloudInstanceCapabilities, Selectable } from "~/types";
 

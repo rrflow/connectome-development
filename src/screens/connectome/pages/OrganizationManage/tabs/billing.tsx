@@ -10,7 +10,7 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconCreditCard } from "@rrflow/ui";
+import { Icon, iconCreditCard } from "@surrealdb/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDistance } from "date-fns";
 import { fetchAPI } from "~/cloud/api";

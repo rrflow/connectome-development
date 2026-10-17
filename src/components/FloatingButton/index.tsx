@@ -1,5 +1,5 @@
 import { ActionIcon, type ActionIconProps, Affix } from "@mantine/core";
-import { Icon } from "@rrflow/ui";
+import { Icon } from "@surrealdb/ui";
 import clsx from "clsx";
 import classes from "./style.module.scss";
 

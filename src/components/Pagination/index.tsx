@@ -1,6 +1,6 @@
 import { type ComboboxData, Group, Select, Text, TextInput } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconChevronLeft, iconChevronRight } from "@rrflow/ui";
+import { Icon, iconChevronLeft, iconChevronRight } from "@surrealdb/ui";
 import { type FocusEvent, type KeyboardEvent, useLayoutEffect } from "react";
 import { useStable } from "~/hooks/stable";
 import { ActionButton } from "../ActionButton";

@@ -12,7 +12,7 @@ import {
 	iconStar,
 	iconText,
 	iconWarning,
-} from "@rrflow/ui";
+} from "@surrealdb/ui";
 import { objectify, trim } from "radash";
 import { useMemo, useRef, useState } from "react";
 import { type HtmlPortalNode, OutPortal } from "react-reverse-portal";
