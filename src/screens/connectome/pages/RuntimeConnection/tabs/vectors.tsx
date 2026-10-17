@@ -26,8 +26,8 @@ import {
 	iconRefresh,
 	iconRelation,
 } from "@rrflow/ui";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { useMemo, useRef, useState } from "react";
+import { skipToken, useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 import { Label } from "~/components/Label";
 import { Section } from "~/components/Section";
 import type {
@@ -64,9 +64,23 @@ function formatDuration(ms: number) {
 /** Searches finished before the remaining time is estimated from their pace. */
 const MIN_SEARCHES_FOR_ESTIMATE = 8;
 
+/**
+ * A similarity-map build in progress. It lives in the query cache rather than
+ * component state, so switching lenses mid-build keeps the progress.
+ */
 interface MapBuild extends Omit<RrdVectorMapProgressView, "points"> {
-	/** When the first search started, on this window's clock. */
+	/** The drawn points, known as soon as the searches start. */
+	points: RrdMapPointView[];
+	/** When the searches started, on this window's clock. */
 	startedAt: number;
+}
+
+/** The next build state after one progress message. */
+function advance(previous: MapBuild | null | undefined, message: RrdVectorMapProgressView) {
+	const { points, ...progress } = message;
+	// The first message arrives as the searches start, with the points.
+	if (points) return { ...progress, points, startedAt: Date.now() };
+	return previous ? { ...previous, ...progress } : null;
 }
 
 function percent(build: MapBuild) {
@@ -160,33 +174,29 @@ export function VectorsTab({
 		collection?.vectors.find((candidate) => candidate.name === vectorName) ??
 		collection?.vectors[0];
 
-	const [build, setBuild] = useState<MapBuild | null>(null);
-	/** The drawn points, known as soon as the searches start. */
-	const [buildPoints, setBuildPoints] = useState<RrdMapPointView[] | null>(null);
-	const buildStart = useRef(0);
+	const queryClient = useQueryClient();
+	const buildKey = ["rrd-vector-map-build", sessionKey, collection?.collection_id, vector?.name];
 	const map = useQuery({
 		queryKey: ["rrd-vector-map", sessionKey, collection?.collection_id, vector?.name],
 		enabled: Boolean(collection && vector),
 		staleTime: Number.POSITIVE_INFINITY,
 		queryFn: () => {
-			setBuild(null);
-			setBuildPoints(null);
+			queryClient.setQueryData<MapBuild | null>(buildKey, null);
 			return client.vectorMap(
 				{
 					collection_id: collection?.collection_id ?? "",
 					vector_name: vector?.name ?? "",
 				},
-				({ points, ...progress }) => {
-					// The first message arrives as the searches start, with the points.
-					if (points) {
-						buildStart.current = Date.now();
-						setBuildPoints(points);
-					}
-					setBuild({ ...progress, startedAt: buildStart.current });
-				},
+				(message) =>
+					queryClient.setQueryData<MapBuild | null>(buildKey, (previous) =>
+						advance(previous, message),
+					),
 			);
 		},
 	});
+	// Read-only view of the build the map query writes; it never fetches.
+	const build =
+		useQuery<MapBuild | null>({ queryKey: buildKey, queryFn: skipToken }).data ?? null;
 
 	const graph = database.data?.graph;
 	const records = useMemo(
@@ -202,7 +212,7 @@ export function VectorsTab({
 		[graph, colorOption],
 	);
 
-	const points = map.data?.points ?? buildPoints ?? undefined;
+	const points = map.data?.points ?? build?.points;
 	const pointIds = useMemo(
 		() => points?.map((point) => referenceText(point.reference)) ?? [],
 		[points],
