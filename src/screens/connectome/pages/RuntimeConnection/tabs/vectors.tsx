@@ -27,10 +27,15 @@ import {
 	iconRelation,
 } from "@rrflow/ui";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Label } from "~/components/Label";
 import { Section } from "~/components/Section";
-import type { RrdNodeView, RrdReference } from "~/rrflow/session";
+import type {
+	RrdMapPointView,
+	RrdNodeView,
+	RrdReference,
+	RrdVectorMapProgressView,
+} from "~/rrflow/session";
 import { formatCount, formatTime } from "../format";
 import { Term } from "../glossary";
 import { type CanvasEdge, type CanvasNode, GraphCanvas } from "../graph";
@@ -54,6 +59,76 @@ function formatScore(score: number) {
 
 function formatDuration(ms: number) {
 	return ms < 1000 ? `${ms} ms` : `${(ms / 1000).toFixed(1)} s`;
+}
+
+/** Searches finished before the remaining time is estimated from their pace. */
+const MIN_SEARCHES_FOR_ESTIMATE = 8;
+
+interface MapBuild extends Omit<RrdVectorMapProgressView, "points"> {
+	/** When the first search started, on this window's clock. */
+	startedAt: number;
+}
+
+function percent(build: MapBuild) {
+	return build.total === 0 ? 100 : (build.searched / build.total) * 100;
+}
+
+/** Remaining time at the pace of the searches so far, once there is a pace. */
+function remaining(build: MapBuild) {
+	if (build.searched < MIN_SEARCHES_FOR_ESTIMATE || build.searched >= build.total) return null;
+	const perSearch = (Date.now() - build.startedAt) / build.searched;
+	const seconds = Math.ceil((perSearch * (build.total - build.searched)) / 1000);
+	return seconds < 60 ? `about ${seconds} s left` : `about ${Math.ceil(seconds / 60)} min left`;
+}
+
+function MapBuildProgress({ build }: { build: MapBuild | null }) {
+	if (!build) {
+		return (
+			<Stack
+				h="100%"
+				justify="center"
+				align="center"
+				gap="xs"
+			>
+				<Loader />
+				<Text c="slate">Reading the collection's vectors…</Text>
+			</Stack>
+		);
+	}
+	const estimate = remaining(build);
+	return (
+		<Stack
+			h="100%"
+			justify="center"
+			align="center"
+			gap="sm"
+			px="xl"
+		>
+			<Text
+				fw={600}
+				c="bright"
+			>
+				Finding each record's nearest neighbours
+			</Text>
+			<Progress
+				w="100%"
+				maw={420}
+				color="violet"
+				value={percent(build)}
+				animated
+			/>
+			<Text
+				fz="sm"
+				c="slate"
+				ta="center"
+				maw={520}
+			>
+				{formatCount(build.searched)} of {formatCount(build.total)} searches done
+				{estimate ? ` · ${estimate}` : ""}. The engine runs one exact search per record, so
+				the map takes longer as the collection grows. Other lenses keep working meanwhile.
+			</Text>
+		</Stack>
+	);
 }
 
 export function VectorsTab({
@@ -85,15 +160,32 @@ export function VectorsTab({
 		collection?.vectors.find((candidate) => candidate.name === vectorName) ??
 		collection?.vectors[0];
 
+	const [build, setBuild] = useState<MapBuild | null>(null);
+	/** The drawn points, known as soon as the searches start. */
+	const [buildPoints, setBuildPoints] = useState<RrdMapPointView[] | null>(null);
+	const buildStart = useRef(0);
 	const map = useQuery({
 		queryKey: ["rrd-vector-map", sessionKey, collection?.collection_id, vector?.name],
 		enabled: Boolean(collection && vector),
 		staleTime: Number.POSITIVE_INFINITY,
-		queryFn: () =>
-			client.vectorMap({
-				collection_id: collection?.collection_id ?? "",
-				vector_name: vector?.name ?? "",
-			}),
+		queryFn: () => {
+			setBuild(null);
+			setBuildPoints(null);
+			return client.vectorMap(
+				{
+					collection_id: collection?.collection_id ?? "",
+					vector_name: vector?.name ?? "",
+				},
+				({ points, ...progress }) => {
+					// The first message arrives as the searches start, with the points.
+					if (points) {
+						buildStart.current = Date.now();
+						setBuildPoints(points);
+					}
+					setBuild({ ...progress, startedAt: buildStart.current });
+				},
+			);
+		},
 	});
 
 	const graph = database.data?.graph;
@@ -110,7 +202,7 @@ export function VectorsTab({
 		[graph, colorOption],
 	);
 
-	const points = map.data?.points;
+	const points = map.data?.points ?? buildPoints ?? undefined;
 	const pointIds = useMemo(
 		() => points?.map((point) => referenceText(point.reference)) ?? [],
 		[points],
@@ -371,20 +463,24 @@ export function VectorsTab({
 					<Grid.Col span={{ base: 12, lg: 8 }}>
 						<Paper
 							h={CANVAS_HEIGHT}
+							pos="relative"
 							style={{ overflow: "hidden" }}
 						>
+							{map.isFetching && !map.isPending && build && (
+								<Progress
+									size={3}
+									radius={0}
+									value={percent(build)}
+									pos="absolute"
+									top={0}
+									left={0}
+									right={0}
+									style={{ zIndex: 3 }}
+									aria-label={`Rebuilding the map: ${build.searched} of ${build.total} searches done`}
+								/>
+							)}
 							{map.isPending ? (
-								<Stack
-									h="100%"
-									justify="center"
-									align="center"
-									gap="xs"
-								>
-									<Loader />
-									<Text c="slate">
-										Asking the engine for every vector's nearest neighbours…
-									</Text>
-								</Stack>
+								<MapBuildProgress build={build} />
 							) : map.isError ? (
 								<Box p="md">
 									<Alert
@@ -502,12 +598,22 @@ export function VectorsTab({
 										</Button>
 									</Group>
 									<Divider />
-									{!selectedPoint ? (
+									{!selectedPoint && !points ? (
+										<Group gap="xs">
+											<Loader size="xs" />
+											<Text
+												fz="sm"
+												c="slate"
+											>
+												Finding this record's vector…
+											</Text>
+										</Group>
+									) : !selectedPoint ? (
 										<Text
 											fz="sm"
 											c="slate"
 										>
-											{data?.truncated
+											{(data?.truncated ?? build?.truncated)
 												? "This record's vector is beyond the part of the collection the map draws."
 												: "This record has no vector in this collection."}
 										</Text>
