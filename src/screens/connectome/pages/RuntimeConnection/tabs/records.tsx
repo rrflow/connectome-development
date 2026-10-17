@@ -37,6 +37,7 @@ import { useMemo, useRef, useState } from "react";
 import { Label } from "~/components/Label";
 import { Section } from "~/components/Section";
 import type { RrdEdgeView, RrdNodeView } from "~/rrflow/session";
+import { plural } from "~/shared/util/helpers";
 import { formatCount, formatSize, formatTime } from "../format";
 import { Term } from "../glossary";
 import { type CanvasEdge, type CanvasNode, GraphCanvas } from "../graph";
@@ -829,7 +830,10 @@ export function RecordsTab({
 					<Collapse in={consoleOpen}>
 						<Stack gap="sm">
 							<Textarea
-								ff="monospace"
+								// The input draws its own font, so the family is set on it directly.
+								styles={{
+									input: { fontFamily: "var(--mantine-font-family-monospace)" },
+								}}
 								autosize
 								minRows={2}
 								value={query}
@@ -891,11 +895,12 @@ export function RecordsTab({
 										mb="sm"
 									>
 										<Badge variant="light">
-											{formatCount(execution.data.returned_rows)} rows
+											{formatCount(execution.data.returned_rows)}{" "}
+											{plural(execution.data.returned_rows, "row")}
 										</Badge>
 										<Badge variant="light">
-											{formatCount(execution.data.keys_examined)} keys
-											examined
+											{formatCount(execution.data.keys_examined)}{" "}
+											{plural(execution.data.keys_examined, "key")} examined
 										</Badge>
 										<Badge variant="light">
 											{formatSize(execution.data.output_bytes)} output
