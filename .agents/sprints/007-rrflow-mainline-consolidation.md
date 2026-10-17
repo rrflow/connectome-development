@@ -385,3 +385,74 @@ relations, 270 vectors): the strip reads "Signed in as local-operator since
 Vectors with the map still building; Storage explained the busy engine
 3.4 s into the build; progress survived a lens switch ("40 of 270 searches
 done · about 57 s left"); every lens state was reviewed by screenshot.
+
+### 2026-10-17 — merge gate: dependency authority, generated SDK, RRD process tests
+
+PR #1, `agent/rrd-engine-lenses` → `main`. The branch was fast-forwarded
+from `61d9c6a` to the desktop-verified `bb43fe7`; the gate work is `50d6df1`
+through `d60cca7`.
+
+- Dependency authority (`50d6df1`, `b56def8`). Four `@rrflow/*` npm aliases
+  resolved to SurrealDB packages, against Authority decision 3 and Slice
+  E-6. They are now declared and imported under their own names at the same
+  resolved versions (`@surrealdb/ui` 1.0.93, `@surrealdb/wasm` 3.0.3,
+  `surrealdb` 2.0.3); `@rrflow/cbor` had no importer and is dropped.
+  `scripts/check-dependency-authority.mjs` runs in `pnpm check`. It fails
+  when an `@rrflow/*` name aliases another publisher's package, when an alias
+  hides its target's scope, when an RRFlow crate in `Cargo.lock` comes from
+  any repository but `rrflow/rrflow-development`, is not pinned to one exact
+  commit, or is not a public contract crate (`rrd-client`, `rrd-contract`),
+  and when the RRFlow crates resolve to more than one commit. Each rule was
+  proven against a synthetic manifest that breaks it.
+- RRD process tests (`a84bd5c`). Two ignored tests in
+  `src-tauri/src/rrd/client/process.rs` install a fresh estate with a real
+  `rrflow` (`install plan`, then `install apply --expect <plan_sha256>`),
+  serve it on a kernel-chosen loopback port (`--json serve --bind
+  127.0.0.1:0` announces the address), wait for `rrflow ready`, load a
+  fixture through the SDK (two groups of four linked documents with
+  8-dimension vectors), and drive `NativeRrdClient` the way the lenses do.
+  Restoring the old per-launch id scheme makes the replay test fail with 412
+  `SessionExpired`, so the test catches the defect the desktop run found.
+- The process tests found an RRD defect (`cc90ce9`). `rrd-security`'s
+  `audit_since` marks the control tail as reached whenever the last journal
+  page it read was partial, even when it stopped inside that page at the
+  record limit. When the limit-th audit record lies in the final, partial
+  page and is not the head, the read fails with 400 "audit chain does not
+  reach its durable head". On the fixture estate the 64-record audit page
+  Connectome asked for failed every time. The lenses render neither the
+  change page nor the audit page, so the diagnostic read now asks for one
+  record of each: a non-empty one-record page is never partial, so the flag
+  is set only by an empty read. "Audit through" showed the journal position
+  after the first audit page from genesis, not a head, and is removed. The
+  engine fix belongs to RRFlow (its plan step 0).
+- CI (`15667c7`, `d60cca7`). Job `rrd-process` resolves the RRFlow revision
+  `Cargo.lock` pins, checks the engine out at that revision, runs RRFlow's
+  own generated-surface parity check (`scripts/ci/check_generated_surfaces.py`)
+  there, and builds `rrflow` in that checkout without debug info at
+  opt-level 1. Install and serve hash the executable they pin: about a
+  minute per step on the 1.2 GB unoptimised debug build, under a second on
+  this one. The engine is saved by revision once both pass, and the process
+  tests run with `--ignored`.
+
+Gate evidence at `d60cca7`:
+
+- Retired-identity and dependency-authority scans, Biome, TypeScript,
+  production build, and render smoke: the frontend job.
+- Native formatting, `cargo check`, tests (23 passed, 2 ignored), and strict
+  Clippy: the native jobs on ubuntu-22.04, macos-15 (ARM), and windows-2025.
+- RRFlow generated-SDK check and RRD process tests: the `rrd-process` job,
+  which verified generated-surface parity at `b275792` (33 HTTP operations,
+  OpenAPI `733695656b3d…`, 7 signal projections) in 54 s, built `rrflow` in
+  14 min 41 s, and passed both process tests in 4.35 s.
+- Runs: push
+  [39062460824](https://github.com/rrflow/connectome-development/actions/runs/39062460824)
+  and pull request
+  [39062464091](https://github.com/rrflow/connectome-development/actions/runs/39062464091),
+  both green on every job.
+- Commit range `38f68ce..d60cca7` reviewed: 26 commits, 279 files (247 of
+  them `50d6df1`'s import renames), no generated bundle.
+
+Not run: the RRD process tests run on Linux only. The desktop run above
+drove Windows at `abc549c`; `50d6df1`'s package renames and `cc90ce9`'s
+one-record pages are covered by CI's build, render smoke, and process
+tests, not by a desktop run. macOS has no desktop run.
