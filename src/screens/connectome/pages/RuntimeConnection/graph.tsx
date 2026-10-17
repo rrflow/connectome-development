@@ -27,10 +27,10 @@ import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import Sigma from "sigma";
 import type { EdgeDisplayData, NodeDisplayData } from "sigma/types";
 import { ActionButton } from "~/components/ActionButton";
-import { drawHover, drawLabel } from "~/components/RelationGraph/drawing";
 import { useStable } from "~/hooks/stable";
 import { getIsLight, useIsLight } from "~/hooks/theme";
 import type { ColorGroup } from "./groups";
+import { createLabelLayer, type ScreenBox } from "./labels";
 
 /** Iterations of ForceAtlas2 applied before the first frame; the graph is static afterwards. */
 const LAYOUT_ITERATIONS = 300;
@@ -53,6 +53,8 @@ const FOCUS_PADDING = 1.4;
 const MIN_FOCUS_RATIO = 0.2;
 /** Legend rows are fixed width so long group names truncate instead of pushing counts out. */
 const LEGEND_ROW_WIDTH = 264;
+/** Ranks highlighted records' labels above every other label when they compete for space. */
+const HIGHLIGHT_LABEL_PRIORITY = 1000;
 const HOVER_OFFSET = 14;
 const HOVER_WIDTH = 300;
 /** Room kept below a hover card so it stays inside the canvas. */
@@ -136,6 +138,20 @@ export interface GraphCanvasProps extends BoxProps {
 	hint: string;
 }
 
+/** The area an overlay covers, in the coordinates of the canvas it sits on. */
+function coverage(element: HTMLElement | null): ScreenBox[] {
+	return element
+		? [
+				{
+					left: element.offsetLeft,
+					top: element.offsetTop,
+					right: element.offsetLeft + element.offsetWidth,
+					bottom: element.offsetTop + element.offsetHeight,
+				},
+			]
+		: [];
+}
+
 /** Frames the focused nodes: one node closely, a group with room around it. */
 function bringIntoView(instance: Sigma<NodeAttributes, EdgeAttributes>, nodes: Iterable<string>) {
 	const points = [...nodes].flatMap((node) => {
@@ -185,6 +201,10 @@ export function GraphCanvas({
 }: GraphCanvasProps) {
 	const ref = useRef<HTMLDivElement>(null);
 	const sigmaRef = useRef<Sigma<NodeAttributes, EdgeAttributes> | null>(null);
+	// Overlays labels must stay clear of; they share the canvas's origin.
+	const hintRef = useRef<HTMLDivElement>(null);
+	const controlsRef = useRef<HTMLDivElement>(null);
+	const legendRef = useRef<HTMLDivElement>(null);
 	const theme = useMantineTheme();
 	const isLight = useIsLight();
 	const handleSelect = useStable(onSelect);
@@ -295,6 +315,13 @@ export function GraphCanvas({
 		if (!ref.current) return;
 		const dimmed = () => (getIsLight() ? theme.colors.obsidian[1] : theme.colors.obsidian[7]);
 		focusRef.current.lit = litNodes(layout, focusRef.current);
+		// Highlighted records first, then the most linked; node size follows degree.
+		const labels = createLabelLayer(
+			(node) =>
+				(focusRef.current.highlighted.has(node) ? HIGHLIGHT_LABEL_PRIORITY : 0) +
+				(layout.hasNode(node) ? layout.getNodeAttribute(node, "size") : 0),
+			() => [hintRef, controlsRef, legendRef].flatMap((overlay) => coverage(overlay.current)),
+		);
 
 		const instance = new Sigma<NodeAttributes, EdgeAttributes>(layout, ref.current, {
 			allowInvalidContainer: true,
@@ -309,8 +336,8 @@ export function GraphCanvas({
 			labelRenderedSizeThreshold: 9,
 			stagePadding: 32,
 			zIndex: true,
-			defaultDrawNodeHover: drawHover,
-			defaultDrawNodeLabel: drawLabel,
+			defaultDrawNodeHover: labels.drawHover,
+			defaultDrawNodeLabel: labels.drawLabel,
 			nodeReducer: (node, data) => {
 				const focus = focusRef.current;
 				const display: Partial<NodeDisplayData> = { ...data };
@@ -354,6 +381,8 @@ export function GraphCanvas({
 				return display;
 			},
 		});
+		instance.on("beforeRender", labels.beginFrame);
+		instance.on("afterRender", labels.endFrame);
 		const repaint = () => {
 			focusRef.current.lit = litNodes(layout, focusRef.current);
 			instance.refresh({ skipIndexation: true });
@@ -425,6 +454,7 @@ export function GraphCanvas({
 			/>
 
 			<Paper
+				ref={hintRef}
 				pos="absolute"
 				top={8}
 				left={8}
@@ -442,6 +472,7 @@ export function GraphCanvas({
 			</Paper>
 
 			<Group
+				ref={controlsRef}
 				gap={4}
 				pos="absolute"
 				top={8}
@@ -479,6 +510,7 @@ export function GraphCanvas({
 
 			{legend.length > 0 && (
 				<Paper
+					ref={legendRef}
 					pos="absolute"
 					bottom={8}
 					left={8}
