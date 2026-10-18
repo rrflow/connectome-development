@@ -24,7 +24,7 @@ import { tagEvent } from "~/shared/util/analytics";
 import { Y_SLIDE_TRANSITION } from "~/shared/util/helpers";
 import classes from "../style.module.scss";
 
-const ENDPOINT = "https://github.com/EonsofStupid/connectome";
+const ENDPOINT = "https://github.com/rrflow/connectome-development";
 
 interface Result {
 	id: string;

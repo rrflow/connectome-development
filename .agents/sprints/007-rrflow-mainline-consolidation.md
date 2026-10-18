@@ -150,11 +150,16 @@ Before advancing Connectome `main`:
 
 After Connectome `main` is green:
 
-1. update the parent engine submodule pointer in an isolated commit;
-2. mount that exact Connectome commit under RRFlow `apps/connectome`;
+1. ~~update the parent engine submodule pointer in an isolated commit;~~
+2. ~~mount that exact Connectome commit under RRFlow `apps/connectome`;~~
 3. remove the temporary workbench only after feature-parity tests pass;
 4. run the full RRFlow platform matrix;
 5. push each repository in dependency order and journal exact run URLs.
+
+Steps 1 and 2 were retired on 2026-10-18 by sprint 009, authority decision 1:
+the repositories are siblings under `github.com/rrflow/`, bound by the one
+pinned engine revision in `src-tauri/Cargo.lock`; RRFlow's `AGENTS.md` forbids
+Git submodules and nothing is mounted inside the engine repository.
 
 ## Execution journal
 

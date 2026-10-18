@@ -140,7 +140,7 @@ export function MigrationView() {
 							>
 								Check compatibility
 							</Button>
-							<Anchor href="https://github.com/EonsofStupid/connectome">
+							<Anchor href="https://github.com/rrflow/connectome-development">
 								<Button
 									variant="light"
 									color="slate"
@@ -212,7 +212,7 @@ export function MigrationView() {
 						</Text>
 						<LearnMore
 							my="md"
-							href="https://github.com/EonsofStupid/connectome"
+							href="https://github.com/rrflow/connectome-development"
 						>
 							Learn more about upgrading to RRFlow 3.0
 						</LearnMore>

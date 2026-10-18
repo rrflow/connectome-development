@@ -115,7 +115,7 @@ export const RRFLOW_START_BASICS = {
 		-- knowledge graphs, as a backend, a BaaS, or embed it directly into your apps
 		-- One engine, every model.
 		--
-		-- Learn more at https://github.com/EonsofStupid/connectome
+		-- Learn more at https://github.com/rrflow/connectome-development
 		--
 		-- *****************************************************************************
 
@@ -152,7 +152,7 @@ export const RRFLOW_START_BASICS = {
 		SELECT *, ->plays_for->team as team FROM user;
 
 		// To learn more, go to RRFlow University Fundamentals course:
-		// https://github.com/EonsofStupid/connectome
+		// https://github.com/rrflow/connectome-development
 	`,
 };
 
@@ -257,7 +257,7 @@ export const RRFLOW_START_GRAPH_V2 = {
 		};
 
 		// To learn more about graph queries, go to the Using RRFlow as a Graph Database page:
-		// https://github.com/EonsofStupid/connectome
+		// https://github.com/rrflow/connectome-development
 	`,
 };
 
@@ -362,7 +362,7 @@ export const RRFLOW_START_GRAPH_V3 = {
 		};
 
 		// To learn more about graph queries, go to the Using RRFlow as a Graph Database page:
-		// https://github.com/EonsofStupid/connectome
+		// https://github.com/rrflow/connectome-development
 	`,
 };
 
@@ -377,7 +377,7 @@ export const RRFLOW_START_VECTOR_V2 = {
 		};
 
 		-- Vector index
-		-- Reference: https://github.com/EonsofStupid/connectome
+		-- Reference: https://github.com/rrflow/connectome-development
 		DEFINE INDEX IF NOT EXISTS documents_vec_index
 			ON TABLE documents
 			FIELDS embedding
@@ -427,7 +427,7 @@ export const RRFLOW_START_VECTOR_V2 = {
 		-- Congratulations, you've finished the onboarding!
 		-- Get your certificate by completing the RRFlow University Fundamentals
 		-- See more examples in:
-		-- https://github.com/EonsofStupid/connectome
+		-- https://github.com/rrflow/connectome-development
 	`,
 };
 
@@ -442,7 +442,7 @@ export const RRFLOW_START_VECTOR_V3 = {
 		};
 
 		-- Vector index
-		-- Reference: https://github.com/EonsofStupid/connectome
+		-- Reference: https://github.com/rrflow/connectome-development
 		DEFINE INDEX OVERWRITE documents_vec_index
 			ON TABLE documents
 			FIELDS embedding
@@ -491,6 +491,6 @@ export const RRFLOW_START_VECTOR_V3 = {
 		-- Congratulations, you've finished the onboarding!
 		-- Get your certificate by completing the RRFlow University Fundamentals
 		-- See more examples in:
-		-- https://github.com/EonsofStupid/connectome
+		-- https://github.com/rrflow/connectome-development
 	`,
 };

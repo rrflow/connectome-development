@@ -46,7 +46,7 @@ export function MajorUpdateSection({ instance, organisation }: MajorUpdateSectio
 										Start migration
 									</Button>
 								</Link>
-								<Anchor href="https://github.com/EonsofStupid/connectome">
+								<Anchor href="https://github.com/rrflow/connectome-development">
 									<Button
 										variant="light"
 										color="slate"

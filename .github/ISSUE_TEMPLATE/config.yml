@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Documentation
-    url: https://github.com/EonsofStupid/rrflow-connectome
+    url: https://github.com/rrflow/connectome-development
     about: Report issues with the documentation here.
   - name: Security issues
-    url: https://github.com/EonsofStupid/rrflow-connectome/security/policy
+    url: https://github.com/rrflow/connectome-development/security/policy
     about: Report security vulnerabilities here.

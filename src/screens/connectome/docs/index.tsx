@@ -264,17 +264,17 @@ export function buildDocumentation(_schema: ConnectionSchema): DocsTopic[] {
 				{
 					id: newId(),
 					title: "Documentation",
-					link: "https://github.com/EonsofStupid/connectome",
+					link: "https://github.com/rrflow/connectome-development",
 				},
 				{
 					id: newId(),
 					title: "RRFlowQL",
-					link: "https://github.com/EonsofStupid/connectome",
+					link: "https://github.com/rrflow/connectome-development",
 				},
 				{
 					id: newId(),
 					title: "Integration",
-					link: "https://github.com/EonsofStupid/connectome",
+					link: "https://github.com/rrflow/connectome-development",
 				},
 			],
 		},

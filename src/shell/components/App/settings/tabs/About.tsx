@@ -17,7 +17,7 @@ export function AboutTab() {
 	const [isChecking, setChecking] = useState(false);
 
 	const versionText = useMemo(() => {
-		let builder = import.meta.env.VERSION;
+		let builder = `${import.meta.env.VERSION} ${import.meta.env.CHANNEL}`;
 
 		if (isPreview) {
 			builder += " (pre)";
@@ -53,7 +53,7 @@ export function AboutTab() {
 
 	return (
 		<Box m="xs">
-			<Text c="obsidian">Connectome &copy; {format(currDate, "yyyy")} EonsofStupid</Text>
+			<Text c="obsidian">Connectome &copy; {format(currDate, "yyyy")} AngryVibes LLC</Text>
 			<Stack
 				gap="xs"
 				mt="xl"
@@ -72,10 +72,10 @@ export function AboutTab() {
 				))}
 			</Stack>
 			<Stack mt="xl">
-				<LearnMore href="https://github.com/EonsofStupid/connectome">
+				<LearnMore href="https://github.com/rrflow/connectome-development">
 					GitHub Repository
 				</LearnMore>
-				<LearnMore href="https://github.com/EonsofStupid/connectome">
+				<LearnMore href="https://github.com/rrflow/rrflow-development">
 					RRFlow engine repository
 				</LearnMore>
 			</Stack>

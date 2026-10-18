@@ -86,7 +86,7 @@ export function ReferralPage() {
 	const isAuthed = useIsAuthenticated();
 	const isLight = useIsLight();
 
-	const referralLink = "https://github.com/EonsofStupid/connectome";
+	const referralLink = "https://github.com/rrflow/connectome-development";
 	const shareOptions = {
 		title: "RRFlow Cloud",
 		text: "Use my referral link to get started today!",

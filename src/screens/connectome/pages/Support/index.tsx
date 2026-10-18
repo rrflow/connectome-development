@@ -222,7 +222,9 @@ export function SupportPage() {
 								description="Learn everything there is to know about all RRFlow products"
 								image={pictoBrain}
 								onClick={() =>
-									adapter.openUrl("https://github.com/EonsofStupid/connectome")
+									adapter.openUrl(
+										"https://github.com/rrflow/connectome-development",
+									)
 								}
 							/>
 							<ResourceTile
@@ -236,7 +238,9 @@ export function SupportPage() {
 								description="Learn the fundamentals of RRFlow in as little as 3 hours"
 								image={pictoUniversity}
 								onClick={() =>
-									adapter.openUrl("https://github.com/EonsofStupid/connectome")
+									adapter.openUrl(
+										"https://github.com/rrflow/connectome-development",
+									)
 								}
 							/>
 							<ResourceTile
@@ -244,7 +248,9 @@ export function SupportPage() {
 								description="Become a RRFlowQL expert through Aeon's RRFlow Renaissance"
 								image={pictoDocument}
 								onClick={() =>
-									adapter.openUrl("https://github.com/EonsofStupid/connectome")
+									adapter.openUrl(
+										"https://github.com/rrflow/connectome-development",
+									)
 								}
 							/>
 						</SimpleGrid>
@@ -282,7 +288,9 @@ export function SupportPage() {
 								description="Report issues or submit feature requests"
 								image={pictoGitHub}
 								onClick={() =>
-									adapter.openUrl("https://github.com/EonsofStupid/connectome")
+									adapter.openUrl(
+										"https://github.com/rrflow/connectome-development",
+									)
 								}
 							/>
 							{flags.support_tickets && (

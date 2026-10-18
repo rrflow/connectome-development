@@ -21,7 +21,9 @@ export function useLatestNewsQuery() {
 	const [flags] = useFeatureFlags();
 	const [websiteSetting] = useSetting("cloud", "urlWebsiteBase");
 	const isCustom = flags.website_base === "custom";
-	const newsfeedBase = isCustom ? websiteSetting : "https://github.com/EonsofStupid/connectome";
+	const newsfeedBase = isCustom
+		? websiteSetting
+		: "https://github.com/rrflow/connectome-development";
 
 	return useQuery<NewsPost[]>({
 		queryKey: ["newsfeed", newsfeedBase],

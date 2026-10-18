@@ -279,7 +279,7 @@ export function AccessEditorModal({ level, existing, opened, onClose }: AccessEd
 								height={96}
 							/>
 
-							<LearnMore href="https://github.com/EonsofStupid/connectome">
+							<LearnMore href="https://github.com/rrflow/connectome-development">
 								Learn more about sign up and sign in queries
 							</LearnMore>
 						</Stack>
@@ -305,7 +305,7 @@ export function AccessEditorModal({ level, existing, opened, onClose }: AccessEd
 								readOnly={!!existing} // NOTE temp
 							/>
 
-							<LearnMore href="https://github.com/EonsofStupid/connectome">
+							<LearnMore href="https://github.com/rrflow/connectome-development">
 								Learn more about session and token durations
 							</LearnMore>
 						</Stack>

@@ -171,7 +171,7 @@ export function InstanceTypeSection({ organisation, details, setDetails }: Deplo
 					</Button>
 				)}
 				<a
-					href="https://github.com/EonsofStupid/connectome"
+					href="https://github.com/rrflow/connectome-development"
 					target="_blank"
 					rel="noreferrer"
 				>

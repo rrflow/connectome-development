@@ -533,7 +533,7 @@ export function OverviewPage() {
 									image={pictoBrain}
 									onClick={() =>
 										adapter.openUrl(
-											"https://github.com/EonsofStupid/connectome",
+											"https://github.com/rrflow/connectome-development",
 										)
 									}
 								/>
@@ -543,7 +543,7 @@ export function OverviewPage() {
 									image={pictoHandsOn}
 									onClick={() =>
 										adapter.openUrl(
-											"https://github.com/EonsofStupid/connectome",
+											"https://github.com/rrflow/connectome-development",
 										)
 									}
 								/>
@@ -553,7 +553,7 @@ export function OverviewPage() {
 									image={pictoUniversity}
 									onClick={() =>
 										adapter.openUrl(
-											"https://github.com/EonsofStupid/connectome",
+											"https://github.com/rrflow/connectome-development",
 										)
 									}
 								/>

@@ -39,7 +39,7 @@ export function compareIdents(a: string, b: string) {
  * but will be replaced in Connectome 4.0 with a fully dynamic system
  */
 export function getDatasetURL(version: string) {
-	const base = `https://github.com/EonsofStupid/connectome`;
+	const base = `https://github.com/rrflow/connectome-development`;
 	const isV3 = compareVersions(version, SDB_3_0_0) >= 0;
 
 	if (isV3) {

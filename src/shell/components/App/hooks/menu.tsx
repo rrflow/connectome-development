@@ -192,7 +192,7 @@ export function getMenuItems(): AppMenu[] {
 				type: "Custom",
 				name: "RRFlow Source",
 				action: () => {
-					adapter.openUrl("https://github.com/EonsofStupid/connectome");
+					adapter.openUrl("https://github.com/rrflow/connectome-development");
 				},
 			},
 			SEPARATOR,
@@ -201,7 +201,9 @@ export function getMenuItems(): AppMenu[] {
 				type: "Custom",
 				name: "Report Issue",
 				action: () => {
-					adapter.openUrl("https://github.com/EonsofStupid/connectome/issues/new/choose");
+					adapter.openUrl(
+						"https://github.com/rrflow/connectome-development/issues/new/choose",
+					);
 				},
 			},
 			...optional(!isDarwin && about),

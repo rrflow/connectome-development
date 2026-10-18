@@ -15,10 +15,12 @@ import { backupConfig } from "~/shared/util/config";
 
 export function NewDomainScreen() {
 	const isLight = useIsLight();
-	const [targetLink, setTargetLink] = useState("https://github.com/EonsofStupid/connectome");
+	const [targetLink, setTargetLink] = useState(
+		"https://github.com/rrflow/connectome-development",
+	);
 
 	const saveBackup = useStable(() => {
-		setTargetLink("https://github.com/EonsofStupid/connectome");
+		setTargetLink("https://github.com/rrflow/connectome-development");
 		adapter.saveFile(
 			"Save config backup",
 			"Connectome-backup.json",
@@ -75,7 +77,7 @@ export function NewDomainScreen() {
 								We've moved to{" "}
 								<Link
 									inherit
-									href="https://github.com/EonsofStupid/connectome"
+									href="https://github.com/rrflow/connectome-development"
 								>
 									127.0.0.1:8000
 								</Link>{" "}

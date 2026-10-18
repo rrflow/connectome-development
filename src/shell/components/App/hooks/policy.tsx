@@ -28,7 +28,7 @@ export function usePolicyAlert() {
 								span
 								fz="xs"
 								c="violet"
-								href="https://github.com/EonsofStupid/connectome"
+								href="https://github.com/rrflow/connectome-development"
 							>
 								Privacy Policy
 							</Link>{" "}
@@ -37,7 +37,7 @@ export function usePolicyAlert() {
 								span
 								fz="xs"
 								c="violet"
-								href="https://github.com/EonsofStupid/connectome"
+								href="https://github.com/rrflow/connectome-development"
 							>
 								Cookies Policy
 							</Link>

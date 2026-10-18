@@ -1,10 +1,10 @@
 [package]
 name = "connectome"
-version = "0.0.0"
+version = "0.0.5"
 description = "Connectome — native control surface for RRFlow runtimes"
-authors = ["EonsofStupid"]
+authors = ["AngryVibes LLC"]
 license = "MIT"
-repository = "https://github.com/EonsofStupid/rrflow-connectome"
+repository = "https://github.com/rrflow/connectome-development"
 edition = "2021"
 publish = false
 

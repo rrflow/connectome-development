@@ -210,7 +210,7 @@ export function GraphqlView() {
 				color="obsidian"
 				variant="light"
 				rightSection={<Icon path={iconOpen} />}
-				onClick={() => adapter.openUrl("https://github.com/EonsofStupid/connectome")}
+				onClick={() => adapter.openUrl("https://github.com/rrflow/connectome-development")}
 			>
 				Learn more
 			</Button>

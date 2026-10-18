@@ -114,7 +114,7 @@ function SupportPlan({ name, description, organization }: SupportPlanProps) {
 						if (flags.support_tickets) {
 							navigate(`/o/${organization}/support-plans`);
 						} else {
-							adapter.openUrl("https://github.com/EonsofStupid/connectome");
+							adapter.openUrl("https://github.com/rrflow/connectome-development");
 						}
 					}}
 					rightSection={
