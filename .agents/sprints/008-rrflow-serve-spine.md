@@ -317,3 +317,46 @@ Branch `agent/rrflow-serve-spine-b` from `main` `8c1daa2`.
   passed against the production bundle (local Chromium). Not run here: a
   desktop run of the stage flow (no display in this environment) — the
   definition of done's screenshot review remains for the owner's machine.
+- Landed as pull request #3, squash-merged to `main` as `4995ec4` (CI green on
+  both heads; the RRD process job drove the product serve path on a clean
+  runner).
+
+### 2026-10-18 — Slice C: the TypeScript client consumes the generated SDK
+
+Branch `agent/rrflow-serve-spine-c` from `main` `4995ec4`.
+
+- `@rrflow/rrd-client` is a dependency: `github:rrflow/rrflow-development#
+  4705941&path:sdks/typescript` — the repository's `sdks/typescript` at the
+  exact commit `Cargo.lock` pins. pnpm installs the subdirectory package from
+  the codeload tarball with an integrity hash; its only runtime dependency is
+  ArkType 2.2.8, and Connectome's own ArkType moved 2.2.3 → 2.2.8 so one copy
+  serves both (two copies in one TypeScript program broke `type.errors`
+  narrowing in `diagnostics.ts` through ArkType's global declarations).
+- `scripts/check-dependency-authority.mjs` rule 3: the SDK specifier must be
+  that repository's `sdks/typescript` at one exact commit, and that commit
+  must equal the one the Rust crates resolve to. Exercised: a one-character
+  change to the npm pin fails the gate naming both revisions.
+- `src/rrflow/runtime.ts` is 130 lines on the SDK instead of 350 of hand
+  parsing: `RrdLiveness`, `RrdReadiness`, `RrdServiceCapabilities`, and
+  `RrdCapability` are `SuccessPayload<"health-live" | "health-ready" |
+  "capabilities-read">` from the generated OpenAPI types (the UI now sees the
+  whole configuration record, not a two-field mirror); the handshake is three
+  `RrdClient.call`s, the SDK validates every envelope and error body, and the
+  protocol/instance checks keep their specific messages. Transport: in the
+  desktop the SDK's `fetch` is `rrd_public_request` (loopback-only HTTP, 1 MiB
+  cap, no redirects, in the native process — the webview opens no socket);
+  in the browser it is the page's fetch called as a free function.
+- Surfaced by the render smoke: the SDK keeps its transport as a property and
+  calls it as a method, and a browser's `fetch` throws "Illegal invocation"
+  when invoked with another `this`. Connectome passes an explicitly bound
+  fetch; the SDK fix (bind the transport) goes to RRFlow as its own change and
+  rides the next pin bump.
+- The SDK is loopback-only ("before TLS qualification"), as the native
+  client already is (`loopback_candidates`); the former hand-written origin
+  check that admitted remote HTTPS described a path nothing implemented.
+- Evidence: `pnpm check` (Biome, identity gate, dependency authority with the
+  new rule, `tsc`): clean; `pnpm build`: the bundle carries the SDK
+  (`capabilities-read`, `health-live`, the SDK's loopback message);
+  render smoke 2 passed — the second test's mocked `/v1/**` routes received
+  the SDK's requests in order (live, ready, capabilities) and the page showed
+  "RRD connected" with the mocked instance.
