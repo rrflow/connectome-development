@@ -11,26 +11,19 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import {
-	CodeBlock,
-	Icon,
-	iconClose,
-	iconDelete,
-	iconDotsVertical,
-	iconQuery,
-	iconSearch,
-	iconText,
-} from "@surrealdb/ui";
 import dayjs from "dayjs";
 import { capitalize } from "radash";
 import { memo, useMemo } from "react";
 import { ActionButton } from "~/components/ActionButton";
+import { CodeBlock } from "~/components/CodeBlock";
+import { Icon } from "~/components/Icon";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";
 import { setEditorText } from "~/editor/helpers";
 import { useConnection } from "~/hooks/connection";
 import { useConnectionAndView } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
+import { iconClose, iconDelete, iconDotsVertical, iconQuery, iconSearch, iconText } from "~/icons";
 import { useConfigStore } from "~/shell/stores/config";
 import type { HistoryQuery } from "~/types";
 

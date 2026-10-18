@@ -1,8 +1,8 @@
 import { Accordion, Flex, Text, TextInput } from "@mantine/core";
-import { iconIndex } from "@surrealdb/ui";
 import { CodeInput } from "~/components/Inputs";
 import { useStable } from "~/hooks/stable";
 import { useIsLight } from "~/hooks/theme";
+import { iconIndex } from "~/icons";
 import type { SchemaIndex } from "~/types";
 import { type ElementProps, SectionTitle } from "../helpers";
 import { Lister } from "../lister";

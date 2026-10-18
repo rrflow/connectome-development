@@ -1,6 +1,6 @@
 import { type BoxProps, Checkbox, NumberInput, Select, SimpleGrid, TextInput } from "@mantine/core";
-import { Icon } from "@surrealdb/ui";
 import { isNumber } from "radash";
+import { Icon } from "~/components/Icon";
 import {
 	CheckboxController,
 	FlagSetController,

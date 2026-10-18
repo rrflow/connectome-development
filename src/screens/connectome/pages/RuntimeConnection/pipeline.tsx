@@ -1,5 +1,6 @@
 import { Badge, Box, Group, Paper, Progress, Stack, Text } from "@mantine/core";
-import { Icon, iconChevronRight } from "@surrealdb/ui";
+import { Icon } from "~/components/Icon";
+import { iconChevronRight } from "~/icons";
 import type { RrdMetricView, RrdPhysicalStorageView } from "~/rrflow/session";
 import { formatCount } from "./format";
 import { type GlossaryTerm, Term } from "./glossary";

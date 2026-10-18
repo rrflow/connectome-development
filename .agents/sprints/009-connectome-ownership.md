@@ -276,3 +276,31 @@ engine). Stored configurations that still carry `settings.cloud` or
 `settings.gtm` merge harmlessly (extra keys are assigned, never read); a
 config-version migration is not needed.
 
+### 2026-10-18 — Slice C1: icons, pictograms, code block
+
+Branch `agent/connectome-icons` from `main` `1f34a3d` (Slice B merged as PR #7).
+
+- `src/icons.ts` names the 119 icons the interface draws and resolves each to
+  a 24×24 path from Material Design Icons (`@mdi/js`, Apache-2.0, in the
+  license report). `src/components/Icon` draws them (same props the kit's
+  `Icon` took: `path`, `size`, `color`, `spin`, `flip`, Box props).
+- `src/pictograms.ts` exports four original Connectome SVG illustrations
+  (connected nodes, terminal prompt, stacked layers, shield) in place of the
+  vendor's pictograms.
+- `src/components/CodeBlock` is a read-only block on Connectome's own
+  `CodeEditor` (RRFlowQL and JSON highlighted — JSON via
+  `@codemirror/lang-json`, MIT — copy button, optional title and line
+  numbers); the editor snapshot type is `CodeEditor`'s own.
+- A codemod rewrote 139 files' kit imports to `~/icons`, `~/pictograms`,
+  `~/components/Icon`, `~/components/Spacer`, `~/components/CodeBlock`.
+  The kit is now imported by three files only: `src/shared/util/mantine.tsx`
+  (`MANTINE_THEME`), `src/shared/util/head.tsx` (`FontLinks`, which loads
+  Inter and JetBrains Mono from Google Fonts at runtime) and the two startup
+  entrypoints (`styles.css`). Those are the visual identity (Slice C2, a
+  decision: the current look is the vendor's — its brand gradient as
+  `defaultGradient`, 117 `[data-variant=surreal]` rules, its palette names).
+- Verification: `pnpm check` green (identity gate still 7 inherited vendor
+  dependencies — the kit stays declared until C2); production build green;
+  render smoke 2/2; screenshots of the Overview and the connection page show
+  the new icons and pictograms with zero page errors.
+

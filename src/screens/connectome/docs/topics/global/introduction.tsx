@@ -1,9 +1,10 @@
 import { Box, Button, Paper, Text, Title } from "@mantine/core";
-import { Icon, iconOpen } from "@surrealdb/ui";
 import { adapter } from "~/adapter";
 import { DriverSelector } from "~/components/DriverSelector";
+import { Icon } from "~/components/Icon";
 import { DRIVERS } from "~/constants";
 import { useSetting } from "~/hooks/config";
+import { iconOpen } from "~/icons";
 import { Article } from "~/screens/connectome/docs/components";
 
 export function DocsGlobalIntroduction() {

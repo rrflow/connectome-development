@@ -1,4 +1,4 @@
-import { iconFunction, iconTable, iconVariable } from "@surrealdb/ui";
+import { iconFunction, iconTable, iconVariable } from "~/icons";
 
 type TypeIcon = { type: string; icon: string; color: string };
 

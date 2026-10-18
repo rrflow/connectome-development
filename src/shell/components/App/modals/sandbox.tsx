@@ -1,11 +1,12 @@
 import { Box, Button, Divider, Modal, Paper, Stack, Text } from "@mantine/core";
-import { Icon, iconChevronRight, iconClose } from "@surrealdb/ui";
 import { useEffect } from "react";
 import { ActionButton } from "~/components/ActionButton";
+import { Icon } from "~/components/Icon";
 import { SANDBOX } from "~/constants";
 import { useBoolean } from "~/hooks/boolean";
 import { useOnboarding } from "~/hooks/onboarding";
 import { useConnectionAndView } from "~/hooks/routing";
+import { iconChevronRight, iconClose } from "~/icons";
 
 export function SandboxModal() {
 	const [isOpen, openHandle] = useBoolean();

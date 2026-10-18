@@ -1,4 +1,4 @@
-import { iconErrorCircle, iconHelp, iconWarning } from "@surrealdb/ui";
+import { iconErrorCircle, iconHelp, iconWarning } from "~/icons";
 import { MigrationSeverity } from "~/types";
 
 export const severityMeta: Record<

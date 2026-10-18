@@ -11,13 +11,14 @@ import {
 } from "@mantine/core";
 
 import { useDisclosure } from "@mantine/hooks";
-import { Icon, iconWarning } from "@surrealdb/ui";
 import { useLayoutEffect, useState } from "react";
+import { Icon } from "~/components/Icon";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";
 import { SENSITIVE_ACCESS_FIELDS } from "~/constants";
 import { useConnection } from "~/hooks/connection";
 import { useStable } from "~/hooks/stable";
+import { iconWarning } from "~/icons";
 import { openConnectionEditModal } from "~/modals/edit-connection";
 import { openConnection } from "~/screens/connectome/connection/connection";
 import { getConnection, getConnectionById } from "~/shared/util/connection";

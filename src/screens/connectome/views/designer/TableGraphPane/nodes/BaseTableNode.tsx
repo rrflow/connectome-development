@@ -1,5 +1,4 @@
 import { Box, Divider, Flex, Group, Paper, ScrollArea, Stack, Text, Tooltip } from "@mantine/core";
-import { Icon, iconBullhorn, iconIndex, iconJSON } from "@surrealdb/ui";
 import { Handle, Position } from "@xyflow/react";
 import {
 	createContext,
@@ -10,10 +9,12 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { Icon } from "~/components/Icon";
 import { Spacer } from "~/components/Spacer";
 import { TABLE_VARIANT_ICONS } from "~/constants";
 import { useStable } from "~/hooks/stable";
 import { useIsLight } from "~/hooks/theme";
+import { iconBullhorn, iconIndex, iconJSON } from "~/icons";
 import { getRRFlowQL } from "~/screens/connectome/connection/connection";
 import { GraphWarning } from "~/screens/connectome/views/designer/TableGraphPane/helpers";
 import { ON_STOP_PROPAGATION } from "~/shared/util/helpers";

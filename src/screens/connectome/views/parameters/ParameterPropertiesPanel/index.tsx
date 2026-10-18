@@ -10,14 +10,15 @@ import {
 	Text,
 	Textarea,
 } from "@mantine/core";
-import { Icon, iconCheck, iconCopy, iconDelete, iconList, iconPlus } from "@surrealdb/ui";
 import { Updater } from "use-immer";
 import { ActionButton } from "~/components/ActionButton";
+import { Icon } from "~/components/Icon";
 import { PermissionInput } from "~/components/Inputs";
 import { ContentPane } from "~/components/Pane";
 import { SaveBox } from "~/components/SaveBox";
 import { Spacer } from "~/components/Spacer";
 import { SaveableHandle } from "~/hooks/save";
+import { iconCheck, iconCopy, iconDelete, iconList, iconPlus } from "~/icons";
 import { SchemaParameter } from "~/types";
 import classes from "./style.module.scss";
 

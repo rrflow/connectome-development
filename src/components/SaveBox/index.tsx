@@ -1,9 +1,10 @@
 import { Button, Group, type GroupProps, Notification, Portal } from "@mantine/core";
-import { Icon, iconCheck, iconHelp } from "@surrealdb/ui";
 import { clsx } from "clsx";
 import { capitalize } from "radash";
 import type { ReactNode } from "react";
+import { Icon } from "~/components/Icon";
 import type { SaveableHandle } from "~/hooks/save";
+import { iconCheck, iconHelp } from "~/icons";
 import { Spacer } from "../Spacer";
 import classes from "./style.module.scss";
 

@@ -39,7 +39,7 @@ import {
 	iconVariable,
 	iconWarning,
 	iconWrench,
-} from "@surrealdb/ui";
+} from "~/icons";
 
 /**
  * List of icons which may be used by users for

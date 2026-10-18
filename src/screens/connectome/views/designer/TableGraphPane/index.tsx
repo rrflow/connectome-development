@@ -13,21 +13,6 @@ import {
 	Text,
 } from "@mantine/core";
 import {
-	Icon,
-	iconAPI,
-	iconChevronRight,
-	iconCog,
-	iconFullscreen,
-	iconHelp,
-	iconImage,
-	iconMagnifyMinus,
-	iconMagnifyPlus,
-	iconPlus,
-	iconRefresh,
-	iconRelation,
-	iconReset,
-} from "@surrealdb/ui";
-import {
 	Background,
 	type Edge,
 	getNodesBounds,
@@ -51,6 +36,7 @@ import {
 } from "react";
 import { adapter } from "~/adapter";
 import { ActionButton } from "~/components/ActionButton";
+import { Icon } from "~/components/Icon";
 import { Label } from "~/components/Label";
 import { Link } from "~/components/Link";
 import { ContentPane } from "~/components/Pane";
@@ -69,6 +55,20 @@ import { useConnectionAndView, useIntent } from "~/hooks/routing";
 import { useDatabaseSchema } from "~/hooks/schema";
 import { useStable } from "~/hooks/stable";
 import { useIsLight } from "~/hooks/theme";
+import {
+	iconAPI,
+	iconChevronRight,
+	iconCog,
+	iconFullscreen,
+	iconHelp,
+	iconImage,
+	iconMagnifyMinus,
+	iconMagnifyPlus,
+	iconPlus,
+	iconRefresh,
+	iconRelation,
+	iconReset,
+} from "~/icons";
 import { DiagramContext } from "~/screens/connectome/views/designer/TableGraphPane/nodes/BaseTableNode";
 import { showInfo } from "~/shared/util/helpers";
 import { themeColor } from "~/shared/util/mantine";

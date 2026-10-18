@@ -9,15 +9,16 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconPlus, iconRelation, iconSearch, iconTable } from "@surrealdb/ui";
 import { useLayoutEffect, useMemo, useState } from "react";
 import { Form } from "~/components/Form";
+import { Icon } from "~/components/Icon";
 import { CodeInput } from "~/components/Inputs";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { SCHEMA_MODES } from "~/constants";
 import { useConnectionAndView, useIntent } from "~/hooks/routing";
 import { useTableNames } from "~/hooks/schema";
 import { useStable } from "~/hooks/stable";
+import { iconPlus, iconRelation, iconSearch, iconTable } from "~/icons";
 import { executeQuery } from "~/screens/connectome/connection/connection";
 import { dispatchIntent } from "~/shared/util/intents";
 import { syncConnectionSchema } from "~/shared/util/schema";

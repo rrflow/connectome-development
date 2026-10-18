@@ -1,10 +1,10 @@
 import { ScrollArea, Stack } from "@mantine/core";
-import { iconAPI } from "@surrealdb/ui";
 import type { RefObject } from "react";
 import { ContentPane } from "~/components/Pane";
 import { ScrollFader } from "~/components/ScrollFader";
 import { useSetting } from "~/hooks/config";
 import { useStable } from "~/hooks/stable";
+import { iconAPI } from "~/icons";
 import type { DocsTopic } from "~/screens/connectome/docs/types";
 import type { CodeLang } from "~/types";
 import { renderTopics } from "./topics";

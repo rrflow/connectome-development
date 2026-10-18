@@ -1,7 +1,14 @@
 import { Accordion, Badge, Center, Group, ScrollArea, Stack, Text } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
+import { useContextMenu } from "mantine-contextmenu";
+import { useEffect, useMemo, useState } from "react";
+import { CodeEditor } from "~/components/CodeEditor";
+import { Icon } from "~/components/Icon";
+import { RelativeTime } from "~/components/RelativeTime";
+import { rrflowqlRecordLinks } from "~/editor";
+import { type Formatter, useResultFormatter } from "~/hooks/rrflowql";
+import { useRefreshTimer } from "~/hooks/timer";
 import {
-	Icon,
 	iconBroadcastOff,
 	iconBroadcastOn,
 	iconClose,
@@ -10,14 +17,7 @@ import {
 	iconHammer,
 	iconHelp,
 	iconPlus,
-} from "@surrealdb/ui";
-import { useContextMenu } from "mantine-contextmenu";
-import { useEffect, useMemo, useState } from "react";
-import { CodeEditor } from "~/components/CodeEditor";
-import { RelativeTime } from "~/components/RelativeTime";
-import { rrflowqlRecordLinks } from "~/editor";
-import { type Formatter, useResultFormatter } from "~/hooks/rrflowql";
-import { useRefreshTimer } from "~/hooks/timer";
+} from "~/icons";
 import { useInspector } from "~/providers/Inspector";
 import { executeQuery } from "~/screens/connectome/connection/connection";
 import { ON_FOCUS_SELECT } from "~/shared/util/helpers";

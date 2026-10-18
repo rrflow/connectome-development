@@ -12,24 +12,17 @@ import {
 	Text,
 	ThemeIcon,
 } from "@mantine/core";
-import {
-	Icon,
-	iconCheck,
-	iconClose,
-	iconCopy,
-	iconDelete,
-	iconDesigner,
-	iconWarning,
-} from "@surrealdb/ui";
 import { capitalize } from "radash";
 import { useState } from "react";
 import type { Updater } from "use-immer";
 import { ActionButton } from "~/components/ActionButton";
 import { DrawerResizer } from "~/components/DrawerResizer";
+import { Icon } from "~/components/Icon";
 import { SaveBox } from "~/components/SaveBox";
 import { Spacer } from "~/components/Spacer";
 import { TABLE_VARIANT_ICONS } from "~/constants";
 import type { SaveableHandle } from "~/hooks/save";
+import { iconCheck, iconClose, iconCopy, iconDelete, iconDesigner, iconWarning } from "~/icons";
 import { useConfirmation } from "~/providers/Confirmation";
 import { executeQuery } from "~/screens/connectome/connection/connection";
 import { getTableVariant, syncConnectionSchema } from "~/shared/util/schema";

@@ -1,5 +1,6 @@
-import { Icon, iconChevronRight } from "@surrealdb/ui";
+import { Icon } from "~/components/Icon";
 import { useStable } from "~/hooks/stable";
+import { iconChevronRight } from "~/icons";
 import { useInterfaceStore } from "~/shell/stores/interface";
 import { ActionButton } from "../ActionButton";
 

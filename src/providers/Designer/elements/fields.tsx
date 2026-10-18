@@ -1,7 +1,7 @@
 import { Accordion, Checkbox, Flex, Text, TextInput } from "@mantine/core";
-import { iconBraces } from "@surrealdb/ui";
 import { CodeInput, FieldKindInput, PermissionInput } from "~/components/Inputs";
 import { useStable } from "~/hooks/stable";
+import { iconBraces } from "~/icons";
 import type { SchemaField } from "~/types";
 import { type ElementProps, SectionTitle } from "../helpers";
 import { Lister } from "../lister";

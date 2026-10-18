@@ -1,14 +1,15 @@
 import { Button, Group, Stack, Text, TextInput } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
 import { closeModal, openModal } from "@mantine/modals";
-import { Icon, iconPlus } from "@surrealdb/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { Form } from "~/components/Form";
+import { Icon } from "~/components/Icon";
 import { LearnMore } from "~/components/LearnMore";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { useNamespaceSchema } from "~/hooks/schema";
 import { useStable } from "~/hooks/stable";
+import { iconPlus } from "~/icons";
 import { activateDatabase, executeQuery } from "~/screens/connectome/connection/connection";
 import { getConnection } from "~/shared/util/connection";
 import { escapeIdent } from "~/vendor/rrflow-client";

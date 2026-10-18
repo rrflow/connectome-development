@@ -1,14 +1,15 @@
 import { ActionIcon, Badge, Box, Group, Menu, ScrollArea, Stack, Text } from "@mantine/core";
-import { Icon, iconAccount, iconDotsVertical, iconKey, iconPlus } from "@surrealdb/ui";
 import { capitalize } from "radash";
 import { type ReactNode, useState } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { Entry } from "~/components/Entry";
+import { Icon } from "~/components/Icon";
 import { ContentPane } from "~/components/Pane";
 import { useBoolean } from "~/hooks/boolean";
 import { useIsConnected } from "~/hooks/connection";
 import { useIntent } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
+import { iconAccount, iconDotsVertical, iconKey, iconPlus } from "~/icons";
 import { useConfirmation } from "~/providers/Confirmation";
 import {
 	SelectDatabase,

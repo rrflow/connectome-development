@@ -1,16 +1,10 @@
 import { Box, Button, Divider, Group, Paper, ScrollArea, Stack, Text, Title } from "@mantine/core";
-import {
-	CodeBlock,
-	Icon,
-	iconBug,
-	iconCheck,
-	iconCopy,
-	iconRefresh,
-	iconWarning,
-} from "@surrealdb/ui";
 import type { FallbackProps } from "react-error-boundary";
 import { adapter } from "~/adapter";
+import { CodeBlock } from "~/components/CodeBlock";
+import { Icon } from "~/components/Icon";
 import { useVersionCopy } from "~/hooks/debug";
+import { iconBug, iconCheck, iconCopy, iconRefresh, iconWarning } from "~/icons";
 
 export function ScaffoldErrorHandler({ error, resetErrorBoundary }: FallbackProps) {
 	const [copyDebug, clipboard] = useVersionCopy();

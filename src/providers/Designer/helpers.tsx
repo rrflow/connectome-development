@@ -1,9 +1,9 @@
 import { Accordion, Group, Text } from "@mantine/core";
-import { Icon } from "@surrealdb/ui";
 import { default as equals } from "fast-deep-equal";
 import { objectify } from "radash";
 import type { Updater } from "use-immer";
 import { adapter } from "~/adapter";
+import { Icon } from "~/components/Icon";
 import type { TableInfo } from "~/types";
 import { escapeIdent } from "~/vendor/rrflow-client";
 

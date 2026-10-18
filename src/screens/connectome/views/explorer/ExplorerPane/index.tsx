@@ -12,23 +12,12 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useDebouncedValue, useInputState } from "@mantine/hooks";
-import {
-	Icon,
-	iconChevronDown,
-	iconChevronRight,
-	iconCopy,
-	iconDelete,
-	iconFilter,
-	iconPlus,
-	iconRefresh,
-	iconServer,
-	iconTable,
-} from "@surrealdb/ui";
 import clsx from "clsx";
 import { useContextMenu } from "mantine-contextmenu";
 import { type MouseEvent, useEffect, useLayoutEffect, useState } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { DataTable } from "~/components/DataTable";
+import { Icon } from "~/components/Icon";
 import { LoadingContainer } from "~/components/LoadingContainer";
 import { Pagination } from "~/components/Pagination";
 import { usePagination } from "~/components/Pagination/hook";
@@ -39,6 +28,17 @@ import { useEventSubscription } from "~/hooks/event";
 import { useConnectionAndView, useConnectionNavigator } from "~/hooks/routing";
 import { useTables } from "~/hooks/schema";
 import { useStable } from "~/hooks/stable";
+import {
+	iconChevronDown,
+	iconChevronRight,
+	iconCopy,
+	iconDelete,
+	iconFilter,
+	iconPlus,
+	iconRefresh,
+	iconServer,
+	iconTable,
+} from "~/icons";
 import { useConfirmation } from "~/providers/Confirmation";
 import {
 	executeQuery,

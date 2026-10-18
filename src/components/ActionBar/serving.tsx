@@ -1,8 +1,9 @@
-import { Icon, iconConsole, iconPlay, iconStop } from "@surrealdb/ui";
 import { useEffect, useState } from "react";
 import { adapter } from "~/adapter";
+import { Icon } from "~/components/Icon";
 import { useConnectionNavigator, useIntent } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
+import { iconConsole, iconPlay, iconStop } from "~/icons";
 import { describeRrdError } from "~/rrflow/runtime";
 import { createBaseConnection } from "~/shared/util/defaults";
 import { showErrorNotification, showInfo } from "~/shared/util/helpers";

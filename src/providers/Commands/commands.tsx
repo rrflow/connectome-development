@@ -1,3 +1,11 @@
+import { invoke } from "@tauri-apps/api/core";
+import { dash } from "radash";
+import { useMemo } from "react";
+import { adapter, isDesktop } from "~/adapter";
+import type { DesktopAdapter } from "~/adapter/desktop";
+import { DRIVERS, SANDBOX } from "~/constants";
+import { useAvailableViews, useConnectionList } from "~/hooks/connection";
+import { useConnectionAndView, useConnectionNavigator } from "~/hooks/routing";
 import {
 	iconAccountPlus,
 	iconAccountSecure,
@@ -42,15 +50,7 @@ import {
 	iconTune,
 	iconUpload,
 	iconWrench,
-} from "@surrealdb/ui";
-import { invoke } from "@tauri-apps/api/core";
-import { dash } from "radash";
-import { useMemo } from "react";
-import { adapter, isDesktop } from "~/adapter";
-import type { DesktopAdapter } from "~/adapter/desktop";
-import { DRIVERS, SANDBOX } from "~/constants";
-import { useAvailableViews, useConnectionList } from "~/hooks/connection";
-import { useConnectionAndView, useConnectionNavigator } from "~/hooks/routing";
+} from "~/icons";
 import { openConnectionDiagnosticsModal } from "~/modals/connection-diagnostics";
 import { showNodeStatus } from "~/modals/node-status";
 import {

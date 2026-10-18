@@ -1,4 +1,5 @@
 import type { MantineColor, MantineColorScheme } from "@mantine/core";
+import { satisfies } from "compare-versions";
 import {
 	iconAPI,
 	iconAuth,
@@ -28,8 +29,7 @@ import {
 	iconVariable,
 	iconWarning,
 	iconXml,
-} from "@surrealdb/ui";
-import { satisfies } from "compare-versions";
+} from "~/icons";
 import {
 	CIcon,
 	DotNetIcon,

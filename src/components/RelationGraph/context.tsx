@@ -1,6 +1,10 @@
 import { Box, Group, Text } from "@mantine/core";
+import { useQuery } from "@tanstack/react-query";
+import { ContextMenuDivider, ContextMenuItem } from "mantine-contextmenu";
+import { unique } from "radash";
+import { Icon } from "~/components/Icon";
+import { useIsLight } from "~/hooks/theme";
 import {
-	Icon,
 	iconCopy,
 	iconEyeOff,
 	iconFullscreen,
@@ -8,11 +12,7 @@ import {
 	iconRelationIn,
 	iconRelationOut,
 	iconSearch,
-} from "@surrealdb/ui";
-import { useQuery } from "@tanstack/react-query";
-import { ContextMenuDivider, ContextMenuItem } from "mantine-contextmenu";
-import { unique } from "radash";
-import { useIsLight } from "~/hooks/theme";
+} from "~/icons";
 import { getRRFlow } from "~/screens/connectome/connection/connection";
 import { QueryResponse } from "~/types";
 import { RecordId } from "~/vendor/rrflow-client";

@@ -1,22 +1,13 @@
 import type { SelectionRange } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
 import { Button, Center, Group, Stack, Text, Tooltip, UnstyledButton } from "@mantine/core";
-import {
-	Icon,
-	iconBroadcastOff,
-	iconCursor,
-	iconHelp,
-	iconList,
-	iconLive,
-	iconQuery,
-	iconUpload,
-} from "@surrealdb/ui";
 import dayjs from "dayjs";
 import { unparse } from "papaparse";
 import { isArray, isObject } from "radash";
 import { useLayoutEffect, useMemo, useState } from "react";
 import { adapter, isMini } from "~/adapter";
 import { ActionButton } from "~/components/ActionButton";
+import { Icon } from "~/components/Icon";
 import { ListMenu } from "~/components/ListMenu";
 import { ContentPane } from "~/components/Pane";
 import { CSV_FILTER, NONE_RESULT_MODES, RESULT_FORMATS, RESULT_MODES } from "~/constants";
@@ -24,6 +15,15 @@ import { executeEditorQuery } from "~/editor/query";
 import { useSetting } from "~/hooks/config";
 import { useConnectionAndView } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
+import {
+	iconBroadcastOff,
+	iconCursor,
+	iconHelp,
+	iconList,
+	iconLive,
+	iconQuery,
+	iconUpload,
+} from "~/icons";
 import { cancelLiveQueries } from "~/screens/connectome/connection/connection";
 import { showInfo, slugify } from "~/shared/util/helpers";
 import { useConfigStore } from "~/shell/stores/config";

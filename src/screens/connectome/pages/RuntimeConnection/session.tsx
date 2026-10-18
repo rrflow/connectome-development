@@ -1,9 +1,10 @@
 import { Alert, Badge, Button, Group, Paper, Text, TextInput } from "@mantine/core";
-import { Icon, iconErrorCircle, iconKey, iconOpenFolder, iconPower } from "@surrealdb/ui";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { isTauri } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { useEffect, useRef } from "react";
+import { Icon } from "~/components/Icon";
+import { iconErrorCircle, iconKey, iconOpenFolder, iconPower } from "~/icons";
 import type { RrdHandshake } from "~/rrflow/runtime";
 import type { RrdConnectionView, RrdSessionClient } from "~/rrflow/session";
 import { useConfigStore } from "~/shell/stores/config";

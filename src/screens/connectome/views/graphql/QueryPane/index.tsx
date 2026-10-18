@@ -1,20 +1,12 @@
 import { Prec } from "@codemirror/state";
 import { type EditorView, keymap } from "@codemirror/view";
 import { Alert, Badge, Button, Group, Stack } from "@mantine/core";
-import {
-	Icon,
-	iconAutoFix,
-	iconDollar,
-	iconGraphql,
-	iconOpen,
-	iconRefresh,
-	iconText,
-} from "@surrealdb/ui";
 import { graphql, updateSchema } from "cm6-graphql";
 import { type GraphQLSchema, parse, print } from "graphql";
 import { useEffect, useMemo } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { CodeEditor } from "~/components/CodeEditor";
+import { Icon } from "~/components/Icon";
 import { Link } from "~/components/Link";
 import { ContentPane } from "~/components/Pane";
 import {
@@ -27,6 +19,7 @@ import { useConnection } from "~/hooks/connection";
 import { useDebouncedFunction } from "~/hooks/debounce";
 import { useConnectionAndView, useIntent } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
+import { iconAutoFix, iconDollar, iconGraphql, iconOpen, iconRefresh, iconText } from "~/icons";
 import { getRRFlowQL } from "~/screens/connectome/connection/connection";
 import { showErrorNotification, showInfo, tryParseParams } from "~/shared/util/helpers";
 import { useConfigStore } from "~/shell/stores/config";

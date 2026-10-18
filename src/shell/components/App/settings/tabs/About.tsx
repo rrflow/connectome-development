@@ -1,12 +1,13 @@
 import { Box, Button, Stack, Text } from "@mantine/core";
-import { Icon, iconCheck, iconReset, iconWrench } from "@surrealdb/ui";
 import { format } from "date-fns";
 import { useMemo, useState } from "react";
 import { adapter, isDesktop } from "~/adapter";
 import type { DesktopAdapter } from "~/adapter/desktop";
+import { Icon } from "~/components/Icon";
 import { LearnMore } from "~/components/LearnMore";
 import { useVersionCopy } from "~/hooks/debug";
 import { useStable } from "~/hooks/stable";
+import { iconCheck, iconReset, iconWrench } from "~/icons";
 import { RRD_PROTOCOL, RRD_PROTOCOL_VERSION } from "~/rrflow/runtime";
 import { isDevelopment, isPreview } from "~/shared/util/environment";
 import classes from "../style.module.scss";

@@ -1,7 +1,7 @@
 import { ActionIcon, Box, Group, Popover, SimpleGrid, TextInput, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { Icon } from "@surrealdb/ui";
 import { Updater } from "use-immer";
+import { Icon } from "~/components/Icon";
 import { USER_ICONS } from "~/shared/util/user-icons";
 import { Connection } from "~/types";
 

@@ -20,8 +20,12 @@ import {
 	Textarea,
 	UnstyledButton,
 } from "@mantine/core";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMemo, useRef, useState } from "react";
+import { Icon } from "~/components/Icon";
+import { Label } from "~/components/Label";
+import { Section } from "~/components/Section";
 import {
-	Icon,
 	iconChevronDown,
 	iconChevronUp,
 	iconErrorCircle,
@@ -31,11 +35,7 @@ import {
 	iconRelation,
 	iconSearch,
 	iconTarget,
-} from "@surrealdb/ui";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useMemo, useRef, useState } from "react";
-import { Label } from "~/components/Label";
-import { Section } from "~/components/Section";
+} from "~/icons";
 import type { RrdEdgeView, RrdNodeView } from "~/rrflow/session";
 import { plural } from "~/shared/util/helpers";
 import { formatCount, formatSize, formatTime } from "../format";

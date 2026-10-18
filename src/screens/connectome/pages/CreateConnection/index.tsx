@@ -14,8 +14,19 @@ import {
 	TextInput,
 	ThemeIcon,
 } from "@mantine/core";
+import { useMemo } from "react";
+import { useImmer } from "use-immer";
+import { Link, useLocation } from "wouter";
+import { adapter } from "~/adapter";
+import { ConnectionNameDetails } from "~/components/ConnectionDetails/connection";
+import { ConnectionLabelsDetails } from "~/components/ConnectionDetails/labels";
+import { Icon } from "~/components/Icon";
+import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
+import { PrimaryTitle } from "~/components/PrimaryTitle";
+import { useLastSavepoint } from "~/hooks/overview";
+import { useConnectionNavigator } from "~/hooks/routing";
+import { useStable } from "~/hooks/stable";
 import {
-	Icon,
 	iconChart,
 	iconChevronDown,
 	iconChevronRight,
@@ -23,18 +34,7 @@ import {
 	iconHomePlus,
 	iconQuery,
 	iconRelation,
-} from "@surrealdb/ui";
-import { useMemo } from "react";
-import { useImmer } from "use-immer";
-import { Link, useLocation } from "wouter";
-import { adapter } from "~/adapter";
-import { ConnectionNameDetails } from "~/components/ConnectionDetails/connection";
-import { ConnectionLabelsDetails } from "~/components/ConnectionDetails/labels";
-import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
-import { PrimaryTitle } from "~/components/PrimaryTitle";
-import { useLastSavepoint } from "~/hooks/overview";
-import { useConnectionNavigator } from "~/hooks/routing";
-import { useStable } from "~/hooks/stable";
+} from "~/icons";
 import { isConnectionValid } from "~/shared/util/connection";
 import { createBaseConnection } from "~/shared/util/defaults";
 import { dispatchIntent } from "~/shared/util/intents";

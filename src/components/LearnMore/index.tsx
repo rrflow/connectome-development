@@ -1,7 +1,8 @@
 import { type BoxProps, Group } from "@mantine/core";
-import { Icon, iconHelp } from "@surrealdb/ui";
 import clsx from "clsx";
 import type { HTMLAttributes, PropsWithChildren } from "react";
+import { Icon } from "~/components/Icon";
+import { iconHelp } from "~/icons";
 import { Link } from "../Link";
 import classes from "./style.module.scss";
 

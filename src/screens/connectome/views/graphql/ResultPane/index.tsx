@@ -1,9 +1,10 @@
 import { Center, Stack, Text } from "@mantine/core";
-import { Icon, iconQuery } from "@surrealdb/ui";
 import { useMemo } from "react";
 import { CodeEditor } from "~/components/CodeEditor";
+import { Icon } from "~/components/Icon";
 import { ContentPane } from "~/components/Pane";
 import { useConnectionAndView } from "~/hooks/routing";
+import { iconQuery } from "~/icons";
 import { useDatabaseStore } from "~/stores/database";
 import { rrflowql } from "~/vendor/rrflowql-editor";
 

@@ -1,9 +1,11 @@
 import { Box, Button, Divider, Group, Stack, Text, Title } from "@mantine/core";
 import { openModal } from "@mantine/modals";
-import { CodeBlock, Icon, iconBug, iconWarning } from "@surrealdb/ui";
 import { ReactNode } from "react";
 import { adapter } from "~/adapter";
+import { CodeBlock } from "~/components/CodeBlock";
+import { Icon } from "~/components/Icon";
 import { Spacer } from "~/components/Spacer";
+import { iconBug, iconWarning } from "~/icons";
 
 /**
  * Opens a modal displaying an error message with optional details.

@@ -16,12 +16,13 @@ import {
 	Textarea,
 	UnstyledButton,
 } from "@mantine/core";
-import { Icon, iconErrorCircle, iconRefresh } from "@surrealdb/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { Redirect } from "wouter";
+import { Icon } from "~/components/Icon";
 import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
+import { iconErrorCircle, iconRefresh } from "~/icons";
 import {
 	type LaunchVyrmFlight,
 	VyrmDiagnosticsClient,

@@ -12,12 +12,13 @@ import {
 	Text,
 	ThemeIcon,
 } from "@mantine/core";
-import { Icon, iconDatabase, iconErrorCircle, iconRefresh } from "@surrealdb/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { Link, Redirect } from "wouter";
+import { Icon } from "~/components/Icon";
 import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
+import { iconDatabase, iconErrorCircle, iconRefresh } from "~/icons";
 import { RRFlowControlPlaneClient, type RRFlowManagedInstance } from "~/rrflow/control-plane";
 import { useConfigStore } from "~/shell/stores/config";
 import classes from "./style.module.scss";

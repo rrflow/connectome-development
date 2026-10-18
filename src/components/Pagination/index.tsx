@@ -1,8 +1,9 @@
 import { type ComboboxData, Group, Select, Text, TextInput } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconChevronLeft, iconChevronRight } from "@surrealdb/ui";
 import { type FocusEvent, type KeyboardEvent, useLayoutEffect } from "react";
+import { Icon } from "~/components/Icon";
 import { useStable } from "~/hooks/stable";
+import { iconChevronLeft, iconChevronRight } from "~/icons";
 import { ActionButton } from "../ActionButton";
 import type { PaginationStore } from "./hook";
 

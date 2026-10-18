@@ -9,15 +9,16 @@ import {
 	Text,
 	TextInput,
 } from "@mantine/core";
-import { Icon, iconServer } from "@surrealdb/ui";
 import clsx from "clsx";
 import { useState } from "react";
 import { Entry, type EntryProps } from "~/components/Entry";
+import { Icon } from "~/components/Icon";
 import { useBoolean } from "~/hooks/boolean";
 import { useConnectionLabels, useConnectionOverview } from "~/hooks/connection";
 import { useKeyNavigation } from "~/hooks/keys";
 import { useConnectionAndView, useConnectionNavigator, useIntent } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
+import { iconServer } from "~/icons";
 import { Y_SLIDE_TRANSITION } from "~/shared/util/helpers";
 import { USER_ICONS } from "~/shared/util/user-icons";
 import type { Connection } from "~/types";
