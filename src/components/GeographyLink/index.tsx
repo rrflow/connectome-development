@@ -1,8 +1,9 @@
 import { Group, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { Icon, iconMarker } from "@surrealdb/ui";
 import type { ComponentPropsWithoutRef, MouseEvent } from "react";
+import { Icon } from "~/components/Icon";
 import { useStable } from "~/hooks/stable";
+import { iconMarker } from "~/icons";
 import { GeographyDrawer } from "../GeographyDrawer";
 import type { GeographyInput } from "../GeographyMap";
 

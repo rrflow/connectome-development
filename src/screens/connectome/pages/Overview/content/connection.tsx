@@ -11,18 +11,12 @@ import {
 	ThemeIcon,
 	UnstyledButton,
 } from "@mantine/core";
-import {
-	Icon,
-	iconCopy,
-	iconDatabase,
-	iconDelete,
-	iconDotsVertical,
-	iconEdit,
-	Spacer,
-} from "@surrealdb/ui";
 import { PropsWithChildren, useRef } from "react";
+import { Icon } from "~/components/Icon";
+import { Spacer } from "~/components/Spacer";
 import { SANDBOX } from "~/constants";
 import { useStable } from "~/hooks/stable";
+import { iconCopy, iconDatabase, iconDelete, iconDotsVertical, iconEdit } from "~/icons";
 import { openConnectionEditModal } from "~/modals/edit-connection";
 import { useConfirmation } from "~/providers/Confirmation";
 import { newId, ON_STOP_PROPAGATION } from "~/shared/util/helpers";

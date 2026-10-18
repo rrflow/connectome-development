@@ -8,11 +8,12 @@ import {
 	Text,
 	Tooltip,
 } from "@mantine/core";
-import { Icon, iconChevronDown, iconChevronUp, iconIndex, iconWarning } from "@surrealdb/ui";
 import clsx from "clsx";
 import { alphabetical, isObject } from "radash";
 import { type MouseEvent, useMemo } from "react";
+import { Icon } from "~/components/Icon";
 import { useStable } from "~/hooks/stable";
+import { iconChevronDown, iconChevronUp, iconIndex, iconWarning } from "~/icons";
 import { useInspector } from "~/providers/Inspector";
 import type { ColumnSort, TableInfo } from "~/types";
 import { RecordId } from "~/vendor/rrflow-client";

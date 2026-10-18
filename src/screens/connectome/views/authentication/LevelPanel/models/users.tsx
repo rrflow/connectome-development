@@ -13,13 +13,14 @@ import {
 } from "@mantine/core";
 
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconCheck, iconPlus } from "@surrealdb/ui";
 import { useLayoutEffect, useState } from "react";
 import { Form } from "~/components/Form";
+import { Icon } from "~/components/Icon";
 import { CodeInput } from "~/components/Inputs";
 import { LearnMore } from "~/components/LearnMore";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { useStable } from "~/hooks/stable";
+import { iconCheck, iconPlus } from "~/icons";
 import { executeQuery } from "~/screens/connectome/connection/connection";
 import { showErrorNotification } from "~/shared/util/helpers";
 import { syncConnectionSchema } from "~/shared/util/schema";

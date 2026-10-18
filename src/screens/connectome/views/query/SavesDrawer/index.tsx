@@ -10,9 +10,19 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
+import clsx from "clsx";
+import { useContextMenu } from "mantine-contextmenu";
+import { useLayoutEffect, useMemo, useState } from "react";
+import { ActionButton } from "~/components/ActionButton";
+import { CodeBlock } from "~/components/CodeBlock";
+import { Icon } from "~/components/Icon";
+import { PrimaryTitle } from "~/components/PrimaryTitle";
+import { Spacer } from "~/components/Spacer";
+import { setEditorText } from "~/editor/helpers";
+import { useSavedQueryTags } from "~/hooks/connection";
+import { useConnectionAndView } from "~/hooks/routing";
+import { useStable } from "~/hooks/stable";
 import {
-	CodeBlock,
-	Icon,
 	iconClose,
 	iconDelete,
 	iconEdit,
@@ -20,17 +30,7 @@ import {
 	iconQuery,
 	iconSearch,
 	iconText,
-} from "@surrealdb/ui";
-import clsx from "clsx";
-import { useContextMenu } from "mantine-contextmenu";
-import { useLayoutEffect, useMemo, useState } from "react";
-import { ActionButton } from "~/components/ActionButton";
-import { PrimaryTitle } from "~/components/PrimaryTitle";
-import { Spacer } from "~/components/Spacer";
-import { setEditorText } from "~/editor/helpers";
-import { useSavedQueryTags } from "~/hooks/connection";
-import { useConnectionAndView } from "~/hooks/routing";
-import { useStable } from "~/hooks/stable";
+} from "~/icons";
 import { useConfigStore } from "~/shell/stores/config";
 import type { SavedQuery } from "~/types";
 import classes from "./style.module.scss";

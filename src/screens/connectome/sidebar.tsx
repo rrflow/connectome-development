@@ -10,7 +10,6 @@ import {
 	Text,
 	UnstyledButton,
 } from "@mantine/core";
-import { iconArrowLeft, iconCog, iconSearch, pictoBrain } from "@surrealdb/ui";
 import clsx from "clsx";
 import { Fragment, useMemo } from "react";
 import { NavigationIcon } from "~/components/NavigationIcon";
@@ -21,6 +20,8 @@ import { useAvailablePages, useAvailableViews } from "~/hooks/connection";
 import { useAbsoluteLocation, useConnectionAndView, useConnectionNavigator } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
 import { useIsLight } from "~/hooks/theme";
+import { iconArrowLeft, iconCog, iconSearch } from "~/icons";
+import { pictoBrain } from "~/pictograms";
 import { isMobile } from "~/shared/util/helpers";
 import { dispatchIntent } from "~/shared/util/intents";
 import { useConfigStore } from "~/shell/stores/config";

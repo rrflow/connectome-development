@@ -1,6 +1,6 @@
-import { EditorStateSnapshot } from "@surrealdb/ui";
 import { omit } from "radash";
 import { create } from "zustand";
+import type { StateSnapshot as EditorStateSnapshot } from "~/components/CodeEditor";
 
 export type QueryStore = {
 	queryState: Record<string, EditorStateSnapshot>;

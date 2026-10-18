@@ -8,15 +8,16 @@ import {
 	Stack,
 	Text,
 } from "@mantine/core";
-import { Icon, iconNamespace, iconPlus, iconTrash } from "@surrealdb/ui";
 import { useMutation } from "@tanstack/react-query";
 import { type SyntheticEvent, useMemo } from "react";
 import { ActionButton } from "~/components/ActionButton";
+import { Icon } from "~/components/Icon";
 import { Spacer } from "~/components/Spacer";
 import { useBoolean } from "~/hooks/boolean";
 import { useConnection, useIsConnected } from "~/hooks/connection";
 import { useRootSchema } from "~/hooks/schema";
 import { useStable } from "~/hooks/stable";
+import { iconNamespace, iconPlus, iconTrash } from "~/icons";
 import { openCreateNamespaceModal } from "~/modals/create-namespace";
 import { useConfirmation } from "~/providers/Confirmation";
 import { getAuthLevel, getAuthNS } from "~/shared/util/connection";

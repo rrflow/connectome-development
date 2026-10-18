@@ -1,0 +1,26 @@
+.root {
+	overflow: hidden;
+}
+
+.header {
+	border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.body {
+	position: relative;
+}
+
+.editor {
+	font-size: 13px;
+}
+
+.copy {
+	position: absolute;
+	top: 6px;
+	right: 6px;
+	opacity: 0.6;
+
+	&:hover {
+		opacity: 1;
+	}
+}

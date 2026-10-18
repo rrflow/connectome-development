@@ -9,11 +9,11 @@ import {
 	Text,
 	TextInput,
 } from "@mantine/core";
-import { Icon, iconChevronRight, iconReset, iconStar, iconTable } from "@surrealdb/ui";
 import { useState } from "react";
 import { ActionBar } from "~/components/ActionBar";
 import { ActionButton } from "~/components/ActionButton";
 import { Form } from "~/components/Form";
+import { Icon } from "~/components/Icon";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { SidebarToggle } from "~/components/SidebarToggle";
 import { Spacer } from "~/components/Spacer";
@@ -27,6 +27,7 @@ import {
 import { useDatasets } from "~/hooks/dataset";
 import { useDatabaseSchema } from "~/hooks/schema";
 import { useStable } from "~/hooks/stable";
+import { iconChevronRight, iconReset, iconStar, iconTable } from "~/icons";
 import { useConfirmation } from "~/providers/Confirmation";
 import { useFeatureFlags } from "~/shared/util/feature-flags";
 import { dispatchIntent } from "~/shared/util/intents";

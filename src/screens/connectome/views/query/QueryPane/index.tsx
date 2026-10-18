@@ -3,21 +3,12 @@ import { syntaxTree } from "@codemirror/language";
 import { EditorState, Prec, type SelectionRange } from "@codemirror/state";
 import { type EditorView, keymap, scrollPastEnd } from "@codemirror/view";
 import { Button, Group, HoverCard, Paper, rem, Text, ThemeIcon, Transition } from "@mantine/core";
-import {
-	Icon,
-	iconAutoFix,
-	iconChevronRight,
-	iconDollar,
-	iconServer,
-	iconStar,
-	iconText,
-	iconWarning,
-} from "@surrealdb/ui";
 import { objectify, trim } from "radash";
 import { useMemo, useRef, useState } from "react";
 import { type HtmlPortalNode, OutPortal } from "react-reverse-portal";
 import { ActionButton } from "~/components/ActionButton";
 import { CodeEditor, StateSnapshot } from "~/components/CodeEditor";
+import { Icon } from "~/components/Icon";
 import { ContentPane } from "~/components/Pane";
 import { Spacer } from "~/components/Spacer";
 import { MAX_HISTORY_QUERY_LENGTH } from "~/constants";
@@ -36,6 +27,15 @@ import { useDatabaseVersionLinter } from "~/hooks/editor";
 import { useConnectionAndView, useIntent } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
 import { useIsLight } from "~/hooks/theme";
+import {
+	iconAutoFix,
+	iconChevronRight,
+	iconDollar,
+	iconServer,
+	iconStar,
+	iconText,
+	iconWarning,
+} from "~/icons";
 import { useInspector } from "~/providers/Inspector";
 import { getRRFlowQL } from "~/screens/connectome/connection/connection";
 import { showErrorNotification, tryParseParams } from "~/shared/util/helpers";

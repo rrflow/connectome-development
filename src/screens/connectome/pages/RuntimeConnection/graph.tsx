@@ -10,16 +10,6 @@ import {
 	UnstyledButton,
 	useMantineTheme,
 } from "@mantine/core";
-import {
-	Icon,
-	iconChevronDown,
-	iconChevronUp,
-	iconFullscreen,
-	iconMagnifyMinus,
-	iconMagnifyPlus,
-	iconMaximize,
-	iconMinimize,
-} from "@surrealdb/ui";
 import Graph from "graphology";
 import { circular } from "graphology-layout";
 import forceAtlas2, { inferSettings } from "graphology-layout-forceatlas2";
@@ -27,8 +17,18 @@ import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import Sigma from "sigma";
 import type { EdgeDisplayData, NodeDisplayData } from "sigma/types";
 import { ActionButton } from "~/components/ActionButton";
+import { Icon } from "~/components/Icon";
 import { useStable } from "~/hooks/stable";
 import { getIsLight, useIsLight } from "~/hooks/theme";
+import {
+	iconChevronDown,
+	iconChevronUp,
+	iconFullscreen,
+	iconMagnifyMinus,
+	iconMagnifyPlus,
+	iconMaximize,
+	iconMinimize,
+} from "~/icons";
 import type { ColorGroup } from "./groups";
 import { createLabelLayer, type ScreenBox } from "./labels";
 

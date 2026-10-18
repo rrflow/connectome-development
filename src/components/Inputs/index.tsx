@@ -18,7 +18,6 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { clamp, useInputState } from "@mantine/hooks";
-import { Icon, iconCancel, iconCheck } from "@surrealdb/ui";
 import clsx from "clsx";
 import {
 	type FocusEvent,
@@ -28,10 +27,12 @@ import {
 	useMemo,
 	useRef,
 } from "react";
+import { Icon } from "~/components/Icon";
 import { acceptWithTab, editorTheme, inputBase } from "~/editor";
 import { useKindList } from "~/hooks/schema";
 import { useStable } from "~/hooks/stable";
 import { useIsLight, useTheme } from "~/hooks/theme";
+import { iconCancel, iconCheck } from "~/icons";
 import { useConfigStore } from "~/shell/stores/config";
 import { rrflowql } from "~/vendor/rrflowql-editor";
 import { ActionButton } from "../ActionButton";

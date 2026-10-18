@@ -12,21 +12,21 @@ import {
 	Text,
 	UnstyledButton,
 } from "@mantine/core";
+import { useQuery } from "@tanstack/react-query";
+import { isTauri } from "@tauri-apps/api/core";
+import { type ReactNode, useMemo, useState } from "react";
+import { Redirect } from "wouter";
+import { Icon } from "~/components/Icon";
+import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
+import { PrimaryTitle } from "~/components/PrimaryTitle";
 import {
-	Icon,
 	iconBook,
 	iconErrorCircle,
 	iconMemory,
 	iconRefresh,
 	iconRelation,
 	iconTarget,
-} from "@surrealdb/ui";
-import { useQuery } from "@tanstack/react-query";
-import { isTauri } from "@tauri-apps/api/core";
-import { type ReactNode, useMemo, useState } from "react";
-import { Redirect } from "wouter";
-import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
-import { PrimaryTitle } from "~/components/PrimaryTitle";
+} from "~/icons";
 import {
 	ATTUNEMENT_ESTIMATE_MINUTES,
 	ATTUNEMENT_PHASES,

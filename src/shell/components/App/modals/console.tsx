@@ -1,13 +1,14 @@
 import { Badge, Center, Drawer, Group, Paper, ScrollArea, Text } from "@mantine/core";
-import { Icon, iconClose, iconDelete } from "@surrealdb/ui";
 import AnsiToHtml from "ansi-to-html";
 import { useEffect, useMemo, useRef } from "react";
 import { ActionButton } from "~/components/ActionButton";
+import { Icon } from "~/components/Icon";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";
 import { useBoolean } from "~/hooks/boolean";
 import { useIntent } from "~/hooks/routing";
 import { useIsLight } from "~/hooks/theme";
+import { iconClose, iconDelete } from "~/icons";
 import { useDatabaseStore } from "~/stores/database";
 
 function ConsoleOutputEntry({

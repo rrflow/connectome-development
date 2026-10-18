@@ -1,8 +1,9 @@
 import { type BoxProps, type ElementProps, Group } from "@mantine/core";
-import { Icon, iconArrowUpRight } from "@surrealdb/ui";
 import type { MouseEvent } from "react";
 import { useEffect, useState } from "react";
+import { Icon } from "~/components/Icon";
 import { useStable } from "~/hooks/stable";
+import { iconArrowUpRight } from "~/icons";
 import { useInspector } from "~/providers/Inspector";
 import { getRRFlowQL } from "~/screens/connectome/connection/connection";
 import type { RecordId } from "~/vendor/rrflow-client";

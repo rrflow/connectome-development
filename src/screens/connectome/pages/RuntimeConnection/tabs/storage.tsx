@@ -12,10 +12,11 @@ import {
 	Table,
 	Text,
 } from "@mantine/core";
-import { Icon, iconChevronDown, iconChevronUp, iconErrorCircle, iconRefresh } from "@surrealdb/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { Icon } from "~/components/Icon";
 import { Section } from "~/components/Section";
+import { iconChevronDown, iconChevronUp, iconErrorCircle, iconRefresh } from "~/icons";
 import { formatCount, formatSize, formatTime, shortDigest } from "../format";
 import { Term } from "../glossary";
 import { ReadNotice } from "../notice";

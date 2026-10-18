@@ -1,7 +1,19 @@
 import { Badge, Divider, ScrollArea, Stack, Text, TextInput } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
+import { type ContextMenuItemOptions, useContextMenu } from "mantine-contextmenu";
+import { sort } from "radash";
+import { useMemo } from "react";
+import { ActionButton } from "~/components/ActionButton";
+import { Entry } from "~/components/Entry";
+import { Icon } from "~/components/Icon";
+import { ContentPane } from "~/components/Pane";
+import { Spacer } from "~/components/Spacer";
+import { TABLE_VARIANT_ICONS } from "~/constants";
+import { useConnection, useIsConnected, useRequireDatabase } from "~/hooks/connection";
+import { useConnectionAndView } from "~/hooks/routing";
+import { useHasSchemaAccess, useTables } from "~/hooks/schema";
+import { useStable } from "~/hooks/stable";
 import {
-	Icon,
 	iconAPI,
 	iconChevronLeft,
 	iconDelete,
@@ -10,19 +22,7 @@ import {
 	iconPlus,
 	iconReset,
 	iconSearch,
-} from "@surrealdb/ui";
-import { type ContextMenuItemOptions, useContextMenu } from "mantine-contextmenu";
-import { sort } from "radash";
-import { useMemo } from "react";
-import { ActionButton } from "~/components/ActionButton";
-import { Entry } from "~/components/Entry";
-import { ContentPane } from "~/components/Pane";
-import { Spacer } from "~/components/Spacer";
-import { TABLE_VARIANT_ICONS } from "~/constants";
-import { useConnection, useIsConnected, useRequireDatabase } from "~/hooks/connection";
-import { useConnectionAndView } from "~/hooks/routing";
-import { useHasSchemaAccess, useTables } from "~/hooks/schema";
-import { useStable } from "~/hooks/stable";
+} from "~/icons";
 import { showTableDefinitionModal } from "~/modals/table-definition";
 import { useConfirmation } from "~/providers/Confirmation";
 import { executeQuery } from "~/screens/connectome/connection/connection";

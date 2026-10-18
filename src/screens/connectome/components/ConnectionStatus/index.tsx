@@ -1,6 +1,11 @@
 import { Box, Button, Indicator, Loader, Menu, Text } from "@mantine/core";
+import { useState } from "react";
+import { Icon } from "~/components/Icon";
+import { SANDBOX } from "~/constants";
+import { useConnection, useRequireDatabase } from "~/hooks/connection";
+import { useConnectionAndView } from "~/hooks/routing";
+import { useStable } from "~/hooks/stable";
 import {
-	Icon,
 	iconClose,
 	iconDownload,
 	iconEdit,
@@ -10,12 +15,7 @@ import {
 	iconSandbox,
 	iconUpload,
 	iconWrench,
-} from "@surrealdb/ui";
-import { useState } from "react";
-import { SANDBOX } from "~/constants";
-import { useConnection, useRequireDatabase } from "~/hooks/connection";
-import { useConnectionAndView } from "~/hooks/routing";
-import { useStable } from "~/hooks/stable";
+} from "~/icons";
 import { openConnectionDiagnosticsModal } from "~/modals/connection-diagnostics";
 import { openConnectionEditModal } from "~/modals/edit-connection";
 import { showNodeStatus } from "~/modals/node-status";

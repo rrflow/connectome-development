@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import {
 	iconAPI,
 	iconAuth,
@@ -7,8 +8,7 @@ import {
 	iconIndex,
 	iconJSON,
 	iconTable,
-} from "@surrealdb/ui";
-import { ReactNode } from "react";
+} from "~/icons";
 import { MigrationDiagnosticResult, MigrationResourceType } from "~/types";
 
 type ResourceTypeMeta = {

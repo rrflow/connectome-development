@@ -1,7 +1,6 @@
 import type { SelectionRange } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { Box, Group, Image, noop, SegmentedControl, Stack } from "@mantine/core";
-import { pictoBrain } from "@surrealdb/ui";
 import { memo, useState } from "react";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { createHtmlPortalNode, InPortal } from "react-reverse-portal";
@@ -19,6 +18,7 @@ import { useEventSubscription } from "~/hooks/event";
 import { usePanelMinSize } from "~/hooks/panels";
 import { useConnectionAndView, useIntent } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
+import { pictoBrain } from "~/pictograms";
 import { SetQueryEvent } from "~/shared/util/global-events";
 import { useConfigStore } from "~/shell/stores/config";
 import { QueryPane } from "../QueryPane";

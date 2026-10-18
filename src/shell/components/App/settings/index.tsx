@@ -10,8 +10,18 @@ import {
 	ThemeIcon,
 	Title,
 } from "@mantine/core";
+import { useState } from "react";
+import { isDesktop } from "~/adapter";
+import { ActionButton } from "~/components/ActionButton";
+import { Entry } from "~/components/Entry";
+import { Icon } from "~/components/Icon";
+import { Spacer } from "~/components/Spacer";
+import { useBoolean } from "~/hooks/boolean";
+import { useLogoUrl } from "~/hooks/brand";
+import { useIntent } from "~/hooks/routing";
+import { useStable } from "~/hooks/stable";
+import { useDesktopUpdater } from "~/hooks/updater";
 import {
-	Icon,
 	iconBalance,
 	iconChevronRight,
 	iconClose,
@@ -23,17 +33,7 @@ import {
 	iconServer,
 	iconTransfer,
 	iconTune,
-} from "@surrealdb/ui";
-import { useState } from "react";
-import { isDesktop } from "~/adapter";
-import { ActionButton } from "~/components/ActionButton";
-import { Entry } from "~/components/Entry";
-import { Spacer } from "~/components/Spacer";
-import { useBoolean } from "~/hooks/boolean";
-import { useLogoUrl } from "~/hooks/brand";
-import { useIntent } from "~/hooks/routing";
-import { useStable } from "~/hooks/stable";
-import { useDesktopUpdater } from "~/hooks/updater";
+} from "~/icons";
 import { useFeatureFlags } from "~/shared/util/feature-flags";
 import { useInterfaceStore } from "~/shell/stores/interface";
 import type { Assign, FeatureCondition } from "~/types";

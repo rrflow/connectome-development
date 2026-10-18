@@ -1,6 +1,5 @@
 import { ActionIcon, Box, Button, Group, Menu, Modal, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { Icon, iconCopy, iconDelete, iconDotsVertical, iconPlus } from "@surrealdb/ui";
 import { type HTMLAttributes, type MouseEvent, useState } from "react";
 import { useImmer } from "use-immer";
 import { ConnectionAddressDetails } from "~/components/ConnectionDetails/address";
@@ -9,9 +8,11 @@ import { ConnectionNameDetails } from "~/components/ConnectionDetails/connection
 import { ConnectionLabelsDetails } from "~/components/ConnectionDetails/labels";
 import { Entry, type EntryProps } from "~/components/Entry";
 import { Form } from "~/components/Form";
+import { Icon } from "~/components/Icon";
 import { Spacer } from "~/components/Spacer";
 import { useSetting } from "~/hooks/config";
 import { useStable } from "~/hooks/stable";
+import { iconCopy, iconDelete, iconDotsVertical, iconPlus } from "~/icons";
 import { useConfirmation } from "~/providers/Confirmation";
 import { createBaseConnection } from "~/shared/util/defaults";
 import { newId, ON_STOP_PROPAGATION, uniqueName } from "~/shared/util/helpers";

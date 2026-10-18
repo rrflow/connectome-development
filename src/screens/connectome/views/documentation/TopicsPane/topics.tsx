@@ -1,10 +1,11 @@
 import { ActionIcon, Collapse, Group, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { Icon, iconChevronDown, iconChevronUp, iconOpen } from "@surrealdb/ui";
 import { adapter } from "~/adapter";
 import { Entry } from "~/components/Entry";
+import { Icon } from "~/components/Icon";
 import { Spacer } from "~/components/Spacer";
 import { useStable } from "~/hooks/stable";
+import { iconChevronDown, iconChevronUp, iconOpen } from "~/icons";
 import {
 	type DocsArticleTopic,
 	type DocsGroupTopic,

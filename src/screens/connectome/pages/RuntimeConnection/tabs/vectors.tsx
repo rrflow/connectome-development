@@ -18,18 +18,18 @@ import {
 	Text,
 	UnstyledButton,
 } from "@mantine/core";
+import { skipToken, useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { Icon } from "~/components/Icon";
+import { Label } from "~/components/Label";
+import { Section } from "~/components/Section";
 import {
-	Icon,
 	iconChevronDown,
 	iconChevronUp,
 	iconErrorCircle,
 	iconRefresh,
 	iconRelation,
-} from "@surrealdb/ui";
-import { skipToken, useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
-import { Label } from "~/components/Label";
-import { Section } from "~/components/Section";
+} from "~/icons";
 import type {
 	RrdMapPointView,
 	RrdNodeView,

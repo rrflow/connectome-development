@@ -14,6 +14,13 @@
 		"author": "Marijn Haverbeke marijn@haverbeke.berlin http://marijnhaverbeke.nl"
 	},
 	{
+		"name": "@codemirror/lang-json",
+		"licenseType": "MIT",
+		"link": "git+https://github.com/codemirror/lang-json.git",
+		"installedVersion": "6.0.2",
+		"author": "Marijn Haverbeke marijn@haverbeke.berlin http://marijnhaverbeke.nl"
+	},
+	{
 		"name": "@codemirror/language",
 		"licenseType": "MIT",
 		"link": "git+https://code.haverbeke.berlin/codemirror/language.git",
@@ -201,6 +208,13 @@
 		"link": "git+https://github.com/mantinedev/mantine.git",
 		"installedVersion": "8.3.14",
 		"author": "Vitaly Rtishchev <rtivital@gmail.com>"
+	},
+	{
+		"name": "@mdi/js",
+		"licenseType": "Apache-2.0",
+		"link": "git+https://github.com/Templarian/MaterialDesign-JS.git",
+		"installedVersion": "7.4.47",
+		"author": "Austin Andrews"
 	},
 	{
 		"name": "@replit/codemirror-indentation-markers",

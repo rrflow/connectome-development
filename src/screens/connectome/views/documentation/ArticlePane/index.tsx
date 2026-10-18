@@ -1,6 +1,6 @@
 import { Box, Group, ScrollArea, Select, Title } from "@mantine/core";
-import { Icon, iconCheck, iconList } from "@surrealdb/ui";
 import { type RefObject, useMemo } from "react";
+import { Icon } from "~/components/Icon";
 import { ContentPane } from "~/components/Pane";
 import { ScrollFader } from "~/components/ScrollFader";
 import { Spacer } from "~/components/Spacer";
@@ -8,6 +8,7 @@ import { DRIVERS } from "~/constants";
 import { useIntent } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
 import { useIsLight } from "~/hooks/theme";
+import { iconCheck, iconList } from "~/icons";
 import {
 	type DocsArticleTopic,
 	type DocsSectionTopic,

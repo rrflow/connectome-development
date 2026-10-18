@@ -10,9 +10,16 @@ import {
 	Text,
 	Transition,
 } from "@mantine/core";
+import { useMemo } from "react";
+import { adapter } from "~/adapter";
+import { ActionButton } from "~/components/ActionButton";
+import { CodeBlock } from "~/components/CodeBlock";
+import { Icon } from "~/components/Icon";
+import { RecordLink } from "~/components/RecordLink";
+import { Spacer } from "~/components/Spacer";
+import { RRFLOWQL_FILTER } from "~/constants";
+import { useIsLight } from "~/hooks/theme";
 import {
-	CodeBlock,
-	Icon,
 	iconArrowLeft,
 	iconArrowUpRight,
 	iconBook,
@@ -20,14 +27,7 @@ import {
 	iconChevronLeft,
 	iconClose,
 	iconDownload,
-} from "@surrealdb/ui";
-import { useMemo } from "react";
-import { adapter } from "~/adapter";
-import { ActionButton } from "~/components/ActionButton";
-import { RecordLink } from "~/components/RecordLink";
-import { Spacer } from "~/components/Spacer";
-import { RRFLOWQL_FILTER } from "~/constants";
-import { useIsLight } from "~/hooks/theme";
+} from "~/icons";
 import { getRRFlowQL } from "~/screens/connectome/connection/connection";
 import { MigrationKind, MigrationResourceType, MigrationSeverity } from "~/types";
 import { kindMeta } from "../MigrationView/kinds";

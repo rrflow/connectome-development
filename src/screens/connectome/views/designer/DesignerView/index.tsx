@@ -1,9 +1,9 @@
 import { Box, Button, Group, Text } from "@mantine/core";
-import { Icon, iconDesigner, iconEye, iconOpen, iconPlus } from "@surrealdb/ui";
 import { ReactFlowProvider } from "@xyflow/react";
 import { memo, useEffect } from "react";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { adapter } from "~/adapter";
+import { Icon } from "~/components/Icon";
 import { Introduction } from "~/components/Introduction";
 import { PanelDragger } from "~/components/Pane/dragger";
 import { useConnection, useIsConnected, useRequireDatabase } from "~/hooks/connection";
@@ -11,6 +11,7 @@ import { usePanelMinSize } from "~/hooks/panels";
 import { useConnectionAndView, useIntent, useViewFocus } from "~/hooks/routing";
 import { useTables } from "~/hooks/schema";
 import { useStable } from "~/hooks/stable";
+import { iconDesigner, iconEye, iconOpen, iconPlus } from "~/icons";
 import { useDesigner } from "~/providers/Designer";
 import { TablesPane } from "~/screens/connectome/components/TablesPane";
 import { dispatchIntent } from "~/shared/util/intents";

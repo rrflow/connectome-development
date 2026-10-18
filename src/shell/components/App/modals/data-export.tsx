@@ -15,8 +15,20 @@ import {
 } from "@mantine/core";
 import { useInputState, useSet } from "@mantine/hooks";
 import { showNotification, updateNotification } from "@mantine/notifications";
+import dayjs from "dayjs";
+import { useMemo, useState } from "react";
+import { adapter, isBrowser } from "~/adapter";
+import { Icon } from "~/components/Icon";
+import { Option } from "~/components/Option";
+import { PrimaryTitle } from "~/components/PrimaryTitle";
+import { Spacer } from "~/components/Spacer";
+import { RRFLOWQL_FILTER } from "~/constants";
+import { useBoolean } from "~/hooks/boolean";
+import { useConnection, useMinimumVersion } from "~/hooks/connection";
+import { useIntent } from "~/hooks/routing";
+import { useTableNames } from "~/hooks/schema";
+import { useStable } from "~/hooks/stable";
 import {
-	Icon,
 	iconAccount,
 	iconAPI,
 	iconAuth,
@@ -32,19 +44,7 @@ import {
 	iconSearch,
 	iconWarning,
 	iconWrench,
-} from "@surrealdb/ui";
-import dayjs from "dayjs";
-import { useMemo, useState } from "react";
-import { adapter, isBrowser } from "~/adapter";
-import { Option } from "~/components/Option";
-import { PrimaryTitle } from "~/components/PrimaryTitle";
-import { Spacer } from "~/components/Spacer";
-import { RRFLOWQL_FILTER } from "~/constants";
-import { useBoolean } from "~/hooks/boolean";
-import { useConnection, useMinimumVersion } from "~/hooks/connection";
-import { useIntent } from "~/hooks/routing";
-import { useTableNames } from "~/hooks/schema";
-import { useStable } from "~/hooks/stable";
+} from "~/icons";
 import {
 	isStreamingSupported,
 	requestDatabaseExport,

@@ -1,6 +1,7 @@
 import { Group, Text } from "@mantine/core";
-import { Icon, iconBraces, iconRelation } from "@surrealdb/ui";
+import { Icon } from "~/components/Icon";
 import { useIsLight } from "~/hooks/theme";
+import { iconBraces, iconRelation } from "~/icons";
 import type { GraphWarning } from "./helpers";
 
 export interface GraphWarningProps {

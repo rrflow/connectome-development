@@ -8,12 +8,13 @@ import {
 	Text,
 	Tooltip,
 } from "@mantine/core";
-import { Icon, iconHelp } from "@surrealdb/ui";
 import { type PropsWithChildren, type ReactNode, useEffect, useLayoutEffect, useMemo } from "react";
 import { useImmer } from "use-immer";
+import { Icon } from "~/components/Icon";
 import { CodeInput } from "~/components/Inputs";
 import { Spacer } from "~/components/Spacer";
 import { ORIENTATIONS, RESULT_MODES, THEMES } from "~/constants";
+import { iconHelp } from "~/icons";
 import { isDevelopment, isProduction } from "~/shared/util/environment";
 import type { ColorScheme, Orientation, ResultMode } from "~/types";
 import { rrflowql } from "~/vendor/rrflowql-editor";

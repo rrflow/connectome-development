@@ -14,11 +14,12 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useDebouncedState, useDisclosure } from "@mantine/hooks";
-import { Icon, iconCheck, iconClose, iconTransfer, iconXml } from "@surrealdb/ui";
 import { useMemo, useRef, useState } from "react";
+import { Icon } from "~/components/Icon";
 import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { useStable } from "~/hooks/stable";
+import { iconCheck, iconClose, iconTransfer, iconXml } from "~/icons";
 import { dedent } from "~/shared/util/dedent";
 import { DEFAULT_STATE, Embedder, EmbedState } from "./embedder";
 import classes from "./style.module.scss";

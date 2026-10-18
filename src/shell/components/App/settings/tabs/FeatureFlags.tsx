@@ -1,9 +1,10 @@
 import { Box, Group, ScrollArea, Select, Stack, Text, TextInput } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconReset, iconSearch } from "@surrealdb/ui";
 import { useMemo } from "react";
 import { ActionButton } from "~/components/ActionButton";
+import { Icon } from "~/components/Icon";
 import { Spacer } from "~/components/Spacer";
+import { iconReset, iconSearch } from "~/icons";
 import { featureFlags, schema, useFeatureFlags } from "~/shared/util/feature-flags";
 import { fuzzyMatch } from "~/shared/util/helpers";
 

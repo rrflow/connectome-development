@@ -1,11 +1,12 @@
 import { Alert, Paper } from "@mantine/core";
-import { Icon, iconWarning } from "@surrealdb/ui";
 import { useMemo } from "react";
 import { CodeEditor } from "~/components/CodeEditor";
+import { Icon } from "~/components/Icon";
 import { SaveBox } from "~/components/SaveBox";
 import { rrflowqlLinting, rrflowqlRecordLinks } from "~/editor";
 import { useSetting } from "~/hooks/config";
 import type { SaveableHandle } from "~/hooks/save";
+import { iconWarning } from "~/icons";
 import { rrflowql } from "~/vendor/rrflowql-editor";
 import { useInspector } from "..";
 

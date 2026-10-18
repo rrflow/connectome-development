@@ -1,16 +1,9 @@
 import { Center, Drawer, Group, Paper, SegmentedControl, Tabs, Text } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import {
-	Icon,
-	iconArrowLeftFat,
-	iconClose,
-	iconDelete,
-	iconRefresh,
-	iconSearch,
-} from "@surrealdb/ui";
 import { useEffect, useState } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { DrawerResizer } from "~/components/DrawerResizer";
+import { Icon } from "~/components/Icon";
 import { CodeInput } from "~/components/Inputs";
 import { Spacer } from "~/components/Spacer";
 import type { HistoryHandle } from "~/hooks/history";
@@ -18,6 +11,7 @@ import { useValueValidator } from "~/hooks/rrflowql";
 import { useSaveable } from "~/hooks/save";
 import { useStable } from "~/hooks/stable";
 import { useIsLight } from "~/hooks/theme";
+import { iconArrowLeftFat, iconClose, iconDelete, iconRefresh, iconSearch } from "~/icons";
 import { executeQuery, getRRFlowQL } from "~/screens/connectome/connection/connection";
 import { RecordId } from "~/vendor/rrflow-client";
 import { useConfirmation } from "../Confirmation";

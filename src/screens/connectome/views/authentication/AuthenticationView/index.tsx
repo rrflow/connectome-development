@@ -1,11 +1,11 @@
 import { Box } from "@mantine/core";
-import { iconDatabaseSecure, iconFolderSecure, iconServerSecure } from "@surrealdb/ui";
 import { memo, useMemo } from "react";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { PanelDragger } from "~/components/Pane/dragger";
 import { useConnection } from "~/hooks/connection";
 import { useViewFocus } from "~/hooks/routing";
 import { useDatabaseSchema, useNamespaceSchema, useRootSchema } from "~/hooks/schema";
+import { iconDatabaseSecure, iconFolderSecure, iconServerSecure } from "~/icons";
 import { syncConnectionSchema } from "~/shared/util/schema";
 import { LevelPanel } from "../LevelPanel";
 

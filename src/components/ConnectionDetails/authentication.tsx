@@ -12,12 +12,13 @@ import {
 } from "@mantine/core";
 
 import { useDisclosure } from "@mantine/hooks";
-import { Icon, iconClose, iconPlus, iconWarning } from "@surrealdb/ui";
 import dayjs from "dayjs";
 import { useMemo } from "react";
 import { Updater } from "use-immer";
+import { Icon } from "~/components/Icon";
 import { AUTH_MODES, SENSITIVE_ACCESS_FIELDS } from "~/constants";
 import { useStable } from "~/hooks/stable";
+import { iconClose, iconPlus, iconWarning } from "~/icons";
 import { fastParseJwt } from "~/shared/util/helpers";
 import { AuthMode, Connection } from "~/types";
 import { ActionButton } from "../ActionButton";

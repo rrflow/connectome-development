@@ -1,5 +1,5 @@
-import { CodeBlock, CodeBlockProps } from "@surrealdb/ui";
 import { useMemo } from "react";
+import { CodeBlock, CodeBlockProps } from "~/components/CodeBlock";
 import { dedent } from "~/shared/util/dedent";
 import type { CodeLang, Snippets } from "~/types";
 

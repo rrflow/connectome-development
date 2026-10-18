@@ -1,8 +1,8 @@
 import { Box, Indicator, type IndicatorProps, Text, Tooltip } from "@mantine/core";
-import { Icon } from "@surrealdb/ui";
 import clsx from "clsx";
 import { isObject } from "radash";
 import type { HTMLProps, ReactNode } from "react";
+import { Icon } from "~/components/Icon";
 import { useRouteMatcher } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
 import { useInterfaceStore } from "~/shell/stores/interface";

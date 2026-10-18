@@ -10,14 +10,16 @@ import {
 	Text,
 	Title,
 } from "@mantine/core";
-import { Icon, iconDownload, iconReset, iconTransfer, pictoBadgeAccess } from "@surrealdb/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
+import { Icon } from "~/components/Icon";
 import { LearnMore } from "~/components/LearnMore";
 import { Spacer } from "~/components/Spacer";
 import { StarSparkles } from "~/components/StarSparkles";
 import { useConnection } from "~/hooks/connection";
 import { useStable } from "~/hooks/stable";
+import { iconDownload, iconReset, iconTransfer } from "~/icons";
+import { pictoBadgeAccess } from "~/pictograms";
 import { getRRFlow } from "~/screens/connectome/connection/connection";
 import { dispatchIntent } from "~/shared/util/intents";
 import { MigrationDiagnosticResult, MigrationResourceType } from "~/types";

@@ -1,13 +1,14 @@
 import { Badge, Group } from "@mantine/core";
-import { Icon, iconClose, iconDollar } from "@surrealdb/ui";
 import { useMemo } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { CodeEditor } from "~/components/CodeEditor";
+import { Icon } from "~/components/Icon";
 import { ContentPane } from "~/components/Pane";
 import { rrflowqlLinting } from "~/editor";
 import { useConnection } from "~/hooks/connection";
 import { useDebouncedFunction } from "~/hooks/debounce";
 import { useConnectionAndView } from "~/hooks/routing";
+import { iconClose, iconDollar } from "~/icons";
 import { getRRFlowQL } from "~/screens/connectome/connection/connection";
 import { useConfigStore } from "~/shell/stores/config";
 import { rrflowql } from "~/vendor/rrflowql-editor";

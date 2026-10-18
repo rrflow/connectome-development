@@ -1,7 +1,7 @@
 import { Accordion, TextInput } from "@mantine/core";
-import { iconBullhorn } from "@surrealdb/ui";
 import { CodeInput } from "~/components/Inputs";
 import { useStable } from "~/hooks/stable";
+import { iconBullhorn } from "~/icons";
 import type { SchemaEvent } from "~/types";
 import { type ElementProps, SectionTitle } from "../helpers";
 import { Lister } from "../lister";

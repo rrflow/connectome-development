@@ -16,26 +16,19 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import {
-	Icon,
-	iconCheck,
-	iconReset,
-	iconSearch,
-	iconTune,
-	pictoBrain,
-	pictoHandsOn,
-	pictoUniversity,
-} from "@surrealdb/ui";
 import { MouseEvent, useState } from "react";
 import { Link } from "wouter";
 import { adapter } from "~/adapter";
 import { ActionButton } from "~/components/ActionButton";
+import { Icon } from "~/components/Icon";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";
 import { useConnectionLabels, useConnectionOverview } from "~/hooks/connection";
 import { OVERVIEW, useSavepoint } from "~/hooks/overview";
 import { useConnectionNavigator } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
+import { iconCheck, iconReset, iconSearch, iconTune } from "~/icons";
+import { pictoBrain, pictoHandsOn, pictoUniversity } from "~/pictograms";
 import { Connection } from "~/types";
 import { StartConnection } from "./content/connection";
 import { StartResource } from "./content/resource";

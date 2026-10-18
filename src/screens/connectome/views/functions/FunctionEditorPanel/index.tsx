@@ -1,11 +1,11 @@
 import type { EditorView } from "@codemirror/view";
 import { Alert, Badge, Box, Group, Stack } from "@mantine/core";
-import { Icon, iconDownload, iconJSON, iconText, iconWarning } from "@surrealdb/ui";
 import { useMemo, useState } from "react";
 import type { Updater } from "use-immer";
 import { adapter } from "~/adapter";
 import { ActionButton } from "~/components/ActionButton";
 import { CodeEditor } from "~/components/CodeEditor";
+import { Icon } from "~/components/Icon";
 import { ContentPane } from "~/components/Pane";
 import { RRFLOWQL_FILTER } from "~/constants";
 import {
@@ -17,6 +17,7 @@ import {
 import { useSetting } from "~/hooks/config";
 import { useDatabaseVersionLinter } from "~/hooks/editor";
 import { useStable } from "~/hooks/stable";
+import { iconDownload, iconJSON, iconText, iconWarning } from "~/icons";
 import { getRRFlowQL } from "~/screens/connectome/connection/connection";
 import { showErrorNotification } from "~/shared/util/helpers";
 import { buildFunctionDefinition } from "~/shared/util/schema";

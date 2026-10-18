@@ -13,12 +13,12 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconClose, iconPlus, iconWarning } from "@surrealdb/ui";
 import { omit } from "radash";
 import { useLayoutEffect, useMemo, useState } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { CodeEditor } from "~/components/CodeEditor";
 import { DrawerResizer } from "~/components/DrawerResizer";
+import { Icon } from "~/components/Icon";
 import { CodeInput } from "~/components/Inputs";
 import { Label } from "~/components/Label";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
@@ -27,6 +27,7 @@ import { rrflowqlLinting } from "~/editor";
 import { useValueValidator } from "~/hooks/rrflowql";
 import { useTableNames, useTables } from "~/hooks/schema";
 import { useStable } from "~/hooks/stable";
+import { iconClose, iconPlus, iconWarning } from "~/icons";
 import { executeQuery, getRRFlowQL } from "~/screens/connectome/connection/connection";
 import { RecordsChangedEvent } from "~/shared/util/global-events";
 import { extractEdgeRecords, getTableVariant } from "~/shared/util/schema";

@@ -12,12 +12,12 @@ import {
 	Text,
 } from "@mantine/core";
 import { indexParallelEdgesIndex } from "@sigma/edge-curve";
-import { Icon, iconBraces, iconFilter, iconRelation, iconTag } from "@surrealdb/ui";
 import { inferSettings } from "graphology-layout-forceatlas2";
 import FA2LayoutSupervisor from "graphology-layout-forceatlas2/worker";
 import iwanthue, { ColorSpaceArray } from "iwanthue";
 import { isArray, isNumber, isObject } from "radash";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { Icon } from "~/components/Icon";
 import { Label } from "~/components/Label";
 import { newRelationalGraph, RelationGraph } from "~/components/RelationGraph";
 import { NodeCircle } from "~/components/RelationGraph/node";
@@ -29,6 +29,7 @@ import { useConnectionAndView } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
 import { useIsLight } from "~/hooks/theme";
 import { useToggleList } from "~/hooks/toggle";
+import { iconBraces, iconFilter, iconRelation, iconTag } from "~/icons";
 import { openGraphLabelEditorModal } from "~/modals/graph-labels";
 import { executeQuery } from "~/screens/connectome/connection/connection";
 import { plural } from "~/shared/util/helpers";

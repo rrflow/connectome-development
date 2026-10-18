@@ -14,9 +14,19 @@ import {
 	UnstyledButton,
 } from "@mantine/core";
 import { closeModal, openModal } from "@mantine/modals";
+import { formatDistanceToNow } from "date-fns";
+import { FC, memo, useMemo, useState } from "react";
+import { adapter } from "~/adapter";
+import { CodeBlock } from "~/components/CodeBlock";
+import { Icon } from "~/components/Icon";
+import { Label } from "~/components/Label";
+import { PrimaryTitle } from "~/components/PrimaryTitle";
+import { Spacer } from "~/components/Spacer";
+import { JSON_FILTER } from "~/constants";
+import { useSetting } from "~/hooks/config";
+import { useStable } from "~/hooks/stable";
+import { useIsLight } from "~/hooks/theme";
 import {
-	CodeBlock,
-	Icon,
 	iconArrowLeft,
 	iconAuth,
 	iconDownload,
@@ -25,17 +35,7 @@ import {
 	iconServer,
 	iconTransfer,
 	iconWrench,
-} from "@surrealdb/ui";
-import { formatDistanceToNow } from "date-fns";
-import { FC, memo, useMemo, useState } from "react";
-import { adapter } from "~/adapter";
-import { Label } from "~/components/Label";
-import { PrimaryTitle } from "~/components/PrimaryTitle";
-import { Spacer } from "~/components/Spacer";
-import { JSON_FILTER } from "~/constants";
-import { useSetting } from "~/hooks/config";
-import { useStable } from "~/hooks/stable";
-import { useIsLight } from "~/hooks/theme";
+} from "~/icons";
 import { showInfo } from "~/shared/util/helpers";
 import { DiagnosticWithTime, useDatabaseStore } from "~/stores/database";
 

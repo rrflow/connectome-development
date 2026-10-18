@@ -1,16 +1,9 @@
 import { Group, HoverCard, Stack, Text } from "@mantine/core";
-import {
-	Icon,
-	iconCheck,
-	iconClock,
-	iconClose,
-	iconExplorer,
-	iconFile,
-	iconXml,
-} from "@surrealdb/ui";
 import dayjs from "dayjs";
 import { convert } from "geo-coordinates-parser";
 import { useEffect, useState } from "react";
+import { Icon } from "~/components/Icon";
+import { iconCheck, iconClock, iconClose, iconExplorer, iconFile, iconXml } from "~/icons";
 import { getRRFlowQL } from "~/screens/connectome/connection/connection";
 import { TRUNCATE_STYLE } from "~/shared/util/helpers";
 import {
