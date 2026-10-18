@@ -25,8 +25,6 @@ import { SANDBOX } from "~/constants";
 import { useStable } from "~/hooks/stable";
 import { openConnectionEditModal } from "~/modals/edit-connection";
 import { useConfirmation } from "~/providers/Confirmation";
-import { tagEvent } from "~/shared/util/analytics";
-import { getConnectionVariant } from "~/shared/util/connection";
 import { newId, ON_STOP_PROPAGATION } from "~/shared/util/helpers";
 import { USER_ICONS } from "~/shared/util/user-icons";
 import { useConfigStore } from "~/shell/stores/config";
@@ -66,12 +64,6 @@ export function StartConnection({
 			lastDatabase: "",
 			id: newId(),
 		});
-
-		tagEvent("connection_duplicated", {
-			protocol: connection.authentication.protocol.toString(),
-			variant: getConnectionVariant(connection),
-			is_local: connection.authentication.hostname.includes("localhost"),
-		});
 	});
 
 	const handleDelete = useConfirmation({
@@ -80,12 +72,6 @@ export function StartConnection({
 		skippable: true,
 		onConfirm() {
 			removeConnection(connection.id);
-
-			tagEvent("connection_deleted", {
-				protocol: connection.authentication.protocol.toString(),
-				variant: getConnectionVariant(connection),
-				is_local: connection.authentication.hostname.includes("localhost"),
-			});
 		},
 	});
 

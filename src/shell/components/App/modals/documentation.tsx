@@ -20,7 +20,6 @@ import { useBoolean } from "~/hooks/boolean";
 import { useKeyNavigation } from "~/hooks/keys";
 import { useIntent } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
-import { tagEvent } from "~/shared/util/analytics";
 import { Y_SLIDE_TRANSITION } from "~/shared/util/helpers";
 import classes from "../style.module.scss";
 
@@ -69,8 +68,6 @@ export function DocumentationModal() {
 			if (!trackedQuery) {
 				return [];
 			}
-
-			tagEvent("documentation_search_query", { search: trackedQuery });
 		},
 	});
 
@@ -87,8 +84,6 @@ export function DocumentationModal() {
 		if (search) {
 			setSearch(search);
 		}
-
-		tagEvent("documentation_search_open");
 	});
 
 	const isEmpty = data?.length === 0;

@@ -17,7 +17,6 @@ export class BrowserAdapter implements ConnectomeAdapter {
 
 	public isServeSupported = false;
 	public isUpdateCheckSupported = false;
-	public isTelemetryEnabled = true;
 	public isSampleSandboxEnabled = true;
 	public titlebarOffset = 0;
 	public platform: Platform = "windows";
@@ -160,21 +159,5 @@ export class BrowserAdapter implements ConnectomeAdapter {
 
 	public trace(label: string, message: string) {
 		console.debug(`${label}: ${message}`);
-	}
-
-	public async trackEvent(url: string): Promise<void> {
-		try {
-			await fetch(url, {
-				method: "POST",
-				mode: "no-cors",
-				credentials: "include",
-				headers: {
-					"Content-Type": "text/plain;charset=UTF-8",
-				},
-				body: "",
-			});
-		} catch (err: any) {
-			console.error("Failed to track event: ", err);
-		}
 	}
 }

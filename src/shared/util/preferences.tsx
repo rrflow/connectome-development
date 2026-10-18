@@ -92,9 +92,7 @@ export class FlagSetController<K extends string, T extends Flags<K>> {
  * Compute available preferences based on the current state
  */
 export function useComputedPreferences(): PreferenceSection[] {
-	const [
-		{ themes, syntax_themes, cloud_endpoints, gtm_debug, sidebar_customization, website_base },
-	] = useFeatureFlags();
+	const [{ themes, syntax_themes, sidebar_customization }] = useFeatureFlags();
 
 	return useMemo(() => {
 		const sections: PreferenceSection[] = [];
@@ -561,102 +559,8 @@ export function useComputedPreferences(): PreferenceSection[] {
 			},
 		);
 
-		if (cloud_endpoints === "custom") {
-			sections.push({
-				id: "cloud-endpoints",
-				name: "Custom Cloud endpoints",
-				preferences: [
-					{
-						id: "auth-base",
-						name: "Auth base",
-						description: "The base URL for cloud authentication",
-						controller: new TextController({
-							placeholder: "https://...",
-							reader: (config) => config.settings.cloud.urlAuthBase,
-							writer: (config, value) => {
-								config.settings.cloud.urlAuthBase = value;
-							},
-						}),
-					},
-					{
-						id: "api-base",
-						name: "API base",
-						description: "The base URL for the cloud API",
-						controller: new TextController({
-							placeholder: "https://...",
-							reader: (config) => config.settings.cloud.urlApiBase,
-							writer: (config, value) => {
-								config.settings.cloud.urlApiBase = value;
-							},
-						}),
-					},
-					{
-						id: "tickets-base",
-						name: "Tickets base",
-						description: "The base URL for the tickets API",
-						controller: new TextController({
-							placeholder: "https://...",
-							reader: (config) => config.settings.cloud.urlApiTicketsBase,
-							writer: (config, value) => {
-								config.settings.cloud.urlApiTicketsBase = value;
-							},
-						}),
-					},
-				],
-			});
-
-			if (website_base === "custom") {
-				sections
-					.find((section) => section.id === "cloud-endpoints")
-					?.preferences.push({
-						id: "website-base",
-						name: "Website base",
-						description: "The base URL for the website",
-						controller: new TextController({
-							placeholder: "https://github.com/rrflow/connectome-development",
-							reader: (config) => config.settings.cloud.urlWebsiteBase,
-							writer: (config, value) => {
-								config.settings.cloud.urlWebsiteBase = value;
-							},
-						}),
-					});
-			}
-		}
-
-		if (gtm_debug) {
-			sections.push({
-				id: "gtm-debug",
-				name: "GTM Debug",
-				preferences: [
-					{
-						id: "gtm-debug-mode",
-						name: "Debug Mode",
-						description: "Enable debug mode for GTM requests",
-						controller: new CheckboxController({
-							reader: (config) => config.settings.gtm.debug_mode,
-							writer: (config, value) => {
-								config.settings.gtm.debug_mode = value;
-							},
-						}),
-					},
-					{
-						id: "gtm-preview-header",
-						name: "X-Gtm-Server-Preview",
-						description:
-							"Header value can be obtained inside the GTM preview application",
-						controller: new TextController({
-							reader: (config) => config.settings.gtm.preview_header,
-							writer: (config, value) => {
-								config.settings.gtm.preview_header = value;
-							},
-						}),
-					},
-				],
-			});
-		}
-
 		return sections;
-	}, [cloud_endpoints, website_base, gtm_debug, sidebar_customization, syntax_themes, themes]);
+	}, [sidebar_customization, syntax_themes, themes]);
 }
 
 function nodef<T extends string>(items: Selectable<T>[]) {

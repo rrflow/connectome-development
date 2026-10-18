@@ -1,13 +1,2 @@
-export const CODE_RES_KEY = "Connectome:oauth_response_code";
-export const STATE_RES_KEY = "Connectome:oauth_response_state";
-export const VERIFIER_KEY = "Connectome:oauth_verifier";
-export const TOKEN_REFRESH_KEY = "Connectome:oauth_refresh_token";
-export const TOKEN_ACCESS_KEY = "Connectome:oauth_access_token";
-export const REFERRER_KEY = "Connectome:referrer_code";
-export const AWS_MARKETPLACE_KEY = "Connectome:aws_marketplace_code";
-export const INVITATION_KEY = "Connectome:invitation_code";
-export const STATE_KEY = "Connectome:oauth_state";
 export const CONFIG_KEY = "Connectome:config";
 export const OVERVIEW_KEY = "Connectome:overview";
-export const APPLY_DATASET_KEY = "Connectome:apply_dataset";
-export const APPLY_DATA_FILE_KEY = "Connectome:apply_data_file";

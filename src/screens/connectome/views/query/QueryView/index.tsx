@@ -9,7 +9,6 @@ import { Form } from "~/components/Form";
 import { CodeInput } from "~/components/Inputs";
 import { PanelDragger } from "~/components/Pane/dragger";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
-import { SidekickPanel } from "~/components/Sidekick/panel";
 import { Spacer } from "~/components/Spacer";
 import { setEditorText } from "~/editor/helpers";
 import { executeEditorQuery } from "~/editor/query";
@@ -19,7 +18,6 @@ import { useEventSubscription } from "~/hooks/event";
 import { usePanelMinSize } from "~/hooks/panels";
 import { useConnectionAndView, useIntent } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
-import { tagEvent } from "~/shared/util/analytics";
 import { SetQueryEvent } from "~/shared/util/global-events";
 import { newId, ON_FOCUS_SELECT } from "~/shared/util/helpers";
 import { useConfigStore } from "~/shell/stores/config";
@@ -97,7 +95,6 @@ export function QueryView() {
 		});
 
 		isSavingHandle.close();
-		tagEvent("query_save");
 	});
 
 	const showVariables = !!active?.showVariables;
@@ -236,7 +233,6 @@ export function QueryView() {
 					>
 						{queryEditor}
 					</Panel>
-					<SidekickPanel />
 				</PanelGroup>
 			</Box>
 

@@ -18,7 +18,7 @@ export function openConnectionEditModal(connection: Connection) {
 	openModal({
 		modalId: "connection-edit",
 		title: <PrimaryTitle>Edit connection</PrimaryTitle>,
-		size: connection.authentication.mode === "cloud" ? "md" : "xl",
+		size: "xl",
 		withCloseButton: true,
 		children: <ConnectionEditor value={connection} />,
 	});
@@ -43,8 +43,6 @@ function ConnectionEditor({ value }: ConnectionEditorProps) {
 		closeModal("connection-edit");
 	});
 
-	const isCloud = value.authentication.mode === "cloud";
-
 	return (
 		<Form onSubmit={handleSave}>
 			<Stack gap="xl">
@@ -64,62 +62,37 @@ function ConnectionEditor({ value }: ConnectionEditorProps) {
 					onChange={setConnection}
 				/>
 
-				{isCloud ? (
-					<>
-						<Box mt="xl">
-							<Text
-								fz="xl"
-								fw={600}
-								c="bright"
-							>
-								Protocol
-							</Text>
-							<Text>Select a communication protocol for this connection</Text>
-						</Box>
+				<Box mt="xl">
+					<Text
+						fz="xl"
+						fw={600}
+						c="bright"
+					>
+						Remote address
+					</Text>
+					<Text>Select a communication protocol and specify instance address</Text>
+				</Box>
 
-						<ConnectionAddressDetails
-							value={connection}
-							onChange={setConnection}
-							withHostname={false}
-						/>
-					</>
-				) : (
-					<>
-						<Box mt="xl">
-							<Text
-								fz="xl"
-								fw={600}
-								c="bright"
-							>
-								Remote address
-							</Text>
-							<Text>
-								Select a communication protocol and specify instance address
-							</Text>
-						</Box>
+				<ConnectionAddressDetails
+					value={connection}
+					onChange={setConnection}
+				/>
 
-						<ConnectionAddressDetails
-							value={connection}
-							onChange={setConnection}
-						/>
+				<Box mt="xl">
+					<Text
+						fz="xl"
+						fw={600}
+						c="bright"
+					>
+						Authentication
+					</Text>
+					<Text>Specify how you want to access your instance</Text>
+				</Box>
 
-						<Box mt="xl">
-							<Text
-								fz="xl"
-								fw={600}
-								c="bright"
-							>
-								Authentication
-							</Text>
-							<Text>Specify how you want to access your instance</Text>
-						</Box>
-
-						<ConnectionAuthDetails
-							value={connection}
-							onChange={setConnection}
-						/>
-					</>
-				)}
+				<ConnectionAuthDetails
+					value={connection}
+					onChange={setConnection}
+				/>
 
 				<Box mt="xl">
 					<Text

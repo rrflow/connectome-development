@@ -1,15 +1,13 @@
 import { useLayoutEffect } from "react";
 import { useAbsoluteLocation, useSearchParams } from "~/hooks/routing";
-import { tagEvent } from "~/shared/util/analytics";
 import { handleIntentRequest } from "~/shared/util/intents";
-import { AWS_MARKETPLACE_KEY, INVITATION_KEY, REFERRER_KEY } from "~/shared/util/storage";
 import { useConfigStore } from "~/shell/stores/config";
 
 export function useAppRouter() {
 	const { setActiveResource } = useConfigStore.getState();
 
 	const [path, setPath] = useAbsoluteLocation();
-	const { intent, referrer, aws_token, invitation } = useSearchParams();
+	const { intent } = useSearchParams();
 	const resource = useConfigStore((s) => s.activeResource);
 
 	// Restore active resource
@@ -31,30 +29,4 @@ export function useAppRouter() {
 			handleIntentRequest(intent);
 		}
 	}, [intent]);
-
-	// Cloud referral codes
-	useLayoutEffect(() => {
-		if (referrer) {
-			sessionStorage.setItem(REFERRER_KEY, referrer);
-		}
-	}, [referrer]);
-
-	// Cloud invitation codes
-	useLayoutEffect(() => {
-		if (invitation) {
-			sessionStorage.setItem(INVITATION_KEY, invitation);
-		}
-	}, [invitation]);
-
-	// Cloud AWS marketplace token
-	useLayoutEffect(() => {
-		if (aws_token) {
-			sessionStorage.setItem(AWS_MARKETPLACE_KEY, aws_token);
-		}
-	}, [aws_token]);
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: Page views
-	useLayoutEffect(() => {
-		tagEvent("page_view");
-	}, [path]);
 }

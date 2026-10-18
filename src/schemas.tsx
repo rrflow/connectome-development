@@ -17,7 +17,6 @@ export const ProtocolSchema = v.union([
 ]);
 
 export const InstanceConfigSchema = v.object({
-	telemetry: v.optional(v.boolean(), true),
 	connections: v.optional(
 		v.array(
 			v.object({
@@ -39,13 +38,6 @@ export const InstanceConfigSchema = v.object({
 			}),
 		),
 		[],
-	),
-	cloud: v.optional(
-		v.object({
-			enabled: v.optional(v.boolean(), false),
-			auth_endpoint: v.optional(v.string()),
-			api_endpoint: v.optional(v.string()),
-		}),
 	),
 });
 

@@ -10,10 +10,9 @@ import {
 	Text,
 	UnstyledButton,
 } from "@mantine/core";
-import { iconArrowLeft, iconCog, iconHelp, iconSearch, pictoBrain } from "@surrealdb/ui";
+import { iconArrowLeft, iconCog, iconSearch, pictoBrain } from "@surrealdb/ui";
 import clsx from "clsx";
 import { Fragment, useMemo } from "react";
-import { useCloudUnreadConversationsQuery } from "~/cloud/queries/context";
 import { NavigationIcon } from "~/components/NavigationIcon";
 import { Shortcut } from "~/components/Shortcut";
 import { Spacer } from "~/components/Spacer";
@@ -29,14 +28,10 @@ import { useInterfaceStore } from "~/shell/stores/interface";
 import type { GlobalPage, SidebarMode, ViewPage } from "~/types";
 import classes from "./style.module.scss";
 
-const GLOBAL_NAVIGATION: GlobalPage[][] = [
-	["/overview", "/organisations"],
-	["/referrals"],
-	["/mini/new"],
-];
+const GLOBAL_NAVIGATION: GlobalPage[][] = [["/overview"], ["/mini/new"]];
 
 const VIEW_NAVIGATION: ViewPage[][] = [
-	["dashboard", "monitor", "migrations"],
+	["migrations"],
 	["query", "explorer", "graphql"],
 	["designer", "authentication", "parameters", "functions"],
 	["documentation"],
@@ -62,8 +57,6 @@ export function ConnectomeSidebar({ sidebarMode, className, ...other }: Connecto
 	const sidebarViews = useConfigStore((s) => s.settings.appearance.sidebarViews);
 	const pages = useAvailablePages();
 	const views = useAvailableViews();
-
-	const { data: unreadConversations } = useCloudUnreadConversationsQuery();
 
 	const { setOverlaySidebar } = useInterfaceStore.getState();
 	const [canHoverSidebar, hoverSidebarHandle] = useBoolean(true);
@@ -253,16 +246,6 @@ export function ConnectomeSidebar({ sidebarMode, className, ...other }: Connecto
 						onClick={openCommands}
 						onMouseEnter={hoverSidebarHandle.open}
 						withTooltip={sidebarMode === "compact"}
-					/>
-
-					<NavigationIcon
-						name="Support"
-						icon={iconHelp}
-						match={["/support", "/support/*"]}
-						onClick={() => navigate("/support")}
-						onMouseEnter={hoverSidebarHandle.open}
-						withTooltip={sidebarMode === "compact"}
-						indicator={unreadConversations}
 					/>
 
 					<NavigationIcon

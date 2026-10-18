@@ -9,7 +9,6 @@ export type AuthLevel = "root" | "namespace" | "database";
 export type AuthType = "user" | "access";
 export type Base = "ROOT" | "NAMESPACE" | "DATABASE";
 export type ColorScheme = "light" | "dark";
-export type DatabaseListMode = "list" | "grid";
 export type DiagramAlgorithm = "default" | "aligned" | "spaced";
 export type DiagramDirection = "default" | "ltr" | "rtl";
 export type DiagramStrategy = "NETWORK_SIMPLEX" | "BRANDES_KOEPF" | "LINEAR_SEGMENTS";
@@ -17,9 +16,7 @@ export type DiagramLineStyle = "default" | "metro" | "straight" | "smooth";
 export type DiagramLinks = "default" | "hidden" | "visible";
 export type DiagramMode = "default" | "fields" | "summary" | "simple";
 export type DiagramHoverFocus = "default" | "none" | "neighbours" | "chain" | "recursive";
-export type InvoiceStatus = "succeeded" | "pending" | "failed";
 export type InstallMode = "fresh" | "existing";
-export type MetricsDuration = "hour" | "half" | "day" | "week" | "month";
 export type MiniAppearance = "normal" | "compact" | "plain";
 export type NoneResultMode = "default" | "show" | "hide" | "collapse";
 export type Orientation = "horizontal" | "vertical";
@@ -27,11 +24,9 @@ export type Platform = "darwin" | "windows" | "linux";
 export type Protocol = "http" | "https" | "ws" | "wss" | "mem" | "indxdb";
 export type ResultFormat = "json" | "sql";
 export type ResultMode = "table" | "single" | "combined" | "graph" | "live";
-export type SupportRequestType = "conversation" | "ticket";
 export type ScaleStep = "75" | "90" | "100" | "110" | "125" | "150";
 export type SchemaMode = "schemaless" | "schemafull";
 export type SidebarMode = "expandable" | "compact" | "wide" | "fill";
-export type InstancePlan = "free" | "start" | "scale" | "enterprise";
 export type SourceMode = "schema" | "infer";
 export type SyntaxTheme = "default" | "vivid";
 export type TableType = "ANY" | "NORMAL" | "RELATION";
@@ -43,28 +38,9 @@ export type AuthState = "unknown" | "loading" | "authenticated" | "unauthenticat
 export type MonitorType = "metrics" | "logs";
 export type MonitorSeverity = "info" | "warning" | "error";
 export type FunctionType = "function" | "model";
-export type StartingData = "none" | "dataset" | "upload" | "restore";
-export type IntercomConversationStateId = "open" | "closed" | "snoozed";
 export type MigrationIssueSeverity = "might_break" | "will_break" | "breaking_resolution";
 export type MigrationIssueKind = "incompatible feature";
 export type MigrationIssueTruncation = "none" | "start" | "end" | "both";
-export type OrganisationBillingProvider = "stripe" | "aws_marketplace" | "bank_transfer";
-export type CloudInstanceAccessType = "public" | "private" | "dual";
-export type OrganisationState =
-	| "created"
-	| "onboarded"
-	| "freezing"
-	| "frozen"
-	| "terminating"
-	| "terminated";
-export type InstanceState =
-	| "creating"
-	| "updating"
-	| "deleting"
-	| "ready"
-	| "pausing"
-	| "paused"
-	| "resuming";
 export type AuthMode =
 	| "none"
 	| "root"
@@ -72,12 +48,9 @@ export type AuthMode =
 	| "database"
 	| "token"
 	| "access"
-	| "access-signup"
-	| "cloud";
-export type GlobalPage = "/overview" | "/signin" | "/organisations" | "/referrals" | "/mini/new";
+	| "access-signup";
+export type GlobalPage = "/overview" | "/mini/new";
 export type ViewPage =
-	| "dashboard"
-	| "monitor"
 	| "query"
 	| "explorer"
 	| "graphql"
@@ -141,7 +114,6 @@ export interface Authentication {
 	token: string;
 	access: string;
 	accessFields: AccessField[];
-	cloudInstance?: string;
 }
 
 export interface Connection {
@@ -282,20 +254,6 @@ export interface EstateStage {
 	detail: string;
 }
 
-export interface ConnectomeCloudSettings {
-	databaseListMode: DatabaseListMode;
-	urlApiBase: string;
-	urlAuthBase: string;
-	urlWebsiteBase: string;
-	urlApiTicketsBase: string;
-}
-
-export interface ConnectomeGtmSettings {
-	preview_header: string;
-	origin: "127.0.0.1:8000";
-	debug_mode: boolean;
-}
-
 export interface GraphqlQuery {
 	query?: string;
 	variables?: Record<string, any>;
@@ -341,8 +299,6 @@ export interface ConnectomeSettings {
 	appearance: ConnectomeAppearanceSettings;
 	templates: ConnectomeTemplateSettings;
 	serving: ConnectomeServingSettings;
-	cloud: ConnectomeCloudSettings;
-	gtm: ConnectomeGtmSettings;
 }
 
 export interface ConnectomeConfig {
@@ -602,7 +558,6 @@ export interface ViewCondition {
 	flags: FeatureFlagMap;
 	connection: string;
 	version: string | null;
-	isCloud: boolean;
 }
 
 export interface Dataset {
@@ -639,454 +594,6 @@ export interface SidekickChat {
 	last_activity: Date;
 }
 
-export interface CloudSignin {
-	id: string;
-	token: string;
-	provider: string;
-	terms_accepted_at?: string;
-}
-
-export interface CloudProfile {
-	username: string;
-	name: string;
-	default_org: string;
-	picture?: string;
-	user_hmac?: string;
-	enabled_features: string[];
-}
-
-export interface CloudInstance {
-	id: string;
-	name: string;
-	host: string;
-	private_host?: string;
-	region: string;
-	version: string;
-	organization_id: string;
-	available_versions: string[];
-	compute_units: number;
-	storage_size: number;
-	storage_size_updated_at?: string;
-	can_update_storage_size: boolean;
-	storage_size_update_cooloff_hours: number;
-	capabilities: CloudInstanceCapabilities;
-	access_type: CloudInstanceAccessType;
-	state: InstanceState;
-	type: CloudInstanceType;
-	distributed_storage_specs?: CloudDistributedStorageSpecs;
-}
-
-export interface CloudInstanceCapabilities {
-	allow_scripting: boolean;
-	allow_guests: boolean;
-	allow_graphql: boolean;
-	allow_insecure_storable_closures: boolean;
-	allowed_rpc_methods: string[];
-	denied_rpc_methods: string[];
-	allowed_http_endpoints: string[];
-	denied_http_endpoints: string[];
-	allowed_networks: string[];
-	denied_networks: string[];
-	allowed_functions: string[];
-	denied_functions: string[];
-	allowed_experimental: string[];
-	denied_experimental: string[];
-	allowed_arbitrary_query: string[];
-	denied_arbitrary_query: string[];
-}
-
-export interface CloudDistributedStorageSpecs {
-	slug: string;
-	units: number;
-	autoscaling: boolean;
-	max_compute_units: number;
-}
-
-export interface CloudInstanceType {
-	slug: string;
-	restricted?: boolean;
-	display_name: string;
-	description: string;
-	cpu: number;
-	memory: number;
-	price_hour: number;
-	enabled?: boolean;
-	category: string;
-	default_storage_size: number;
-	max_storage_size: number;
-	compute_units: {
-		min?: number;
-		max?: number;
-	};
-}
-
-export interface CloudRegion {
-	slug: string;
-	description: string;
-}
-
-export interface CloudPlan {
-	id: string;
-	name: string;
-	description: string;
-	regions: string[];
-	instance_types: CloudInstanceType[];
-	storage_instance_types: CloudInstanceType[];
-}
-
-export interface CloudOrganization {
-	id: string;
-	name: string;
-	state: OrganisationState;
-	billing_provider: OrganisationBillingProvider;
-	max_free_instances: number;
-	max_paid_instances: number;
-	billing_info: boolean;
-	payment_info: boolean;
-	plan: CloudPlan;
-	available_plans: CloudPlan[];
-	member_count: number;
-	user_role: string;
-	resources_locked: boolean;
-	privatelink_enabled: boolean;
-}
-
-export interface CloudBanner {
-	message: string;
-	message_type: BannerType;
-	timestamp: string;
-}
-
-export interface CloudBilling {
-	Name: string;
-	Email: string;
-	AddressLine1: string;
-	AddressLine2: string;
-	City: string;
-	Zipcode: string;
-	State: string;
-	Country: string;
-	LegalName: string;
-	TaxIdentificationNumber: string;
-	Phone: string;
-}
-
-export interface CloudInvoice {
-	id: string;
-	date: string;
-	amount: number;
-	status: InvoiceStatus;
-	url: string;
-}
-
-export interface CloudPayment {
-	payment_info: boolean;
-	info?: {
-		card_last4?: string;
-		card_brand?: string;
-	};
-}
-
-export interface CloudBillingCountry {
-	name: string;
-	code: string;
-}
-
-export interface CloudMeasurement {
-	instance_id: string;
-	instance_type?: string;
-	metric_type: string;
-	measured_period_start: string;
-	measured_period_end: string;
-
-	// Compute
-	compute_hours?: number;
-
-	// Storage
-	disk_used_bytes?: number;
-	source?: string;
-}
-
-export interface CloudMetrics {
-	metric: string;
-	from_time: string;
-	to_time: string;
-	unit: string;
-	values: {
-		timestamps: string[];
-		metrics: {
-			labels: string;
-			values: (number | null)[];
-		}[];
-	};
-}
-
-export interface CloudLogLine {
-	timestamp: string;
-	pod: string;
-	level: string;
-	message: string;
-}
-
-export interface CloudLogs {
-	from_time: string;
-	to_time: string;
-	log_lines: CloudLogLine[];
-}
-
-export interface CloudCoupon {
-	name: string;
-	amount: number;
-	amount_remaining: number;
-	expires_at?: string;
-}
-
-export interface CloudBackup {
-	snapshot_started_at: string;
-	snapshot_id: string;
-	valid_versions?: string[];
-}
-
-export interface CloudMember {
-	user_id: string;
-	organization_id: string;
-	role: string;
-	name: string;
-	username: string;
-	profile_picture: string;
-}
-
-export interface CloudInvitation {
-	organization_id: string;
-	code: string;
-	role: string;
-	email: string;
-	status: string;
-}
-
-export interface CloudRole {
-	name: string;
-	permissions: {
-		resource: string;
-		action: string;
-	}[];
-}
-
-export interface CloudSupportPlan {
-	id: string;
-	name: string;
-	description: string;
-}
-
-export interface CloudSupportPlanResult {
-	id: string;
-	support_plan: CloudSupportPlan;
-	enabled_at: string;
-	disabled_at?: string;
-}
-
-export interface StartingDataDetails {
-	type: StartingData;
-	backupOptions?: {
-		instance?: CloudInstance;
-		backup?: CloudBackup;
-	};
-}
-
-export interface CloudDeployConfig {
-	name: string;
-	version: string;
-	region: string;
-	computeType: string;
-	storageType: string;
-	computeUnits: number;
-	storageUnits: number;
-	storageAmount: number;
-	startingData: StartingDataDetails;
-	public_traffic: boolean;
-	private_traffic: boolean;
-	plan: InstancePlan;
-	migration?: boolean;
-}
-
-export interface CloudPlanCategories {
-	compute: string[];
-	storage: string[];
-}
-
-export interface IntercomTicketTypeMinimal {
-	id: string;
-	name: string;
-}
-
-export interface IntercomTicketType extends IntercomTicketTypeMinimal {
-	description: string;
-	attributes: IntercomTicketTypeAttribute[];
-}
-
-export interface IntercomTicketTypeAttributeListOption {
-	label: string;
-	archived: boolean;
-	id: string;
-	description?: string;
-}
-
-export interface IntercomTicketTypeAttribute {
-	id: string;
-	name: string;
-	description?: string;
-	order: number;
-	data_type: string;
-	input_options?: {
-		list_options?: IntercomTicketTypeAttributeListOption[];
-		multiline?: boolean;
-		allow_multiple_values?: boolean;
-	};
-	required: boolean;
-	visible_on_create: boolean;
-}
-
-export interface IntercomContact {
-	id: string;
-	email: string;
-	name: string;
-	avatar?: string;
-}
-
-export interface IntercomUser {
-	type: "admin" | "user" | "bot";
-	id: string;
-	name: string;
-	avatar?: string;
-}
-
-export interface IntercomTicketState {
-	id: string;
-	category: string;
-	label: string;
-}
-
-export interface IntercomTicketPart {
-	id: string;
-	part_type: string;
-	state: IntercomTicketState;
-	previous_ticket_state: string;
-	created_at: number;
-	updated_at: number;
-	attachments: any[];
-	body?: string;
-	author?: IntercomUser;
-}
-
-export interface IntercomTicket {
-	id: string;
-	title: string;
-	description: string;
-	state: IntercomTicketState;
-	type: IntercomTicketTypeMinimal;
-	created_at: number;
-	updated_at: number;
-	contacts: IntercomContact[];
-	parts: IntercomTicketPart[];
-	open: boolean;
-	attributes: Record<string, any>;
-}
-
-export interface IntercomTicketCreateRequest {
-	name: string;
-	description: string;
-	attributes: Record<string, any>;
-}
-
-export interface IntercomConversationCreateRequest {
-	body: string;
-	subject: string;
-	tags?: string[];
-}
-
-export interface IntercomConversationReplyRequest {
-	body: string;
-	attachment_files?: {
-		content_type: string;
-		data: string;
-		name: string;
-	}[];
-	reply_options?: {
-		text: string;
-		uuid: string;
-	}[];
-}
-
-export interface IntercomConversationStateRequest {
-	conversationId: string;
-	state: "read" | "unread";
-}
-
-export interface IntercomAttachment {
-	type: string;
-	name: string;
-	url: string;
-	content_type: string;
-	filesize: number;
-	width: number;
-	height: number;
-}
-
-export interface IntercomConversationPart {
-	id: string;
-	part_type: string;
-	body: string;
-	created_at: number;
-	updated_at: number;
-	attachments?: IntercomAttachment[];
-	state: IntercomConversationStateId;
-	author: IntercomUser;
-}
-
-export interface IntercomConversation {
-	id: string;
-	title: string;
-	description: string;
-	state: IntercomConversationStateId;
-	created_at: number;
-	updated_at: number;
-	contacts: IntercomContact[];
-	last_response_author: IntercomUser;
-	parts: IntercomConversationPart[];
-	initial_part: IntercomConversationPart;
-	open: boolean;
-	read: boolean;
-	priority: boolean;
-	hasTicket: boolean;
-	ticketData?: IntercomTicket;
-}
-
-export interface IntercomSupportArticle {
-	id: string;
-	title: string;
-	description: string;
-	body: string;
-	author: IntercomUser;
-	created_at: number;
-	updated_at: number;
-	url: string;
-	collection?: IntercomSupportCollectionShallow;
-}
-
-export interface IntercomSupportCollectionShallow {
-	id: string;
-	name: string;
-	description: string;
-	icon: string;
-	url: string;
-	image?: string;
-	order: number;
-}
-
-export interface IntercomSupportCollection extends IntercomSupportCollectionShallow {
-	articles: IntercomSupportArticle[];
-}
-
 export interface AppMenu {
 	id: string;
 	name: string;
@@ -1102,24 +609,6 @@ export interface AppMenuItem {
 	disabled?: boolean;
 	binding?: string[];
 	action?: () => void;
-}
-
-export interface ObserverMetric {
-	id: string;
-	name: string;
-}
-
-export interface ObserverMetricCollection {
-	id: string;
-	name: string;
-	icon: string;
-	metrics: ObserverMetric[];
-}
-
-export interface ObserverLogFeed {
-	id: string;
-	name: string;
-	icon: string;
 }
 
 export interface Monitor {

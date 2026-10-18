@@ -19,7 +19,6 @@ import { useConnectionAndView, useIntent } from "~/hooks/routing";
 import { useTableNames } from "~/hooks/schema";
 import { useStable } from "~/hooks/stable";
 import { executeQuery } from "~/screens/connectome/connection/connection";
-import { tagEvent } from "~/shared/util/analytics";
 import { dispatchIntent } from "~/shared/util/intents";
 import { syncConnectionSchema } from "~/shared/util/schema";
 import { useInterfaceStore } from "~/shell/stores/interface";
@@ -73,8 +72,6 @@ export function TableCreatorModal() {
 				table: tableName,
 			});
 		}
-
-		tagEvent("table_created");
 	});
 
 	useLayoutEffect(() => {

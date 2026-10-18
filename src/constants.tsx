@@ -3,7 +3,6 @@ import {
 	iconAPI,
 	iconAuth,
 	iconBraces,
-	iconChart,
 	iconChat,
 	iconCheck,
 	iconChevronUp,
@@ -19,25 +18,18 @@ import {
 	iconGraphql,
 	iconHelp,
 	iconLive,
-	iconOrganization,
 	iconPause,
 	iconQuery,
-	iconReferral,
 	iconRefresh,
 	iconRelation,
 	iconSearch,
 	iconTable,
-	iconTag,
 	iconTransfer,
-	iconTune,
 	iconVariable,
 	iconWarning,
 	iconXml,
 } from "@surrealdb/ui";
 import { satisfies } from "compare-versions";
-import flagIE from "flag-icons/flags/4x3/ie.svg";
-import flagIN from "flag-icons/flags/4x3/in.svg";
-import flagUS from "flag-icons/flags/4x3/us.svg";
 import {
 	CIcon,
 	DotNetIcon,
@@ -73,7 +65,6 @@ import type {
 	SchemaMode,
 	Selectable,
 	SidebarMode,
-	SupportRequestType,
 	SyntaxTheme,
 	TableVariant,
 	ViewPage,
@@ -155,21 +146,6 @@ export const RESULT_MODES: Listable<ResultMode>[] = [
 	},
 ];
 
-export const SUPPORT_REQUEST_TYPES: Listable<SupportRequestType>[] = [
-	{
-		label: "Conversation",
-		value: "conversation",
-		icon: iconChat,
-		description: "Raise a sales or billing question",
-	},
-	{
-		label: "Ticket",
-		value: "ticket",
-		icon: iconTag,
-		description: "Request expedited support",
-	},
-];
-
 export const NONE_RESULT_MODES: Listable<NoneResultMode>[] = [
 	{
 		label: "Show",
@@ -236,24 +212,6 @@ export const GLOBAL_PAGES: Record<GlobalPage, GlobalPageInfo> = {
 		name: "Overview",
 		icon: iconExplorer,
 	},
-	"/signin": {
-		id: "/signin",
-		name: "Authenticate",
-		icon: iconAuth,
-	},
-	"/organisations": {
-		id: "/organisations",
-		name: "Organisations",
-		icon: iconOrganization,
-		aliases: ["/o/*"],
-		disabled: ({ flags }) => !flags.cloud_enabled,
-	},
-	"/referrals": {
-		id: "/referrals",
-		name: "Referrals",
-		icon: iconReferral,
-		disabled: ({ flags }) => !flags.cloud_enabled,
-	},
 	"/mini/new": {
 		id: "/mini/new",
 		name: "Embed Connectome",
@@ -262,18 +220,6 @@ export const GLOBAL_PAGES: Record<GlobalPage, GlobalPageInfo> = {
 };
 
 export const VIEW_PAGES: Record<ViewPage, ViewPageInfo> = {
-	dashboard: {
-		id: "dashboard",
-		name: "Dashboard",
-		icon: iconTune,
-		disabled: ({ isCloud }) => !isCloud,
-	},
-	monitor: {
-		id: "monitor",
-		name: "Monitoring",
-		icon: iconChart,
-		disabled: ({ isCloud }) => !isCloud,
-	},
 	query: {
 		id: "query",
 		name: "Query studio",
@@ -433,14 +379,6 @@ export const SCHEMA_MODES: Selectable<SchemaMode>[] = [
 	{ label: "Schemaless", value: "schemaless" },
 	{ label: "Schemafull", value: "schemafull" },
 ];
-
-export const REGION_FLAGS: Record<string, string> = {
-	"aws-euw1": flagIE,
-	"aws-use1": flagUS,
-	"aws-use2": flagUS,
-	"aws-usw2": flagUS,
-	"aws-aps1": flagIN,
-};
 
 export const TABLE_VARIANT_ICONS: Record<TableVariant, string> = {
 	normal: iconTable,

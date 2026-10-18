@@ -35,8 +35,7 @@ import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { useLastSavepoint } from "~/hooks/overview";
 import { useConnectionNavigator } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
-import { tagEvent } from "~/shared/util/analytics";
-import { getConnectionVariant, isConnectionValid } from "~/shared/util/connection";
+import { isConnectionValid } from "~/shared/util/connection";
 import { createBaseConnection } from "~/shared/util/defaults";
 import { dispatchIntent } from "~/shared/util/intents";
 import { USER_ICONS } from "~/shared/util/user-icons";
@@ -106,12 +105,6 @@ export function CreateConnectionPage() {
 		} else {
 			navigateConnection(connection.id);
 		}
-
-		tagEvent("connection_created", {
-			protocol: connection.authentication.protocol.toString(),
-			variant: getConnectionVariant(connection),
-			is_local: connection.authentication.hostname.includes("localhost"),
-		});
 	});
 
 	const setTarget = (target: string) => {

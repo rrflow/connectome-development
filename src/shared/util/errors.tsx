@@ -6,11 +6,6 @@ import { adapter } from "~/adapter";
 import { Spacer } from "~/components/Spacer";
 
 /**
- * Thrown during a failure in a cloud operation.
- */
-export class CloudError extends Error {}
-
-/**
  * Opens a modal displaying an error message with optional details.
  *
  * @param title - The title of the error modal.

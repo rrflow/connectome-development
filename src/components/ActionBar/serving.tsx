@@ -4,7 +4,6 @@ import { adapter } from "~/adapter";
 import { useConnectionNavigator, useIntent } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
 import { describeRrdError } from "~/rrflow/runtime";
-import { tagEvent } from "~/shared/util/analytics";
 import { createBaseConnection } from "~/shared/util/defaults";
 import { showErrorNotification, showInfo } from "~/shared/util/helpers";
 import { dispatchIntent } from "~/shared/util/intents";
@@ -123,7 +122,6 @@ export function DatabaseServing() {
 			const estate = await adapter.serveEstate();
 
 			confirmServing(estate);
-			tagEvent("database_serve");
 
 			showInfo({
 				title: estate.installed ? "Estate installed and serving" : "Serving started",

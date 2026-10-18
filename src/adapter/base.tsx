@@ -24,7 +24,6 @@ export interface ConnectomeAdapter {
 	/**
 	 * Whether telemetry is enabled
 	 */
-	isTelemetryEnabled: boolean;
 
 	/**
 	 * Whether the sample sandbox is enabled
@@ -133,11 +132,4 @@ export interface ConnectomeAdapter {
 	 * Log a trace message to the implemented logging system
 	 */
 	trace(label: string, message: string): void;
-
-	/**
-	 * Track an analytics event by it's url
-	 *
-	 * @param url The URL of the event
-	 */
-	trackEvent(url: string): Promise<void>;
 }

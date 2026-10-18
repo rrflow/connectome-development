@@ -9,19 +9,18 @@ import {
 	Text,
 	TextInput,
 } from "@mantine/core";
-import { Icon, iconCircle, iconCloud, iconServer } from "@surrealdb/ui";
+import { Icon, iconServer } from "@surrealdb/ui";
 import clsx from "clsx";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Entry, type EntryProps } from "~/components/Entry";
 import { useBoolean } from "~/hooks/boolean";
-import { useConnectionLabels, useConnectionList, useConnectionOverview } from "~/hooks/connection";
+import { useConnectionLabels, useConnectionOverview } from "~/hooks/connection";
 import { useKeyNavigation } from "~/hooks/keys";
 import { useConnectionAndView, useConnectionNavigator, useIntent } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
-import { resolveInstanceConnection } from "~/shared/util/connection";
 import { Y_SLIDE_TRANSITION } from "~/shared/util/helpers";
 import { USER_ICONS } from "~/shared/util/user-icons";
-import type { CloudInstance, Connection } from "~/types";
+import type { Connection } from "~/types";
 import classes from "../style.module.scss";
 
 export function ConnectionsModal() {
@@ -36,7 +35,7 @@ export function ConnectionsModal() {
 	const showLabels = labels.length > 0;
 	const showAll = label === "";
 
-	const { sandbox, isEmpty, userConnections, organizations } = useConnectionOverview({
+	const { sandbox, isEmpty, userConnections } = useConnectionOverview({
 		search,
 		labels: showAll ? undefined : [label],
 		labelMode: "any",
@@ -45,10 +44,6 @@ export function ConnectionsModal() {
 	const activateConnection = useStable((con: Connection) => {
 		navigateConnection(con.id);
 		openedHandle.close();
-	});
-
-	const activateInstance = useStable((instance: CloudInstance) => {
-		activateConnection(resolveInstanceConnection(instance));
 	});
 
 	const [handleKeyDown, selected] = useKeyNavigation([], () => {}, connection || undefined);
@@ -203,38 +198,6 @@ export function ConnectionsModal() {
 							))}
 						</Stack>
 					)}
-
-					{organizations.map((org) => (
-						<Stack
-							key={org.info.id}
-							gap="xs"
-						>
-							<Group gap={2}>
-								<Text
-									fz="lg"
-									fw={500}
-									c="bright"
-								>
-									{org.info.name}
-								</Text>
-								<Icon
-									path={iconCircle}
-									c="obsidian"
-								/>
-								<Text>RRFlow Cloud</Text>
-							</Group>
-							{org.instances.map((instance) => (
-								<InstanceEntry
-									key={instance.id}
-									instance={instance}
-									active={connection ?? ""}
-									selected={selected}
-									onClose={openedHandle.close}
-									onConnect={activateInstance}
-								/>
-							))}
-						</Stack>
-					))}
 				</Stack>
 			</ScrollArea.Autosize>
 		</Modal>
@@ -277,49 +240,6 @@ function ConnectionEntry({
 			{...other}
 		>
 			<Text truncate>{connection.name}</Text>
-		</Entry>
-	);
-}
-
-interface InstanceEntryProps extends EntryProps {
-	instance: CloudInstance;
-	active: string;
-	selected: string;
-	onConnect: (instance: CloudInstance) => void;
-	onClose: () => void;
-}
-
-function InstanceEntry({
-	instance,
-	active,
-	selected,
-	onConnect,
-	onClose,
-	...other
-}: InstanceEntryProps) {
-	const connections = useConnectionList();
-
-	const connection = useMemo(() => {
-		return connections.find((c) => c.authentication.cloudInstance === instance.id);
-	}, [connections, instance.id]);
-
-	const isActive = connection?.id === active;
-
-	const activate = useStable(() => {
-		onConnect(instance);
-	});
-
-	return (
-		<Entry
-			key={instance.id}
-			isActive={isActive}
-			data-navigation-item-id={instance.id}
-			className={clsx(classes.connection, selected === null && classes.listingActive)}
-			onClick={activate}
-			leftSection={<Icon path={connection ? USER_ICONS[connection.icon] : iconCloud} />}
-			{...other}
-		>
-			<Text truncate>{instance.name}</Text>
 		</Entry>
 	);
 }

@@ -14,7 +14,6 @@ use tauri::{AppHandle, Manager, RunEvent};
 use tauri_plugin_log::{Target, TargetKind};
 use time::{format_description, OffsetDateTime};
 
-mod analytics;
 mod appbar;
 mod config;
 mod diagnostics;
@@ -101,7 +100,6 @@ fn main() {
         .manage(EstateState::default())
         .manage(RrdClientState::default())
         .invoke_handler(tauri::generate_handler![
-            analytics::track_event,
             config::load_config,
             config::save_config,
             config::backup_config,

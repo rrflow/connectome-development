@@ -3,40 +3,21 @@ import {
 	Button,
 	Group,
 	HoverCard,
-	Image,
-	Menu,
 	Modal,
 	Select,
 	Stack,
 	Text,
 	TextInput,
 } from "@mantine/core";
-import {
-	Icon,
-	iconCheck,
-	iconChevronRight,
-	iconCloud,
-	iconReset,
-	iconStar,
-	iconTable,
-} from "@surrealdb/ui";
-import { useEffect, useState } from "react";
-import { openCloudAuthentication } from "~/cloud/api/auth";
-import { INSTANCE_PLAN_SUGGESTIONS, isOrganisationBillable } from "~/cloud/helpers";
-import { useInstanceTypeRegistry } from "~/cloud/hooks/types";
-import { useInstanceDeployMutation } from "~/cloud/mutations/deploy";
-import { useCloudOrganizationInstancesQuery } from "~/cloud/queries/instances";
-import { useCloudOrganizationsQuery } from "~/cloud/queries/organizations";
+import { Icon, iconChevronRight, iconReset, iconStar, iconTable } from "@surrealdb/ui";
+import { useState } from "react";
 import { ActionBar } from "~/components/ActionBar";
 import { ActionButton } from "~/components/ActionButton";
 import { Form } from "~/components/Form";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { SidebarToggle } from "~/components/SidebarToggle";
 import { Spacer } from "~/components/Spacer";
-import { StarSparkles } from "~/components/StarSparkles";
-import { REGION_FLAGS, SANDBOX } from "~/constants";
 import { useBoolean } from "~/hooks/boolean";
-import { useAvailableInstanceVersions, useIsAuthenticated, useIsCloudEnabled } from "~/hooks/cloud";
 import {
 	useConnection,
 	useIsConnected,
@@ -44,83 +25,34 @@ import {
 	useRequireDatabase,
 } from "~/hooks/connection";
 import { useDatasets } from "~/hooks/dataset";
-import { useConnectionNavigator } from "~/hooks/routing";
 import { useDatabaseSchema } from "~/hooks/schema";
 import { useStable } from "~/hooks/stable";
-import { openBillingRequiredModal } from "~/modals/billing-required";
 import { useConfirmation } from "~/providers/Confirmation";
-import { getConnectionById } from "~/shared/util/connection";
 import { useFeatureFlags } from "~/shared/util/feature-flags";
-import { showErrorNotification } from "~/shared/util/helpers";
 import { dispatchIntent } from "~/shared/util/intents";
-import { generateRandomName } from "~/shared/util/random";
 import { useConfigStore } from "~/shell/stores/config";
 import { useInterfaceStore } from "~/shell/stores/interface";
-import { useCloudStore } from "~/stores/cloud";
 import { useDatabaseStore } from "~/stores/database";
-import { useDeployStore } from "~/stores/deploy";
-import { CloudDeployConfig } from "~/types";
 import { ConnectionStatus } from "./components/ConnectionStatus";
 import { DatabaseList } from "./components/DatabaseList";
 import { NamespaceList } from "./components/NamespaceList";
-import { requestDatabaseExport, resetConnection } from "./connection/connection";
+import { resetConnection } from "./connection/connection";
 
 export function ConnectomeToolbar() {
 	const { readChangelog } = useInterfaceStore.getState();
 	const { updateConnection } = useConfigStore.getState();
 	const [flags] = useFeatureFlags();
 
-	const navigateConnection = useConnectionNavigator();
-	const showCloud = useIsCloudEnabled();
-	const isAuthenticated = useIsAuthenticated();
 	const showChangelog = useInterfaceStore((s) => s.showChangelogAlert);
 	const hasReadChangelog = useInterfaceStore((s) => s.hasReadChangelog);
 	const isSyncingSchema = useDatabaseStore((s) => s.isSyncingSchema);
-	const authState = useCloudStore((s) => s.authState);
 	const isConnected = useIsConnected();
 
-	const [id, namespace, database, authMode] = useConnection((c) => [
+	const [id, namespace, database] = useConnection((c) => [
 		c?.id,
 		c?.lastNamespace,
 		c?.lastDatabase,
-		c?.authentication.mode,
 	]);
-
-	const [opened, openHandle] = useBoolean(false);
-
-	const { data: organizations = [] } = useCloudOrganizationsQuery();
-	const {
-		organization,
-		region,
-		setOrganization,
-		setRegion,
-		isDeploying,
-		setDeployConnectionId,
-		setIsDeploying,
-		setData,
-	} = useDeployStore();
-
-	const { data: instances = [] } = useCloudOrganizationInstancesQuery(organization?.id ?? "");
-	const allRegions = useCloudStore((s) => s.regions);
-
-	const versions = useAvailableInstanceVersions();
-	const deployMutation = useInstanceDeployMutation(organization ?? undefined);
-	const instanceTypes = useInstanceTypeRegistry(organization ?? undefined);
-	const freeCount = instances.filter((instance) => instance.type.price_hour === 0).length;
-	const isBillable = isOrganisationBillable(organization ?? undefined);
-	const allowFree = freeCount < (organization?.max_free_instances ?? 0);
-
-	// Find the cheapest possible plan available to the user
-	const type = allowFree
-		? instanceTypes.get("free")
-		: instanceTypes.get(INSTANCE_PLAN_SUGGESTIONS.start[0]);
-
-	const regionSet = new Set(organization?.plan?.regions ?? []);
-	const supportedRegions = allRegions.filter((region) => regionSet.has(region.slug));
-	const regionList = supportedRegions.map((region) => ({
-		value: region.slug,
-		label: region.description,
-	}));
 
 	const schema = useDatabaseSchema();
 	const noTables = schema.tables.length === 0;
@@ -128,17 +60,6 @@ export function ConnectomeToolbar() {
 	const noParams = schema.params.length === 0;
 	const noUsers = schema.users.length === 0;
 	const isSchemaEmpty = noTables && noFunctions && noParams && noUsers;
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: Not necessary
-	useEffect(() => {
-		if (!organization && organizations.length > 0) {
-			setOrganization(organizations[0]);
-		}
-
-		if (!region && supportedRegions.length > 0) {
-			setRegion(supportedRegions[0] ?? null);
-		}
-	}, [organization, region, organizations, supportedRegions]);
 
 	const [datasetModalOpen, datasetModalOpenHandle] = useBoolean();
 	const [editingTab, setEditingTab] = useState<string | null>(null);
@@ -169,149 +90,6 @@ export function ConnectomeToolbar() {
 		onConfirm: resetConnection,
 	});
 
-	const handleDeploy = useStable(async () => {
-		openHandle.close();
-		setIsDeploying(true);
-
-		try {
-			const blob = await requestDatabaseExport({
-				accesses: true,
-				analyzers: true,
-				functions: true,
-				params: true,
-				users: true,
-				records: true,
-				sequences: true,
-				tables: true,
-				v3: false,
-			});
-
-			const result = await blob.text();
-
-			if (!result) {
-				showErrorNotification({
-					title: "Failed to deploy to cloud",
-					content: "The database export was empty",
-				});
-				setIsDeploying(false);
-				return;
-			}
-
-			if (!result) {
-				showErrorNotification({
-					title: "Failed to deploy to cloud",
-					content: "The data file was not stored",
-				});
-				setIsDeploying(false);
-				return;
-			} else {
-				setData(result);
-			}
-
-			const deployInstance = async () => {
-				if (!isBillable && !allowFree) {
-					showErrorNotification({
-						title: "Deployment cancelled",
-						content: "Billing information is required to deploy a paid instance.",
-					});
-
-					setDeployConnectionId(null);
-					setIsDeploying(false);
-					setData("");
-					return;
-				} else if (!organization || !region || !type) {
-					showErrorNotification({
-						title: "Deployment cancelled",
-						content:
-							"Organization, region, and type are required to deploy an instance.",
-					});
-
-					setIsDeploying(false);
-					setDeployConnectionId(null);
-					setData("");
-					return;
-				}
-
-				try {
-					const config: CloudDeployConfig = {
-						name: generateRandomName(),
-						version: versions[0],
-						region: region?.slug ?? "",
-						computeType: type.slug ?? "",
-						computeUnits: 1,
-						plan: allowFree ? "free" : "start",
-						private_traffic: false,
-						public_traffic: true,
-						storageAmount: type.default_storage_size,
-						storageType: "",
-						storageUnits: 3,
-						startingData: { type: "none" },
-					};
-
-					const sandbox = getConnectionById(SANDBOX);
-
-					if (!sandbox) {
-						showErrorNotification({
-							title: "Deployment failed",
-							content: "Sandbox connection not found",
-						});
-
-						setIsDeploying(false);
-						return;
-					}
-
-					const [_, conn] = await deployMutation.mutateAsync(config);
-
-					updateConnection({
-						id: conn.id,
-						activeQuery: sandbox.activeQuery,
-						queries: sandbox.queries,
-					});
-
-					setDeployConnectionId(conn.id);
-					setIsDeploying(false);
-					setOrganization(null);
-					setRegion(null);
-					navigateConnection(conn.id, "dashboard");
-				} catch (error) {
-					showErrorNotification({
-						title: "Deployment failed",
-						content: error,
-					});
-				}
-			};
-
-			if (!isBillable && !allowFree) {
-				if (organization) {
-					openBillingRequiredModal({
-						organization,
-						onClose: () => {
-							setIsDeploying(false);
-							setDeployConnectionId(null);
-							setData("");
-
-							showErrorNotification({
-								title: "Deployment failed",
-								content: "Payment information is required",
-							});
-						},
-						onContinue: () => {
-							deployInstance();
-						},
-					});
-				}
-			} else {
-				deployInstance();
-			}
-		} catch (error) {
-			setIsDeploying(false);
-			showErrorNotification({
-				title: "Deployment failed",
-				content: error,
-			});
-		}
-	});
-
 	const [applyDataset, isDatasetLoading] = useDatasets();
 
 	const openChangelog = useStable(() => {
@@ -331,16 +109,6 @@ export function ConnectomeToolbar() {
 			<SidebarToggle />
 
 			<ConnectionStatus />
-
-			{showCloud && authState === "unauthenticated" && authMode === "cloud" && (
-				<Button
-					variant="gradient"
-					size="xs"
-					onClick={openCloudAuthentication}
-				>
-					Sign in to RRFlow Cloud
-				</Button>
-			)}
 
 			{showNS && (
 				<>
@@ -389,134 +157,6 @@ export function ConnectomeToolbar() {
 				>
 					Import sample data
 				</Button>
-			)}
-
-			{showCloud && isConnected && isSandbox && flags.sandbox_deploy && (
-				<StarSparkles>
-					{isAuthenticated && (
-						<Menu
-							disabled={isDeploying}
-							opened={opened}
-							onChange={openHandle.set}
-							transitionProps={{
-								transition: "scale-y",
-							}}
-							closeOnItemClick={false}
-							clickOutsideEvents={[]}
-							trigger="click"
-						>
-							<Menu.Target>
-								<Button
-									variant="gradient"
-									size="xs"
-									loading={isDeploying}
-								>
-									Deploy to Cloud
-								</Button>
-							</Menu.Target>
-							<Menu.Dropdown p="md">
-								<Stack gap="md">
-									{organizations.length > 1 && (
-										<Select
-											label="Select organization"
-											placeholder="Loading organizations..."
-											description="Select the organization to deploy to"
-											data={organizations.map((org) => ({
-												label: org.name,
-												value: org.id,
-											}))}
-											value={organization?.id}
-											onChange={(value) =>
-												setOrganization(
-													value
-														? (organizations.find(
-																(org) => org.id === value,
-															) ?? null)
-														: null,
-												)
-											}
-										/>
-									)}
-
-									<Select
-										label="Region"
-										placeholder="Loading regions..."
-										description="Select the region where your instance will be deployed"
-										data={regionList}
-										value={region?.slug}
-										onChange={(value) => {
-											const foundRegion = supportedRegions.find(
-												(r) => r.slug === value,
-											);
-
-											if (foundRegion) {
-												setRegion(foundRegion);
-											}
-										}}
-										leftSection={
-											region && (
-												<Image
-													src={REGION_FLAGS[region.slug]}
-													w={18}
-												/>
-											)
-										}
-										disabled={!organization}
-										renderOption={(org) => (
-											<Group>
-												<Image
-													src={REGION_FLAGS[org.option.value]}
-													w={24}
-												/>
-												{org.option.label}
-												{org.checked && (
-													<Icon
-														path={iconCheck}
-														c="bright"
-													/>
-												)}
-											</Group>
-										)}
-									/>
-
-									<Group gap="md">
-										<Button
-											flex={1}
-											color="obsidian"
-											variant="light"
-											size="xs"
-											onClick={() => {
-												openHandle.close();
-											}}
-										>
-											Close
-										</Button>
-										<Button
-											flex={1}
-											variant="gradient"
-											size="xs"
-											disabled={!organization || !region}
-											loading={isDeploying}
-											rightSection={<Icon path={iconCloud} />}
-											onClick={handleDeploy}
-										>
-											Deploy
-										</Button>
-									</Group>
-								</Stack>
-							</Menu.Dropdown>
-						</Menu>
-					)}
-					{!isAuthenticated && (
-						<Button
-							variant="gradient"
-							size="xs"
-							onClick={openCloudAuthentication}
-						>
-							Deploy to Cloud
-						</Button>
-					)}
-				</StarSparkles>
 			)}
 
 			{isConnected && !isSupported && (
