@@ -7,6 +7,7 @@ import type { DesktopAdapter } from "~/adapter/desktop";
 import { LearnMore } from "~/components/LearnMore";
 import { useVersionCopy } from "~/hooks/debug";
 import { useStable } from "~/hooks/stable";
+import { RRD_PROTOCOL, RRD_PROTOCOL_VERSION } from "~/rrflow/runtime";
 import { isDevelopment, isPreview } from "~/shared/util/environment";
 import classes from "../style.module.scss";
 
@@ -33,7 +34,11 @@ export function AboutTab() {
 			["Build date", format(import.meta.env.DATE, "MMMM do, yyyy")],
 			["Build time", format(import.meta.env.DATE, "HH:mm:ss OOO")],
 			["Build mode", import.meta.env.MODE],
-			["RRFlow protocol", `v${import.meta.env.RRFLOW_VERSION}`],
+			["RRD protocol", `${RRD_PROTOCOL} v${RRD_PROTOCOL_VERSION}`],
+			[
+				"RRFlow engine",
+				`${import.meta.env.RRFLOW_ENGINE_VERSION} (${import.meta.env.RRFLOW_ENGINE_REVISION.slice(0, 7)})`,
+			],
 		],
 		[versionText],
 	);

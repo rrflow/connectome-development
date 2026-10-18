@@ -1,4 +1,4 @@
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
@@ -6,7 +6,29 @@ import { defineConfig, type PluginOption } from "vite";
 import { compression } from "vite-plugin-compression2";
 import { ViteImageOptimizer as images } from "vite-plugin-image-optimizer";
 import { Mode, plugin as markdown } from "vite-plugin-markdown";
-import { engineProtocol, version } from "./package.json";
+import { version } from "./package.json";
+
+/**
+ * The RRFlow engine Connectome is contracted to. `src-tauri/Cargo.lock` is
+ * the one owner of that pin: the native client builds on `rrd-contract` at
+ * exactly this revision, CI builds the engine from it, and the renderer shows
+ * it. The crate version is RRFlow's product version.
+ */
+function pinnedEngine(): { version: string; revision: string } {
+	const lock = readFileSync(
+		fileURLToPath(new URL("src-tauri/Cargo.lock", import.meta.url)),
+		"utf8",
+	);
+	const block = lock
+		.split("[[package]]")
+		.find((candidate) => /^name = "rrd-contract"$/m.test(candidate));
+	const engineVersion = block?.match(/^version = "([^"]+)"$/m)?.[1];
+	const revision = block?.match(/rrflow-development\?rev=([0-9a-f]{40})/)?.[1];
+	if (!engineVersion || !revision) {
+		throw new Error("src-tauri/Cargo.lock does not pin rrd-contract to one RRFlow revision");
+	}
+	return { version: engineVersion, revision };
+}
 
 const isTauri = !!process.env.TAURI_ENV_PLATFORM;
 const isCompress = process.env.VITE_CONNECTOME_COMPRESS !== "false";
@@ -25,6 +47,7 @@ const TOOLS = {
 export default defineConfig(({ mode }) => {
 	// Required because we cannot pass a custom mode to tauri build
 	mode = isPreview ? "preview" : mode;
+	const engine = pinnedEngine();
 
 	// Define base plugins
 	const plugins: PluginOption[] = [
@@ -126,7 +149,8 @@ export default defineConfig(({ mode }) => {
 		define: {
 			"import.meta.env.DATE": JSON.stringify(new Date()),
 			"import.meta.env.VERSION": JSON.stringify(version),
-			"import.meta.env.RRFLOW_VERSION": JSON.stringify(engineProtocol),
+			"import.meta.env.RRFLOW_ENGINE_VERSION": JSON.stringify(engine.version),
+			"import.meta.env.RRFLOW_ENGINE_REVISION": JSON.stringify(engine.revision),
 			"import.meta.env.MODE": JSON.stringify(mode),
 			"import.meta.env.GTM_ID": JSON.stringify(""),
 		},
