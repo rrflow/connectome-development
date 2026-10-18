@@ -670,6 +670,7 @@ dependencies = [
  "rrd-contract",
  "serde",
  "serde_json",
+ "sha2 0.10.9",
  "showfile",
  "tauri",
  "tauri-build",

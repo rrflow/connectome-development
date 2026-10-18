@@ -14,3 +14,6 @@ pnpm-debug.log*
 /src-tauri/gen/schemas
 /src-tauri/cache
 /target
+
+# The pinned RRFlow engine staged as the Tauri sidecar (scripts/engine/build-sidecar.mjs)
+/src-tauri/binaries

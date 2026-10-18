@@ -135,9 +135,19 @@ The production TypeScript/Vite build is green. The inherited whole-repository
 Biome assist baseline still reports import-order debt, so CI intentionally uses
 the build as its frontend gate until that mechanical cleanup is isolated.
 
+## The bundled engine
+
+A packaged Connectome ships the RRFlow engine it is contracted to. `src-tauri/Cargo.lock` pins one RRFlow revision; `pnpm engine:stage` builds `rrflow` from exactly that revision (or `node scripts/engine/build-sidecar.mjs --from <binary>` takes one already built from it) and stages it as the Tauri sidecar under `src-tauri/binaries/` with a manifest of its revision, target, and SHA-256. The native build embeds that digest, and the desktop runs the bundled engine only while the file still hashes to it — a stale or altered sidecar is refused, never silently replaced. With nothing bundled, "Start serving" uses the executable configured in Settings → Serving, else `rrflow` on `PATH`, and says which one it used.
+
+```bash
+pnpm engine:stage        # build and stage the pinned engine (or --from <binary>)
+pnpm engine:check        # verify the staged engine against its manifest and the pin
+pnpm tauri:bundle        # package Connectome with the bundled engine
+```
+
 ## Packaging
 
-The Tauri bundle configuration emits NSIS installers for Windows, app/DMG bundles for macOS, and AppImage/DEB/RPM packages for Linux. The inherited release workflow already covers macOS x86-64 and ARM64 plus Windows and Linux x86-64; Linux ARM packaging still needs a dedicated runner or cross-compilation pipeline.
+The Tauri bundle configuration emits NSIS installers for Windows, app/DMG bundles for macOS, and AppImage/DEB/RPM packages for Linux. `pnpm tauri:bundle` adds the staged engine as `bundle.externalBin` through `src-tauri/tauri.bundle.conf.json`; plain `pnpm tauri:build` packages without it. The inherited release workflow already covers macOS x86-64 and ARM64 plus Windows and Linux x86-64; Linux ARM packaging still needs a dedicated runner or cross-compilation pipeline.
 
 ## Origin and license
 

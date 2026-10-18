@@ -360,3 +360,50 @@ Branch `agent/rrflow-serve-spine-c` from `main` `4995ec4`.
   render smoke 2 passed — the second test's mocked `/v1/**` routes received
   the SDK's requests in order (live, ready, capabilities) and the page showed
   "RRD connected" with the mocked instance.
+- Landed as pull request #4, squash-merged to `main` as `7ad821b` (CI green).
+  The SDK transport fix went to RRFlow as pull request #15; once Connectome's
+  pin moves past it, `browserFetch` in `src/rrflow/runtime.ts` can go.
+
+### 2026-10-18 — Slice D: turnkey executable
+
+Branch `agent/rrflow-serve-spine-d` from `main` `7ad821b`.
+
+- `scripts/engine/build-sidecar.mjs` stages the pinned engine as the Tauri
+  sidecar: it reads the one revision `src-tauri/Cargo.lock` pins, builds
+  `rrflow` from exactly that revision in a per-revision cache checkout (or
+  takes a binary already built from it with `--from`, as CI does), places it
+  at `src-tauri/binaries/rrflow-<host triple>` where `bundle.externalBin`
+  looks, and writes `src-tauri/binaries/engine.json` (revision, target, file,
+  size, SHA-256). `--check` verifies the staged file against the manifest and
+  the lock. `src-tauri/binaries/` is ignored by Git; `pnpm engine:stage`,
+  `pnpm engine:check`, `pnpm tauri:bundle` (`tauri build --config
+  src-tauri/tauri.bundle.conf.json`, which adds the sidecar) are the scripts.
+- `src-tauri/build.rs` embeds the manifest's SHA-256 and revision
+  (`RRFLOW_SIDECAR_SHA256`, `RRFLOW_SIDECAR_REVISION`) when the manifest is
+  present and fails the build if its revision is not the pinned one. A build
+  without a staged engine embeds nothing.
+- `src-tauri/src/rrd/engine.rs` resolves the engine, in order: the configured
+  executable (absolute, readable); the sidecar beside the running executable,
+  run only when it hashes to the embedded digest — a mismatch, or a sidecar
+  with no embedded manifest, is refused with no fallback; last, `rrflow` on
+  `PATH`. The binding (path, source, SHA-256, revision) is reported as the
+  first serve stage ("engine") and carried on `ServedEstate.engine`, so the
+  operator always sees which engine ran and what it hashed to. Four unit tests
+  cover the order and the refusals.
+- The RRD process job stages the engine it already builds
+  (`--from ~/.rrflow-engine/rrflow`), verifies the manifest, and runs a third
+  process test, `the_bundled_engine_serves_as_the_verified_sidecar`, which
+  copies the staged sidecar beside the test executable and serves an estate
+  with nothing configured: the binding reports `sidecar`, the manifest's
+  digest and revision, and the "bundled with this build" stage line.
+- Verified here: `TAURI_CONFIG` with the bundle config makes tauri-build place
+  the staged sidecar as `target/debug/rrflow` beside the application binary —
+  the location the resolver reads. A full `tauri:bundle` (AppImage/DMG/NSIS
+  with the engine) was not run in this environment; the release workflow is
+  where it belongs and is the next packaging step.
+- Evidence: `cargo check/clippy -D warnings/fmt --check --locked
+  --all-targets`: clean; native unit tests 27 passed (4 new); RRD process
+  tests 3 passed through the product path (`the_lenses_read_a_live_estate`,
+  `a_second_connection_never_replays_the_first_session`,
+  `the_bundled_engine_serves_as_the_verified_sidecar`); `pnpm check`: clean;
+  `node scripts/engine/build-sidecar.mjs --check`: the staged engine matches.
