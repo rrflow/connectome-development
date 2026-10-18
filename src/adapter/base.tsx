@@ -1,4 +1,4 @@
-import type { ConnectomeConfig, Platform, UrlTarget } from "~/types";
+import type { ConnectomeConfig, Platform, ServedEstate, UrlTarget } from "~/types";
 
 export interface FileFilter {
 	name: string;
@@ -80,14 +80,21 @@ export interface ConnectomeAdapter {
 	saveConfig(config: ConnectomeConfig): Promise<void>;
 
 	/**
-	 * Start the database with the given parameters
+	 * Serve the configured local estate: install it when the project has no
+	 * estate yet, start the engine on a loopback port, and wait until it is
+	 * ready. Resolves with the served estate's coordinates.
 	 */
-	startDatabase(): Promise<void>;
+	serveEstate(): Promise<ServedEstate>;
 
 	/**
-	 * Stop the currently running database
+	 * The estate this process is already serving, if any
 	 */
-	stopDatabase(): Promise<void>;
+	servedEstate(): Promise<ServedEstate | null>;
+
+	/**
+	 * Stop the served estate. Resolves with whether one was running.
+	 */
+	stopEstate(): Promise<boolean>;
 
 	/**
 	 * Open the given URL in the default browser

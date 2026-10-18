@@ -1,25 +1,24 @@
 //! Connectome's native client against a real RRD process.
 //!
-//! Each test installs a fresh estate with the `rrflow` binary named by
-//! `RRFLOW_BIN`, serves it on a free loopback port, loads a small fixture
-//! through the SDK, and drives `NativeRrdClient` the way the lenses do. They
-//! are ignored by default; CI's RRD process job builds `rrflow` at the
-//! revision `Cargo.lock` pins and runs them with `--ignored`.
+//! Each test installs and serves a fresh estate through the product's own
+//! serve path (`rrd::estate::serve_estate`, the sequence behind the desktop's
+//! "Start serving") with the `rrflow` binary named by `RRFLOW_BIN`, loads a
+//! small fixture through the SDK, and drives `NativeRrdClient` the way the
+//! lenses do. They are ignored by default; CI's RRD process job builds
+//! `rrflow` at the revision `Cargo.lock` pins and runs them with `--ignored`.
 
 use super::*;
+use crate::rrd::estate::{
+    serve_estate, EstateServeRequest, EstateStage, InstallMode, ServeObserver, ServedEstate,
+};
 use rrd_contract::{
     BeginTransaction, CommitTransaction, DataSchemaRegistry, EnsureVectorCollection,
     PreviewTransaction, TransactionMutation,
 };
 use serde_json::{json, Value};
-use std::ffi::OsStr;
-use std::io::{BufRead, BufReader, Write};
 use std::path::PathBuf;
-use std::process::{Child, Command, Stdio};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
-/// A debug build installs and opens a fresh store well within this.
-const READY_TIMEOUT: Duration = Duration::from_secs(180);
 const FIXTURE_COLLECTION: &str = "notes";
 const FIXTURE_VECTOR: &str = "body";
 /// Two groups of four documents, densely linked inside each group.
@@ -37,12 +36,29 @@ const TRANSACTION_MAX_STORAGE_KEYS: u32 = 10_000;
 
 /// One installed and served estate, stopped and removed when dropped.
 struct Estate {
-    project: PathBuf,
-    plan: PathBuf,
-    log: PathBuf,
-    server: Child,
+    served: ServedEstate,
     address: SocketAddr,
     instance: String,
+}
+
+/// The serve sequence's boundaries and the engine's output, kept so a
+/// failing test can show what the product path reported.
+#[derive(Default)]
+struct RecordingObserver {
+    lines: Mutex<Vec<String>>,
+}
+
+impl ServeObserver for RecordingObserver {
+    fn stage(&self, stage: EstateStage) {
+        self.lines.lock().expect("observer").push(format!(
+            "[{} {}] {}",
+            stage.stage, stage.state, stage.detail
+        ));
+    }
+
+    fn output(&self, line: String) {
+        self.lines.lock().expect("observer").push(line);
+    }
 }
 
 fn rrflow() -> PathBuf {
@@ -51,140 +67,39 @@ fn rrflow() -> PathBuf {
     )
 }
 
-/// Runs one `rrflow` command to completion and returns its standard output.
-fn run(arguments: &[&OsStr]) -> Vec<u8> {
-    let output = Command::new(rrflow())
-        .args(arguments)
-        .output()
-        .expect("rrflow starts");
-    assert!(
-        output.status.success(),
-        "rrflow {:?} failed: {}",
-        arguments,
-        String::from_utf8_lossy(&output.stderr)
-    );
-    output.stdout
-}
-
-/// The one-line JSON announcement `serve --json` prints once it is bound. The
-/// rest of the server's output is copied to its log so the pipe never fills.
-fn announcement(server: &mut Child, mut log: std::fs::File, log_path: &Path) -> Value {
-    let output = server.stdout.take().expect("the server's piped output");
-    let (sender, receiver) = std::sync::mpsc::channel();
-    std::thread::spawn(move || {
-        let mut lines = BufReader::new(output).lines();
-        if let Some(Ok(line)) = lines.next() {
-            let _ = sender.send(line);
-        }
-        for line in lines.map_while(Result::ok) {
-            let _ = writeln!(log, "{line}");
-        }
-    });
-    let line = receiver.recv_timeout(READY_TIMEOUT).unwrap_or_else(|_| {
-        panic!(
-            "rrflow serve did not announce itself: {}",
-            std::fs::read_to_string(log_path).unwrap_or_default()
-        )
-    });
-    serde_json::from_str(&line).expect("the announcement is one JSON line")
-}
-
 impl Estate {
-    /// Installs a fresh estate (plan, then apply the exact plan digest) and
-    /// serves it on a kernel-chosen loopback port, returning once `rrflow
-    /// ready` authenticates against it.
+    /// Installs a fresh estate and serves it exactly as the desktop does.
     fn install_and_serve() -> Self {
-        let root = std::env::temp_dir().join(format!(
-            "connectome-rrd-process-{}",
+        let project = std::env::temp_dir().join(format!(
+            "connectome-rrd-process-{}.project",
             Uuid::new_v4().simple()
         ));
-        let project = root.with_extension("project");
-        let plan = root.with_extension("plan.json");
-        let log = root.with_extension("serve.log");
-        std::fs::create_dir_all(&project).expect("create the project directory");
-
-        let preview = run(&[
-            "install".as_ref(),
-            "plan".as_ref(),
-            "--project".as_ref(),
-            project.as_os_str(),
-            "--mode".as_ref(),
-            "fresh".as_ref(),
-        ]);
-        std::fs::write(&plan, &preview).expect("write the installation plan");
-        let digest = serde_json::from_slice::<Value>(&preview).expect("the plan is JSON")
-            ["installation"]["plan_sha256"]
-            .as_str()
-            .expect("the plan names its digest")
-            .to_owned();
-        run(&[
-            "install".as_ref(),
-            "apply".as_ref(),
-            "--project".as_ref(),
-            project.as_os_str(),
-            "--mode".as_ref(),
-            "fresh".as_ref(),
-            "--plan".as_ref(),
-            plan.as_os_str(),
-            "--expect".as_ref(),
-            digest.as_ref(),
-        ]);
-
-        // `serve --json` announces itself on one stdout line once it is bound,
-        // so the kernel picks the free port and nothing has to guess one.
-        let log_file = std::fs::File::create(&log).expect("create the server log");
-        let mut server = Command::new(rrflow())
-            .args(["--json", "serve", "--bind", "127.0.0.1:0", "--project"])
-            .arg(&project)
-            .stdout(Stdio::piped())
-            .stderr(log_file.try_clone().expect("share the server log"))
-            .spawn()
-            .expect("rrflow serve starts");
-        let announced = announcement(&mut server, log_file, &log);
-        let address: SocketAddr = announced["url"]
-            .as_str()
-            .and_then(|url| url.strip_prefix("http://"))
+        let observer = Arc::new(RecordingObserver::default());
+        let served = serve_estate(
+            EstateServeRequest {
+                project: project.to_string_lossy().into_owned(),
+                mode: InstallMode::Fresh,
+                executable: rrflow().to_string_lossy().into_owned(),
+            },
+            observer.clone(),
+        )
+        .unwrap_or_else(|error| {
+            panic!(
+                "the product serve path failed: {error:?}\n{}",
+                observer.lines.lock().expect("observer").join("\n")
+            )
+        });
+        assert!(served.view.installed, "a fresh project is installed first");
+        let address: SocketAddr = served
+            .view
+            .endpoint
+            .strip_prefix("http://")
             .and_then(|address| address.parse().ok())
-            .expect("the announcement names a loopback HTTP address");
-        let instance = announced["instance_id"]
-            .as_str()
-            .expect("the announcement names its instance")
-            .to_owned();
-
-        // Authenticated readiness, as an operator's tooling checks it.
-        let deadline = Instant::now() + READY_TIMEOUT;
-        loop {
-            let ready = Command::new(rrflow())
-                .args(["ready", "--address"])
-                .arg(address.to_string())
-                .arg("--project")
-                .arg(&project)
-                .stdout(Stdio::null())
-                .stderr(Stdio::null())
-                .status()
-                .expect("rrflow ready runs");
-            if ready.success() {
-                break;
-            }
-            if let Some(status) = server.try_wait().expect("poll the server") {
-                panic!(
-                    "rrflow serve exited with {status}: {}",
-                    std::fs::read_to_string(&log).unwrap_or_default()
-                );
-            }
-            assert!(
-                Instant::now() < deadline,
-                "rrflow was not ready after {READY_TIMEOUT:?}: {}",
-                std::fs::read_to_string(&log).unwrap_or_default()
-            );
-            std::thread::sleep(Duration::from_millis(500));
-        }
+            .expect("the served estate names a loopback HTTP address");
+        let instance = served.view.instance.clone();
 
         Self {
-            project,
-            plan,
-            log,
-            server,
+            served,
             address,
             instance,
         }
@@ -192,24 +107,18 @@ impl Estate {
 
     fn connect_request(&self) -> RrdConnectRequest {
         RrdConnectRequest {
-            endpoint: format!("http://{}", self.address),
+            endpoint: self.served.view.endpoint.clone(),
             instance: self.instance.clone(),
-            credential_path: self
-                .project
-                .join(".rrflow/credentials/local-operator.json")
-                .to_string_lossy()
-                .into_owned(),
+            credential_path: self.served.view.credential_path.clone(),
         }
     }
 }
 
 impl Drop for Estate {
     fn drop(&mut self) {
-        let _ = self.server.kill();
-        let _ = self.server.wait();
-        let _ = std::fs::remove_dir_all(&self.project);
-        let _ = std::fs::remove_file(&self.plan);
-        let _ = std::fs::remove_file(&self.log);
+        let _ = self.served.server.kill();
+        let _ = self.served.server.wait();
+        let _ = std::fs::remove_dir_all(&self.served.view.project);
     }
 }
 

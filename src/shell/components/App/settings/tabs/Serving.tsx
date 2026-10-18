@@ -1,41 +1,21 @@
 import { Box, NumberInput, ScrollArea, Select, Text, TextInput } from "@mantine/core";
 import { useSetting } from "~/hooks/config";
 import { useStable } from "~/hooks/stable";
-import type { LogLevel, Selectable } from "~/types";
+import type { InstallMode, Selectable } from "~/types";
 import { SettingsSection } from "../utilities";
 
 const CAT = "serving";
 
-const DRIVERS = [
-	{ label: "Memory", value: "memory" },
-	{ label: "RocksDB", value: "file" },
-	{ label: "RRFlowKV", value: "rrflowkv" },
-	{ label: "TiKV", value: "tikv" },
-];
-
-const LOG_LEVELS: Selectable<LogLevel>[] = [
-	{ label: "Error", value: "error" },
-	{ label: "Warn", value: "warn" },
-	{ label: "Info", value: "info" },
-	{ label: "Debug", value: "debug" },
-	{ label: "Trace", value: "trace" },
+const MODES: Selectable<InstallMode>[] = [
+	{ label: "Fresh — the directory is empty or new", value: "fresh" },
+	{ label: "Existing — the directory already holds a project", value: "existing" },
 ];
 
 export function ServingTab() {
-	const [driver, setDriver] = useSetting(CAT, "driver");
-	const [storage, setStorage] = useSetting(CAT, "storage");
-	const [username, setUsername] = useSetting(CAT, "username");
-	const [password, setPassword] = useSetting(CAT, "password");
+	const [project, setProject] = useSetting(CAT, "project");
+	const [mode, setMode] = useSetting(CAT, "mode");
 	const [executable, setExecutable] = useSetting(CAT, "executable");
-	const [logLevel, setLogLevel] = useSetting(CAT, "logLevel");
 	const [historySize, setHistorySize] = useSetting(CAT, "historySize");
-	const [port, setPort] = useSetting(CAT, "port");
-
-	const isFileDriver = driver === "file" || driver === "rrflowkv";
-
-	const updatePort = useStable((value: string | number) => {
-		setPort(value as number);
-	});
 
 	const updateHistorySize = useStable((value: string | number) => {
 		setHistorySize(value as number);
@@ -52,100 +32,64 @@ export function ServingTab() {
 			<Box m="xs">
 				<Text
 					mb="xl"
-					maw={500}
+					maw={520}
 				>
-					You can use Connectome Desktop to serve RRFlow on your local machine.
-					<br />
-					This page allows you to customize the settings for the database.
+					Connectome Desktop serves one local RRFlow estate. Starting it installs the
+					estate the first time (a sealed plan you can read, then its exact apply), starts
+					the engine on a loopback port the operating system chooses, and waits until the
+					estate answers an authenticated readiness check. The operator credential stays a
+					file the native process reads; nothing here asks for a username, a password, or
+					a port.
 				</Text>
 
 				<SettingsSection
-					label="Options"
-					maw={400}
+					label="Estate"
+					maw={520}
 				>
-					<NumberInput
-						label="Serving port"
-						value={port}
-						onChange={updatePort}
-						min={1}
-						max={65_535}
+					<TextInput
+						w="unset"
+						label="Project directory"
+						description="The directory that holds, or will hold, the estate's .rrflow tree. Leave empty to use the estate Connectome keeps in its own data directory."
+						value={project}
+						spellCheck={false}
+						onChange={(e) => setProject(e.target.value)}
+						placeholder="Leave empty for Connectome's default estate"
 					/>
 
 					<Select
 						w="unset"
-						label="Log level"
-						data={LOG_LEVELS}
-						value={logLevel}
-						onChange={setLogLevel as any}
+						label="Installation mode"
+						description="Only used the first time, when the directory has no estate yet. Both modes preview the exact files RRFlow will create before anything is written."
+						data={MODES}
+						value={mode}
+						onChange={setMode as any}
 					/>
+				</SettingsSection>
 
-					<NumberInput
-						w="unset"
-						label="Console history size"
-						value={historySize}
-						onChange={updateHistorySize}
-						min={1}
-						max={10_000}
-					/>
-
+				<SettingsSection
+					mt="xl"
+					maw={520}
+					label="Engine"
+				>
 					<TextInput
 						w="unset"
 						label="RRFlow executable path"
+						description="The rrflow binary Connectome is contracted to. Leave empty to use the one on PATH."
 						value={executable}
 						spellCheck={false}
 						onChange={(e) => setExecutable(e.target.value)}
 						placeholder="Leave empty to infer from $PATH"
 					/>
-				</SettingsSection>
 
-				<SettingsSection
-					mt="xl"
-					maw={400}
-					label="Authentication"
-				>
-					<TextInput
+					<NumberInput
 						w="unset"
-						label="Initial root user"
-						placeholder="root"
-						value={username}
-						spellCheck={false}
-						onChange={(e) => setUsername(e.target.value)}
+						label="Console history size"
+						description="How many lines of the engine's output the serving console keeps."
+						value={historySize}
+						onChange={updateHistorySize}
+						min={1}
+						max={10_000}
 					/>
-
-					<TextInput
-						w="unset"
-						label="Initial root password"
-						placeholder="root"
-						value={password}
-						spellCheck={false}
-						onChange={(e) => setPassword(e.target.value)}
-					/>
-				</SettingsSection>
-
-				<SettingsSection
-					mt="xl"
-					maw={400}
-					label="Storage"
-				>
-					<Select
-						w="unset"
-						label="Storage mode"
-						data={DRIVERS}
-						value={driver}
-						spellCheck={false}
-						onChange={setDriver as any}
-					/>
-
-					{(driver === "file" || driver === "tikv" || driver === "rrflowkv") && (
-						<TextInput
-							w="unset"
-							label={isFileDriver ? "Storage path" : "Storage cluster address"}
-							placeholder={isFileDriver ? "/path/to/storage" : "address:port"}
-							value={storage}
-							spellCheck={false}
-							onChange={(e) => setStorage(e.target.value)}
-						/>
-					)}
 				</SettingsSection>
 			</Box>
 		</ScrollArea>

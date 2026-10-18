@@ -17,9 +17,8 @@ export type DiagramLineStyle = "default" | "metro" | "straight" | "smooth";
 export type DiagramLinks = "default" | "hidden" | "visible";
 export type DiagramMode = "default" | "fields" | "summary" | "simple";
 export type DiagramHoverFocus = "default" | "none" | "neighbours" | "chain" | "recursive";
-export type DriverType = "file" | "rrflowkv" | "memory" | "tikv";
 export type InvoiceStatus = "succeeded" | "pending" | "failed";
-export type LogLevel = "error" | "warn" | "info" | "debug" | "trace";
+export type InstallMode = "fresh" | "existing";
 export type MetricsDuration = "hour" | "half" | "day" | "week" | "month";
 export type MiniAppearance = "normal" | "compact" | "plain";
 export type NoneResultMode = "default" | "show" | "hide" | "collapse";
@@ -236,15 +235,38 @@ export interface ConnectomeTemplateSettings {
 	list: Template[];
 }
 
+/**
+ * How the desktop serves a local RRFlow estate. RRFlow has one storage
+ * engine, picks its own loopback port, and keeps the operator credential in a
+ * file the native process reads, so there is nothing else to configure.
+ */
 export interface ConnectomeServingSettings {
-	driver: DriverType;
-	logLevel: LogLevel;
-	storage: string;
+	/** The project directory that holds, or will hold, the estate. Empty means the app's default estate. */
+	project: string;
+	/** Installation mode used when the project has no estate yet. */
+	mode: InstallMode;
+	/** An explicit `rrflow` executable; empty means the one on PATH. */
 	executable: string;
-	username: string;
-	password: string;
-	port: number;
 	historySize: number;
+}
+
+/** The estate the native process is serving, as the webview may see it: coordinates only. */
+export interface ServedEstate {
+	project: string;
+	endpoint: string;
+	instance: string;
+	credential_path: string;
+	installed: boolean;
+}
+
+export type EstateStageName = "install" | "serve" | "ready";
+export type EstateStageState = "running" | "done" | "skipped" | "failed" | "stopped";
+
+/** One boundary of the serve sequence, reported by the native process as it is reached. */
+export interface EstateStage {
+	stage: EstateStageName;
+	state: EstateStageState;
+	detail: string;
 }
 
 export interface ConnectomeCloudSettings {

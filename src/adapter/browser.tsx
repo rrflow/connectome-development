@@ -6,7 +6,7 @@ import {
 } from "~/shared/util/file-system";
 import * as idxdb from "~/shared/util/idxdb";
 import { CONFIG_KEY } from "~/shared/util/storage";
-import type { ConnectomeConfig, Platform, UrlTarget } from "~/types";
+import type { ConnectomeConfig, Platform, ServedEstate, UrlTarget } from "~/types";
 import type { ConnectomeAdapter, FileFilter } from "./base";
 
 /**
@@ -70,11 +70,15 @@ export class BrowserAdapter implements ConnectomeAdapter {
 		localStorage.removeItem(CONFIG_KEY);
 	}
 
-	public async startDatabase() {
+	public async serveEstate(): Promise<ServedEstate> {
 		throw new Error("Not supported");
 	}
 
-	public async stopDatabase() {
+	public async servedEstate(): Promise<ServedEstate | null> {
+		return null;
+	}
+
+	public async stopEstate(): Promise<boolean> {
 		throw new Error("Not supported");
 	}
 
