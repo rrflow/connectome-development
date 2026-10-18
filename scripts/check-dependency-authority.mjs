@@ -10,12 +10,18 @@
 // 2. RRFlow Rust crates come only from RRFlow's development repository,
 //    pinned to one exact commit, and only the public contract crates the native
 //    client is built on. No physical engine crate is linked (Slice D).
+// 3. The generated TypeScript SDK (`@rrflow/rrd-client`) comes from the same
+//    repository's `sdks/typescript`, pinned to the same exact commit as the
+//    crates, so the webview's wire types and the native client's contract are
+//    one revision (sprint 008, Slice C).
 import { readFile } from "node:fs/promises";
 import process from "node:process";
 
 const RRFLOW_SCOPE = "@rrflow/";
 const RRFLOW_REPOSITORY = "https://github.com/rrflow/rrflow-development";
 const CONTRACT_CRATES = new Set(["rrd-client", "rrd-contract"]);
+const SDK_PACKAGE = "@rrflow/rrd-client";
+const SDK_SPECIFIER = /^github:rrflow\/rrflow-development#([0-9a-f]{40})&path:sdks\/typescript$/;
 const MANIFEST_SECTIONS = [
 	"dependencies",
 	"devDependencies",
@@ -66,6 +72,23 @@ function lockedPackages(lock) {
 		});
 }
 
+/** The exact commit the SDK dependency names, or a violation. */
+function sdkRevision(manifest, violations) {
+	const spec = manifest.dependencies?.[SDK_PACKAGE];
+	if (typeof spec !== "string") {
+		violations.push(`package.json dependencies: "${SDK_PACKAGE}" is missing`);
+		return null;
+	}
+	const match = SDK_SPECIFIER.exec(spec);
+	if (!match) {
+		violations.push(
+			`package.json dependencies: "${SDK_PACKAGE}" must be ${RRFLOW_REPOSITORY}'s sdks/typescript at one exact commit; it is ${spec}`,
+		);
+		return null;
+	}
+	return match[1];
+}
+
 function cargoViolations(lock) {
 	const violations = [];
 	const revisions = new Set();
@@ -95,12 +118,28 @@ function cargoViolations(lock) {
 			`Cargo.lock: RRFlow crates resolve to ${revisions.size} commits (${[...revisions].join(", ")}); the native client and the engine it targets must share one`,
 		);
 	}
+	return { violations, revisions };
+}
+
+function pinViolations(manifest, revisions) {
+	const violations = [];
+	const sdk = sdkRevision(manifest, violations);
+	if (sdk && revisions.size === 1 && !revisions.has(sdk)) {
+		violations.push(
+			`${SDK_PACKAGE} is pinned to ${sdk} but Cargo.lock pins ${[...revisions][0]}; the webview's wire types and the native contract must be one RRFlow revision`,
+		);
+	}
 	return violations;
 }
 
 const manifest = JSON.parse(await readFile("package.json", "utf8"));
 const lock = await readFile("src-tauri/Cargo.lock", "utf8");
-const violations = [...npmViolations(manifest), ...cargoViolations(lock)];
+const cargo = cargoViolations(lock);
+const violations = [
+	...npmViolations(manifest),
+	...cargo.violations,
+	...pinViolations(manifest, cargo.revisions),
+];
 
 if (violations.length > 0) {
 	console.error("Dependency authority violations:");
