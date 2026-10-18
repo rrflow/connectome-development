@@ -339,3 +339,29 @@ Branch `agent/connectome-theme` from `main` `ce08e2f` (Slice C1 merged as PR #8)
   modal under the new theme with zero page errors; fonts verified loaded
   from the bundle (`document.fonts.check`).
 
+### 2026-10-18 — Slice C2 CI blocked; Slice D paused (Decision 11)
+
+- PR #9's CI did not start: every job failed in four seconds with the
+  GitHub annotation "The job was not started because recent account
+  payments have failed or your spending limit needs to be increased"
+  (the `rrflow` organization's Actions billing). The workflow is unchanged
+  and was green on `main` twelve minutes earlier. The owner clears it under
+  the organization's Billing & plans; CI is then re-run and PR #9 merges on
+  green.
+- Decision 11 (owner, 2026-10-18): pause Slice D until billing is fixed and
+  the Slice C2 build is verified on the owner's desktop. The two orders
+  considered for the first D increment stay recorded for that moment:
+  delete the inherited engine surface first (recommended: the RRD runtime
+  page already carries the graph lens with scope/depth/direction drill-down,
+  an RRFlowQL console, vector and storage lenses; the nine SurrealDB views,
+  the Sandbox, the datasets, `src/vendor` and the six remaining vendor
+  packages would go, the connection model would lose its SurrealDB
+  authentication fields with a config migration, and the identity gate
+  would reach zero), or build the RRFlowQL studio on RRD first and delete
+  afterwards.
+- Desktop verification of `agent/connectome-theme` (PR #9): check out the
+  branch, `pnpm install`, `pnpm engine:stage` (or `--from <path to a built
+  rrflow>`), `pnpm tauri:dev`; expect the Connectome application icon, the
+  text wordmark in Settings, the violet → cyan theme, Start serving →
+  engine/install/serve/ready stage cards → the runtime lenses.
+
