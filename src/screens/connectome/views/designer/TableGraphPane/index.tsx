@@ -697,7 +697,7 @@ export function TableGraphPane(props: TableGraphPaneProps) {
 								</Text>
 							</Popover.Dropdown>
 						</Popover>
-						<Link href="https://github.com/EonsofStupid/connectome">
+						<Link href="https://github.com/rrflow/connectome-development">
 							<ActionButton label="Designer help">
 								<Icon path={iconHelp} />
 							</ActionButton>

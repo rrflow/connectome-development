@@ -85,7 +85,7 @@
     description = "Powerful graphical RRFlow query playground and database explorer for Browser and Desktop"
     authors = ["RRFlow"]
     license = "MIT"
-    repository = "https://github.com/EonsofStupid/connectome"
+    repository = "https://github.com/rrflow/connectome-development"
     ```
 - **Target code**:
     ```toml
@@ -94,7 +94,7 @@
     description = "Cortex DevTools — Visual IDE for the MAESTRO pipeline"
     authors = ["DevPulse / Jesse Hall"]
     license = "MIT"
-    repository = "https://github.com/EonsofStupid/connectome"
+    repository = "https://github.com/rrflow/connectome-development"
     ```
 - **Rationale**: Cortex engine identity, Jesse's fork repo
 

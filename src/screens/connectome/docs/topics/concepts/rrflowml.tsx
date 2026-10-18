@@ -14,11 +14,11 @@ export function DocsConceptsRRFlowML(_: TopicProps) {
 					their model in a chosen framework in Python, save the model, and load and
 					execute it in either Python or Rust. You can use RRFlowML within your database
 					connection to store and execute trained ML models using{" "}
-					<Link href="https://github.com/EonsofStupid/connectome">
+					<Link href="https://github.com/rrflow/connectome-development">
 						Machine learning functions
 					</Link>
 					. Learn more about{" "}
-					<Link href="https://github.com/EonsofStupid/connectome">
+					<Link href="https://github.com/rrflow/connectome-development">
 						RRFlowML in the documentation
 					</Link>
 				</p>

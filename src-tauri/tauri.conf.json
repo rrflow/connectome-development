@@ -1,7 +1,7 @@
 {
 	"productName": "Connectome",
 	"version": "../package.json",
-	"identifier": "dev.eonsofstupid.connectome",
+	"identifier": "dev.rrflow.connectome",
 	"build": {
 		"beforeDevCommand": "pnpm run dev",
 		"beforeBuildCommand": "pnpm run build",
@@ -13,7 +13,7 @@
 		"category": "DeveloperTool",
 		"shortDescription": "Native RRFlow control surface",
 		"longDescription": "Connect to RRFlow runtimes and inspect their data, graph, query, schema, and observability surfaces.",
-		"copyright": "",
+		"copyright": "Copyright (c) 2026 AngryVibes LLC",
 		"targets": [
 			"nsis",
 			"dmg",

@@ -125,7 +125,7 @@ export function PlanStep({ organisation, instances, setDetails, setStep }: StepP
 			>
 				<Text>Looking for more pricing options and information?</Text>
 				<a
-					href="https://github.com/EonsofStupid/connectome"
+					href="https://github.com/rrflow/connectome-development"
 					target="_blank"
 					rel="noreferrer"
 				>

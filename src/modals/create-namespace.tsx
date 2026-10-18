@@ -56,7 +56,7 @@ function CreateNamespace() {
 					autoFocus
 				/>
 				<LearnMore
-					href="https://github.com/EonsofStupid/connectome"
+					href="https://github.com/rrflow/connectome-development"
 					mb="xl"
 				>
 					Learn more about namespaces

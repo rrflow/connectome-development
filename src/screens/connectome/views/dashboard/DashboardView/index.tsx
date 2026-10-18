@@ -689,13 +689,13 @@ function LoadingScreen() {
 					title="Cloud Documentation"
 					description="Learn more about RRFlow Cloud features and capabilities."
 					image={pictoDocument}
-					href="https://github.com/EonsofStupid/connectome"
+					href="https://github.com/rrflow/connectome-development"
 				/>
 				<GettingStartedLink
 					title="Join the Community"
 					description="Get help from the community and share your experiences."
 					image={pictoHandsOn}
-					href="https://github.com/EonsofStupid/connectome"
+					href="https://github.com/rrflow/connectome-development"
 				/>
 				<GettingStartedLink
 					title="Quick Start Tutorial"

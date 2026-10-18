@@ -92,7 +92,7 @@ export function createBaseSettings(): ConnectomeSettings {
 			databaseListMode: "grid",
 			urlAuthBase: "",
 			urlApiBase: "",
-			urlWebsiteBase: "https://github.com/EonsofStupid/connectome",
+			urlWebsiteBase: "https://github.com/rrflow/connectome-development",
 			urlApiTicketsBase: "",
 		},
 		gtm: {

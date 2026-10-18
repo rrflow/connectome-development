@@ -1,11 +1,32 @@
 # Connectome changelog
 
-## Unreleased alpha
+The in-application "Release changelogs" entries live in
+`src/shared/assets/changelogs/<version>.md`; this file is their summary.
+`package.json` owns the version and the maturity channel (`pnpm version:check`,
+`pnpm version:set <version> [channel]`); the version stays at 0.0.5 alpha until
+Connectome works end to end.
 
-- Established Connectome as the native Windows, macOS, and Linux control surface for RRFlow.
-- Added locally persisted connection profiles for local and remote RRFlow instances.
-- Canonicalized RRFlowQL across the query editor, import/export flows, syntax tooling, and file associations.
-- Added data, graph, schema, authentication, query, and runtime-diagnostic surfaces.
-- Disabled inherited hosted-cloud, telemetry, news, support, and AI side-channel integrations for the local-first alpha.
+## 0.0.5 alpha — 2026-10-18
 
-Release history before the RRFlow product boundary remains available in repository history and third-party notices.
+The first version Connectome numbers as its own.
+
+- Native Windows, macOS, and Linux control surface for RRFlow, at
+  `github.com/rrflow/connectome-development`, a sibling of
+  `rrflow/rrflow-development` bound by one pinned engine revision.
+- One contracted engine pin in `src-tauri/Cargo.lock`, consumed by the native
+  client, the generated TypeScript SDK, the staged `rrflow` sidecar, CI, and
+  the About tab, with a gate that fails on any disagreement.
+- Start serving runs RRFlow's contracted install → serve → ready sequence and
+  shows each stage; the bundled sidecar runs only when its digest matches.
+- The public RRD handshake runs on the generated `@rrflow/rrd-client` SDK.
+- Database, vector, graph, and rrflowKV storage lenses read live state through
+  the native RRD client.
+- Licensed MIT by AngryVibes LLC; the notice for the portions still derived
+  from the inherited client is preserved in `NOTICE`; an identity gate forbids
+  the inherited vendor's name outside declared dependency identifiers, the
+  `src/vendor/` seam, and the notices.
+
+Still inherited and scheduled for removal rather than renaming (sprint 009):
+the cloud/organization pages (disabled by feature flag), the inherited
+assistant, the inherited UI kit, and the views that still run on the inherited
+query client.

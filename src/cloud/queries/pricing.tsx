@@ -79,7 +79,7 @@ export function useCloudPricingQuery() {
 			const isCustom = flags.website_base === "custom";
 			const websiteBase = isCustom
 				? websiteSetting
-				: "https://github.com/EonsofStupid/connectome";
+				: "https://github.com/rrflow/connectome-development";
 			const response = await fetch(`${websiteBase}/api/cloud/pricing.json`);
 			const plans: PricingResult = await response.json();
 

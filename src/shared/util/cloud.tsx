@@ -80,7 +80,7 @@ export function measureComputeCost(measurements: CloudMeasurement[]) {
  * Open the changelog for the given version
  */
 export function openRRFlowChangelog(version: string) {
-	adapter.openUrl(`https://github.com/EonsofStupid/connectome/releases/tag/v${version}`);
+	adapter.openUrl(`https://github.com/rrflow/connectome-development/releases/tag/v${version}`);
 }
 
 /**

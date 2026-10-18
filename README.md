@@ -3,10 +3,13 @@
 Connectome is the native desktop control surface for RRFlow. It runs as a Tauri application on Windows, macOS, and Linux and connects to a separately deployed RRFlow runtime.
 
 This is the standalone
-[`EonsofStupid/rrflow-connectome`](https://github.com/EonsofStupid/rrflow-connectome)
-Git repository. It may be checked out beside the engine while the repositories
-are developed together, but it is not part of the database engine and it is
-not an embedded browser panel.
+[`rrflow/connectome-development`](https://github.com/rrflow/connectome-development)
+Git repository, a sibling of the engine repository
+[`rrflow/rrflow-development`](https://github.com/rrflow/rrflow-development)
+under the same GitHub organization. The two are bound by one pinned engine
+revision (see "The bundled engine" below), not by a Git submodule or a shared
+checkout: Connectome is not part of the engine and the engine does not need
+Connectome to run.
 
 ## Current alpha
 
@@ -33,11 +36,12 @@ Connectome currently provides:
 
 Connectome uses RRFlow-native runtime and control-plane contracts. A new
 runtime profile opens the RRD bootstrap screen; it does not route through the
-inherited Surreal-compatible query client. The inherited query, graph, and
-schema surfaces remain available for migration, but are not evidence that the
-native RRD operations behind those surfaces are finished. The optional
-enterprise control-plane connection remains a separate fleet-management
-boundary. There is no runtime compatibility fallback.
+inherited query client. The inherited query, graph, and schema surfaces still
+run on the inherited client and are being replaced view by view with surfaces
+on the generated RRD SDK (`.agents/sprints/009-connectome-ownership.md`);
+their presence is not evidence that the native RRD operations behind them are
+finished. The optional enterprise control-plane connection remains a separate
+fleet-management boundary. There is no runtime compatibility fallback.
 
 The connection sequence is deliberately narrow:
 
@@ -151,4 +155,14 @@ The Tauri bundle configuration emits NSIS installers for Windows, app/DMG bundle
 
 ## Origin and license
 
-Connectome preserves a mature desktop query, schema, graph, and connection shell while the product evolves around RRFlow. See [LICENSE](LICENSE), third-party notices, and the repository history for attribution.
+Connectome is licensed under the MIT License ([LICENSE](LICENSE)). It began
+as a fork of an MIT-licensed desktop database client; [NOTICE](NOTICE) names
+that work and preserves its copyright and permission notice for the portions
+that remain derived from it, as that license requires. Everything written for
+Connectome is Connectome's. The inherited product surfaces (cloud/organization
+pages, the inherited assistant, the inherited query client and its WASM
+engine, and the inherited UI kit) are being removed or replaced in the order
+recorded in `.agents/sprints/009-connectome-ownership.md`; `pnpm
+check:identity` fails if the inherited vendor's name appears anywhere other
+than a declared dependency's own identifier, the `src/vendor/` seam, or the
+notices.

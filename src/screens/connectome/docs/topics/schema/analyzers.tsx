@@ -68,7 +68,7 @@ export function DocsSchemaAnalyzers({ language }: TopicProps) {
 					Analyzers are used to enable full-text search on a table within your database.
 					If you have any analyzers defined for a table, you can use the full-text search
 					capabilities of RRFlow. Check out the section on{" "}
-					<Link href="https://github.com/EonsofStupid/connectome">
+					<Link href="https://github.com/rrflow/connectome-development">
 						{" "}
 						Full Text Search for more information.
 					</Link>

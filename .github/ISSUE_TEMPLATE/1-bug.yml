@@ -58,7 +58,7 @@ body:
     type: checkboxes
     attributes:
       label: Is there an existing issue for this?
-      description: Please search [our issues](https://github.com/EonsofStupid/rrflow-connectome) to see if this bug already exists.
+      description: Please search [our issues](https://github.com/rrflow/connectome-development) to see if this bug already exists.
       options:
         - label: I have searched the existing issues
           required: true
@@ -66,7 +66,7 @@ body:
     type: checkboxes
     attributes:
       label: Code of Conduct
-      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/EonsofStupid/rrflow-connectome)
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/rrflow/connectome-development)
       options:
         - label: I agree to follow this project's Code of Conduct
           required: true

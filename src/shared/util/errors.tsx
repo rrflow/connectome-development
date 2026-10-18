@@ -96,7 +96,7 @@ export async function openErrorModal(
 						<Button
 							leftSection={<Icon path={iconBug} />}
 							onClick={() =>
-								adapter.openUrl("https://github.com/EonsofStupid/connectome")
+								adapter.openUrl("https://github.com/rrflow/connectome-development")
 							}
 							variant="light"
 							color="obsidian"

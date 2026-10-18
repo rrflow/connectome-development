@@ -84,7 +84,7 @@ function RoleModal({ organization, member }: RoleModalProps) {
 					onChange={setRole as any}
 				/>
 
-				<LearnMore href="https://github.com/EonsofStupid/connectome">
+				<LearnMore href="https://github.com/rrflow/connectome-development">
 					Learn more about roles and permissions
 				</LearnMore>
 

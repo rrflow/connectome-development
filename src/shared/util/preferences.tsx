@@ -613,7 +613,7 @@ export function useComputedPreferences(): PreferenceSection[] {
 						name: "Website base",
 						description: "The base URL for the website",
 						controller: new TextController({
-							placeholder: "https://github.com/EonsofStupid/connectome",
+							placeholder: "https://github.com/rrflow/connectome-development",
 							reader: (config) => config.settings.cloud.urlWebsiteBase,
 							writer: (config, value) => {
 								config.settings.cloud.urlWebsiteBase = value;

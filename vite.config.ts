@@ -6,7 +6,7 @@ import { defineConfig, type PluginOption } from "vite";
 import { compression } from "vite-plugin-compression2";
 import { ViteImageOptimizer as images } from "vite-plugin-image-optimizer";
 import { Mode, plugin as markdown } from "vite-plugin-markdown";
-import { version } from "./package.json";
+import { connectome, version } from "./package.json";
 
 /**
  * The RRFlow engine Connectome is contracted to. `src-tauri/Cargo.lock` is
@@ -149,6 +149,7 @@ export default defineConfig(({ mode }) => {
 		define: {
 			"import.meta.env.DATE": JSON.stringify(new Date()),
 			"import.meta.env.VERSION": JSON.stringify(version),
+			"import.meta.env.CHANNEL": JSON.stringify(connectome.channel),
 			"import.meta.env.RRFLOW_ENGINE_VERSION": JSON.stringify(engine.version),
 			"import.meta.env.RRFLOW_ENGINE_REVISION": JSON.stringify(engine.revision),
 			"import.meta.env.MODE": JSON.stringify(mode),

@@ -3,6 +3,7 @@
 interface ImportMetaEnv {
 	DATE: string;
 	VERSION: string;
+	CHANNEL: string;
 	/** RRFlow's product version at the pinned engine revision (`src-tauri/Cargo.lock`). */
 	RRFLOW_ENGINE_VERSION: string;
 	/** The exact `rrflow/rrflow-development` commit Connectome is contracted to. */

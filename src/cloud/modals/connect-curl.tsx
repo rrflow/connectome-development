@@ -58,8 +58,9 @@ function ConnectCurlModal({ instance, namespace, database }: ConnectCurlModalPro
 		<Stack>
 			<Text size="lg">
 				You can connect to this instance using{" "}
-				<Link href="https://github.com/EonsofStupid/connectome">HTTP requests</Link>. The
-				following example demonstrates how to use cURL to communicate with this instance.
+				<Link href="https://github.com/rrflow/connectome-development">HTTP requests</Link>.
+				The following example demonstrates how to use cURL to communicate with this
+				instance.
 			</Text>
 
 			<Text
@@ -97,7 +98,7 @@ function ConnectCurlModal({ instance, namespace, database }: ConnectCurlModalPro
 					/>
 				</SimpleGrid>
 
-				<LearnMore href="https://github.com/EonsofStupid/connectome">
+				<LearnMore href="https://github.com/rrflow/connectome-development">
 					Learn more about authentication
 				</LearnMore>
 			</Paper>
@@ -120,7 +121,7 @@ function ConnectCurlModal({ instance, namespace, database }: ConnectCurlModalPro
 
 			<LearnMore
 				mt="sm"
-				href="https://github.com/EonsofStupid/connectome"
+				href="https://github.com/rrflow/connectome-development"
 			>
 				Learn more about the HTTP protocol
 			</LearnMore>

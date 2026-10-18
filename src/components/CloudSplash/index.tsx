@@ -61,7 +61,7 @@ export function CloudSplash() {
 						variant="light"
 						rightSection={<Icon path={iconOpen} />}
 						onClick={() =>
-							adapter.openUrl("https://github.com/EonsofStupid/connectome")
+							adapter.openUrl("https://github.com/rrflow/connectome-development")
 						}
 					>
 						Learn more

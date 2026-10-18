@@ -193,7 +193,7 @@ export function UserEditorModal({ level, existing, opened, onClose }: UserEditor
 								onChange={setSessionDuration}
 							/>
 
-							<LearnMore href="https://github.com/EonsofStupid/connectome">
+							<LearnMore href="https://github.com/rrflow/connectome-development">
 								Learn more about session and token durations
 							</LearnMore>
 						</Stack>

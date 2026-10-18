@@ -405,7 +405,7 @@ export function CheckoutStep({ organisation, details, setDetails, setStep }: Ste
 			/>
 
 			<Box mt="xl">
-				<LearnMore href="https://github.com/EonsofStupid/connectome">
+				<LearnMore href="https://github.com/rrflow/connectome-development">
 					Learn more about the migration process
 				</LearnMore>
 			</Box>

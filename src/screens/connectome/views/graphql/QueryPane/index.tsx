@@ -236,7 +236,7 @@ export function QueryPane({
 					<Stack>
 						Visit the RRFlow documentation to learn how to enable GraphQL on your
 						instance
-						<Link href="https://github.com/EonsofStupid/connectome">
+						<Link href="https://github.com/rrflow/connectome-development">
 							<Button
 								color="obsidian"
 								variant="light"

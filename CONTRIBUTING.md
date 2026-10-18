@@ -14,4 +14,4 @@ pnpm build
 cargo check --manifest-path src-tauri/Cargo.toml
 ```
 
-Use [GitHub issues](https://github.com/EonsofStupid/connectome/issues) for bugs and proposals. Keep changes focused, include verification evidence, and update the relevant user-facing documentation when behavior changes.
+Use [GitHub issues](https://github.com/rrflow/connectome-development/issues) for bugs and proposals. Keep changes focused, include verification evidence, and update the relevant user-facing documentation when behavior changes.

@@ -100,7 +100,7 @@ export function MiniQueryView() {
 
 				{miniAppearance === "normal" && (
 					<Group>
-						<Link href="https://github.com/EonsofStupid/connectome">
+						<Link href="https://github.com/rrflow/connectome-development">
 							<Group>
 								<Image
 									h={32}

@@ -160,7 +160,7 @@ export function DesignerView() {
 									rightSection={<Icon path={iconOpen} />}
 									onClick={() =>
 										adapter.openUrl(
-											"https://github.com/EonsofStupid/connectome",
+											"https://github.com/rrflow/connectome-development",
 										)
 									}
 								>
