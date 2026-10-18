@@ -250,6 +250,18 @@ export interface ConnectomeServingSettings {
 	historySize: number;
 }
 
+/** How the desktop chose the engine it ran. */
+export type EngineSource = "override" | "sidecar" | "path";
+
+/** The `rrflow` executable the desktop ran: where, how it was chosen, and what it hashes to. */
+export interface EngineBinding {
+	path: string;
+	source: EngineSource;
+	sha256: string;
+	/** The RRFlow revision a bundled engine was built from. */
+	revision?: string;
+}
+
 /** The estate the native process is serving, as the webview may see it: coordinates only. */
 export interface ServedEstate {
 	project: string;
@@ -257,9 +269,10 @@ export interface ServedEstate {
 	instance: string;
 	credential_path: string;
 	installed: boolean;
+	engine: EngineBinding;
 }
 
-export type EstateStageName = "install" | "serve" | "ready";
+export type EstateStageName = "engine" | "install" | "serve" | "ready";
 export type EstateStageState = "running" | "done" | "skipped" | "failed" | "stopped";
 
 /** One boundary of the serve sequence, reported by the native process as it is reached. */

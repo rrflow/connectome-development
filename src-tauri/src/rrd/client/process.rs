@@ -505,3 +505,75 @@ fn the_lenses_read_a_live_estate() {
         client.close().await.expect("close the session");
     });
 }
+
+/// The turnkey path: with no executable configured, the desktop runs the
+/// engine bundled beside it, and only because it hashes to the digest this
+/// build embedded from `binaries/engine.json`. The staged sidecar is copied
+/// beside the test executable, where Tauri installs `bundle.externalBin`.
+#[test]
+#[ignore = "drives the staged engine sidecar; CI stages it and runs with --ignored"]
+fn the_bundled_engine_serves_as_the_verified_sidecar() {
+    let manifest_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("binaries/engine.json");
+    let manifest: Value = serde_json::from_slice(
+        &std::fs::read(&manifest_path)
+            .expect("the engine is staged (scripts/engine/build-sidecar.mjs)"),
+    )
+    .expect("engine manifest is JSON");
+    let staged = manifest_path
+        .parent()
+        .expect("binaries directory")
+        .join(manifest["file"].as_str().expect("manifest names its file"));
+    let beside_exe = std::env::current_exe()
+        .expect("test executable")
+        .parent()
+        .expect("executable directory")
+        .join(format!("rrflow{}", std::env::consts::EXE_SUFFIX));
+    std::fs::copy(&staged, &beside_exe).expect("place the sidecar beside the executable");
+
+    let project = std::env::temp_dir().join(format!(
+        "connectome-rrd-sidecar-{}.project",
+        Uuid::new_v4().simple()
+    ));
+    let observer = Arc::new(RecordingObserver::default());
+    let served = serve_estate(
+        EstateServeRequest {
+            project: project.to_string_lossy().into_owned(),
+            mode: InstallMode::Fresh,
+            executable: String::new(),
+        },
+        observer.clone(),
+    );
+    let _ = std::fs::remove_file(&beside_exe);
+    let mut served = served.unwrap_or_else(|error| {
+        panic!(
+            "the sidecar serve path failed: {error:?}\n{}",
+            observer.lines.lock().expect("observer").join("\n")
+        )
+    });
+    let _ = served.server.kill();
+    let _ = served.server.wait();
+    let _ = std::fs::remove_dir_all(&project);
+
+    assert_eq!(
+        served.view.engine.source,
+        crate::rrd::engine::EngineSource::Sidecar
+    );
+    assert_eq!(
+        served.view.engine.sha256,
+        manifest["sha256"]
+            .as_str()
+            .expect("manifest names its sha256")
+    );
+    assert_eq!(
+        served.view.engine.revision.as_deref(),
+        manifest["revision"].as_str()
+    );
+    let lines = observer.lines.lock().expect("observer");
+    assert!(
+        lines
+            .iter()
+            .any(|line| line.contains("[engine done]") && line.contains("bundled with this build")),
+        "{}",
+        lines.join("\n")
+    );
+}

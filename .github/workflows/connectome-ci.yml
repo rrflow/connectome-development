@@ -96,8 +96,10 @@ jobs:
 
   # The gate's RRFlow generated-SDK check and the native client against a real
   # RRD process, both at the RRFlow revision Cargo.lock pins. The process
-  # tests install a fresh estate, serve it on loopback, and drive every lens
-  # through the session (src-tauri/src/rrd/client/process.rs).
+  # tests install a fresh estate through the desktop's own serve path, serve
+  # it on loopback, and drive every lens through the session
+  # (src-tauri/src/rrd/client/process.rs); one of them runs the engine as the
+  # digest-verified sidecar the bundle ships.
   rrd-process:
     name: RRFlow SDK and RRD process integration
     runs-on: ubuntu-22.04
@@ -183,6 +185,22 @@ jobs:
           path: ~/.rrflow-engine
           key: ${{ steps.rrflow-cache.outputs.cache-primary-key }}
 
+      # The same engine becomes the Tauri sidecar: staged beside the native
+      # crate with a manifest (revision, target, SHA-256) that the native
+      # build embeds and the desktop verifies before it runs the sidecar.
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Stage the engine as the sidecar and verify its manifest
+        run: |
+          node scripts/engine/build-sidecar.mjs --from "$HOME/.rrflow-engine/rrflow"
+          node scripts/engine/build-sidecar.mjs --check
+
+      # Two tests drive the engine through RRFLOW_BIN (the configured
+      # executable); the third runs it as the verified sidecar beside the
+      # executable, with nothing configured.
       - name: Run the RRD process tests
         run: |
           export RRFLOW_BIN="$HOME/.rrflow-engine/rrflow"

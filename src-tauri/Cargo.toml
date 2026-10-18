@@ -39,6 +39,7 @@ url = "2"
 uuid = { version = "1", features = ["v4"] }
 showfile = "0.1.1"
 reqwest = "0.12"
+sha2 = "0.10"
 tokio = { version = "1", features = ["net", "rt", "sync", "time"] }
 # RRFlow's Rust SDK and contract own every authenticated RRD request and
 # response type. Pinned to one rrflow-development revision so the native client
@@ -55,3 +56,4 @@ openssl = { version = "0.10.72", features = ["vendored"] }
 
 [build-dependencies]
 tauri-build = { version = "2.1.0" }
+serde_json = "1.0"

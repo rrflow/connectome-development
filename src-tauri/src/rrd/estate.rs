@@ -22,6 +22,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter, State};
 
+use super::engine::{resolve_engine, EngineBinding, EngineSource};
 use super::error::RrdError;
 use crate::paths::get_data_directory;
 
@@ -33,7 +34,6 @@ const READY_POLL: Duration = Duration::from_millis(500);
 const LOCATOR: &str = ".rrflow/config.toml";
 /// The operator credential the installation wrote, relative to the project.
 const OPERATOR_CREDENTIAL: &str = ".rrflow/credentials/local-operator.json";
-const DEFAULT_EXECUTABLE: &str = "rrflow";
 const STAGE_EVENT: &str = "estate:stage";
 const OUTPUT_EVENT: &str = "estate:output";
 
@@ -106,6 +106,8 @@ pub struct ServedEstateView {
     pub credential_path: String,
     /// Whether this serve installed the estate first.
     pub installed: bool,
+    /// The engine that was run: where it is, how it was chosen, its digest.
+    pub engine: EngineBinding,
 }
 
 /// One boundary of the serve sequence, reported as it is reached.
@@ -217,7 +219,21 @@ pub fn serve_estate(
     }
     std::fs::create_dir_all(&project)
         .map_err(|error| format!("cannot create the estate project directory: {error}"))?;
-    let executable = executable(&request.executable);
+
+    // The engine: the configured override, else the bundled sidecar verified
+    // against the digest this build embeds, else PATH. Reported first, so the
+    // operator always sees which rrflow ran and what it hashed to.
+    stage(
+        app,
+        "engine",
+        "running",
+        "Resolving the RRFlow engine this build is contracted to.",
+    );
+    let engine = resolve_engine(&request.executable).inspect_err(|error| {
+        stage(app, "engine", "failed", error.message.clone());
+    })?;
+    stage(app, "engine", "done", describe_engine(&engine));
+    let executable = engine.path.clone();
 
     // Install when the project has no locator; otherwise open what is there.
     let installed = if project.join(LOCATOR).is_file() {
@@ -334,16 +350,26 @@ pub fn serve_estate(
                 .to_string_lossy()
                 .into_owned(),
             installed,
+            engine,
         },
     })
 }
 
-fn executable(configured: &str) -> PathBuf {
-    let configured = configured.trim();
-    if configured.is_empty() {
-        PathBuf::from(DEFAULT_EXECUTABLE)
-    } else {
-        PathBuf::from(configured)
+fn describe_engine(engine: &EngineBinding) -> String {
+    let digest = &engine.sha256[..12];
+    match engine.source {
+        EngineSource::Sidecar => format!(
+            "Using the engine bundled with this build (sha256 {digest}…, RRFlow revision {}), verified against the build's manifest.",
+            engine.revision.as_deref().map(|r| &r[..7.min(r.len())]).unwrap_or("unknown")
+        ),
+        EngineSource::Override => format!(
+            "Using the configured executable {} (sha256 {digest}…).",
+            engine.path.display()
+        ),
+        EngineSource::Path => format!(
+            "No engine is bundled with this build; using {} from PATH (sha256 {digest}…).",
+            engine.path.display()
+        ),
     }
 }
 

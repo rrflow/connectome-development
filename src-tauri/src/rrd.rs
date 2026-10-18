@@ -6,6 +6,7 @@ use tauri::{ipc::Channel, State};
 
 mod client;
 mod cluster;
+pub mod engine;
 mod error;
 pub mod estate;
 mod transport;
