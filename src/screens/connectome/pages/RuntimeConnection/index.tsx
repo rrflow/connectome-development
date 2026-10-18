@@ -32,7 +32,7 @@ import {
 	ATTUNEMENT_PHASES,
 	AUTOMATION_PRIMITIVES,
 } from "~/rrflow/attunement";
-import { RrdRuntimeClient } from "~/rrflow/runtime";
+import { describeRrdError, RrdRuntimeClient } from "~/rrflow/runtime";
 import { RrdSessionClient } from "~/rrflow/session";
 import { useConfigStore } from "~/shell/stores/config";
 import { formatCount } from "./format";
@@ -295,9 +295,7 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 							title="RRD handshake failed"
 							icon={<Icon path={iconErrorCircle} />}
 						>
-							{query.error instanceof Error
-								? query.error.message
-								: "Unknown RRD connection error"}
+							{describeRrdError(query.error)}
 						</Alert>
 					)}
 

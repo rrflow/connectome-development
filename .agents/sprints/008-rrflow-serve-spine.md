@@ -303,7 +303,11 @@ Branch `agent/rrflow-serve-spine-b` from `main` `8c1daa2`.
   per operator credential path, updated with the announced address (the
   kernel chooses the port) and the instance id, created on first serve — and
   navigates to it, where the session panel reopens from the saved credential.
-  Failures surface the native error text; nothing is "Unknown" any more.
+  Failures surface the native error text; nothing is "Unknown" any more:
+  `describeRrdError` reads an `Error`, a native `{ message }` rejection, or
+  the plain string `rrd_public_request` rejects with — the handshake page had
+  been showing "Unknown RRD connection error" because that string is not an
+  `Error` instance, which hid "connection refused" in the screenshot.
   The CreateConnection "Localhost" template (SurrealDB root/ws) is replaced by
   a "Served estate" template available while an estate is served.
 - Evidence: `cargo check/clippy -D warnings/fmt --check --locked

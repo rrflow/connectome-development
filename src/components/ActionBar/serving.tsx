@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { adapter } from "~/adapter";
 import { useConnectionNavigator, useIntent } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
+import { describeRrdError } from "~/rrflow/runtime";
 import { tagEvent } from "~/shared/util/analytics";
 import { createBaseConnection } from "~/shared/util/defaults";
 import { showErrorNotification, showInfo } from "~/shared/util/helpers";
@@ -135,7 +136,7 @@ export function DatabaseServing() {
 
 			showErrorNotification({
 				title: "Serving failed",
-				content: error instanceof Error ? error.message : String(error),
+				content: describeRrdError(error),
 			});
 		}
 	});
