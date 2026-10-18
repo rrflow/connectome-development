@@ -304,3 +304,38 @@ Branch `agent/connectome-icons` from `main` `1f34a3d` (Slice B merged as PR #7).
   render smoke 2/2; screenshots of the Overview and the connection page show
   the new icons and pictograms with zero page errors.
 
+### 2026-10-18 — Slice C2: Connectome's own look (Decision 10 = A)
+
+Branch `agent/connectome-theme` from `main` `ce08e2f` (Slice C1 merged as PR #8).
+
+- Decision 10 (owner, 2026-10-18): Connectome theme now, ColdLight tokens
+  later. `src/shared/util/mantine.tsx` is Connectome's theme — type (Inter
+  Variable, JetBrains Mono Variable, self-hosted from `@fontsource-variable/*`,
+  OFL-1.1; no runtime fetch from Google Fonts), sizes, spacing, radii, the
+  `obsidian` and `slate` neutral scales, the `rrflow` accent scale (also
+  bound to `violet`), the violet → cyan gradient, and component defaults on
+  Mantine's built-in variants. `src/shared/assets/styles/theme.scss` carries
+  the same identity as `--connectome-*` custom properties (the previous
+  `--rrflow-energy`/`--rrflow-passion`/`--Connectome-*` names — the vendor's
+  token vocabulary, inconsistently renamed — are gone; `--Connectome-gradient`
+  was referenced in four places and defined nowhere). The dead
+  `coldlight.scss` (a neon palette nothing imported) is removed; ColdLight
+  arrives as generated tokens mapped in `mantine.tsx`.
+- Found while replacing the theme: the tree still shipped the vendor's
+  bowler-hat logo as **the application icon on every platform**
+  (`src-tauri/icons/*`, `public/favicon.ico`), its wordmark as the settings
+  and mini-view logo, its "Sandbox" screenshot, its referral-program art,
+  its glow images, its SurrealQL/SurrealML logos renamed, its social-link and
+  README imagery under `.github/images`, and `CODEOWNERS` naming its
+  maintainers as owners of this repository. All deleted or replaced: an
+  original application icon (`src/shared/assets/brand/app-icon.svg`,
+  rendered to every platform format by `tauri icon`), a text `Wordmark`
+  component, a CSS `TopGlow`, `CODEOWNERS` = the owner. The unmounted
+  `new-domain` screen (the vendor's domain-move notice) is deleted.
+- `@surrealdb/ui` removed from `package.json`; identity gate 7 → 6. The six
+  that remain are the engine, client and editor packages Slice D removes.
+- Verification: `pnpm check` green; production build green; render smoke
+  2/2; screenshots of the Overview, the connection page and the settings
+  modal under the new theme with zero page errors; fonts verified loaded
+  from the bundle (`document.fonts.check`).
+

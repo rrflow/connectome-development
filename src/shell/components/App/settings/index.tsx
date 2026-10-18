@@ -16,8 +16,8 @@ import { ActionButton } from "~/components/ActionButton";
 import { Entry } from "~/components/Entry";
 import { Icon } from "~/components/Icon";
 import { Spacer } from "~/components/Spacer";
+import { Wordmark } from "~/components/Wordmark";
 import { useBoolean } from "~/hooks/boolean";
-import { useLogoUrl } from "~/hooks/brand";
 import { useIntent } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
 import { useDesktopUpdater } from "~/hooks/updater";
@@ -124,8 +124,6 @@ function SettingsSidebar({
 	setActiveTab,
 	...other
 }: SettingsSidebarProps) {
-	const logoUrl = useLogoUrl();
-
 	const availableUpdate = useInterfaceStore((s) => s.availableUpdate);
 	const { phase, progress, version, startUpdate } = useDesktopUpdater();
 
@@ -138,7 +136,7 @@ function SettingsSidebar({
 			h="100%"
 			w={250}
 			style={{
-				borderRight: withBorder ? "1px solid var(--Connectome-divider-color)" : undefined,
+				borderRight: withBorder ? "1px solid var(--connectome-divider-color)" : undefined,
 			}}
 			gap={0}
 			{...other}
@@ -147,11 +145,7 @@ function SettingsSidebar({
 				mb="xl"
 				py={4}
 			>
-				<Image
-					h={36}
-					w="auto"
-					src={logoUrl}
-				/>
+				<Wordmark size={18} />
 			</Center>
 			<Stack
 				gap="xs"
