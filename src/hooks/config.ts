@@ -7,8 +7,6 @@ const ACTIONS = {
 	appearance: "updateAppearanceSettings",
 	templates: "updateTemplateSettings",
 	serving: "updateServingSettings",
-	cloud: "updateCloudSettings",
-	gtm: "updateGtmSettings",
 } satisfies Record<Category, keyof ConfigStore>;
 
 /**

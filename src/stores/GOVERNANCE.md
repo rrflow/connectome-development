@@ -1,24 +1,21 @@
 # GOVERNANCE REGISTRY — Stores (src/stores/)
 
-> **Boundary**: `src/stores/` | **Date**: 2026-03-27
+> **Boundary**: `src/stores/` | **Date**: 2026-03-27 | **Updated**: 2026-10-18 (sprint 009 Slice B)
 
 ---
 
 ## Scope
 
-Governs the 7 Zustand state stores. In Phase 1, stores will be triaged: some move to `src/shell/stores/`, some to `src/shared/stores/`, some to spoke-specific `stores/` directories.
+Governs the 2 Zustand state stores that remain here. The inherited Cloud, Deploy and Sidekick stores were deleted on 2026-10-18 (sprint 009, Slice B); the shell stores live in `src/shell/stores/`.
 
 ## Current Store Inventory
 
 | Store | File | Purpose | Phase 1 Destination |
 |-------|------|---------|-------------------|
-| Cloud | `cloud.tsx` | RRFlow Cloud state | STRIP (not needed) |
-| Config | `config.tsx` | App configuration | Shell |
-| Database | `database.tsx` | RRFlow connection state | RRFlow spoke |
-| Deploy | `deploy.tsx` | Cloud deployment state | STRIP (not needed) |
-| Interface | `interface.tsx` | UI layout/panel state | Shell |
+| Database | `database.tsx` | RRFlow connection, served-estate and lens state | RRFlow spoke |
 | Query | `query.tsx` | Active query state | RRFlow spoke |
-| Sidekick | `sidekick.tsx` | AI assistant state | Shell (→ Clyffy) |
+
+Deleted 2026-10-18: `cloud.tsx` (inherited vendor's hosted-cloud account state), `deploy.tsx` (its instance deployment flow), `sidekick.tsx` (its assistant). Nothing replaces them; Clyffy arrives with the prompt → frontier AI → rrflowKV increment (sprint 009, Slice D).
 
 ## Zustand Store Pattern
 

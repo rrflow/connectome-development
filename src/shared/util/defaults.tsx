@@ -8,7 +8,6 @@ import type {
 	QueryType,
 } from "~/types";
 
-import { HOSTNAME } from "./analytics";
 import { newId } from "./helpers";
 
 export const CONFIG_VERSION = 2;
@@ -87,18 +86,6 @@ export function createBaseSettings(): ConnectomeSettings {
 			mode: "fresh",
 			executable: "",
 			historySize: 250,
-		},
-		cloud: {
-			databaseListMode: "grid",
-			urlAuthBase: "",
-			urlApiBase: "",
-			urlWebsiteBase: "https://github.com/rrflow/connectome-development",
-			urlApiTicketsBase: "",
-		},
-		gtm: {
-			origin: HOSTNAME,
-			preview_header: "",
-			debug_mode: false,
 		},
 	};
 }

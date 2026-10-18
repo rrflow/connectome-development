@@ -22,14 +22,12 @@ import { ConnectomeSidebar } from "./sidebar";
 import classes from "./style.module.scss";
 import { ConnectomeToolbar } from "./toolbar";
 import AuthenticationView from "./views/authentication/AuthenticationView";
-import DashboardView from "./views/dashboard/DashboardView";
 import DesignerView from "./views/designer/DesignerView";
 import DocumentationView from "./views/documentation/DocumentationView";
 import ExplorerView from "./views/explorer/ExplorerView";
 import FunctionsView from "./views/functions/FunctionsView";
 import GraphqlView from "./views/graphql/GraphqlView";
 import MigrationView from "./views/migration/MigrationView";
-import MonitorView from "./views/monitor/MonitorView";
 import ParametersView from "./views/parameters/ParametersView";
 import QueryView from "./views/query/QueryView";
 
@@ -45,8 +43,6 @@ const PORTAL_OPTIONS = {
 };
 
 const VIEW_PORTALS: Record<ViewPage, HtmlPortalNode> = {
-	dashboard: createHtmlPortalNode(PORTAL_OPTIONS),
-	monitor: createHtmlPortalNode(PORTAL_OPTIONS),
 	query: createHtmlPortalNode(PORTAL_OPTIONS),
 	explorer: createHtmlPortalNode(PORTAL_OPTIONS),
 	graphql: createHtmlPortalNode(PORTAL_OPTIONS),
@@ -59,8 +55,6 @@ const VIEW_PORTALS: Record<ViewPage, HtmlPortalNode> = {
 };
 
 const VIEW_COMPONENTS: Record<ViewPage, FC> = {
-	dashboard: memo(DashboardView),
-	monitor: memo(MonitorView),
 	query: memo(QueryView),
 	explorer: memo(ExplorerView),
 	graphql: memo(GraphqlView),

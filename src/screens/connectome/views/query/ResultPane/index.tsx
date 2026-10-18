@@ -25,7 +25,6 @@ import { useSetting } from "~/hooks/config";
 import { useConnectionAndView } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
 import { cancelLiveQueries } from "~/screens/connectome/connection/connection";
-import { tagEvent } from "~/shared/util/analytics";
 import { showInfo, slugify } from "~/shared/util/helpers";
 import { useConfigStore } from "~/shell/stores/config";
 import { useInterfaceStore } from "~/shell/stores/interface";
@@ -195,8 +194,6 @@ export function ResultPane({ activeTab, selection, editor, corners }: ResultPane
 				title: "Export",
 				subtitle: "Results successfully exported",
 			});
-
-			tagEvent("export", { extension: "csv" });
 		}
 	});
 

@@ -1,17 +1,9 @@
 import { compareVersions } from "compare-versions";
 import { adapter } from "~/adapter";
-import { fetchAPI } from "~/cloud/api";
 import { MAX_HISTORY_QUERY_LENGTH, SANDBOX } from "~/constants";
 import { hasCompletedOnboarding } from "~/hooks/onboarding";
-import { tagEvent } from "~/shared/util/analytics";
 import { getSetting } from "~/shared/util/config";
-import {
-	getActiveConnection,
-	getAuthDB,
-	getAuthNS,
-	getConnection,
-	getConnectionVariant,
-} from "~/shared/util/connection";
+import { getActiveConnection, getAuthDB, getAuthNS, getConnection } from "~/shared/util/connection";
 import {
 	RRFLOW_START_BASICS,
 	RRFLOW_START_GRAPH_V2,
@@ -20,8 +12,6 @@ import {
 	RRFLOW_START_VECTOR_V3,
 } from "~/shared/util/dataset";
 import { createBaseQuery } from "~/shared/util/defaults";
-import { rrflowqlDurationToSeconds } from "~/shared/util/duration";
-import { CloudError } from "~/shared/util/errors";
 import {
 	ActivateDatabaseEvent,
 	ConnectedEvent,
@@ -41,12 +31,10 @@ import { RRFlowQL } from "~/shared/util/rrflowql/contract";
 import { syncConnectionSchema } from "~/shared/util/schema";
 import { useConfigStore } from "~/shell/stores/config";
 import { useInterfaceStore } from "~/shell/stores/interface";
-import { useCloudStore } from "~/stores/cloud";
 import { State, useDatabaseStore } from "~/stores/database";
 import { useQueryStore } from "~/stores/query";
 import type {
 	Authentication,
-	CloudInstance,
 	Connection,
 	Protocol,
 	QueryResponse,
@@ -81,7 +69,6 @@ export interface GraphqlResponse {
 	errors?: any;
 }
 
-let retryTask: any;
 let openedConnection: Connection;
 let instance = new RRFlow();
 let rrflowql: RRFlowQL | null = null;
@@ -129,35 +116,8 @@ export async function openConnection(options?: ConnectOptions) {
 
 	adapter.log("DB", `Opening connection to ${rpcEndpoint}`);
 
-	if (retryTask) {
-		clearTimeout(retryTask);
-		retryTask = null;
-	}
-
 	try {
 		const [versionCheck] = getVersionTimeout();
-
-		if (connection.authentication.mode === "cloud") {
-			const { authState } = useCloudStore.getState();
-
-			if (authState === "loading" || authState === "unknown") {
-				scheduleReconnect(1000);
-				return;
-			}
-
-			if (authState === "unauthenticated") {
-				throw new CloudError("Not authenticated with RRFlow Cloud");
-			}
-
-			const instance = await fetchAPI<CloudInstance>(
-				`/instances/${connection.authentication.cloudInstance}`,
-			);
-
-			if (instance?.state !== "ready") {
-				scheduleReconnect(1000);
-				return;
-			}
-		}
 
 		const namespace = getAuthNS(connection.authentication) || connection.lastNamespace;
 		const database = getAuthDB(connection.authentication) || connection.lastDatabase;
@@ -284,11 +244,6 @@ export async function openConnection(options?: ConnectOptions) {
 		}
 
 		ConnectedEvent.dispatch(null);
-
-		tagEvent("connection_connected", {
-			protocol: connection.authentication.protocol.toString(),
-			variant: getConnectionVariant(connection),
-		});
 	} catch (err: any) {
 		console.error("Connection failed", err);
 		instance.close();
@@ -300,7 +255,7 @@ export async function openConnection(options?: ConnectOptions) {
 				title: "Unsupported version",
 				content: `The database version (${err.version}) must satisfy ">= ${err.minimum} < ${err.maximum}"`,
 			});
-		} else if (!(err instanceof CloudError)) {
+		} else {
 			console.error(err);
 			showErrorNotification({
 				title: "Connection failed",
@@ -559,16 +514,6 @@ export async function executeUserQuery(options?: UserQueryOptions) {
 
 		setQueryResponse(id, response);
 
-		const compute_time = response
-			.map(({ duration }) => (duration?.seconds ? Number(duration.seconds) : 0))
-			.reduce((a, b) => a + b, 0);
-
-		tagEvent("query_execute", {
-			protocol: connection.authentication.protocol.toString(),
-			type: "rrflowql",
-			compute_time: compute_time,
-		});
-
 		if (query.length <= MAX_HISTORY_QUERY_LENGTH) {
 			addHistoryEntry(connection.id, {
 				id: newId(),
@@ -691,12 +636,6 @@ export async function executeGraphql(
 		const response = await sendGraphqlRequest(query, params, operation);
 
 		setGraphqlResponse(connection.id, response);
-
-		tagEvent("query_execute", {
-			protocol: connection.authentication.protocol.toString(),
-			type: "graphql",
-			compute_time: rrflowqlDurationToSeconds(response.execution_time),
-		});
 	} catch (err: any) {
 		console.warn("executeGraphql fail", err);
 
@@ -934,19 +873,6 @@ export function getRRFlow() {
 /**
  * Schedule a reconnect attempt
  */
-function scheduleReconnect(timeout: number) {
-	retryTask = setTimeout(() => {
-		const { currentState } = useDatabaseStore.getState();
-		const connection = getConnection();
-
-		if (currentState !== "connected" && connection) {
-			openConnection({
-				connection,
-				isRetry: true,
-			});
-		}
-	}, timeout);
-}
 
 async function isNamespaceValid(namespace: string) {
 	try {

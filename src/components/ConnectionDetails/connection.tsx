@@ -13,8 +13,6 @@ export interface ConnectionNameDetailsProps {
 export function ConnectionNameDetails({ value, onChange }: ConnectionNameDetailsProps) {
 	const [showIcons, showIconsHandle] = useDisclosure();
 
-	const isCloud = value.authentication.mode === "cloud";
-
 	const updateIcon = (index: number) => {
 		showIconsHandle.close();
 
@@ -68,7 +66,6 @@ export function ConnectionNameDetails({ value, onChange }: ConnectionNameDetails
 			<TextInput
 				flex={1}
 				placeholder="Connection name"
-				disabled={isCloud}
 				value={value.name}
 				autoFocus
 				onChange={(e) =>

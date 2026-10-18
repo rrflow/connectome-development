@@ -27,7 +27,6 @@ import { useTableNames } from "~/hooks/schema";
 import { useStable } from "~/hooks/stable";
 import { useIsLight } from "~/hooks/theme";
 import { executeQuery, getRRFlow, getRRFlowQL } from "~/screens/connectome/connection/connection";
-import { tagEvent } from "~/shared/util/analytics";
 import { formatFileSize, showErrorNotification, showWarning } from "~/shared/util/helpers";
 import { syncConnectionSchema } from "~/shared/util/schema";
 import { Duration, RecordId, StringRecordId, Table, Uuid } from "~/vendor/rrflow-client";
@@ -1049,7 +1048,6 @@ export function DataImportModal() {
 
 		const configureImportType = (type: ImportType) => {
 			setImportType(type);
-			tagEvent("import", { extension: type });
 		};
 
 		const extractFromFileType = (fileFormat: DataFileFormat) => {

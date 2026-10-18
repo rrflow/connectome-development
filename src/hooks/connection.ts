@@ -2,8 +2,6 @@ import { compareVersions } from "compare-versions";
 import { unique } from "radash";
 import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { isOrganisationTerminated } from "~/cloud/helpers";
-import { useCloudInstanceList } from "~/cloud/hooks/instances";
 import { GLOBAL_PAGES, SANDBOX, VIEW_PAGES } from "~/constants";
 import { openRequiredDatabaseModal } from "~/modals/require-database";
 import { useFeatureFlags } from "~/shared/util/feature-flags";
@@ -11,7 +9,6 @@ import { fuzzyMatch } from "~/shared/util/helpers";
 import { useConfigStore } from "~/shell/stores/config";
 import { useDatabaseStore } from "~/stores/database";
 import {
-	CloudInstance,
 	Connection,
 	GlobalCondition,
 	GlobalPage,
@@ -123,17 +120,13 @@ export function useAvailableViews(): Partial<Record<ViewPage, ViewPageInfo>> {
 	const [flags] = useFeatureFlags();
 	const version = useDatabaseStore((s) => s.version) || null;
 
-	const [connection, isCloud] = useConnection((c) => [
-		c?.id ?? "",
-		c?.authentication.mode === "cloud",
-	]);
+	const connection = useConnection((c) => c?.id ?? "");
 
 	return useMemo(() => {
 		const draft = { ...VIEW_PAGES } as const;
 		const condition: ViewCondition = {
 			connection,
 			flags,
-			isCloud,
 			version,
 		};
 
@@ -144,7 +137,7 @@ export function useAvailableViews(): Partial<Record<ViewPage, ViewPageInfo>> {
 		}
 
 		return draft;
-	}, [flags, connection, isCloud, version]);
+	}, [flags, connection, version]);
 }
 
 /**
@@ -210,29 +203,23 @@ export interface ConnectionFilter {
 	labels?: string[];
 	labelMode?: FilterMode;
 	labelInclude?: boolean;
-	includeEmpty?: boolean;
 }
 
 /**
- * Retrieve the structured list of instances and connections
+ * Retrieve the filtered sandbox and user connections for the overview
  */
 export function useConnectionOverview({
 	search = "",
 	labels = [],
 	labelMode = "any",
 	labelInclude = true,
-	includeEmpty,
 }: ConnectionFilter) {
-	const { entries, isPending } = useCloudInstanceList();
-
 	const connections = useConnectionList();
 	const sandboxInfo = useConfigStore((s) => s.sandbox);
 
-	const [userConnections, sandbox, organizations, isEmpty] = useMemo(() => {
-		const organizations = [];
-		const normalConnections = connections.filter((c) => !c.authentication.cloudInstance);
+	const [userConnections, sandbox, isEmpty] = useMemo(() => {
 		const userConnections = filterConnections(
-			normalConnections,
+			connections,
 			search,
 			labels,
 			labelMode,
@@ -240,39 +227,15 @@ export function useConnectionOverview({
 		);
 
 		const [sandbox] = filterConnections([sandboxInfo], search, labels, labelMode, labelInclude);
+		const isEmpty = !sandbox && userConnections.length === 0;
 
-		for (const entry of entries) {
-			if (isOrganisationTerminated(entry.organization)) {
-				continue;
-			}
-
-			const instances = filterInstances(
-				entry.instances,
-				search,
-				labels,
-				labelMode,
-				labelInclude,
-			);
-
-			if (instances.length > 0 || includeEmpty) {
-				organizations.push({
-					info: entry.organization,
-					instances,
-				});
-			}
-		}
-
-		const isEmpty = !sandbox && userConnections.length === 0 && organizations.length === 0;
-
-		return [userConnections, sandbox, organizations, isEmpty] as const;
-	}, [connections, sandboxInfo, entries, search, labels, labelMode, labelInclude, includeEmpty]);
+		return [userConnections, sandbox, isEmpty] as const;
+	}, [connections, sandboxInfo, search, labels, labelMode, labelInclude]);
 
 	return {
-		isPending,
 		isEmpty,
 		sandbox,
 		userConnections,
-		organizations,
 	};
 }
 
@@ -308,52 +271,6 @@ function filterConnections(
 			const needle = search.toLowerCase();
 			const name = target.name.toLowerCase();
 			const hostname = target.authentication.hostname.toLowerCase();
-
-			if (!fuzzyMatch(needle, name) && !fuzzyMatch(needle, hostname)) {
-				return false;
-			}
-		}
-
-		return true;
-	});
-}
-
-/**
- * Filters cloud instances based on search term and selected labels with filtering modes
- */
-function filterInstances(
-	list: CloudInstance[],
-	search: string,
-	labels: string[],
-	labelMode: FilterMode = "any",
-	labelInclude = true,
-) {
-	if (!search && labels.length === 0) {
-		return list;
-	}
-
-	const { connections } = useConfigStore.getState();
-
-	return list.filter((target) => {
-		const connection = connections.find((c) => c.authentication.cloudInstance === target.id);
-
-		// Label filtering
-		if (labels.length > 0) {
-			const matches =
-				labelMode === "any"
-					? labels.some((label) => connection?.labels?.includes(label))
-					: labels.every((label) => connection?.labels?.includes(label));
-
-			if (matches !== labelInclude) {
-				return false;
-			}
-		}
-
-		// Search filtering
-		if (search) {
-			const needle = search.toLowerCase();
-			const name = target.name.toLowerCase();
-			const hostname = target.host.toLowerCase();
 
 			if (!fuzzyMatch(needle, name) && !fuzzyMatch(needle, hostname)) {
 				return false;

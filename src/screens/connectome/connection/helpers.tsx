@@ -1,13 +1,11 @@
 import { objectify } from "radash";
-import { fetchAPI } from "~/cloud/api";
 import { getSetting } from "~/shared/util/config";
-import { CloudError } from "~/shared/util/errors";
 import { featureFlags } from "~/shared/util/feature-flags";
 import type { Authentication } from "~/types";
 import type { AccessRecordAuth, ProvidedAuth } from "~/vendor/rrflow-client";
 
 export async function composeAuthentication(connection: Authentication): Promise<ProvidedAuth> {
-	const { mode, username, password, namespace, database, token, cloudInstance } = connection;
+	const { mode, username, password, namespace, database, token } = connection;
 
 	switch (mode) {
 		case "root": {
@@ -24,23 +22,6 @@ export async function composeAuthentication(connection: Authentication): Promise
 		}
 		case "token": {
 			return token;
-		}
-		case "cloud": {
-			if (!cloudInstance) {
-				throw new Error("Connection is not a cloud instance");
-			}
-
-			try {
-				const response = await fetchAPI<{ token: string }>(
-					`/instances/${cloudInstance}/auth`,
-				);
-
-				return response.token;
-			} catch (err: any) {
-				throw new CloudError("Failed to authenticate with cloud instance", {
-					cause: err,
-				});
-			}
 		}
 		case "none": {
 			return null;

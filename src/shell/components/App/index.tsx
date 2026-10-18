@@ -9,7 +9,6 @@ import { ConnectionsModal } from "./modals/connections";
 import { ConsoleDrawer } from "./modals/console";
 import { DataExportModal } from "./modals/data-export";
 import { DataImportModal } from "./modals/data-import";
-import { FailedConnectDialog } from "./modals/failed-connect";
 import { HighlightToolModal } from "./modals/highlight-tool";
 import { RegisterUserModal } from "./modals/register";
 import { SandboxModal } from "./modals/sandbox";
@@ -47,7 +46,6 @@ export function App() {
 			<DataImportModal />
 			<RegisterUserModal />
 			<ConsoleDrawer />
-			<FailedConnectDialog />
 
 			{isDesktop && <UpdaterDialog />}
 		</Scaffold>

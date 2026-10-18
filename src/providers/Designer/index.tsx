@@ -6,7 +6,6 @@ import { useSaveable } from "~/hooks/save";
 import { useTables } from "~/hooks/schema";
 import { useStable } from "~/hooks/stable";
 import { executeQuery } from "~/screens/connectome/connection/connection";
-import { tagEvent } from "~/shared/util/analytics";
 import { showErrorNotification } from "~/shared/util/helpers";
 import { syncConnectionSchema } from "~/shared/util/schema";
 import { SDB_2_0_0 } from "~/shared/util/versions";
@@ -79,8 +78,6 @@ export function DesignerProvider({ children }: PropsWithChildren) {
 		setErrors([]);
 		saveHandle.track();
 		designingHandle.open();
-
-		tagEvent("table_designer_open");
 	});
 
 	const closeDrawer = useStable((force?: boolean) => {

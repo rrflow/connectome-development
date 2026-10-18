@@ -11,17 +11,14 @@ import { open as openURL } from "@tauri-apps/plugin-shell";
 import { check } from "@tauri-apps/plugin-updater";
 import { compareVersions } from "compare-versions";
 import { VIEW_PAGES } from "~/constants";
-import { startCloudSync, syncCloudStore } from "~/shared/util/cloud";
 import { getSetting, overwriteConfig, watchStore } from "~/shared/util/config";
 import { getConnection } from "~/shared/util/connection";
-import { featureFlags } from "~/shared/util/feature-flags";
 import { openAndReadFiles, openAndWriteFile } from "~/shared/util/file-system";
 import { NavigateViewEvent } from "~/shared/util/global-events";
 import { showErrorNotification, showInfo } from "~/shared/util/helpers";
 import { dispatchIntent, handleIntentRequest } from "~/shared/util/intents";
 import { ConfigStore, useConfigStore } from "~/shell/stores/config";
 import { useInterfaceStore } from "~/shell/stores/interface";
-import { CloudStore } from "~/stores/cloud";
 import { useDatabaseStore } from "~/stores/database";
 import type {
 	ConnectomeConfig,
@@ -58,7 +55,6 @@ export class DesktopAdapter implements ConnectomeAdapter {
 
 	public isServeSupported = true;
 	public isUpdateCheckSupported = true;
-	public isTelemetryEnabled = true;
 	public isSampleSandboxEnabled = true;
 	public titlebarOffset = 0;
 	public platform: Platform = "windows";
@@ -87,10 +83,6 @@ export class DesktopAdapter implements ConnectomeAdapter {
 
 		getCurrentWindow().listen("config-updated", (event: Event<ConfigStore>) => {
 			overwriteConfig(event.payload);
-		});
-
-		getCurrentWindow().listen("cloud-updated", (event: Event<CloudStore>) => {
-			syncCloudStore(event.payload);
 		});
 
 		getCurrentWindow().listen("open-resource", () => {
@@ -129,8 +121,6 @@ export class DesktopAdapter implements ConnectomeAdapter {
 				getCurrentWindow().setAlwaysOnTop(pinned);
 			},
 		});
-
-		startCloudSync();
 	}
 
 	public dumpDebug = () => ({
@@ -438,39 +428,6 @@ export class DesktopAdapter implements ConnectomeAdapter {
 
 				await invoke("clear_opened_resources");
 			}
-		}
-	}
-
-	public async trackEvent(url: string): Promise<void> {
-		const stripCookie = (cookie: string) =>
-			cookie
-				.split(";")
-				.map((c) => c.trim())
-				.filter(
-					(c) =>
-						!c.startsWith("HttpOnly") &&
-						!c.startsWith("Secure") &&
-						!c.startsWith("Domain"),
-				)
-				.join("; ");
-
-		const { gtm_debug } = featureFlags.store;
-		const previewHeader = getSetting("gtm", "preview_header");
-
-		try {
-			const cookies = await invoke<Promise<string[]>>("track_event", {
-				url,
-				cookie: document.cookie,
-				userAgent: navigator.userAgent,
-				previewHeader: (gtm_debug && previewHeader) || undefined,
-			});
-
-			for (const cookie of cookies) {
-				// biome-ignore lint/suspicious/noDocumentCookie: Cookie Store API not supported enough yet
-				document.cookie = stripCookie(cookie);
-			}
-		} catch (err) {
-			console.error("Failed to track event: ", err);
 		}
 	}
 }

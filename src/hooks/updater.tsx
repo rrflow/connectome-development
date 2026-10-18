@@ -4,7 +4,6 @@ import { invoke } from "@tauri-apps/api/core";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { useState } from "react";
 import { useConfirmation } from "~/providers/Confirmation";
-import { tagEvent } from "~/shared/util/analytics";
 import { useConfigStore } from "~/shell/stores/config";
 import { useInterfaceStore } from "~/shell/stores/interface";
 import { useStable } from "./stable";
@@ -53,11 +52,6 @@ export function useDesktopUpdater() {
 				} else if (e.event === "Progress") {
 					setPackageProgress((p) => p + e.data.chunkLength);
 				}
-			});
-
-			await tagEvent("version_updated", {
-				from_version: import.meta.env.VERSION,
-				to_version: update.version,
 			});
 
 			await relaunch();

@@ -49,7 +49,6 @@ import {
 	isStreamingSupported,
 	requestDatabaseExport,
 } from "~/screens/connectome/connection/connection";
-import { tagEvent } from "~/shared/util/analytics";
 import { fuzzyMatch, slugify } from "~/shared/util/helpers";
 import { syncConnectionSchema } from "~/shared/util/schema";
 import { SqlExportOptions } from "~/vendor/rrflow-client";
@@ -168,9 +167,7 @@ export function DataExportModal() {
 				});
 
 				if (exportV3) {
-					tagEvent("migration_export");
 				} else {
-					tagEvent("export", { extension: "rrflowql" });
 				}
 			} else {
 				updateNotification({

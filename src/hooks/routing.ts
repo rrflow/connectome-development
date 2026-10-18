@@ -87,9 +87,7 @@ export function useConnectionNavigator() {
 				return;
 			}
 
-			const fallback = info.authentication.mode === "cloud" ? "dashboard" : "query";
-
-			navigate(`/c/${info.id}/${view ?? fallback}`);
+			navigate(`/c/${info.id}/${view ?? "query"}`);
 		}
 	});
 }

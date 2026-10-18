@@ -10,9 +10,7 @@ import type {
 	Connection,
 	ConnectomeAppearanceSettings,
 	ConnectomeBehaviorSettings,
-	ConnectomeCloudSettings,
 	ConnectomeConfig,
-	ConnectomeGtmSettings,
 	ConnectomeServingSettings,
 	ConnectomeTemplateSettings,
 	HistoryQuery,
@@ -70,8 +68,6 @@ export type ConfigStore = ConnectomeConfig & {
 	updateAppearanceSettings: (settings: Partial<ConnectomeAppearanceSettings>) => void;
 	updateTemplateSettings: (settings: Partial<ConnectomeTemplateSettings>) => void;
 	updateServingSettings: (settings: Partial<ConnectomeServingSettings>) => void;
-	updateCloudSettings: (settings: Partial<ConnectomeCloudSettings>) => void;
-	updateGtmSettings: (settings: Partial<ConnectomeGtmSettings>) => void;
 	setFeatureFlag: <T extends FeatureFlag<typeof schema>>(
 		key: T,
 		value: FeatureFlagOption<typeof schema, T>,
@@ -300,28 +296,6 @@ export const useConfigStore = create<ConfigStore>()(
 					...state.settings,
 					serving: {
 						...state.settings.serving,
-						...settings,
-					},
-				},
-			})),
-
-		updateCloudSettings: (settings) =>
-			set((state) => ({
-				settings: {
-					...state.settings,
-					cloud: {
-						...state.settings.cloud,
-						...settings,
-					},
-				},
-			})),
-
-		updateGtmSettings: (settings) =>
-			set((state) => ({
-				settings: {
-					...state.settings,
-					gtm: {
-						...state.settings.gtm,
 						...settings,
 					},
 				},

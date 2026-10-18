@@ -25,8 +25,12 @@ The first version Connectome numbers as its own.
   from the inherited client is preserved in `NOTICE`; an identity gate forbids
   the inherited vendor's name outside declared dependency identifiers, the
   `src/vendor/` seam, and the notices.
+- The inherited vendor's hosted-service surface deleted, not renamed: cloud
+  account, organization, billing, support and referral pages; instance
+  dashboard and monitoring views; the assistant; the newsfeed; support chat;
+  analytics tracking and the native command that carried it; 221 files and
+  twelve dependencies.
 
 Still inherited and scheduled for removal rather than renaming (sprint 009):
-the cloud/organization pages (disabled by feature flag), the inherited
-assistant, the inherited UI kit, and the views that still run on the inherited
-query client.
+the inherited UI kit, and the views that still run on the inherited query
+client.

@@ -4,7 +4,6 @@ import { createContext, type PropsWithChildren, useContext, useState } from "rea
 import { type HistoryHandle, useHistory } from "~/hooks/history";
 import { useStable } from "~/hooks/stable";
 import { getRRFlowQL } from "~/screens/connectome/connection/connection";
-import { tagEvent } from "~/shared/util/analytics";
 import { RecordsChangedEvent } from "~/shared/util/global-events";
 import { RecordId } from "~/vendor/rrflow-client";
 import { InspectorDrawer } from "./drawer";
@@ -59,8 +58,6 @@ export function InspectorProvider({ children }: PropsWithChildren) {
 		} else {
 			setHistoryItems([recordId]);
 		}
-
-		tagEvent("record_inspector_open");
 	});
 
 	const stopInspect = useStable(() => {

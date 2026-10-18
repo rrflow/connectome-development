@@ -9,7 +9,6 @@ import { Form } from "~/components/Form";
 import { Introduction } from "~/components/Introduction";
 import { PanelDragger } from "~/components/Pane/dragger";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
-import { SidekickPanel } from "~/components/Sidekick/panel";
 import { useConnection, useIsConnected, useRequireDatabase } from "~/hooks/connection";
 import { usePanelMinSize } from "~/hooks/panels";
 import { useViewFocus } from "~/hooks/routing";
@@ -22,7 +21,6 @@ import {
 	executeQuery,
 	getRRFlowQL,
 } from "~/screens/connectome/connection/connection";
-import { tagEvent } from "~/shared/util/analytics";
 import { createBaseAuthentication } from "~/shared/util/defaults";
 import { showErrorNotification } from "~/shared/util/helpers";
 import {
@@ -218,8 +216,6 @@ export function FunctionsView() {
 				headers,
 				body: file,
 			});
-
-			tagEvent("import", { extension: "surml" });
 		}
 
 		syncConnectionSchema();
@@ -241,8 +237,6 @@ export function FunctionsView() {
 					headers,
 				}).then((res) => res.blob()),
 		);
-
-		tagEvent("export", { extension: "surml" });
 	});
 
 	useViewFocus("functions", () => {
@@ -367,7 +361,6 @@ export function FunctionsView() {
 							</Panel>
 						</>
 					)}
-					<SidekickPanel />
 				</PanelGroup>
 			</Box>
 

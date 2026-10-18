@@ -42,52 +42,19 @@ export const schema = {
 	syntax_themes: {
 		options: [false, true],
 	},
-	newsfeed: {
-		options: [false, true],
-	},
 	database_version_check: {
 		options: [false, true],
 	},
 	highlight_tool: {
 		options: [false, true],
 	},
-	cloud_enabled: {
-		options: [false, true],
-	},
-	cloud_endpoints: {
-		options: ["default", "custom"],
-	},
-	cloud_access: {
-		options: [false, true],
-	},
-	cloud_killswitch: {
-		options: [false, true],
-	},
 	changelog: {
 		options: ["auto", "hidden", "read", "unread"],
-	},
-	website_base: {
-		options: ["production", "custom"],
-	},
-	support_tickets_endpoint: {
-		options: ["production", "staging"],
-	},
-	support_tickets: {
-		options: [false, true],
 	},
 	sidebar_customization: {
 		options: [false, true],
 	},
-	gtm_debug: {
-		options: [false, true],
-	},
-	sidekick_ai: {
-		options: [false, true],
-	},
 	v3_migration_tooling: {
-		options: [false, true],
-	},
-	sandbox_deploy: {
 		options: [false, true],
 	},
 } satisfies FeatureFlagSchema;
@@ -107,19 +74,11 @@ export const featureFlags = new FeatureFlags({
 			functions_view: true,
 			parameters_view: true,
 			apidocs_view: true,
-			newsfeed: false,
 			highlight_tool: true,
-			cloud_enabled: false,
-			cloud_access: false,
 			themes: true,
 			syntax_themes: true,
 			sidebar_customization: true,
-			gtm_debug: false,
-			sidekick_ai: false,
-			support_tickets: false,
 			v3_migration_tooling: true,
-			support_tickets_endpoint: "staging",
-			sandbox_deploy: false,
 		},
 		preview: {
 			query_view: true,
@@ -131,18 +90,9 @@ export const featureFlags = new FeatureFlags({
 			parameters_view: true,
 			apidocs_view: true,
 			changelog: "hidden",
-			cloud_enabled: false,
-			cloud_killswitch: true,
-			cloud_access: false,
-			newsfeed: false,
 			themes: true,
 			sidebar_customization: true,
-			gtm_debug: false,
-			sidekick_ai: false,
-			support_tickets: false,
 			v3_migration_tooling: true,
-			support_tickets_endpoint: "staging",
-			sandbox_deploy: false,
 		},
 		production: {
 			query_view: true,
@@ -154,17 +104,8 @@ export const featureFlags = new FeatureFlags({
 			parameters_view: true,
 			apidocs_view: false, // TODO fix api docs
 			database_version_check: true,
-			cloud_enabled: false,
-			cloud_killswitch: true,
-			cloud_access: false,
-			newsfeed: false,
 			themes: true,
-			gtm_debug: false,
-			sidekick_ai: false,
-			support_tickets: false,
 			v3_migration_tooling: true,
-			support_tickets_endpoint: "production",
-			sandbox_deploy: false,
 		},
 	},
 	overrides: (flag) => {

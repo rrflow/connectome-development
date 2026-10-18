@@ -2,8 +2,7 @@ import { adapter } from "~/adapter";
 import { MiniAdapter } from "~/adapter/mini";
 import { SANDBOX } from "~/constants";
 import { useConfigStore } from "~/shell/stores/config";
-import type { Authentication, AuthLevel, CloudInstance, Connection } from "~/types";
-import { createBaseConnection } from "./defaults";
+import type { Authentication, AuthLevel, Connection } from "~/types";
 import { connectionUri, fastParseJwt } from "./helpers";
 
 /**
@@ -67,10 +66,6 @@ export function getActiveQuery() {
  * Returns the authentication level of the given mode
  */
 export function getAuthLevel(auth: Authentication): AuthLevel {
-	if (auth.mode === "cloud") {
-		return "root";
-	}
-
 	if (getAuthDB(auth)) {
 		return "database";
 	}
@@ -184,47 +179,13 @@ export function isConnectionValid(auth: Authentication | undefined) {
 	return true;
 }
 
-/**
- * Resolve the connection for a CloudInstance, creating one
- * if it does not exist
- */
-export function resolveInstanceConnection(instance: CloudInstance) {
-	const { settings, addConnection, connections } = useConfigStore.getState();
-	const connection = connections.find((c) => c.authentication.cloudInstance === instance.id);
-
-	if (connection) {
-		return connection;
-	}
-
-	const base = createBaseConnection(settings);
-
-	addConnection({
-		...base,
-		name: instance.name,
-		authentication: {
-			...base.authentication,
-			protocol: "wss",
-			mode: "cloud",
-			token: "",
-			hostname: instance.host,
-			cloudInstance: instance.id,
-		},
-	});
-
-	return base;
-}
-
-export type ConnectionVariant = "browser" | "localhost" | "cloud" | "remote";
+export type ConnectionVariant = "browser" | "localhost" | "remote";
 
 /**
  * Returns the variant of the specified connection
  */
 export function getConnectionVariant(connection: Connection) {
-	const { mode, protocol, hostname } = connection.authentication;
-
-	if (mode === "cloud") {
-		return "cloud";
-	}
+	const { protocol, hostname } = connection.authentication;
 
 	if (protocol === "mem" || protocol === "indxdb") {
 		return "browser";

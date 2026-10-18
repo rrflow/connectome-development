@@ -218,3 +218,61 @@ Branch `agent/connectome-ownership` from `main` `29c9a14`.
   repository correctly; the 73 inherited changelogs are removed and
   `0.0.5.md` authored; `CHANGELOG.md` rewritten. Sprint 007's submodule steps
   retired.
+
+### 2026-10-18 — Slice B
+
+Branch `agent/connectome-cloud-strip` from `main` `a3e00ee` (Slice A merged
+as PR #6).
+
+Scope grew from "the 105 STRIP files" to the whole inherited hosted-service
+surface once the dependency map was drawn: the vendor's cloud account,
+organization, billing, invoice, support, support-plan and referral pages; the
+`src/cloud/` API, queries, mutations, hooks and modals; the auth-callback
+screen and the cloud OAuth session-storage keys; the dashboard and monitor
+views (gated to cloud connections) and the metrics charts; the Sidekick
+assistant (component, view, store, hook, modal, command, intents); the
+newsfeed (hook, action-bar item, modal, Overview block, command, intent); the
+Intercom support chat and its ticket/conversation types; the help-centre and
+create-message modals; the `Context` provider (a WebSocket to the vendor's
+hosted "context" instance, renamed by sprint 006 to a `rrflow.cloud` host that
+does not exist); the cloud `deploy` store and the toolbar's "Deploy to Cloud"
+flow; the cloud sign-in button; cloud referral/invitation/AWS-marketplace
+query-parameter capture; the `"cloud"` authentication mode and
+`cloudInstance` field of the connection model; the `cloud` and `gtm` settings
+categories and their preference sections; eleven cloud-era feature flags; 63
+cloud/Intercom/observer types; the analytics module and its 49 `tagEvent`
+call sites, which posted a visitor cookie, the page URL and title and, on
+sign-in, the account email to a tracking endpoint (sprint 006 had rewritten
+the host to `127.0.0.1:8000`); the native `track_event` command, which sent
+`document.cookie` and the user agent to any URL the renderer named, and its
+`src-tauri/src/analytics.rs`. Dependencies removed with their last importer:
+`@intercom/messenger-js-sdk`, `flag-icons`, `react-window`,
+`react-virtualized-auto-sizer`, plus eight that no file imported any more
+(`@mdi/js`, `@tauri-apps/plugin-deep-link`, `react-markdown`, `remark-gfm`,
+`remark-github-blockquote-alert`, `rss-parser`, `turndown`,
+`@types/turndown`, `@types/react-window`). Net: 221 files deleted, 60
+changed, about 25,700 lines removed; `src/types.tsx` 1189 → 678 lines; the
+toolbar 658 → 298; the Overview 608 → 377.
+
+Kept, on purpose: the `connectome://` deep-link scheme registration in the
+native shell (nothing handles it yet; removing an OS registration is a
+packaging decision for the release workflow); the Docker adapter minus its
+cloud and telemetry fields; the `migrations`, `documentation` and the seven
+engine-backed views (Slice D).
+
+Found while deleting, not fixed here (pre-existing on `main`):
+`src/shell/components/App/modals/changelog.tsx` and `modals/documentation.tsx`
+are imported by nothing, so the "View release changelogs" command and the
+documentation search intent open nothing. Recorded for Slice D, which owns
+the documentation view.
+
+Verification: `pnpm check` green (Biome, identity gate — 7 inherited vendor
+dependencies still declared, unchanged by this slice — dependency authority,
+version contract, tsc); production build green; render smoke 2/2 against the
+production bundle; `cargo fmt --check`, `cargo check --locked`,
+`cargo clippy --all-targets -- -D warnings` green; `cargo test --all-targets`:
+27 passed, 3 ignored (the RRD process tests, which CI runs with a real
+engine). Stored configurations that still carry `settings.cloud` or
+`settings.gtm` merge harmlessly (extra keys are assigned, never read); a
+config-version migration is not needed.
+

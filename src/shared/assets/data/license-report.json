@@ -91,13 +91,6 @@
 		"author": "Sean Sullivan <sean@fig.io>"
 	},
 	{
-		"name": "@intercom/messenger-js-sdk",
-		"licenseType": "MIT",
-		"link": "https://registry.npmjs.org/@intercom/messenger-js-sdk/-/messenger-js-sdk-0.0.14.tgz",
-		"installedVersion": "0.0.14",
-		"author": "intercom"
-	},
-	{
 		"name": "@lezer/common",
 		"licenseType": "MIT",
 		"link": "git+https://code.haverbeke.berlin/lezer/common.git",
@@ -210,13 +203,6 @@
 		"author": "Vitaly Rtishchev <rtivital@gmail.com>"
 	},
 	{
-		"name": "@mdi/js",
-		"licenseType": "Apache-2.0",
-		"link": "git+https://github.com/Templarian/MaterialDesign-JS.git",
-		"installedVersion": "7.4.47",
-		"author": "Austin Andrews"
-	},
-	{
 		"name": "@replit/codemirror-indentation-markers",
 		"licenseType": "MIT",
 		"link": "git+https://github.com/replit/codemirror-indentation-markers.git",
@@ -301,13 +287,6 @@
 		"author": "n/a"
 	},
 	{
-		"name": "@tauri-apps/plugin-deep-link",
-		"licenseType": "MIT OR Apache-2.0",
-		"link": "git+https://github.com/tauri-apps/plugins-workspace.git",
-		"installedVersion": "2.2.0",
-		"author": "n/a"
-	},
-	{
 		"name": "@tauri-apps/plugin-dialog",
 		"licenseType": "MIT OR Apache-2.0",
 		"link": "git+https://github.com/tauri-apps/plugins-workspace.git",
@@ -361,13 +340,6 @@
 		"licenseType": "Apache Licence 2.0",
 		"link": "git+https://github.com/theopensource-company/feature-flags.git",
 		"installedVersion": "0.4.6",
-		"author": "n/a"
-	},
-	{
-		"name": "@types/turndown",
-		"licenseType": "MIT",
-		"link": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
-		"installedVersion": "5.0.6",
 		"author": "n/a"
 	},
 	{
@@ -460,13 +432,6 @@
 		"link": "git+https://github.com/epoberezkin/fast-deep-equal.git",
 		"installedVersion": "3.1.3",
 		"author": "Evgeny Poberezkin"
-	},
-	{
-		"name": "flag-icons",
-		"licenseType": "MIT",
-		"link": "git+https://github.com/lipis/flag-icons.git",
-		"installedVersion": "7.5.0",
-		"author": "Panayiotis Lipiridis <lipiridis@gmail.com>"
 	},
 	{
 		"name": "geo-coordinates-parser",
@@ -595,13 +560,6 @@
 		"author": "Paul Le Cam <paul@ulem.net>"
 	},
 	{
-		"name": "react-markdown",
-		"licenseType": "MIT",
-		"link": "git+https://github.com/remarkjs/react-markdown.git",
-		"installedVersion": "10.1.0",
-		"author": "Espen Hovlandsdal <espen@hovlandsdal.com>"
-	},
-	{
 		"name": "react-resizable-panels",
 		"licenseType": "MIT",
 		"link": "git+https://github.com/bvaughn/react-resizable-panels.git",
@@ -616,41 +574,6 @@
 		"author": "Tim Perry <tim@httptoolkit.tech>"
 	},
 	{
-		"name": "react-virtualized-auto-sizer",
-		"licenseType": "MIT",
-		"link": "git+https://github.com/bvaughn/react-virtualized-auto-sizer.git",
-		"installedVersion": "1.0.26",
-		"author": "Brian Vaughn <brian.david.vaughn@gmail.com> (https://github.com/bvaughn/)"
-	},
-	{
-		"name": "react-window",
-		"licenseType": "MIT",
-		"link": "git+https://github.com/bvaughn/react-window.git",
-		"installedVersion": "1.8.11",
-		"author": "Brian Vaughn <brian.david.vaughn@gmail.com> (https://github.com/bvaughn/)"
-	},
-	{
-		"name": "remark-gfm",
-		"licenseType": "MIT",
-		"link": "git+https://github.com/remarkjs/remark-gfm.git",
-		"installedVersion": "4.0.1",
-		"author": "Titus Wormer <tituswormer@gmail.com> (https://wooorm.com)"
-	},
-	{
-		"name": "remark-github-blockquote-alert",
-		"licenseType": "MIT",
-		"link": "git+https://github.com/jaywcjlove/remark-github-blockquote-alert.git",
-		"installedVersion": "2.1.0",
-		"author": "Kenny Wong <wowohoo@qq.com>"
-	},
-	{
-		"name": "rss-parser",
-		"licenseType": "MIT",
-		"link": "git+https://github.com/bobby-brennan/rss-parser.git",
-		"installedVersion": "3.13.0",
-		"author": "Bobby Brennan"
-	},
-	{
 		"name": "sigma",
 		"licenseType": "MIT",
 		"link": "http://github.com/jacomyal/sigma.js.git",
@@ -663,13 +586,6 @@
 		"link": "git+https://github.com/surrealdb/surrealdb.js.git",
 		"installedVersion": "2.0.3",
 		"author": "n/a"
-	},
-	{
-		"name": "turndown",
-		"licenseType": "MIT",
-		"link": "git+https://github.com/mixmark-io/turndown.git",
-		"installedVersion": "7.2.2",
-		"author": "Dom Christie"
 	},
 	{
 		"name": "use-immer",
@@ -753,13 +669,6 @@
 		"licenseType": "MIT",
 		"link": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
 		"installedVersion": "18.3.7",
-		"author": "n/a"
-	},
-	{
-		"name": "@types/react-window",
-		"licenseType": "MIT",
-		"link": "https://github.com/DefinitelyTyped/DefinitelyTyped.git",
-		"installedVersion": "1.8.8",
 		"author": "n/a"
 	},
 	{
