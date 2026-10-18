@@ -83,13 +83,9 @@ export function createBaseSettings(): ConnectomeSettings {
 			list: [],
 		},
 		serving: {
-			driver: "memory",
-			logLevel: "info",
-			storage: "",
+			project: "",
+			mode: "fresh",
 			executable: "",
-			username: "root",
-			password: "root",
-			port: 8000,
 			historySize: 250,
 		},
 		cloud: {

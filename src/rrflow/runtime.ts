@@ -261,6 +261,24 @@ function validateRuntimeOrigin(endpoint: string) {
 	}
 }
 
+/**
+ * The message of a failed RRD call, whatever shape it arrived in: an `Error`,
+ * a native command's `{ message }` rejection, or the plain string a public
+ * request rejects with. The UI shows this instead of a generic fallback.
+ */
+export function describeRrdError(error: unknown): string {
+	if (error instanceof Error) {
+		return error.message;
+	}
+	if (typeof error === "string" && error.length > 0) {
+		return error;
+	}
+	if (typeof error === "object" && error !== null && "message" in error) {
+		return String((error as { message: unknown }).message);
+	}
+	return "Unknown RRD connection error";
+}
+
 export class RrdRuntimeClient {
 	constructor(
 		private readonly endpoint: string,
@@ -269,7 +287,14 @@ export class RrdRuntimeClient {
 
 	private async publicGet(path: string): Promise<unknown> {
 		if (isTauri()) {
-			return invoke<unknown>("rrd_public_request", { endpoint: this.endpoint, path });
+			try {
+				return await invoke<unknown>("rrd_public_request", {
+					endpoint: this.endpoint,
+					path,
+				});
+			} catch (error) {
+				throw new Error(describeRrdError(error));
+			}
 		}
 		const response = await fetch(runtimeUrl(this.endpoint, path), {
 			headers: { Accept: "application/json" },

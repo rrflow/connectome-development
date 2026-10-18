@@ -263,3 +263,57 @@ Branch `agent/rrflow-serve-spine` from `main` `b388e48`.
   the repository's Playwright through its pre-installed Chromium via a
   local-only config; CI installs the pinned browser).
 - Not changed yet: the dead `start_database` lane (Slice B).
+- Landed as pull request #2, squash-merged to `main` as `8c1daa2` (Connectome
+  CI green: frontend, native on three platforms, RRD process job).
+
+### 2026-10-18 — Slice B: the contracted estate serve replaces the legacy lane
+
+Branch `agent/rrflow-serve-spine-b` from `main` `8c1daa2`.
+
+- `src-tauri/src/database/{mod.rs,shell.rs}` are deleted. The `sh -c`/`cmd /C`
+  wrapper, the `rrflow start` line, the root user/password, the driver URI,
+  and the fixed port are gone with them.
+- `src-tauri/src/rrd/estate.rs` holds the product path, `serve_estate`:
+  resolve the project (empty → `<app data>/estates/local`), `install plan
+  --mode <fresh|existing>` when the project has no `.rrflow/config.toml`,
+  write the plan outside the project (it hashes the project's inventory),
+  `install apply --plan --expect <plan_sha256>`, `--json serve --bind
+  127.0.0.1:0 --project` (the one-line announcement names the address and
+  instance), then `rrflow ready --address --project` until it succeeds, with
+  the engine's exit or a 180 s deadline as the failure boundaries. Three Tauri
+  commands wrap it: `rrd_estate_serve` (idempotent while serving; a raced
+  second serve is stopped), `rrd_estate_status` (a new window resumes the
+  served estate), `rrd_estate_stop` (kills only the child it started; nothing
+  by name). Every boundary is an `estate:stage` event — install (plan, apply,
+  skipped when installed), serve (announced), ready (authenticated) — and the
+  engine's stderr streams as `estate:output`. `ServeObserver` is the seam:
+  `AppHandle` emits, the process tests record.
+- The RRD process tests now drive `serve_estate` with `RRFLOW_BIN` instead of
+  their own copy of the sequence, so CI proves the desktop's serve path, not
+  a parallel one: `the_lenses_read_a_live_estate` and
+  `a_second_connection_never_replays_the_first_session` pass (41 s, debug
+  engine at `4705941`).
+- `ConnectomeServingSettings` is `{ project, mode, executable, historySize }`;
+  `DriverType` and `LogLevel` are gone. The Serving settings tab explains what
+  starting does and asks only for those. The adapter contract is
+  `serveEstate | servedEstate | stopEstate`; the browser adapter reports
+  serving unsupported as before.
+- "Start serving" calls `serveEstate`, records the `ServedEstate` in the
+  database store, then resolves the runtime connection for that estate — one
+  per operator credential path, updated with the announced address (the
+  kernel chooses the port) and the instance id, created on first serve — and
+  navigates to it, where the session panel reopens from the saved credential.
+  Failures surface the native error text; nothing is "Unknown" any more:
+  `describeRrdError` reads an `Error`, a native `{ message }` rejection, or
+  the plain string `rrd_public_request` rejects with — the handshake page had
+  been showing "Unknown RRD connection error" because that string is not an
+  `Error` instance, which hid "connection refused" in the screenshot.
+  The CreateConnection "Localhost" template (SurrealDB root/ws) is replaced by
+  a "Served estate" template available while an estate is served.
+- Evidence: `cargo check/clippy -D warnings/fmt --check --locked
+  --all-targets`: clean; native unit tests 23 passed; RRD process tests 2
+  passed through the product path; `pnpm check` (Biome, identity gate,
+  dependency authority, `tsc`): clean; `pnpm build`: built; render smoke 2
+  passed against the production bundle (local Chromium). Not run here: a
+  desktop run of the stage flow (no display in this environment) — the
+  definition of done's screenshot review remains for the owner's machine.

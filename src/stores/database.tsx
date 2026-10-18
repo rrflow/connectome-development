@@ -2,7 +2,7 @@ import { omit } from "radash";
 import { create } from "zustand";
 import type { GraphqlResponse } from "~/screens/connectome/connection/connection";
 import { createConnectionSchema } from "~/shared/util/defaults";
-import type { ConnectionSchema, QueryResponse } from "~/types";
+import type { ConnectionSchema, EstateStage, QueryResponse, ServedEstate } from "~/types";
 import { Diagnostic } from "~/vendor/rrflow-client";
 
 export type State = "disconnected" | "connecting" | "retrying" | "connected";
@@ -11,6 +11,10 @@ export type DiagnosticWithTime = Diagnostic & { timestamp: number };
 export type DatabaseStore = {
 	isServing: boolean;
 	servePending: boolean;
+	/** The estate the native process is serving; null while nothing is served. */
+	servedEstate: ServedEstate | null;
+	/** The serve sequence's boundaries, oldest first, cleared on each start. */
+	estateStages: EstateStage[];
 	currentState: State;
 	latestError: string;
 	isSyncingSchema: boolean;
@@ -27,9 +31,10 @@ export type DatabaseStore = {
 	setGraphqlQueryActive: (isQueryActive: boolean) => void;
 	clearSchema: () => void;
 	prepareServe: () => void;
-	confirmServing: () => void;
+	confirmServing: (estate: ServedEstate) => void;
 	stopServing: () => void;
 	cancelServe: () => void;
+	pushStage: (stage: EstateStage) => void;
 	pushConsoleLine: (line: string, max: number) => void;
 	clearConsole: () => void;
 	setIsSyncingSchema: (isSyncingSchema: boolean) => void;
@@ -47,6 +52,8 @@ export type DatabaseStore = {
 export const useDatabaseStore = create<DatabaseStore>((set) => ({
 	isServing: false,
 	servePending: false,
+	servedEstate: null,
+	estateStages: [],
 	currentState: "disconnected",
 	latestError: "",
 	isSyncingSchema: false,
@@ -78,18 +85,26 @@ export const useDatabaseStore = create<DatabaseStore>((set) => ({
 		set(() => ({
 			servePending: true,
 			consoleOutput: [],
+			estateStages: [],
 		})),
 
-	confirmServing: () =>
+	confirmServing: (servedEstate) =>
 		set(() => ({
 			isServing: true,
 			servePending: false,
+			servedEstate,
 		})),
 
 	stopServing: () =>
 		set(() => ({
 			isServing: false,
 			servePending: false,
+			servedEstate: null,
+		})),
+
+	pushStage: (stage) =>
+		set((state) => ({
+			estateStages: [...state.estateStages, stage],
 		})),
 
 	cancelServe: () =>

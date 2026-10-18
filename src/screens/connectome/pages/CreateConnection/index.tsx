@@ -41,6 +41,7 @@ import { createBaseConnection } from "~/shared/util/defaults";
 import { dispatchIntent } from "~/shared/util/intents";
 import { USER_ICONS } from "~/shared/util/user-icons";
 import { useConfigStore } from "~/shell/stores/config";
+import { useDatabaseStore } from "~/stores/database";
 import { Template } from "~/types";
 import classes from "./style.module.scss";
 
@@ -150,52 +151,33 @@ export function CreateConnectionPage() {
 		dispatchIntent("open-settings", { tab: "templates" });
 	});
 
-	// const newLocalhost = useStable(() => {
-	// 	const { username, password, port } = useConfigStore.getState().settings.serving;
-
-	// 	const template = JSON.stringify({
-	// 		name: "Local database",
-	// 		icon: 0,
-	// 		values: {
-	// 			mode: "root",
-	// 			database: "",
-	// 			namespace: "",
-	// 			protocol: "ws",
-	// 			hostname: `localhost:${port}`,
-	// 			scope: "",
-	// 			scopeFields: [],
-	// 			access: "",
-	// 			token: "",
-	// 			username,
-	// 			password,
-	// 		},
-	// 	});
-
-	// 	dispatchIntent("new-connection", { template });
-	// 	openedHandle.close();
-	// });
-
+	// The estate the desktop is serving, as a template for a runtime
+	// connection: the announced loopback address, the instance the engine
+	// identified as, and a reference to the operator credential file.
+	const served = useDatabaseStore((s) => s.servedEstate);
 	const localhost = useMemo(() => {
-		const { username, password, port } = useConfigStore.getState().settings.serving;
+		if (!served) {
+			return null;
+		}
 
 		return {
 			id: "_localhost",
-			name: "Local database",
+			name: "Served estate",
 			icon: 0,
 			values: {
-				mode: "root",
+				mode: "none",
 				database: "",
 				namespace: "",
-				protocol: "ws",
-				hostname: `localhost:${port}`,
+				protocol: "http",
+				hostname: served.endpoint.replace(/^https?:\/\//, ""),
 				accessFields: [],
 				access: "",
 				token: "",
-				username,
-				password,
+				username: "",
+				password: "",
 			},
 		} as Template;
-	}, []);
+	}, [served]);
 
 	const templates = useConfigStore((s) => s.settings.templates.list);
 	const savepoint = useLastSavepoint();
@@ -245,7 +227,7 @@ export function CreateConnectionPage() {
 									</Button>
 								</Menu.Target>
 								<Menu.Dropdown miw={200}>
-									{adapter.isServeSupported && (
+									{adapter.isServeSupported && localhost && (
 										<>
 											<Menu.Item
 												onClick={() => applyTemplate(localhost)}
@@ -266,9 +248,11 @@ export function CreateConnectionPage() {
 														fw={500}
 														lh={1}
 													>
-														Localhost
+														Served estate
 													</Text>
-													<Text fz="sm">Automatic template</Text>
+													<Text fz="sm">
+														The estate Connectome is serving
+													</Text>
 												</Box>
 											</Menu.Item>
 											<Menu.Divider />
