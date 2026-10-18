@@ -2,7 +2,6 @@
 	"name": "connectome",
 	"private": true,
 	"version": "3.7.3",
-	"engineProtocol": "2.0.0",
 	"type": "module",
 	"engines": {
 		"node": ">=22.13"

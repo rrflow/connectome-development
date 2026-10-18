@@ -319,7 +319,7 @@ export function ConnectomeToolbar() {
 		readChangelog();
 	});
 
-	const [isSupported, version] = useMinimumVersion(import.meta.env.RRFLOW_VERSION);
+	const [isSupported, version] = useMinimumVersion(import.meta.env.RRFLOW_ENGINE_VERSION);
 	const isSandbox = id === "sandbox";
 	const showNS = !isSandbox && id && isConnected;
 	const showDB = showNS && namespace;
@@ -537,7 +537,7 @@ export function ConnectomeToolbar() {
 								span
 								c="bright"
 							>
-								RRFlow {import.meta.env.RRFLOW_VERSION}
+								RRFlow {import.meta.env.RRFLOW_ENGINE_VERSION}
 							</Text>
 						</Text>
 						<Text>
