@@ -2,14 +2,19 @@
 
 Connectome is the native desktop control surface for RRFlow. It runs as a Tauri application on Windows, macOS, and Linux and connects to a separately deployed RRFlow runtime.
 
-This is the standalone
-[`rrflow/connectome-development`](https://github.com/rrflow/connectome-development)
-Git repository, a sibling of the engine repository
-[`rrflow/rrflow-development`](https://github.com/rrflow/rrflow-development)
-under the same GitHub organization. The two are bound by one pinned engine
-revision (see "The bundled engine" below), not by a Git submodule or a shared
-checkout: Connectome is not part of the engine and the engine does not need
-Connectome to run.
+This public repository,
+[`rrflow/connectome-development`](https://github.com/rrflow/connectome-development),
+is RRFlow's associated operator and developer UI repository. The engine
+repository, [`rrflow/rrflow-development`](https://github.com/rrflow/rrflow-development),
+registers it at `connectome/` as an optional Git submodule in
+[the source-integration change](https://github.com/rrflow/rrflow-development/pull/20).
+The parent gitlink pins an exact Connectome source revision; UI changes are
+reviewed here before a separate engine change advances that pin.
+
+Connectome keeps its own Git history, build, and release boundary. RRFlow can
+operate independently of this UI. Connectome's packaged engine revision (see
+"The bundled engine" below) is a separate pin for the engine binary shipped
+with the desktop application.
 
 ## Current alpha
 
@@ -104,9 +109,18 @@ RRFlow engine repository             Connectome repository
                                       └── native desktop UI
 ```
 
-During joint development the Connectome and RRFlow repositories may be checked
-out beside one another, but their Git histories and release boundaries remain
-independent.
+After the source-integration change lands, acquire the pinned UI from an RRFlow
+checkout with:
+
+```bash
+git submodule update --init -- connectome
+git submodule status -- connectome
+```
+
+A standalone clone of this public repository also supports UI development.
+Neither checkout layout makes UI source an engine build or readiness dependency.
+The [RRFlow client contract](https://github.com/rrflow/rrflow-development/blob/agent/connectome-product-integration/docs/reference/client/connectome.md)
+owns the integration requirements; a source pin alone does not qualify the UI.
 Connectome visualizes and controls project RRFlow instances. The optional
 enterprise profile connects to a distinct control plane for fleet and
 deployment management; it does not change or proxy the project-runtime
