@@ -1,6 +1,5 @@
 import { Center, Drawer, Group, Paper, SegmentedControl, Tabs, Text } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconArrowLeftFat, iconClose, iconDelete, iconRefresh, iconSearch } from "@rrflow/ui";
 import { useEffect, useState } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { DrawerResizer } from "~/components/DrawerResizer";
@@ -12,7 +11,15 @@ import { useSaveable } from "~/hooks/save";
 import { useStable } from "~/hooks/stable";
 import { useIsLight } from "~/hooks/theme";
 import { executeQuery, getRRFlowQL } from "~/screens/connectome/connection/connection";
-import { RecordId } from "~/vendor/rrflow-client";
+import { RecordId } from "../../rrflow/client/values";
+import {
+	Icon,
+	iconArrowLeftFat,
+	iconClose,
+	iconDelete,
+	iconRefresh,
+	iconSearch,
+} from "../../rrflow/ui/index";
 import { useConfirmation } from "../Confirmation";
 import classes from "./style.module.scss";
 import { ContentTab } from "./tabs/content";

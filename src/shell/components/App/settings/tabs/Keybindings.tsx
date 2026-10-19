@@ -11,7 +11,6 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconEdit, iconPlus, iconSearch } from "@rrflow/ui";
 import equal from "fast-deep-equal";
 import { Fragment, useMemo, useState } from "react";
 import { ActionButton } from "~/components/ActionButton";
@@ -29,6 +28,7 @@ import {
 } from "~/providers/Commands";
 import { fuzzyMatch } from "~/shared/util/helpers";
 import { useConfigStore } from "~/shell/stores/config";
+import { Icon, iconEdit, iconPlus, iconSearch } from "../../../../../rrflow/ui/index";
 
 export function KeybindingsTab() {
 	const [search, setSearch] = useInputState("");

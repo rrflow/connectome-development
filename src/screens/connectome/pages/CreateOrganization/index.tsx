@@ -1,6 +1,5 @@
 import { Box, Button, Group, ScrollArea, Stack, TextInput } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconOrganization } from "@rrflow/ui";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { fetchAPI } from "~/cloud/api";
@@ -12,6 +11,7 @@ import { useAbsoluteLocation } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
 import { tagEvent } from "~/shared/util/analytics";
 import { CloudOrganization } from "~/types";
+import { Icon, iconOrganization } from "../../../../rrflow/ui/index";
 import classes from "./style.module.scss";
 
 export function CreateOrganizationPage() {

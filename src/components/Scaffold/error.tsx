@@ -1,4 +1,7 @@
 import { Box, Button, Divider, Group, Paper, ScrollArea, Stack, Text, Title } from "@mantine/core";
+import type { FallbackProps } from "react-error-boundary";
+import { adapter } from "~/adapter";
+import { useVersionCopy } from "~/hooks/debug";
 import {
 	CodeBlock,
 	Icon,
@@ -7,10 +10,7 @@ import {
 	iconCopy,
 	iconRefresh,
 	iconWarning,
-} from "@rrflow/ui";
-import type { FallbackProps } from "react-error-boundary";
-import { adapter } from "~/adapter";
-import { useVersionCopy } from "~/hooks/debug";
+} from "../../rrflow/ui/index";
 
 export function ScaffoldErrorHandler({ error, resetErrorBoundary }: FallbackProps) {
 	const [copyDebug, clipboard] = useVersionCopy();

@@ -1,6 +1,5 @@
 import { Badge, ScrollArea, Stack, Text, TextInput } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconCopy, iconDelete, iconPlus, iconSearch, iconVariable } from "@rrflow/ui";
 import { useContextMenu } from "mantine-contextmenu";
 import { useMemo } from "react";
 import { ActionButton } from "~/components/ActionButton";
@@ -8,6 +7,14 @@ import { Entry } from "~/components/Entry";
 import { ContentPane } from "~/components/Pane";
 import { useIsConnected } from "~/hooks/connection";
 import type { SchemaParameter } from "~/types";
+import {
+	Icon,
+	iconCopy,
+	iconDelete,
+	iconPlus,
+	iconSearch,
+	iconVariable,
+} from "../../../../../rrflow/ui/index";
 import classes from "./style.module.scss";
 
 export interface ParametersPanelProps {

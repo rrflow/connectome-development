@@ -1,9 +1,9 @@
 import { Button, Group, Text } from "@mantine/core";
-import { Icon, iconDownload, iconModuleML, iconOpen } from "@rrflow/ui";
 import { useMemo } from "react";
 import { adapter } from "~/adapter";
 import { Introduction } from "~/components/Introduction";
 import type { SchemaModel } from "~/types";
+import { Icon, iconDownload, iconModuleML, iconOpen } from "../../../../../rrflow/ui/index";
 
 export interface ModelPanelProps {
 	details: SchemaModel;

@@ -1,15 +1,4 @@
 import { Alert, Box, Button, Divider, Group, ScrollArea, Stack, Tabs, Text } from "@mantine/core";
-import {
-	Icon,
-	iconChat,
-	iconChevronRight,
-	iconCog,
-	iconCreditCard,
-	iconDollar,
-	iconOrganization,
-	iconProgressClock,
-	iconServer,
-} from "@rrflow/ui";
 import { useMemo } from "react";
 import { Redirect, useLocation } from "wouter";
 import {
@@ -29,6 +18,17 @@ import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { useIsAuthenticated } from "~/hooks/cloud";
 import { OVERVIEW, Savepoint, useSavepoint } from "~/hooks/overview";
 import { dispatchIntent } from "~/shared/util/intents";
+import {
+	Icon,
+	iconChat,
+	iconChevronRight,
+	iconCog,
+	iconCreditCard,
+	iconDollar,
+	iconOrganization,
+	iconProgressClock,
+	iconServer,
+} from "../../../../rrflow/ui/index";
 import classes from "./style.module.scss";
 import { OrganizationBillingTab } from "./tabs/billing";
 import { OrganizationInstancesTab } from "./tabs/instances";

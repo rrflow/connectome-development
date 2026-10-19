@@ -17,11 +17,11 @@ export function DocsSchemaScopes({ language }: TopicProps) {
 		);
 		`,
 			js: `
-		import { RRFlow } from '~/vendor/rrflow-client';
+		import { RRFlow } from "../../../../../rrflow/client/native";
 
 		const db = new RRFlow();
 
-		import { RRFlow } from '~/vendor/rrflow-client';
+		import { RRFlow } from "../../../../../rrflow/client/native";
 		const db = new RRFlow();
 		await db.connect('<the actual address of the connection>/rpc', {
 			namespace: '<the actual ns of the connection>',

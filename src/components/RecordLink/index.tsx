@@ -1,11 +1,11 @@
 import { type BoxProps, type ElementProps, Group } from "@mantine/core";
-import { Icon, iconArrowUpRight } from "@rrflow/ui";
 import type { MouseEvent } from "react";
 import { useEffect, useState } from "react";
 import { useStable } from "~/hooks/stable";
 import { useInspector } from "~/providers/Inspector";
 import { getRRFlowQL } from "~/screens/connectome/connection/connection";
-import type { RecordId } from "~/vendor/rrflow-client";
+import type { RecordId } from "../../rrflow/client/values";
+import { Icon, iconArrowUpRight } from "../../rrflow/ui/index";
 import { HighlightedText } from "../HighlightedText";
 
 export interface RecordLinkProps extends BoxProps, ElementProps<"div"> {

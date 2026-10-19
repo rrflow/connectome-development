@@ -16,7 +16,6 @@ import {
 	TextInput,
 	Tooltip,
 } from "@mantine/core";
-import { Icon, iconCheck, iconCopy, iconHelp, pictoChatHeart } from "@rrflow/ui";
 import { ReactNode } from "react";
 import { useCloudReferralCodeQuery, useCloudReferralQuery } from "~/cloud/queries/referral";
 import { CloudSplash } from "~/components/CloudSplash";
@@ -37,6 +36,7 @@ import tier4LightUrl from "~/shared/assets/images/light/referral-tier-4.png";
 import tier5LightUrl from "~/shared/assets/images/light/referral-tier-5.png";
 import glowImage from "~/shared/assets/images/radial-glow.png";
 import { ON_FOCUS_SELECT } from "~/shared/util/helpers";
+import { Icon, iconCheck, iconCopy, iconHelp, pictoChatHeart } from "../../../../rrflow/ui/index";
 import classes from "./style.module.scss";
 
 const REWARDS = [1, 10, 25, 100, 500];

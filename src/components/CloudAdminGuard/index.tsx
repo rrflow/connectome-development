@@ -1,9 +1,9 @@
 import { Button, Center, Group, Image, Stack, Text } from "@mantine/core";
-import { pictoSDBCloud } from "@rrflow/ui";
 import { PropsWithChildren } from "react";
 import { navigate } from "wouter/use-browser-location";
 import { hasOrganizationRoles, ORG_ROLES_ADMIN } from "~/cloud/helpers";
 import { CloudOrganization } from "~/types";
+import { pictoRRFlowCloud } from "../../rrflow/ui/index";
 
 export interface CloudAdminGuardProps {
 	organisation: CloudOrganization;
@@ -23,7 +23,7 @@ export function CloudAdminGuard({
 			>
 				<Stack align="center">
 					<Image
-						src={pictoSDBCloud}
+						src={pictoRRFlowCloud}
 						alt=""
 						maw={125}
 					/>

@@ -16,7 +16,6 @@ import {
 	Textarea,
 	UnstyledButton,
 } from "@mantine/core";
-import { Icon, iconErrorCircle, iconRefresh } from "@rrflow/ui";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { Redirect } from "wouter";
@@ -28,6 +27,7 @@ import {
 	type VyrmFlight,
 } from "~/rrflow/diagnostics";
 import { useConfigStore } from "~/shell/stores/config";
+import { Icon, iconErrorCircle, iconRefresh } from "../../../../rrflow/ui/index";
 import classes from "./style.module.scss";
 
 const LANE_ORDER = ["context", "routing", "model", "tools", "verification", "outcome"];

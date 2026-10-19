@@ -11,7 +11,6 @@ import {
 	Stack,
 	Text,
 } from "@mantine/core";
-import { Icon, iconBraces, iconFilter, iconRelation, iconTag } from "@rrflow/ui";
 import { indexParallelEdgesIndex } from "@sigma/edge-curve";
 import { inferSettings } from "graphology-layout-forceatlas2";
 import FA2LayoutSupervisor from "graphology-layout-forceatlas2/worker";
@@ -34,7 +33,14 @@ import { executeQuery } from "~/screens/connectome/connection/connection";
 import { plural } from "~/shared/util/helpers";
 import { themeColor } from "~/shared/util/mantine";
 import { useConfigStore } from "~/shell/stores/config";
-import { equals, escapeIdent, RecordId } from "~/vendor/rrflow-client";
+import { equals, escapeIdent, RecordId } from "../../../../../../rrflow/client/values";
+import {
+	Icon,
+	iconBraces,
+	iconFilter,
+	iconRelation,
+	iconTag,
+} from "../../../../../../rrflow/ui/index";
 import classes from "../style.module.scss";
 import { type PreviewProps } from ".";
 

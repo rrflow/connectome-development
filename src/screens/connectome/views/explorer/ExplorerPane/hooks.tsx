@@ -2,7 +2,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useDatabaseSchema } from "~/hooks/schema";
 import { executeQueryFirst, executeQuerySingle } from "~/screens/connectome/connection/connection";
 import { parseIdent } from "~/shared/util/language";
-import { escapeIdent } from "~/vendor/rrflow-client";
+import { escapeIdent } from "../../../../../rrflow/client/values";
 
 export type SortMode = [string, "asc" | "desc"] | null;
 

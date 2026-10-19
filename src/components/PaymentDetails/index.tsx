@@ -11,7 +11,6 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useWindowEvent } from "@mantine/hooks";
-import { Icon, iconCreditCard } from "@rrflow/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { capitalize } from "radash";
 import { useRef, useState } from "react";
@@ -23,6 +22,7 @@ import { useStable } from "~/hooks/stable";
 import { tagEvent } from "~/shared/util/analytics";
 import { showErrorNotification } from "~/shared/util/helpers";
 import { CloudOrganization } from "~/types";
+import { Icon, iconCreditCard } from "../../rrflow/ui/index";
 import { Label } from "../Label";
 import { Spacer } from "../Spacer";
 

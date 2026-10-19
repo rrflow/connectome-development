@@ -1,6 +1,5 @@
 import { ActionIcon, Collapse, Group, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { Icon, iconChevronDown, iconChevronUp, iconOpen } from "@rrflow/ui";
 import { adapter } from "~/adapter";
 import { Entry } from "~/components/Entry";
 import { Spacer } from "~/components/Spacer";
@@ -17,6 +16,7 @@ import {
 	isSection,
 } from "~/screens/connectome/docs/types";
 import type { CodeLang } from "~/types";
+import { Icon, iconChevronDown, iconChevronUp, iconOpen } from "../../../../../rrflow/ui/index";
 import classes from "./style.module.scss";
 
 interface TopicProps<T> {

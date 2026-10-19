@@ -1,4 +1,11 @@
 import { Box, Group, Text } from "@mantine/core";
+import { useQuery } from "@tanstack/react-query";
+import { ContextMenuDivider, ContextMenuItem } from "mantine-contextmenu";
+import { unique } from "radash";
+import { useIsLight } from "~/hooks/theme";
+import { getRRFlow } from "~/screens/connectome/connection/connection";
+import { QueryResponse } from "~/types";
+import { RecordId } from "../../rrflow/client/values";
 import {
 	Icon,
 	iconCopy,
@@ -8,14 +15,7 @@ import {
 	iconRelationIn,
 	iconRelationOut,
 	iconSearch,
-} from "@rrflow/ui";
-import { useQuery } from "@tanstack/react-query";
-import { ContextMenuDivider, ContextMenuItem } from "mantine-contextmenu";
-import { unique } from "radash";
-import { useIsLight } from "~/hooks/theme";
-import { getRRFlow } from "~/screens/connectome/connection/connection";
-import { QueryResponse } from "~/types";
-import { RecordId } from "~/vendor/rrflow-client";
+} from "../../rrflow/ui/index";
 import { NodeCircle } from "./node";
 import { GraphEdges, GraphExpansion, RelationGraphNode } from "./types";
 

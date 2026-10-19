@@ -1,5 +1,4 @@
 import { Alert, Box, Button, Divider, Group, ScrollArea, Slider, Stack, Text } from "@mantine/core";
-import { Icon, iconChevronRight, iconClock, iconHelp, iconWarning } from "@rrflow/ui";
 import { add, formatDistance } from "date-fns";
 import { useMemo, useState } from "react";
 import { useUpdateConfirmation } from "~/cloud/hooks/confirm";
@@ -7,6 +6,13 @@ import { useUpdateInstanceStorageMutation } from "~/cloud/mutations/storage";
 import { Link } from "~/components/Link";
 import { useStable } from "~/hooks/stable";
 import { CloudInstance } from "~/types";
+import {
+	Icon,
+	iconChevronRight,
+	iconClock,
+	iconHelp,
+	iconWarning,
+} from "../../../../../../rrflow/ui/index";
 import classes from "../style.module.scss";
 
 export interface ConfigurationStorageProps {

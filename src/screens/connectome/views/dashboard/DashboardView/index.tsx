@@ -19,17 +19,6 @@ import {
 	UnstyledButton,
 } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
-import {
-	Icon,
-	iconCheck,
-	iconChevronDown,
-	iconChevronRight,
-	iconCopy,
-	pictoDocument,
-	pictoHandsOn,
-	pictoPlay,
-	pictoSDBCloud,
-} from "@rrflow/ui";
 import { memo, useEffect, useState } from "react";
 import { useImmer } from "use-immer";
 import { Redirect } from "wouter";
@@ -62,6 +51,17 @@ import { APPLY_DATA_FILE_KEY, APPLY_DATASET_KEY } from "~/shared/util/storage";
 import { openResourcesLockedModal } from "~/shell/components/App/modals/resources-locked";
 import { useDatabaseStore } from "~/stores/database";
 import { useDeployStore } from "~/stores/deploy";
+import {
+	Icon,
+	iconCheck,
+	iconChevronDown,
+	iconChevronRight,
+	iconCopy,
+	pictoDocument,
+	pictoHandsOn,
+	pictoPlay,
+	pictoRRFlowCloud,
+} from "../../../../../rrflow/ui/index";
 import { MonitorMetricOptions } from "../../monitor/helpers";
 import { MetricActions } from "../../monitor/MetricPane/actions";
 import { BackupsBlock } from "../BackupsBlock";
@@ -657,7 +657,7 @@ function LoadingScreen() {
 				/>
 				<Image
 					className={classes.provisionIcon}
-					src={pictoSDBCloud}
+					src={pictoRRFlowCloud}
 					w={68}
 					h={68}
 					mt={-8}

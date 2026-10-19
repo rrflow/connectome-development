@@ -1,6 +1,5 @@
 import { ActionIcon, Box, Drawer, Group, Stack } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconClose, iconMarker } from "@rrflow/ui";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { DrawerResizer } from "~/components/DrawerResizer";
 import { Label } from "~/components/Label";
@@ -9,7 +8,8 @@ import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";
 import { getRRFlowQL } from "~/screens/connectome/connection/connection";
 import { ON_STOP_PROPAGATION } from "~/shared/util/helpers";
-import { rrflowql } from "~/vendor/rrflowql-editor";
+import { rrflowql } from "../../rrflow/editor";
+import { Icon, iconClose, iconMarker } from "../../rrflow/ui/index";
 import { CodeEditor } from "../CodeEditor";
 import type { GeographyInput } from "../GeographyMap";
 

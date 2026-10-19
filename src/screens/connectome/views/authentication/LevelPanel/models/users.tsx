@@ -13,7 +13,6 @@ import {
 } from "@mantine/core";
 
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconCheck, iconPlus } from "@rrflow/ui";
 import { useLayoutEffect, useState } from "react";
 import { Form } from "~/components/Form";
 import { CodeInput } from "~/components/Inputs";
@@ -24,7 +23,8 @@ import { executeQuery } from "~/screens/connectome/connection/connection";
 import { showErrorNotification } from "~/shared/util/helpers";
 import { syncConnectionSchema } from "~/shared/util/schema";
 import type { Base, SchemaUser } from "~/types";
-import { escapeIdent } from "~/vendor/rrflow-client";
+import { escapeIdent } from "../../../../../../rrflow/client/values";
+import { Icon, iconCheck, iconPlus } from "../../../../../../rrflow/ui/index";
 
 const ROLES = [
 	{ value: "OWNER", label: "Owner" },

@@ -11,6 +11,13 @@ import {
 	Stack,
 	Text,
 } from "@mantine/core";
+import { useState } from "react";
+import { ActionButton } from "~/components/ActionButton";
+import { Link } from "~/components/Link";
+import { RelativeTime } from "~/components/RelativeTime";
+import { Spacer } from "~/components/Spacer";
+import { useIsLight } from "~/hooks/theme";
+import { SidekickChatMessage } from "~/types";
 import {
 	Icon,
 	iconArrowLeft,
@@ -19,14 +26,7 @@ import {
 	iconChevronUp,
 	iconCopy,
 	Markdown,
-} from "@rrflow/ui";
-import { useState } from "react";
-import { ActionButton } from "~/components/ActionButton";
-import { Link } from "~/components/Link";
-import { RelativeTime } from "~/components/RelativeTime";
-import { Spacer } from "~/components/Spacer";
-import { useIsLight } from "~/hooks/theme";
-import { SidekickChatMessage } from "~/types";
+} from "../../../rrflow/ui/index";
 import classes from "../style.module.scss";
 
 export interface SidekickMessageProps {

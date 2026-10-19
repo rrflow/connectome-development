@@ -13,7 +13,6 @@ import {
 } from "@mantine/core";
 
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconPlus } from "@rrflow/ui";
 import { useLayoutEffect, useMemo, useState } from "react";
 import { Form } from "~/components/Form";
 import { CodeInput } from "~/components/Inputs";
@@ -25,7 +24,8 @@ import { executeQuery } from "~/screens/connectome/connection/connection";
 import { showErrorNotification } from "~/shared/util/helpers";
 import { readBlock, syncConnectionSchema } from "~/shared/util/schema";
 import type { AccessType, Base, SchemaAccess } from "~/types";
-import { escapeIdent } from "~/vendor/rrflow-client";
+import { escapeIdent } from "../../../../../../rrflow/client/values";
+import { Icon, iconPlus } from "../../../../../../rrflow/ui/index";
 
 type VerifyMode = "url" | "keyalg";
 

@@ -1,5 +1,5 @@
 import { Accordion, Stack, TextInput } from "@mantine/core";
-import { iconClock } from "@rrflow/ui";
+import { iconClock } from "../../../rrflow/ui/index";
 import { type ElementProps, SectionTitle } from "../helpers";
 
 export function ChangefeedElement({ data, setData }: ElementProps) {

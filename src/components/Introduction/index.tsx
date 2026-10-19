@@ -1,7 +1,7 @@
 import { Box, Center, Divider, Group, Paper, Stack, Text } from "@mantine/core";
-import { CodeBlock, Icon } from "@rrflow/ui";
 import { type PropsWithChildren, type ReactNode, useMemo } from "react";
 import { dedent } from "~/shared/util/dedent";
+import { CodeBlock, Icon } from "../../rrflow/ui/index";
 import { Spacer } from "../Spacer";
 
 export interface IntroductionProps {

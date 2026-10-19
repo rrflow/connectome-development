@@ -1,6 +1,5 @@
 import { Box, Divider, Group, Modal, ScrollArea, Stack, Text, TextInput } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconSearch } from "@rrflow/ui";
 import clsx from "clsx";
 import { type KeyboardEvent, useMemo, useRef } from "react";
 import { Entry } from "~/components/Entry";
@@ -19,6 +18,7 @@ import {
 } from "~/providers/Commands";
 import { fuzzyMatch, ON_STOP_PROPAGATION, Y_SLIDE_TRANSITION } from "~/shared/util/helpers";
 import { useConfigStore } from "~/shell/stores/config";
+import { Icon, iconSearch } from "../../../../rrflow/ui/index";
 import classes from "../style.module.scss";
 
 export function CommandPaletteModal() {

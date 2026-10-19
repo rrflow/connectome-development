@@ -1,6 +1,6 @@
 import { Badge, Box, Group, Paper, Progress, Stack, Text } from "@mantine/core";
-import { Icon, iconChevronRight } from "@rrflow/ui";
 import type { RrdMetricView, RrdPhysicalStorageView } from "~/rrflow/session";
+import { Icon, iconChevronRight } from "../../../../rrflow/ui/index";
 import { formatCount } from "./format";
 import { type GlossaryTerm, Term } from "./glossary";
 import { fill, fillColor, formatMetric } from "./physical";

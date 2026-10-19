@@ -1,5 +1,5 @@
 import { MigrationDiagnosticResult, MigrationResourceType } from "~/types";
-import { RecordId } from "~/vendor/rrflow-client";
+import { RecordId } from "../../../../../rrflow/client/values";
 
 /*
 Available origin patterns:

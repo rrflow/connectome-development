@@ -1,16 +1,5 @@
 import { Badge, Divider, ScrollArea, Stack, Text, TextInput } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import {
-	Icon,
-	iconAPI,
-	iconChevronLeft,
-	iconDelete,
-	iconPin,
-	iconPinOff,
-	iconPlus,
-	iconReset,
-	iconSearch,
-} from "@rrflow/ui";
 import { type ContextMenuItemOptions, useContextMenu } from "mantine-contextmenu";
 import { sort } from "radash";
 import { useMemo } from "react";
@@ -32,7 +21,18 @@ import { getTableVariant, syncConnectionSchema } from "~/shared/util/schema";
 import { useConfigStore } from "~/shell/stores/config";
 import { useInterfaceStore } from "~/shell/stores/interface";
 import { TableVariant } from "~/types";
-import { escapeIdent } from "~/vendor/rrflow-client";
+import { escapeIdent } from "../../../../rrflow/client/values";
+import {
+	Icon,
+	iconAPI,
+	iconChevronLeft,
+	iconDelete,
+	iconPin,
+	iconPinOff,
+	iconPlus,
+	iconReset,
+	iconSearch,
+} from "../../../../rrflow/ui/index";
 import classes from "./style.module.scss";
 
 const VARIANT_ORDER: TableVariant[] = ["normal", "view", "relation"];

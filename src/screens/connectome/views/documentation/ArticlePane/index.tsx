@@ -1,5 +1,4 @@
 import { Box, Group, ScrollArea, Select, Title } from "@mantine/core";
-import { Icon, iconCheck, iconList } from "@rrflow/ui";
 import { type RefObject, useMemo } from "react";
 import { ContentPane } from "~/components/Pane";
 import { ScrollFader } from "~/components/ScrollFader";
@@ -17,6 +16,7 @@ import {
 	isSection,
 } from "~/screens/connectome/docs/types";
 import type { CodeLang } from "~/types";
+import { Icon, iconCheck, iconList } from "../../../../../rrflow/ui/index";
 
 type ReadableArticle = DocsArticleTopic | DocsSectionTopic;
 

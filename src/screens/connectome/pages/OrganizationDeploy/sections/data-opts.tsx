@@ -1,7 +1,8 @@
 import { Alert, Box, Button, Group, Select, Stack, Text } from "@mantine/core";
-import { Icon, iconArrowDownFat, iconHelp, iconInfo, useStable } from "@rrflow/ui";
 import dayjs from "dayjs";
 import { isDistributedPlan } from "~/cloud/helpers";
+import { useStable } from "../../../../../hooks/stable";
+import { Icon, iconArrowDownFat, iconHelp, iconInfo } from "../../../../../rrflow/ui/index";
 import { DeploySectionProps } from "../types";
 
 export function DataOptionsSection({

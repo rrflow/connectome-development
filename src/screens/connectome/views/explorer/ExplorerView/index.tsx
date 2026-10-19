@@ -1,16 +1,5 @@
 import { Box, Button, Group, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import {
-	Icon,
-	iconChevronRight,
-	iconDesigner,
-	iconDownload,
-	iconExplorer,
-	iconOpen,
-	iconPlus,
-	iconTable,
-	iconUpload,
-} from "@rrflow/ui";
 import { memo, useState } from "react";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { adapter } from "~/adapter";
@@ -30,6 +19,17 @@ import { dispatchIntent } from "~/shared/util/intents";
 import { syncConnectionSchema } from "~/shared/util/schema";
 import { useConfigStore } from "~/shell/stores/config";
 import { useInterfaceStore } from "~/shell/stores/interface";
+import {
+	Icon,
+	iconChevronRight,
+	iconDesigner,
+	iconDownload,
+	iconExplorer,
+	iconOpen,
+	iconPlus,
+	iconTable,
+	iconUpload,
+} from "../../../../../rrflow/ui/index";
 import { CreatorDrawer } from "../CreatorDrawer";
 import { ExplorerPane } from "../ExplorerPane";
 

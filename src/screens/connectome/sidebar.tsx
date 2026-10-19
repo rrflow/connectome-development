@@ -10,7 +10,6 @@ import {
 	Text,
 	UnstyledButton,
 } from "@mantine/core";
-import { iconArrowLeft, iconCog, iconHelp, iconSearch, pictoBrain } from "@rrflow/ui";
 import clsx from "clsx";
 import { Fragment, useMemo } from "react";
 import { useCloudUnreadConversationsQuery } from "~/cloud/queries/context";
@@ -27,6 +26,7 @@ import { dispatchIntent } from "~/shared/util/intents";
 import { useConfigStore } from "~/shell/stores/config";
 import { useInterfaceStore } from "~/shell/stores/interface";
 import type { GlobalPage, SidebarMode, ViewPage } from "~/types";
+import { iconArrowLeft, iconCog, iconHelp, iconSearch, pictoBrain } from "../../rrflow/ui/index";
 import classes from "./style.module.scss";
 
 const GLOBAL_NAVIGATION: GlobalPage[][] = [

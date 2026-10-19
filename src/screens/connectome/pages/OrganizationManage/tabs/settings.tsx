@@ -1,10 +1,10 @@
 import { ActionIcon, Box, Button, CopyButton, Stack, TextInput } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconCheck, iconCopy } from "@rrflow/ui";
 import { useUpdateOrganizationMutation } from "~/cloud/mutations/update";
 import { Section } from "~/components/Section";
 import { useStable } from "~/hooks/stable";
 import { showInfo } from "~/shared/util/helpers";
+import { Icon, iconCheck, iconCopy } from "../../../../../rrflow/ui/index";
 import { OrganizationTabProps } from "../types";
 
 export function OrganizationSettingsTab({ organization }: OrganizationTabProps) {

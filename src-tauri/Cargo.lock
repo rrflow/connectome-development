@@ -664,7 +664,6 @@ dependencies = [
  "log",
  "objc",
  "openssl",
- "portpicker",
  "reqwest 0.12.28",
  "rrd-client",
  "rrd-contract",
@@ -3428,15 +3427,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "portpicker"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "be97d76faf1bfab666e1375477b23fde79eccf0276e9b63b92a39d676a889ba9"
-dependencies = [
- "rand 0.8.5",
-]
-
-[[package]]
 name = "potential_utf"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3963,7 +3953,7 @@ dependencies = [
 [[package]]
 name = "rrd-client"
 version = "1.0.0"
-source = "git+https://github.com/rrflow/rrflow-development?rev=b27579299b91dbe8fe13893ff66c2cd8906c8466#b27579299b91dbe8fe13893ff66c2cd8906c8466"
+source = "git+https://github.com/rrflow/rrflow-development?rev=e5672ec1d953c736b2befa38b34a13623a23a5d6#e5672ec1d953c736b2befa38b34a13623a23a5d6"
 dependencies = [
  "bytes",
  "futures-util",
@@ -3982,7 +3972,7 @@ dependencies = [
 [[package]]
 name = "rrd-contract"
 version = "1.0.0"
-source = "git+https://github.com/rrflow/rrflow-development?rev=b27579299b91dbe8fe13893ff66c2cd8906c8466#b27579299b91dbe8fe13893ff66c2cd8906c8466"
+source = "git+https://github.com/rrflow/rrflow-development?rev=e5672ec1d953c736b2befa38b34a13623a23a5d6#e5672ec1d953c736b2befa38b34a13623a23a5d6"
 dependencies = [
  "base64 0.22.1",
  "schemars 1.2.1",

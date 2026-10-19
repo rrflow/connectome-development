@@ -10,17 +10,6 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import {
-	CodeBlock,
-	Icon,
-	iconClose,
-	iconDelete,
-	iconEdit,
-	iconPlus,
-	iconQuery,
-	iconSearch,
-	iconText,
-} from "@rrflow/ui";
 import clsx from "clsx";
 import { useContextMenu } from "mantine-contextmenu";
 import { useLayoutEffect, useMemo, useState } from "react";
@@ -33,6 +22,17 @@ import { useConnectionAndView } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
 import { useConfigStore } from "~/shell/stores/config";
 import type { SavedQuery } from "~/types";
+import {
+	CodeBlock,
+	Icon,
+	iconClose,
+	iconDelete,
+	iconEdit,
+	iconPlus,
+	iconQuery,
+	iconSearch,
+	iconText,
+} from "../../../../../rrflow/ui/index";
 import classes from "./style.module.scss";
 
 export interface SavesDrawerProps {

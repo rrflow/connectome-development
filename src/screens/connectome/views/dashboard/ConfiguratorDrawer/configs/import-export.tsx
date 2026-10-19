@@ -1,5 +1,4 @@
 import { Box, Button, Divider, Group, Paper, ScrollArea, Stack, Text } from "@mantine/core";
-import { Icon, iconDownload, iconUpload } from "@rrflow/ui";
 import { useState } from "react";
 import { adapter } from "~/adapter";
 import { useUpdateConfirmation } from "~/cloud/hooks/confirm";
@@ -13,6 +12,7 @@ import { parseCapabilities, transformCapabilities } from "~/shared/util/capabili
 import { showErrorNotification } from "~/shared/util/helpers";
 import { dispatchIntent } from "~/shared/util/intents";
 import { CloudInstance, CloudInstanceCapabilities } from "~/types";
+import { Icon, iconDownload, iconUpload } from "../../../../../../rrflow/ui/index";
 import classes from "../style.module.scss";
 
 export interface ImportExportProps {

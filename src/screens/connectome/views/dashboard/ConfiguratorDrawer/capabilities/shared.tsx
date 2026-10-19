@@ -7,9 +7,10 @@ import {
 	TextInput,
 	type TextInputProps,
 } from "@mantine/core";
-import { Icon, iconCancel, iconCheck, useStable } from "@rrflow/ui";
 import type { ReactNode } from "react";
 import type { CloudInstanceCapabilities, Selectable } from "~/types";
+import { useStable } from "../../../../../../hooks/stable";
+import { Icon, iconCancel, iconCheck } from "../../../../../../rrflow/ui/index";
 
 export type CapabilityField = keyof CloudInstanceCapabilities;
 export type BaseValue = "allowed" | "denied" | "granular";

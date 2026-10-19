@@ -15,7 +15,7 @@ import type {
 	TableInfo,
 	TableVariant,
 } from "~/types";
-import { escapeIdent, Table } from "~/vendor/rrflow-client";
+import { escapeIdent, Table } from "../../rrflow/client/values";
 import { dedent } from "./dedent";
 import { createConnectionSchema } from "./defaults";
 import { showErrorNotification } from "./helpers";

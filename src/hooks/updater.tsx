@@ -1,5 +1,4 @@
 import { Alert, Group } from "@mantine/core";
-import { Icon, iconDownload } from "@rrflow/ui";
 import { invoke } from "@tauri-apps/api/core";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { useState } from "react";
@@ -7,6 +6,7 @@ import { useConfirmation } from "~/providers/Confirmation";
 import { tagEvent } from "~/shared/util/analytics";
 import { useConfigStore } from "~/shell/stores/config";
 import { useInterfaceStore } from "~/shell/stores/interface";
+import { Icon, iconDownload } from "../rrflow/ui/index";
 import { useStable } from "./stable";
 
 type Phase = "idle" | "downloading" | "error";

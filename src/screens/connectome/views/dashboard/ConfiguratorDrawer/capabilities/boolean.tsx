@@ -1,8 +1,8 @@
 import { Group, Switch, Text, Tooltip } from "@mantine/core";
-import { Icon, iconHelp } from "@rrflow/ui";
 import { ChangeEvent } from "react";
 import { Spacer } from "~/components/Spacer";
 import { useStable } from "~/hooks/stable";
+import { Icon, iconHelp } from "../../../../../../rrflow/ui/index";
 import { CapabilityBaseProps, CapabilityField } from "./shared";
 
 export interface BooleanCapabilityProps extends CapabilityBaseProps {

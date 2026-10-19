@@ -4,7 +4,7 @@ import { getSetting } from "~/shared/util/config";
 import { CloudError } from "~/shared/util/errors";
 import { featureFlags } from "~/shared/util/feature-flags";
 import type { Authentication } from "~/types";
-import type { AccessRecordAuth, ProvidedAuth } from "~/vendor/rrflow-client";
+import type { AccessRecordAuth, ProvidedAuth } from "../../../rrflow/client/native";
 
 export async function composeAuthentication(connection: Authentication): Promise<ProvidedAuth> {
 	const { mode, username, password, namespace, database, token, cloudInstance } = connection;

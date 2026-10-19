@@ -1,4 +1,12 @@
 import { Button, Paper, SimpleGrid, Skeleton, Stack, Text } from "@mantine/core";
+import { hasOrganizationRoles, ORG_ROLES_ADMIN } from "~/cloud/helpers";
+import { PropertyValue } from "~/components/PropertyValue";
+import { useStable } from "~/hooks/stable";
+import { tagEvent } from "~/shared/util/analytics";
+import { getTypeCategoryName } from "~/shared/util/cloud";
+import { formatMemory, plural } from "~/shared/util/helpers";
+import { useCloudStore } from "~/stores/cloud";
+import { CloudInstance, CloudOrganization } from "~/types";
 import {
 	Icon,
 	iconArrowDownFat,
@@ -10,15 +18,7 @@ import {
 	iconQuery,
 	iconRelation,
 	iconTag,
-} from "@rrflow/ui";
-import { hasOrganizationRoles, ORG_ROLES_ADMIN } from "~/cloud/helpers";
-import { PropertyValue } from "~/components/PropertyValue";
-import { useStable } from "~/hooks/stable";
-import { tagEvent } from "~/shared/util/analytics";
-import { getTypeCategoryName } from "~/shared/util/cloud";
-import { formatMemory, plural } from "~/shared/util/helpers";
-import { useCloudStore } from "~/stores/cloud";
-import { CloudInstance, CloudOrganization } from "~/types";
+} from "../../../../../rrflow/ui/index";
 
 export interface ConfigurationBlockProps {
 	instance: CloudInstance | undefined;

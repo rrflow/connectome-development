@@ -1,7 +1,7 @@
 import { Accordion, Checkbox, MultiSelect, Select, Stack } from "@mantine/core";
-import { iconCog } from "@rrflow/ui";
 import { useTableNames } from "~/hooks/schema";
 import type { Selectable, TableType } from "~/types";
+import { iconCog } from "../../../rrflow/ui/index";
 import { type ElementProps, SectionTitle } from "../helpers";
 
 const TABLE_TYPES: Selectable<TableType>[] = [

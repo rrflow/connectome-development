@@ -1,12 +1,12 @@
 import { Drawer } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { Icon, iconClose } from "@rrflow/ui";
 import { useRef, useState } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { DrawerResizer } from "~/components/DrawerResizer";
 import { Sidekick, SidekickHandle } from "~/components/Sidekick";
 import { useIntent } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
+import { Icon, iconClose } from "../../../../rrflow/ui/index";
 
 export function SidekickDrawer() {
 	const sidekickRef = useRef<SidekickHandle>(null);

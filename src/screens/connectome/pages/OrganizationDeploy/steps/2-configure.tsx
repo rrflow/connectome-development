@@ -1,8 +1,8 @@
 import { Alert, AlertProps, Box, Button, Divider, Group, SimpleGrid, Stack } from "@mantine/core";
-import { Icon, iconChevronRight, iconWarning } from "@rrflow/ui";
 import { useMemo } from "react";
 import { EstimatedCost } from "~/components/EstimatedCost";
 import { Spacer } from "~/components/Spacer";
+import { Icon, iconChevronRight, iconWarning } from "../../../../../rrflow/ui/index";
 import { ClusterOptionsSection } from "../sections/cluster";
 import { DataOptionsSection } from "../sections/data-opts";
 import { DeploymentSection } from "../sections/instance";

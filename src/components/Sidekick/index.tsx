@@ -1,13 +1,4 @@
 import { Box, Divider, Flex, Group, Image, Stack, Text, Transition } from "@mantine/core";
-import {
-	Icon,
-	iconChat,
-	iconChevronLeft,
-	iconList,
-	iconPin,
-	iconPinOff,
-	pictoSidekick,
-} from "@rrflow/ui";
 import { forwardRef, memo, useEffect, useImperativeHandle, useRef } from "react";
 import { openCloudAuthentication } from "~/cloud/api/auth";
 import { Spacer } from "~/components/Spacer";
@@ -16,6 +7,15 @@ import { useSetting } from "~/hooks/config";
 import glowImg from "~/shared/assets/images/radial-glow.png";
 import { dispatchIntent } from "~/shared/util/intents";
 import { useSidekickStore } from "~/stores/sidekick";
+import {
+	Icon,
+	iconChat,
+	iconChevronLeft,
+	iconList,
+	iconPin,
+	iconPinOff,
+	pictoSidekick,
+} from "../../rrflow/ui/index";
 import { ActionButton } from "../ActionButton";
 import { SidekickChat } from "./chat";
 import { SidekickHistory } from "./history";

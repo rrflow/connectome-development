@@ -1,6 +1,6 @@
-import { iconAuth, iconBook, iconDesigner, iconStar, iconTable } from "@rrflow/ui";
 import { newId } from "~/shared/util/helpers";
 import type { ConnectionSchema } from "~/types";
+import { iconAuth, iconBook, iconDesigner, iconStar, iconTable } from "../../../rrflow/ui/index";
 import { DocsAuthAccessUserData } from "./topics/authentication/access-user-data";
 import { DocsAuthSignIn } from "./topics/authentication/sign-in";
 // import {DocsGlobalAuthentication} from "./topics/global/authentication";

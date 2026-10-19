@@ -5,7 +5,7 @@ import { rrflowqlRecordLinks } from "~/editor";
 import { useSetting } from "~/hooks/config";
 import { useResultFormatter } from "~/hooks/rrflowql";
 import { useInspector } from "~/providers/Inspector";
-import { rrflowql } from "~/vendor/rrflowql-editor";
+import { rrflowql } from "../../../../../../rrflow/editor";
 import { attemptFormat, type PreviewProps } from ".";
 
 export function IndividualPreview({ responses, selected }: PreviewProps) {

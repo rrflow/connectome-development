@@ -1,12 +1,12 @@
 import { Alert, Paper } from "@mantine/core";
-import { Icon, iconWarning } from "@rrflow/ui";
 import { useMemo } from "react";
 import { CodeEditor } from "~/components/CodeEditor";
 import { SaveBox } from "~/components/SaveBox";
 import { rrflowqlLinting, rrflowqlRecordLinks } from "~/editor";
 import { useSetting } from "~/hooks/config";
 import type { SaveableHandle } from "~/hooks/save";
-import { rrflowql } from "~/vendor/rrflowql-editor";
+import { rrflowql } from "../../../rrflow/editor";
+import { Icon, iconWarning } from "../../../rrflow/ui/index";
 import { useInspector } from "..";
 
 export interface ContentTabProps {

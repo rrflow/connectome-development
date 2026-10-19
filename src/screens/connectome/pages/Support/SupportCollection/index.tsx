@@ -1,7 +1,7 @@
 import { Anchor, Box, Group, Image, Paper, Text } from "@mantine/core";
-import { pictoBrain } from "@rrflow/ui";
 import { navigate } from "wouter/use-browser-location";
 import { IntercomSupportCollectionShallow } from "~/types";
+import { pictoBrain } from "../../../../../rrflow/ui/index";
 
 export interface SupportCollectionProps {
 	collection: IntercomSupportCollectionShallow;

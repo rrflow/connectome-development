@@ -13,21 +13,6 @@ import {
 	Text,
 } from "@mantine/core";
 import {
-	Icon,
-	iconAPI,
-	iconChevronRight,
-	iconCog,
-	iconFullscreen,
-	iconHelp,
-	iconImage,
-	iconMagnifyMinus,
-	iconMagnifyPlus,
-	iconPlus,
-	iconRefresh,
-	iconRelation,
-	iconReset,
-} from "@rrflow/ui";
-import {
 	Background,
 	type Edge,
 	getNodesBounds,
@@ -84,6 +69,21 @@ import type {
 	DiagramStrategy,
 	TableInfo,
 } from "~/types";
+import {
+	Icon,
+	iconAPI,
+	iconChevronRight,
+	iconCog,
+	iconFullscreen,
+	iconHelp,
+	iconImage,
+	iconMagnifyMinus,
+	iconMagnifyPlus,
+	iconPlus,
+	iconRefresh,
+	iconRelation,
+	iconReset,
+} from "../../../../../rrflow/ui/index";
 import { GraphWarningLine } from "./components";
 import {
 	applyDefault,

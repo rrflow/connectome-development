@@ -1,7 +1,7 @@
 import { Group, Paper, ScrollArea, Text } from "@mantine/core";
-import { Icon, iconCircle } from "@rrflow/ui";
 import { RecordLink } from "~/components/RecordLink";
-import type { RecordId } from "~/vendor/rrflow-client";
+import type { RecordId } from "../../../rrflow/client/values";
+import { Icon, iconCircle } from "../../../rrflow/ui/index";
 
 interface RelationsListProps {
 	name: string;

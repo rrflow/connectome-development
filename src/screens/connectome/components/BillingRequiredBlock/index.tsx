@@ -1,7 +1,7 @@
 import { BoxProps, Image, Paper, Stack, Text } from "@mantine/core";
-import { pictoSDBCloud } from "@rrflow/ui";
 import { PropsWithChildren, ReactNode } from "react";
 import glowImage from "~/shared/assets/images/glow.png";
+import { pictoRRFlowCloud } from "../../../../rrflow/ui/index";
 import classes from "./style.module.scss";
 
 export interface BillingRequiredBlockProps extends BoxProps {
@@ -33,7 +33,7 @@ export function BillingRequiredBlock({
 				{subtitle}
 			</Stack>
 			<Image
-				src={pictoSDBCloud}
+				src={pictoRRFlowCloud}
 				className={classes.cloudImage}
 			/>
 			<Image

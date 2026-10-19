@@ -1,5 +1,4 @@
 import { Group, HoverCard, Stack, Text } from "@mantine/core";
-import { Icon, iconCheck, iconClock, iconClose, iconExplorer, iconFile, iconXml } from "@rrflow/ui";
 import dayjs from "dayjs";
 import { convert } from "geo-coordinates-parser";
 import { useEffect, useState } from "react";
@@ -19,7 +18,16 @@ import {
 	GeometryPolygon,
 	RecordId,
 	Uuid,
-} from "~/vendor/rrflow-client";
+} from "../../rrflow/client/values";
+import {
+	Icon,
+	iconCheck,
+	iconClock,
+	iconClose,
+	iconExplorer,
+	iconFile,
+	iconXml,
+} from "../../rrflow/ui/index";
 import { GeographyLink } from "../GeographyLink";
 import { RecordLink } from "../RecordLink";
 import classes from "./style.module.scss";

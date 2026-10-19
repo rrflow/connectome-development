@@ -1,9 +1,9 @@
 import { Button, Group, Stack, Text } from "@mantine/core";
 import { closeModal, openModal } from "@mantine/modals";
-import { Icon, iconAuth } from "@rrflow/ui";
 import { Spacer } from "~/components/Spacer";
 import { dispatchIntent } from "~/shared/util/intents";
 import { CloudOrganization } from "~/types";
+import { Icon, iconAuth } from "../../../../rrflow/ui/index";
 
 export function openResourcesLockedModal(organisation: CloudOrganization) {
 	return openModal({

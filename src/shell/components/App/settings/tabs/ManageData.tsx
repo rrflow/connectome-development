@@ -1,5 +1,4 @@
 import { Box, Button, Checkbox, Group, MultiSelect, ScrollArea, Stack, Text } from "@mantine/core";
-import { Icon, iconCheck, iconDownload, iconUpload } from "@rrflow/ui";
 import { assign } from "radash";
 import { useMemo, useState } from "react";
 import { adapter } from "~/adapter";
@@ -11,6 +10,7 @@ import { backupConfig } from "~/shared/util/config";
 import { showErrorNotification, showInfo } from "~/shared/util/helpers";
 import { applyMigrations } from "~/shared/util/migrator";
 import { useConfigStore } from "~/shell/stores/config";
+import { Icon, iconCheck, iconDownload, iconUpload } from "../../../../../rrflow/ui/index";
 
 export function ManageDataTab() {
 	const connections = useConnectionList();

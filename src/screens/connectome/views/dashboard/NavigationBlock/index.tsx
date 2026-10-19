@@ -1,4 +1,6 @@
 import { Anchor, Box, Group, Paper, SimpleGrid, Skeleton, Text, ThemeIcon } from "@mantine/core";
+import { Link } from "wouter";
+import { Spacer } from "~/components/Spacer";
 import {
 	Icon,
 	iconAuth,
@@ -6,9 +8,7 @@ import {
 	iconDesigner,
 	iconExplorer,
 	iconQuery,
-} from "@rrflow/ui";
-import { Link } from "wouter";
-import { Spacer } from "~/components/Spacer";
+} from "../../../../../rrflow/ui/index";
 import classes from "./style.module.scss";
 
 export interface NavigationBlockProps {

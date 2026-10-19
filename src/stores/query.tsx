@@ -1,6 +1,6 @@
-import { EditorStateSnapshot } from "@rrflow/ui";
 import { omit } from "radash";
 import { create } from "zustand";
+import { EditorStateSnapshot } from "../rrflow/ui/index";
 
 export type QueryStore = {
 	queryState: Record<string, EditorStateSnapshot>;

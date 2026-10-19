@@ -19,7 +19,7 @@ export function DocsGlobalInit({ language }: TopicProps) {
 			rrflow sql --endpoint ${esc_endpoint} --namespace ${esc_namespace} --database ${esc_database}
 		`,
 			js: `
-			import RRFlow from '~/vendor/rrflow-client';
+			import { RRFlow } from "../../../../../rrflow/client/native";
 
 			// Create a new RRFlow instance
 			const db = new RRFlow();

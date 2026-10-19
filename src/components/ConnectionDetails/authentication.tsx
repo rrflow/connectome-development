@@ -12,7 +12,6 @@ import {
 } from "@mantine/core";
 
 import { useDisclosure } from "@mantine/hooks";
-import { Icon, iconClose, iconPlus, iconWarning } from "@rrflow/ui";
 import dayjs from "dayjs";
 import { useMemo } from "react";
 import { Updater } from "use-immer";
@@ -20,6 +19,7 @@ import { AUTH_MODES, SENSITIVE_ACCESS_FIELDS } from "~/constants";
 import { useStable } from "~/hooks/stable";
 import { fastParseJwt } from "~/shared/util/helpers";
 import { AuthMode, Connection } from "~/types";
+import { Icon, iconClose, iconPlus, iconWarning } from "../../rrflow/ui/index";
 import { ActionButton } from "../ActionButton";
 import { PrimaryTitle } from "../PrimaryTitle";
 

@@ -12,7 +12,7 @@ import { useFeatureFlags } from "~/shared/util/feature-flags";
 import { renderHighlighting } from "~/shared/util/highlighting";
 import { useConfigStore } from "~/shell/stores/config";
 import { CodeLang, type ColorScheme, type SyntaxTheme } from "~/types";
-import { rrflowql } from "~/vendor/rrflowql-editor";
+import { rrflowql } from "../../../../rrflow/editor";
 
 function Render({
 	value,

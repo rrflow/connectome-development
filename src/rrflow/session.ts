@@ -174,6 +174,68 @@ export interface RrdVectorCollectionsView {
 	collections: RrdCollectionView[];
 }
 
+/** Safe native projection of the Rust knowledge-tree contract. Secret values
+ * and project/scope selection never enter these renderer requests. */
+export interface RrdKnowledgeEndpointView {
+	id: string;
+	class: "vector_store";
+	kind: "local" | "self_hosted" | "subscription" | "api";
+	endpoint: { kind: "url"; url: string };
+	service_id: string;
+	manifest_sha256: string | null;
+	credential: { provider: string; name: string } | null;
+	placement: string | null;
+	footprint: {
+		memory_bytes: number;
+		gpu: { kind: "none" } | { kind: "required"; memory_bytes: number };
+	};
+	limits: { max_concurrency: number; timeout_ms: number; max_input_bytes: number };
+}
+
+export type RrdKnowledgePathBindingView =
+	| { kind: "group" }
+	| { kind: "native"; collection_id: string; vector_name: string }
+	| {
+			kind: "external";
+			provider_id: string;
+			endpoint: RrdKnowledgeEndpointView;
+			namespace: string | null;
+			index: string | null;
+			collection: string | null;
+	  };
+
+export interface RrdKnowledgePathView {
+	id: string;
+	name: string;
+	parent_id: string | null;
+	binding: RrdKnowledgePathBindingView;
+}
+
+export interface RrdKnowledgeTreeView {
+	id: string;
+	name: string;
+	paths: RrdKnowledgePathView[];
+}
+
+export interface RrdKnowledgeTreeCatalogueView {
+	contract_version: number;
+	project_id: string;
+	scope: string;
+	revision: number;
+	trees: RrdKnowledgeTreeView[];
+}
+
+export interface RrdReplaceKnowledgeTreesRequest {
+	expected_instance: string;
+	expected_revision: number;
+	trees: RrdKnowledgeTreeView[];
+}
+
+export interface RrdReplaceKnowledgeTreesView {
+	catalogue: RrdKnowledgeTreeCatalogueView;
+	idempotent_replay: boolean;
+}
+
 export interface RrdPointView {
 	reference: RrdReference;
 	subject: RrdReference;
@@ -433,14 +495,30 @@ export class RrdSessionClient {
 		return call<RrdStorageView>("rrd_storage");
 	}
 
-	async query(query: string): Promise<RrdQueryView> {
+	async query(query: string, expectedInstance: string): Promise<RrdQueryView> {
 		this.requireNative();
-		return call<RrdQueryView>("rrd_query", { request: { query } });
+		return call<RrdQueryView>("rrd_query", {
+			request: { query, expected_instance: expectedInstance },
+		});
 	}
 
 	async vectorCollections(): Promise<RrdVectorCollectionsView> {
 		this.requireNative();
 		return call<RrdVectorCollectionsView>("rrd_vector_collections");
+	}
+
+	async knowledgeTrees(expectedInstance: string): Promise<RrdKnowledgeTreeCatalogueView> {
+		this.requireNative();
+		return call<RrdKnowledgeTreeCatalogueView>("rrd_knowledge_trees", {
+			request: { expected_instance: expectedInstance },
+		});
+	}
+
+	async replaceKnowledgeTrees(
+		request: RrdReplaceKnowledgeTreesRequest,
+	): Promise<RrdReplaceKnowledgeTreesView> {
+		this.requireNative();
+		return call<RrdReplaceKnowledgeTreesView>("rrd_replace_knowledge_trees", { request });
 	}
 
 	async vectorPoints(request: RrdVectorPointsRequest): Promise<RrdVectorPointsView> {
@@ -467,8 +545,10 @@ export class RrdSessionClient {
 		return call<RrdVectorMapView>("rrd_vector_map", { request, onProgress: progress });
 	}
 
-	async disconnect(): Promise<void> {
+	async disconnect(target: Pick<RrdConnectionView, "endpoint" | "instance">): Promise<void> {
 		this.requireNative();
-		await call<void>("rrd_disconnect");
+		await call<void>("rrd_disconnect", {
+			request: { endpoint: target.endpoint, instance: target.instance },
+		});
 	}
 }

@@ -1,6 +1,5 @@
 import { Button, Group, Select, Stack, Text } from "@mantine/core";
 import { closeModal, openModal } from "@mantine/modals";
-import { Icon, iconTag } from "@rrflow/ui";
 import { capitalize } from "radash";
 import { useState } from "react";
 import { Form } from "~/components/Form";
@@ -9,6 +8,7 @@ import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { useStable } from "~/hooks/stable";
 import { showErrorNotification } from "~/shared/util/helpers";
 import { CloudMember, CloudOrganization } from "~/types";
+import { Icon, iconTag } from "../../rrflow/ui/index";
 import { useUpdateRoleMutation } from "../mutations/role";
 import { useCloudRolesQuery } from "../queries/roles";
 

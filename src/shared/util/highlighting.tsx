@@ -10,10 +10,10 @@ import { parser as phpParser } from "@lezer/php";
 import { parser as pyParser } from "@lezer/python";
 import { parser as rustParser } from "@lezer/rust";
 import { parser as yamlParser } from "@lezer/yaml";
-import { parser as rrflowqlParser } from "@surrealdb/lezer";
 import { adapter } from "~/adapter";
 import { createStyleHighlighter } from "~/editor";
 import type { ColorScheme, SyntaxTheme } from "~/types";
+import { rrflowqlPresentationParser as rrflowqlParser } from "../../rrflow/editor/parser";
 
 type Parser = { parse: (code: string) => any };
 
@@ -44,7 +44,7 @@ const PARSER_MAP = new Map<string, Parser>([
 	["html", htmlParser],
 	["cli", rrflowqlParser],
 	["php", phpParser.configure({ top: "Program" })],
-	["syntax", rrflowqlParser.configure({ top: "Syntax" })],
+	["syntax", rrflowqlParser],
 ]);
 
 /**
@@ -66,7 +66,9 @@ export function renderHighlighting(
 
 	if (!parser) {
 		adapter.warn("Highlight", `Unsupported language: ${language}`);
-		return `<pre>${code}</pre>`;
+		const plain = document.createElement("pre");
+		plain.textContent = code;
+		return plain.outerHTML;
 	}
 
 	const rendered = document.createElement("pre");

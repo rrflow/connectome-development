@@ -1,5 +1,4 @@
 import { Box, Button, Stack, Text } from "@mantine/core";
-import { Icon, iconCheck, iconReset, iconWrench } from "@rrflow/ui";
 import { format } from "date-fns";
 import { useMemo, useState } from "react";
 import { adapter, isDesktop } from "~/adapter";
@@ -8,6 +7,7 @@ import { LearnMore } from "~/components/LearnMore";
 import { useVersionCopy } from "~/hooks/debug";
 import { useStable } from "~/hooks/stable";
 import { isDevelopment, isPreview } from "~/shared/util/environment";
+import { Icon, iconCheck, iconReset, iconWrench } from "../../../../../rrflow/ui/index";
 import classes from "../style.module.scss";
 
 export function AboutTab() {

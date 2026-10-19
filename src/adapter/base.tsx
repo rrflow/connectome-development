@@ -1,4 +1,10 @@
-import type { ConnectomeConfig, Platform, UrlTarget } from "~/types";
+import type {
+	ConnectomeConfig,
+	EstateServeRequest,
+	Platform,
+	ServedEstate,
+	UrlTarget,
+} from "~/types";
 
 export interface FileFilter {
 	name: string;
@@ -82,12 +88,13 @@ export interface ConnectomeAdapter {
 	/**
 	 * Start the database with the given parameters
 	 */
-	startDatabase(): Promise<void>;
+	serveEstate(request: EstateServeRequest): Promise<ServedEstate>;
+	servedEstate(): Promise<ServedEstate | null>;
 
 	/**
 	 * Stop the currently running database
 	 */
-	stopDatabase(): Promise<void>;
+	stopEstate(): Promise<boolean>;
 
 	/**
 	 * Open the given URL in the default browser

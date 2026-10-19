@@ -13,7 +13,6 @@ import {
 } from "@mantine/core";
 
 import { closeModal, openModal } from "@mantine/modals";
-import { Icon, iconArrowLeft, iconArrowUpRight } from "@rrflow/ui";
 import { Fragment, ReactNode, useEffect, useLayoutEffect, useMemo } from "react";
 import { INSTANCE_PLAN_ARCHITECTURES, INSTANCE_PLAN_SUGGESTIONS } from "~/cloud/helpers";
 import { useInstanceTypeRegistry } from "~/cloud/hooks/types";
@@ -24,6 +23,7 @@ import { useStable } from "~/hooks/stable";
 import { getTypeCategoryName } from "~/shared/util/cloud";
 import { CURRENCY_FORMAT, formatMemory, optional } from "~/shared/util/helpers";
 import { CloudDeployConfig, CloudInstanceType } from "~/types";
+import { Icon, iconArrowLeft, iconArrowUpRight } from "../../../../../rrflow/ui/index";
 import classes from "../style.module.scss";
 import { DeploySectionProps } from "../types";
 

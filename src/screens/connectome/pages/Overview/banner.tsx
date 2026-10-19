@@ -1,6 +1,6 @@
 import { Alert, MantineColor } from "@mantine/core";
-import { Icon, iconBullhorn, iconWarning } from "@rrflow/ui";
 import { BannerType, CloudBanner } from "~/types";
+import { Icon, iconBullhorn, iconWarning } from "../../../../rrflow/ui/index";
 
 const BANNER_INFO: Record<BannerType, [MantineColor, string, string]> = {
 	info: ["violet", "Service Update", iconBullhorn],

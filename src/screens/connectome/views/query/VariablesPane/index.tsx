@@ -1,7 +1,6 @@
 import { Prec } from "@codemirror/state";
 import { type EditorView, keymap } from "@codemirror/view";
 import { Badge, Group } from "@mantine/core";
-import { Icon, iconClose, iconDollar, iconReset } from "@rrflow/ui";
 import { useEffect, useMemo, useState } from "react";
 import { type HtmlPortalNode, OutPortal } from "react-reverse-portal";
 import { ActionButton } from "~/components/ActionButton";
@@ -15,7 +14,8 @@ import { useConnectionAndView } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
 import { getRRFlowQL } from "~/screens/connectome/connection/connection";
 import { useConfigStore } from "~/shell/stores/config";
-import { rrflowql } from "~/vendor/rrflowql-editor";
+import { rrflowql } from "../../../../../rrflow/editor";
+import { Icon, iconClose, iconDollar, iconReset } from "../../../../../rrflow/ui/index";
 
 export interface VariablesPaneProps {
 	isValid: boolean;

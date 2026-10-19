@@ -9,7 +9,6 @@ import {
 	Text,
 	TextInput,
 } from "@mantine/core";
-import { Icon, iconCircle, iconCloud, iconServer } from "@rrflow/ui";
 import clsx from "clsx";
 import { useMemo, useState } from "react";
 import { Entry, type EntryProps } from "~/components/Entry";
@@ -22,6 +21,7 @@ import { resolveInstanceConnection } from "~/shared/util/connection";
 import { Y_SLIDE_TRANSITION } from "~/shared/util/helpers";
 import { USER_ICONS } from "~/shared/util/user-icons";
 import type { CloudInstance, Connection } from "~/types";
+import { Icon, iconCircle, iconCloud, iconServer } from "../../../../rrflow/ui/index";
 import classes from "../style.module.scss";
 
 export function ConnectionsModal() {

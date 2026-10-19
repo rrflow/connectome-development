@@ -7,6 +7,7 @@ export interface SectionProps {
 	description?: ReactNode;
 	rightSection?: ReactNode;
 	withMaxWidth?: boolean;
+	compact?: boolean;
 }
 
 export function Section({
@@ -14,6 +15,7 @@ export function Section({
 	description,
 	rightSection,
 	withMaxWidth,
+	compact = false,
 	children,
 }: PropsWithChildren<SectionProps>) {
 	const isLight = useIsLight();
@@ -31,8 +33,8 @@ export function Section({
 					</Text>
 					{description && (
 						<Text
-							fz="lg"
-							mt="xs"
+							fz={compact ? "sm" : "lg"}
+							mt={compact ? 4 : "xs"}
 						>
 							{description}
 						</Text>
@@ -41,7 +43,8 @@ export function Section({
 				{rightSection}
 			</Group>
 			<Stack
-				py="xl"
+				py={compact ? "sm" : "xl"}
+				gap={compact ? "sm" : "md"}
 				maw={withMaxWidth ? 500 : undefined}
 			>
 				{children}

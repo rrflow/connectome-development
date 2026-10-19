@@ -18,9 +18,10 @@ import { Updater } from "use-immer";
 import { CONNECTION_PROTOCOLS } from "~/constants";
 import { useStable } from "~/hooks/stable";
 import { useIsLight } from "~/hooks/theme";
-import { createRRFlow } from "~/screens/connectome/connection/rrflow";
-import { connectionUri, isHostLocal } from "~/shared/util/helpers";
+import { isHostLocal } from "~/shared/util/helpers";
+import { useConfigStore } from "~/shell/stores/config";
 import { Connection, Protocol } from "~/types";
+import { describeRrdError, RrdRuntimeClient } from "../../rrflow/runtime";
 
 const ENDPOINT_PATTERN = /^(.+?):\/\/(.+)$/;
 
@@ -40,9 +41,26 @@ export function ConnectionAddressDetails({
 	const isLight = useIsLight();
 
 	const { protocol, hostname } = value.authentication;
+	const isRuntime = value.target === "runtime";
+	const persisted = useConfigStore((state) =>
+		state.connections.find((connection) => connection.id === value.id),
+	);
+	// A draft transport does not authorize starting an SSH process while typing.
+	const sshHost =
+		persisted &&
+		persisted.runtimeSshHost === value.runtimeSshHost &&
+		persisted.authentication.protocol === protocol &&
+		persisted.authentication.hostname === hostname
+			? persisted.runtimeSshHost
+			: undefined;
 
 	const protocols = useMemo(() => {
-		const [remote, local] = fork(CONNECTION_PROTOCOLS, (p) => p.remote);
+		const [remote, local] = fork(
+			CONNECTION_PROTOCOLS.filter(
+				(entry) => !isRuntime || entry.value === "http" || entry.value === "https",
+			),
+			(p) => p.remote,
+		);
 
 		return [
 			{
@@ -54,7 +72,7 @@ export function ConnectionAddressDetails({
 				items: local,
 			},
 		];
-	}, []);
+	}, [isRuntime]);
 
 	const handleEndpointChange = useStable((e: React.ChangeEvent<HTMLInputElement>) => {
 		onChange((draft) => {
@@ -68,7 +86,9 @@ export function ConnectionAddressDetails({
 			}
 
 			const [, protocol, hostname] = result;
-			const isValid = CONNECTION_PROTOCOLS.some((p) => p.value === protocol);
+			const isValid =
+				CONNECTION_PROTOCOLS.some((p) => p.value === protocol) &&
+				(!isRuntime || protocol === "http" || protocol === "https");
 
 			if (!isValid) {
 				return;
@@ -99,23 +119,24 @@ export function ConnectionAddressDetails({
 		data: status,
 		isFetched: statusReady,
 		isFetching: statusFetching,
+		isError: statusFailed,
+		error: statusError,
 	} = useQuery({
-		queryKey: ["connect-status", { protocol, hostname }],
+		queryKey: [
+			"connect-status",
+			{ protocol, hostname, instance: value.runtimeInstance, sshHost },
+		],
 		enabled: !!protocol && !!hostname,
+		retry: false,
 		queryFn: async ({ signal }) => {
-			const test = await createRRFlow();
-
 			await sleep(500);
-			if (signal.aborted) return;
-
-			try {
-				await test.connect(connectionUri(protocol, hostname));
-				return true;
-			} catch {
-				return false;
-			} finally {
-				test.close();
-			}
+			if (signal.aborted) throw new DOMException("Connection probe cancelled", "AbortError");
+			await new RrdRuntimeClient(
+				`${protocol}://${hostname}`,
+				value.runtimeInstance,
+				sshHost,
+			).handshake();
+			return true;
 		},
 	});
 
@@ -161,14 +182,14 @@ export function ConnectionAddressDetails({
 								showStatus && (
 									<Tooltip
 										label={
-											status
-												? "RRFlow endpoint is reachable"
-												: "RRFlow endpoint is not reachable"
+											statusFailed
+												? describeRrdError(statusError)
+												: "RRD public handshake verified; authentication is separate"
 										}
 									>
 										<Indicator
 											processing
-											color={status ? "green" : "red"}
+											color={!statusFailed && status ? "green" : "red"}
 										/>
 									</Tooltip>
 								)

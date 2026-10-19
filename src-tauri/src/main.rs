@@ -6,9 +6,10 @@
 
 use std::{env, sync::OnceLock};
 
-use database::DatabaseState;
 use log::info;
 use paths::get_logs_directory;
+use rrd::estate::EstateState;
+use rrd::ssh_forward::SshForwardState;
 use rrd::RrdClientState;
 use tauri::{AppHandle, Manager, RunEvent};
 use tauri_plugin_log::{Target, TargetKind};
@@ -17,7 +18,7 @@ use time::{format_description, OffsetDateTime};
 mod analytics;
 mod appbar;
 mod config;
-mod database;
+
 mod diagnostics;
 mod open;
 mod paths;
@@ -99,8 +100,9 @@ fn main() {
                 .build(),
         )
         .manage(open::OpenResourceState(Default::default()))
-        .manage(DatabaseState(Default::default()))
+        .manage(EstateState::default())
         .manage(RrdClientState::default())
+        .manage(SshForwardState::default())
         .invoke_handler(tauri::generate_handler![
             analytics::track_event,
             config::load_config,
@@ -108,8 +110,9 @@ fn main() {
             config::backup_config,
             config::has_config_backup,
             config::restore_config_backup,
-            database::start_database,
-            database::stop_database,
+            rrd::estate::rrd_estate_serve,
+            rrd::estate::rrd_estate_status,
+            rrd::estate::rrd_estate_stop,
             diagnostics::runtime_diagnostics_request,
             rrd::rrd_public_request,
             rrd::rrd_connect,
@@ -118,6 +121,8 @@ fn main() {
             rrd::rrd_database,
             rrd::rrd_storage,
             rrd::rrd_query,
+            rrd::rrd_knowledge_trees,
+            rrd::rrd_replace_knowledge_trees,
             rrd::rrd_vector_collections,
             rrd::rrd_vector_points,
             rrd::rrd_vector_search,
@@ -162,11 +167,11 @@ fn main() {
             window::emit_last(app, "open-resource", ());
         }
         RunEvent::Exit => {
-            let state = app.state::<DatabaseState>();
-            let process = state.0.lock().unwrap().take();
-
-            if let Some(child) = process {
-                database::kill_rrflow_process(child.id())
+            rrd::estate::stop_on_exit(&app.state::<EstateState>());
+            if let Err(error) =
+                tauri::async_runtime::block_on(app.state::<SshForwardState>().stop_all())
+            {
+                log::error!("Stopping the owned SSH forward failed: {error}");
             }
         }
         _ => (),

@@ -1,5 +1,4 @@
 import { Box, Button, Center, Group, Loader, ScrollArea, Stack } from "@mantine/core";
-import { Icon, iconPlus } from "@rrflow/ui";
 import { useConversationsQuery } from "~/cloud/queries/context";
 import { AuthGuard } from "~/components/AuthGuard";
 import { ConversationTable } from "~/components/ConversationTable";
@@ -7,6 +6,7 @@ import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";
 import { dispatchIntent } from "~/shared/util/intents";
+import { Icon, iconPlus } from "../../../../../rrflow/ui/index";
 import classes from "../style.module.scss";
 
 export function RequestsPage() {

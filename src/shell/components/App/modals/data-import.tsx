@@ -12,7 +12,6 @@ import {
 } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
 import { showNotification, updateNotification } from "@mantine/notifications";
-import { Icon, iconCheck, iconFile, iconUpload, iconWarning } from "@rrflow/ui";
 import papaparse from "papaparse";
 import { cluster, isArray, isObject, unique } from "radash";
 import { ChangeEvent, MutableRefObject, useEffect, useMemo, useRef, useState } from "react";
@@ -30,7 +29,8 @@ import { executeQuery, getRRFlow, getRRFlowQL } from "~/screens/connectome/conne
 import { tagEvent } from "~/shared/util/analytics";
 import { formatFileSize, showErrorNotification, showWarning } from "~/shared/util/helpers";
 import { syncConnectionSchema } from "~/shared/util/schema";
-import { Duration, RecordId, StringRecordId, Table, Uuid } from "~/vendor/rrflow-client";
+import { Duration, RecordId, StringRecordId, Table, Uuid } from "../../../../rrflow/client/values";
+import { Icon, iconCheck, iconFile, iconUpload, iconWarning } from "../../../../rrflow/ui/index";
 
 type DataFileFormat = "csv" | "json" | "ndjson";
 type ImportType = "sql" | DataFileFormat;

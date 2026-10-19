@@ -1,9 +1,9 @@
 import { Anchor, Group, Paper, Stack, Text } from "@mantine/core";
-import { Icon, iconChevronRight } from "@rrflow/ui";
 import { navigate } from "wouter/use-browser-location";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";
 import { IntercomSupportArticle } from "~/types";
+import { Icon, iconChevronRight } from "../../../../../rrflow/ui/index";
 
 export interface ArticleCardProps {
 	article: IntercomSupportArticle;

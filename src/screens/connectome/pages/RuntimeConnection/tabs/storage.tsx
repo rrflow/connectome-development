@@ -12,10 +12,16 @@ import {
 	Table,
 	Text,
 } from "@mantine/core";
-import { Icon, iconChevronDown, iconChevronUp, iconErrorCircle, iconRefresh } from "@rrflow/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Section } from "~/components/Section";
+import {
+	Icon,
+	iconChevronDown,
+	iconChevronUp,
+	iconErrorCircle,
+	iconRefresh,
+} from "../../../../../rrflow/ui/index";
 import { formatCount, formatSize, formatTime, shortDigest } from "../format";
 import { Term } from "../glossary";
 import { ReadNotice } from "../notice";
@@ -64,6 +70,7 @@ export function StorageTab({ client, sessionKey }: RuntimeLensProps) {
 	return (
 		<Stack gap="xl">
 			<Section
+				compact
 				title={
 					<>
 						Storage engine ·{" "}
@@ -110,6 +117,7 @@ export function StorageTab({ client, sessionKey }: RuntimeLensProps) {
 			</Section>
 
 			<Section
+				compact
 				title="History, retention, and indexes"
 				description={
 					<>
@@ -184,6 +192,7 @@ export function StorageTab({ client, sessionKey }: RuntimeLensProps) {
 						</SimpleGrid>
 
 						<Section
+							compact
 							title="Vector artifacts"
 							description="Published vector projections the engine serves search from."
 						>
@@ -247,6 +256,7 @@ export function StorageTab({ client, sessionKey }: RuntimeLensProps) {
 						</Section>
 
 						<Section
+							compact
 							title="Query indexes"
 							description="Secondary indexes maintained for RRFlowQL."
 						>

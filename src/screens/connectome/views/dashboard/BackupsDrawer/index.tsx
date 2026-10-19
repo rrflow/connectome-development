@@ -1,5 +1,4 @@
 import { Box, Button, Divider, Drawer, Group, ScrollArea, Stack, Text } from "@mantine/core";
-import { Icon, iconClose, iconHistory } from "@rrflow/ui";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { navigate } from "wouter/use-browser-location";
@@ -8,6 +7,7 @@ import { DrawerResizer } from "~/components/DrawerResizer";
 import { Spacer } from "~/components/Spacer";
 import { useStable } from "~/hooks/stable";
 import { CloudBackup, CloudInstance } from "~/types";
+import { Icon, iconClose, iconHistory } from "../../../../../rrflow/ui/index";
 import { InstanceBackup } from "./InstanceBackup";
 import classes from "./style.module.scss";
 

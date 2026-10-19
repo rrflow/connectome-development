@@ -11,7 +11,6 @@ import {
 	Tooltip,
 	UnstyledButton,
 } from "@mantine/core";
-import { Icon, iconDotsVertical, iconExitToAp, iconWarning } from "@rrflow/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { PropsWithChildren, useMemo } from "react";
 import { isOrganisationRestricted, isOrganisationTerminated } from "~/cloud/helpers";
@@ -25,6 +24,7 @@ import { useConfirmation } from "~/providers/Confirmation";
 import { ON_STOP_PROPAGATION, plural, showInfo } from "~/shared/util/helpers";
 import { useCloudStore } from "~/stores/cloud";
 import { CloudOrganization } from "~/types";
+import { Icon, iconDotsVertical, iconExitToAp, iconWarning } from "../../../../rrflow/ui/index";
 
 export interface OrganizationTileProps extends BoxProps {
 	organization: CloudOrganization;

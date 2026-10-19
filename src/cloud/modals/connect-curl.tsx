@@ -1,11 +1,11 @@
 import { Group, Paper, SimpleGrid, Stack, Text, TextInput } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
 import { openModal } from "@mantine/modals";
-import { CodeBlock, Icon, iconTransfer } from "@rrflow/ui";
 import { LearnMore } from "~/components/LearnMore";
 import { Link } from "~/components/Link";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import type { CloudInstance } from "~/types";
+import { CodeBlock, Icon, iconTransfer } from "../../rrflow/ui/index";
 
 export function openConnectCurl(instance: CloudInstance, namespace: string, database: string) {
 	openModal({

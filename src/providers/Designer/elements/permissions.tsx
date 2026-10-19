@@ -1,6 +1,6 @@
 import { Accordion, Stack } from "@mantine/core";
-import { iconKey } from "@rrflow/ui";
 import { PermissionInput } from "~/components/Inputs";
+import { iconKey } from "../../../rrflow/ui/index";
 import { type ElementProps, SectionTitle } from "../helpers";
 
 export function PermissionsElement({ data, setData }: ElementProps) {

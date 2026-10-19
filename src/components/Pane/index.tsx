@@ -1,8 +1,8 @@
 import { Box, Divider, Group, MantineSize, Paper, type PaperProps, Text } from "@mantine/core";
-import { Icon } from "@rrflow/ui";
 import clsx from "clsx";
 import type { HTMLAttributes } from "react";
 import { useIsLight } from "~/hooks/theme";
+import { Icon } from "../../rrflow/ui/index";
 import { Spacer } from "../Spacer";
 import classes from "./style.module.scss";
 

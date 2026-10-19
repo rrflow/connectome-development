@@ -1,11 +1,11 @@
 import { Group, Skeleton, Text } from "@mantine/core";
 import { openModal } from "@mantine/modals";
-import { CodeBlock, Icon, iconConsole } from "@rrflow/ui";
 import { useEffect } from "react";
 import { LearnMore } from "~/components/LearnMore";
 import { Link } from "~/components/Link";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import type { CloudInstance } from "~/types";
+import { CodeBlock, Icon, iconConsole } from "../../rrflow/ui/index";
 import { useCloudAuthTokenMutation } from "../mutations/auth";
 
 export function openConnectCli(instance: CloudInstance) {

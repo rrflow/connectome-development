@@ -1,5 +1,4 @@
 import { Text } from "@mantine/core";
-import { Icon, iconArrowUpRight, iconChevronRight, iconDelete, iconText } from "@rrflow/ui";
 import { useContextMenu } from "mantine-contextmenu";
 import { useState } from "react";
 import { EditableText } from "~/components/EditableText";
@@ -9,6 +8,13 @@ import { useSidekickDeleteMutation, useSidekickRenameMutation } from "~/hooks/si
 import { useStable } from "~/hooks/stable";
 import { useSidekickStore } from "~/stores/sidekick";
 import { SidekickChat } from "~/types";
+import {
+	Icon,
+	iconArrowUpRight,
+	iconChevronRight,
+	iconDelete,
+	iconText,
+} from "../../../rrflow/ui/index";
 
 export interface SidekickHistoryEntryProps {
 	chat: SidekickChat;

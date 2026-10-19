@@ -1,5 +1,4 @@
 import { Box, Divider, Flex, Group, Paper, ScrollArea, Stack, Text, Tooltip } from "@mantine/core";
-import { Icon, iconBullhorn, iconIndex, iconJSON } from "@rrflow/ui";
 import { Handle, Position } from "@xyflow/react";
 import {
 	createContext,
@@ -20,6 +19,7 @@ import { ON_STOP_PROPAGATION } from "~/shared/util/helpers";
 import { themeColor } from "~/shared/util/mantine";
 import { getTableVariant } from "~/shared/util/schema";
 import type { DiagramDirection, DiagramMode, TableInfo } from "~/types";
+import { Icon, iconBullhorn, iconIndex, iconJSON } from "../../../../../../rrflow/ui/index";
 import classes from "../style.module.scss";
 
 export type DiagramContextProps = {

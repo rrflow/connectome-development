@@ -19,7 +19,7 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { MANTINE_THEME } from "@rrflow/ui";
+import { MANTINE_THEME } from "../../rrflow/ui/index";
 
 const ICON_SIZES: Record<string, number> = {
 	xs: 0.5,

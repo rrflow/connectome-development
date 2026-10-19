@@ -18,22 +18,6 @@ import {
 	Transition,
 } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import {
-	Icon,
-	iconArrowLeft,
-	iconArrowUpRight,
-	iconCheck,
-	iconPlus,
-	iconReset,
-	iconSearch,
-	iconTune,
-	iconWarning,
-	pictoBrain,
-	pictoHandsOn,
-	pictoSDBCloud,
-	pictoSidekick,
-	pictoUniversity,
-} from "@rrflow/ui";
 import { MouseEvent, useState } from "react";
 import { Link } from "wouter";
 import { adapter } from "~/adapter";
@@ -54,6 +38,22 @@ import { dispatchIntent } from "~/shared/util/intents";
 import { openResourcesLockedModal } from "~/shell/components/App/modals/resources-locked";
 import { useCloudStore } from "~/stores/cloud";
 import { CloudInstance, Connection } from "~/types";
+import {
+	Icon,
+	iconArrowLeft,
+	iconArrowUpRight,
+	iconCheck,
+	iconPlus,
+	iconReset,
+	iconSearch,
+	iconTune,
+	iconWarning,
+	pictoBrain,
+	pictoHandsOn,
+	pictoRRFlowCloud,
+	pictoSidekick,
+	pictoUniversity,
+} from "../../../../rrflow/ui/index";
 import { CloudAlert } from "./banner";
 import { StartBlog } from "./content/blog";
 import { StartCloud } from "./content/cloud";
@@ -496,7 +496,7 @@ export function OverviewPage() {
 									</PrimaryTitle>
 									<StartCloud
 										action="Sign in"
-										image={pictoSDBCloud}
+										image={pictoRRFlowCloud}
 										onClick={openCloudAuthentication}
 									>
 										<Text

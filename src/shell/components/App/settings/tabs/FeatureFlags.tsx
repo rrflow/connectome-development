@@ -1,11 +1,11 @@
 import { Box, Group, ScrollArea, Select, Stack, Text, TextInput } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconReset, iconSearch } from "@rrflow/ui";
 import { useMemo } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { Spacer } from "~/components/Spacer";
 import { featureFlags, schema, useFeatureFlags } from "~/shared/util/feature-flags";
 import { fuzzyMatch } from "~/shared/util/helpers";
+import { Icon, iconReset, iconSearch } from "../../../../../rrflow/ui/index";
 
 export function FeatureFlagsTab() {
 	const [flags, setFlags] = useFeatureFlags();

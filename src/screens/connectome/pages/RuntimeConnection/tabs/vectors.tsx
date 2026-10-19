@@ -18,14 +18,6 @@ import {
 	Text,
 	UnstyledButton,
 } from "@mantine/core";
-import {
-	Icon,
-	iconChevronDown,
-	iconChevronUp,
-	iconErrorCircle,
-	iconRefresh,
-	iconRelation,
-} from "@rrflow/ui";
 import { skipToken, useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Label } from "~/components/Label";
@@ -36,6 +28,14 @@ import type {
 	RrdReference,
 	RrdVectorMapProgressView,
 } from "~/rrflow/session";
+import {
+	Icon,
+	iconChevronDown,
+	iconChevronUp,
+	iconErrorCircle,
+	iconRefresh,
+	iconRelation,
+} from "../../../../../rrflow/ui/index";
 import { formatCount, formatTime } from "../format";
 import { Term } from "../glossary";
 import { type CanvasEdge, type CanvasNode, GraphCanvas } from "../graph";
@@ -47,7 +47,6 @@ import type { RecordFocusProps, RuntimeLensProps } from "../types";
 /** Points requested per page while browsing; the contract bounds the maximum natively. */
 const POINT_PAGE_SIZE = 50;
 const SIMILAR_COUNTS = ["5", "10", "20"];
-const CANVAS_HEIGHT = 620;
 const NO_RECORD_GROUP = "no-record";
 
 function referenceText(reference: RrdReference) {
@@ -176,6 +175,12 @@ export function VectorsTab({
 	const map = useQuery({
 		queryKey: ["rrd-vector-map", sessionKey, collection?.collection_id, vector?.name],
 		enabled: Boolean(collection && vector),
+		// Each build performs many engine reads. A refusal requires an explicit
+		// retry; focus, remount and network recovery must not repeat the build.
+		retry: false,
+		retryOnMount: false,
+		refetchOnWindowFocus: false,
+		refetchOnReconnect: false,
 		staleTime: Number.POSITIVE_INFINITY,
 		queryFn: () => {
 			queryClient.setQueryData<MapBuild | null>(buildKey, null);
@@ -367,6 +372,7 @@ export function VectorsTab({
 	if (!collection || !vector) {
 		return (
 			<Section
+				compact
 				title="Vectors"
 				description={
 					<>
@@ -385,6 +391,7 @@ export function VectorsTab({
 	return (
 		<Stack gap="xl">
 			<Section
+				compact
 				title="Vectors"
 				description={
 					<>
@@ -411,7 +418,7 @@ export function VectorsTab({
 						loading={catalogue.isFetching || map.isFetching}
 						onClick={() => {
 							catalogue.refetch();
-							map.refetch();
+							map.refetch({ cancelRefetch: false });
 						}}
 					>
 						Refresh
@@ -469,9 +476,8 @@ export function VectorsTab({
 				<Grid>
 					<Grid.Col span={{ base: 12, lg: 8 }}>
 						<Paper
-							h={CANVAS_HEIGHT}
+							className={classes.runtimeCanvas}
 							pos="relative"
-							style={{ overflow: "hidden" }}
 						>
 							{map.isFetching && !map.isPending && build && (
 								<Progress
@@ -559,7 +565,7 @@ export function VectorsTab({
 					<Grid.Col span={{ base: 12, lg: 4 }}>
 						<Paper
 							p="md"
-							h={CANVAS_HEIGHT}
+							className={classes.runtimePanel}
 						>
 							{selected ? (
 								<Stack
@@ -849,6 +855,7 @@ export function VectorsTab({
 			</Section>
 
 			<Section
+				compact
 				title={
 					<>
 						Stored <Term id="point">points</Term>

@@ -1,5 +1,4 @@
 import { Box, Group, Image, Menu, Text } from "@mantine/core";
-import { Icon, iconClose, iconMaximize, iconMinimize, iconRestore, pictoBrain } from "@rrflow/ui";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useState } from "react";
 import { ActionButton } from "~/components/ActionButton";
@@ -13,6 +12,14 @@ import {
 import { displayBinding } from "~/providers/Commands/keybindings";
 import { getMenuItems } from "~/shell/components/App/hooks/menu";
 import { useInterfaceStore } from "~/shell/stores/interface";
+import {
+	Icon,
+	iconClose,
+	iconMaximize,
+	iconMinimize,
+	iconRestore,
+	pictoBrain,
+} from "../../../rrflow/ui/index";
 import classes from "./style.module.scss";
 
 export function AppTitleBar() {

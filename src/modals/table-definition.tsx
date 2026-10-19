@@ -1,10 +1,10 @@
 import { Stack, Text } from "@mantine/core";
 import { openModal } from "@mantine/modals";
-import { CodeBlock } from "@rrflow/ui";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { executeQuerySingle } from "~/screens/connectome/connection/connection";
 import { showErrorNotification } from "~/shared/util/helpers";
-import { escapeIdent } from "~/vendor/rrflow-client";
+import { escapeIdent } from "../rrflow/client/values";
+import { CodeBlock } from "../rrflow/ui/index";
 
 function header(name: string) {
 	return `\n\n-- ------------------------------\n-- ${name}\n-- ------------------------------ \n\n`;

@@ -10,7 +10,6 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useDebouncedValue, useInputState } from "@mantine/hooks";
-import { Icon, iconBook } from "@rrflow/ui";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import clsx from "clsx";
 import { adapter } from "~/adapter";
@@ -22,6 +21,7 @@ import { useIntent } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
 import { tagEvent } from "~/shared/util/analytics";
 import { Y_SLIDE_TRANSITION } from "~/shared/util/helpers";
+import { Icon, iconBook } from "../../../../rrflow/ui/index";
 import classes from "../style.module.scss";
 
 const ENDPOINT = "https://github.com/EonsofStupid/connectome";

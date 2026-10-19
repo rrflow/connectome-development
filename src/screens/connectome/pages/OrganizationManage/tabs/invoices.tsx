@@ -1,9 +1,9 @@
 import { ActionIcon, Alert, Paper, Skeleton, Stack, Table } from "@mantine/core";
-import { Icon, iconHelp, iconOpen } from "@rrflow/ui";
 import { adapter } from "~/adapter";
 import { useCloudInvoicesQuery } from "~/cloud/queries/invoices";
 import { Section } from "~/components/Section";
 import { InvoiceStatus } from "~/types";
+import { Icon, iconHelp, iconOpen } from "../../../../../rrflow/ui/index";
 import classes from "../style.module.scss";
 import { OrganizationTabProps } from "../types";
 

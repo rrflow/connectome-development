@@ -5,7 +5,8 @@ import { QueryResponse } from "~/types";
  */
 export interface RRFlowQL {
 	/**
-	 * Validate a query and return an error message if invalid
+	 * Return a native validation error or an explicit unavailable reason.
+	 * Client presentation tokenization is never evidence of query validity.
 	 */
 	validateQuery(sql: string): Promise<string | undefined>;
 
@@ -15,12 +16,13 @@ export interface RRFlowQL {
 	validateWhere(where: string): Promise<string | undefined>;
 
 	/**
-	 * Format a value structure to a JSON or SQL string
+	 * Format a public value as editable JSON. The json flag is retained for
+	 * existing presentation callers; it does not enable a second value grammar.
 	 */
 	formatValue(value: any, json?: boolean, pretty?: boolean): Promise<string>;
 
 	/**
-	 * Parse an SQL string back into a value structure
+	 * Deserialize editable JSON without evaluating a query expression
 	 */
 	parseValue<T = unknown>(value: string): Promise<T>;
 
@@ -30,7 +32,7 @@ export interface RRFlowQL {
 	getLiveQueries(query: string, responses: QueryResponse[]): Promise<number[]>;
 
 	/**
-	 * Format the given query
+	 * Lay out source whitespace without canonicalizing or validating a query
 	 */
 	formatQuery(query: string, pretty?: boolean): Promise<string>;
 

@@ -12,18 +12,6 @@ import {
 	Transition,
 	useMantineTheme,
 } from "@mantine/core";
-import {
-	Icon,
-	iconAPI,
-	iconFullscreen,
-	iconImage,
-	iconMagnifyMinus,
-	iconMagnifyPlus,
-	iconPause,
-	iconPlay,
-	iconRelation,
-	iconReset,
-} from "@rrflow/ui";
 import { createEdgeCurveProgram } from "@sigma/edge-curve";
 import { createNodeBorderProgram } from "@sigma/node-border";
 import { MultiDirectedGraph } from "graphology";
@@ -35,7 +23,19 @@ import { EdgeDisplayData, NodeDisplayData } from "sigma/types";
 import { useStable } from "~/hooks/stable";
 import { getIsLight, useIsLight } from "~/hooks/theme";
 import { useInspector } from "~/providers/Inspector";
-import { RecordId } from "~/vendor/rrflow-client";
+import { RecordId } from "../../rrflow/client/values";
+import {
+	Icon,
+	iconAPI,
+	iconFullscreen,
+	iconImage,
+	iconMagnifyMinus,
+	iconMagnifyPlus,
+	iconPause,
+	iconPlay,
+	iconRelation,
+	iconReset,
+} from "../../rrflow/ui/index";
 import { ActionButton } from "../ActionButton";
 import { NodeContextMenu } from "./context";
 import { drawHover, drawLabel } from "./drawing";

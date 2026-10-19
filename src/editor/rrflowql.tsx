@@ -4,6 +4,7 @@ import type { Extension } from "@codemirror/state";
 import type { EditorView } from "@codemirror/view";
 import { getRRFlowQL, hasRRFlowQL } from "~/screens/connectome/connection/connection";
 import { getSetting } from "~/shared/util/config";
+import { RRFLOWQL_VALIDATION_UNAVAILABLE } from "~/shared/util/rrflowql/native";
 
 const findStatement = (stack: any): [number, number] | null => {
 	let last: any = null;
@@ -61,7 +62,12 @@ export const rrflowqlLinting = (onValidate?: (status: string) => void): Extensio
 				return [];
 			}
 
-			const message = (await getRRFlowQL().validateQuery(content)) || "";
+			let message: string;
+			try {
+				message = (await getRRFlowQL().validateQuery(content)) || "";
+			} catch (error) {
+				message = error instanceof Error ? error.message : String(error);
+			}
 			const match = message.match(/^Parse error: (.+)?\s+-->\s+\[(\d+):(\d+)\]/i);
 
 			if (match) {
@@ -69,7 +75,10 @@ export const rrflowqlLinting = (onValidate?: (status: string) => void): Extensio
 				const lineNumber = Number.parseInt(match[2], 10);
 				const column = Number.parseInt(match[3], 10);
 
-				const position = view.state.doc.line(lineNumber).from + column - 1;
+				const line = view.state.doc.line(
+					Math.max(1, Math.min(view.state.doc.lines, lineNumber)),
+				);
+				const position = Math.max(line.from, Math.min(line.to, line.from + column - 1));
 				const word = view.state.wordAt(position);
 
 				onValidate?.(reason);
@@ -85,11 +94,24 @@ export const rrflowqlLinting = (onValidate?: (status: string) => void): Extensio
 							}
 						: {
 								from: position,
-								to: position + 1,
+								to: Math.min(content.length, position + 1),
 								message: reason,
 								severity: "error",
 								source: "RRFlowQL",
 							},
+				];
+			}
+
+			if (message) {
+				onValidate?.(message);
+				return [
+					{
+						from: 0,
+						to: Math.min(content.length, 1),
+						message,
+						severity: message === RRFLOWQL_VALIDATION_UNAVAILABLE ? "warning" : "error",
+						source: "RRFlowQL",
+					},
 				];
 			}
 

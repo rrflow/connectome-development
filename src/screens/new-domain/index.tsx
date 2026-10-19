@@ -1,5 +1,4 @@
 import { Alert, Box, Button, Divider, Image, Paper, SimpleGrid, Stack, Text } from "@mantine/core";
-import { Icon, iconArrowUpRight, iconDownload, pictoBrain } from "@rrflow/ui";
 import { useState } from "react";
 import { adapter } from "~/adapter";
 import { Link } from "~/components/Link";
@@ -12,6 +11,7 @@ import { useIsLight, useThemeImage } from "~/hooks/theme";
 import logoDarkUrl from "~/shared/assets/images/dark/logo.webp";
 import logoLightUrl from "~/shared/assets/images/light/logo.webp";
 import { backupConfig } from "~/shared/util/config";
+import { Icon, iconArrowUpRight, iconDownload, pictoBrain } from "../../rrflow/ui/index";
 
 export function NewDomainScreen() {
 	const isLight = useIsLight();

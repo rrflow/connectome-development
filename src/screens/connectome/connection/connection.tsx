@@ -1,69 +1,25 @@
-import { compareVersions } from "compare-versions";
 import { adapter } from "~/adapter";
-import { fetchAPI } from "~/cloud/api";
-import { MAX_HISTORY_QUERY_LENGTH, SANDBOX } from "~/constants";
-import { hasCompletedOnboarding } from "~/hooks/onboarding";
+import { MAX_HISTORY_QUERY_LENGTH } from "~/constants";
 import { tagEvent } from "~/shared/util/analytics";
-import { getSetting } from "~/shared/util/config";
-import {
-	getActiveConnection,
-	getAuthDB,
-	getAuthNS,
-	getConnection,
-	getConnectionVariant,
-} from "~/shared/util/connection";
-import {
-	RRFLOW_START_BASICS,
-	RRFLOW_START_GRAPH_V2,
-	RRFLOW_START_GRAPH_V3,
-	RRFLOW_START_VECTOR_V2,
-	RRFLOW_START_VECTOR_V3,
-} from "~/shared/util/dataset";
-import { createBaseQuery } from "~/shared/util/defaults";
+import { getConnection } from "~/shared/util/connection";
 import { rrflowqlDurationToSeconds } from "~/shared/util/duration";
-import { CloudError } from "~/shared/util/errors";
-import {
-	ActivateDatabaseEvent,
-	ConnectedEvent,
-	DisconnectedEvent,
-} from "~/shared/util/global-events";
-import {
-	__throw,
-	connectionUri,
-	exposeDebug,
-	newId,
-	showErrorNotification,
-	showWarning,
-} from "~/shared/util/helpers";
-import { parseIdent } from "~/shared/util/language";
+import { ConnectedEvent, DisconnectedEvent } from "~/shared/util/global-events";
+import { __throw, exposeDebug, newId, showErrorNotification } from "~/shared/util/helpers";
 import { createRRFlowQL } from "~/shared/util/rrflowql";
-import { RRFlowQL } from "~/shared/util/rrflowql/contract";
-import { syncConnectionSchema } from "~/shared/util/schema";
+import type { RRFlowQL } from "~/shared/util/rrflowql/contract";
 import { useConfigStore } from "~/shell/stores/config";
 import { useInterfaceStore } from "~/shell/stores/interface";
-import { useCloudStore } from "~/stores/cloud";
-import { State, useDatabaseStore } from "~/stores/database";
+import { type State, useDatabaseStore } from "~/stores/database";
 import { useQueryStore } from "~/stores/query";
-import type {
-	Authentication,
-	CloudInstance,
-	Connection,
-	Protocol,
-	QueryResponse,
-	SchemaInfoKV,
-	SchemaInfoNS,
-} from "~/types";
+import type { Authentication, Connection, Protocol, QueryResponse } from "~/types";
 import {
 	type AccessRecordAuth,
-	Features,
-	ProvidedAuth,
+	type ProvidedAuth,
 	RRFlow,
-	SqlExportOptions,
-	SystemAuth,
-	UnsupportedVersionError,
-	Uuid,
-} from "~/vendor/rrflow-client";
-import { composeAuthentication, getVersionTimeout } from "./helpers";
+	RRFlowCapabilityUnavailableError,
+	type SqlExportOptions,
+} from "../../../rrflow/client/native";
+import { Uuid } from "../../../rrflow/client/values";
 import { createRRFlow } from "./rrflow";
 
 export interface ConnectOptions {
@@ -81,12 +37,11 @@ export interface GraphqlResponse {
 	errors?: any;
 }
 
-let retryTask: any;
 let openedConnection: Connection;
 let instance = new RRFlow();
 let rrflowql: RRFlowQL | null = null;
 
-const LQ_SUPPORTED = new Set<Protocol>(["ws", "wss", "mem", "indxdb"]);
+const LQ_SUPPORTED = new Set<Protocol>();
 const LIVE_QUERIES = new Map<string, Set<Uuid>>();
 
 /**
@@ -95,218 +50,48 @@ const LIVE_QUERIES = new Map<string, Set<Uuid>>();
  * @param options Connection options
  */
 export async function openConnection(options?: ConnectOptions) {
-	const params = new URLSearchParams(location.search);
-	const currentConnection = getConnection();
-	const hasCompletedSandboxOnboarding = hasCompletedOnboarding("sandbox");
-	const connection = options?.connection || currentConnection;
-
-	const { settings, updateConnection } = useConfigStore.getState();
-
-	if (!connection) {
-		throw new Error("No connection available");
-	}
-
-	const strictSandbox = getSetting("behavior", "strictSandbox");
-	const newState = options?.isRetry ? "retrying" : "connecting";
-	const rrflow = await createRRFlow();
-
-	await _closeConnection(newState, false);
-
-	instance = rrflow;
-	openedConnection = connection;
-
-	exposeDebug({ rrflow, rrflowql });
-
+	const connection = options?.connection || getConnection();
+	if (!connection) throw new Error("No connection available");
 	const { setCurrentState, setVersion, setLatestError, clearSchema } =
 		useDatabaseStore.getState();
-
-	const rpcEndpoint = connectionUri(
-		connection.authentication.protocol,
-		connection.authentication.hostname,
-	);
-
+	const rrflow = await createRRFlow();
+	await _closeConnection(options?.isRetry ? "retrying" : "connecting", false);
+	instance = rrflow;
+	openedConnection = connection;
 	clearSchema();
-
-	adapter.log("DB", `Opening connection to ${rpcEndpoint}`);
-
-	if (retryTask) {
-		clearTimeout(retryTask);
-		retryTask = null;
-	}
-
+	exposeDebug({ rrflow, rrflowql });
+	instance.subscribe("connecting", () => setCurrentState("connecting"));
+	instance.subscribe("disconnected", () => {
+		setCurrentState("disconnected");
+		setVersion("");
+		DisconnectedEvent.dispatch(null);
+	});
+	instance.subscribe("error", (error) => setLatestError(error.message));
 	try {
-		const [versionCheck] = getVersionTimeout();
-
-		if (connection.authentication.mode === "cloud") {
-			const { authState } = useCloudStore.getState();
-
-			if (authState === "loading" || authState === "unknown") {
-				scheduleReconnect(1000);
-				return;
-			}
-
-			if (authState === "unauthenticated") {
-				throw new CloudError("Not authenticated with RRFlow Cloud");
-			}
-
-			const instance = await fetchAPI<CloudInstance>(
-				`/instances/${connection.authentication.cloudInstance}`,
+		const { protocol, hostname } = connection.authentication;
+		if (protocol !== "http" && protocol !== "https") {
+			throw new RRFlowCapabilityUnavailableError(
+				"Connection transport",
+				"select the RRD HTTP origin in the Runtime connection lens; embedded and database RPC engines are unavailable",
 			);
-
-			if (instance?.state !== "ready") {
-				scheduleReconnect(1000);
-				return;
-			}
 		}
-
-		const namespace = getAuthNS(connection.authentication) || connection.lastNamespace;
-		const database = getAuthDB(connection.authentication) || connection.lastDatabase;
-
-		instance.subscribe("connecting", () => {
-			setCurrentState("connecting");
+		await instance.connect(`${protocol}://${hostname}`, {
+			credentialPath: connection.runtimeCredential,
+			expectedInstance: connection.runtimeInstance,
+			sshHost: connection.runtimeSshHost,
 		});
-
-		instance.subscribe("reconnecting", () => {
-			setCurrentState("retrying");
-		});
-
-		instance.subscribe("disconnected", () => {
-			DisconnectedEvent.dispatch(null);
-
-			setCurrentState("disconnected");
-			setVersion("");
-		});
-
-		instance.subscribe("error", (err) => {
-			setLatestError(err.message);
-			console.error(err);
-		});
-
-		try {
-			await instance.connect(rpcEndpoint, {
-				versionCheck,
-				reconnect: {
-					enabled: true,
-					attempts: -1,
-					retryDelayMultiplier: 1.2,
-					retryDelayJitter: 0,
-				},
-				authentication: async () => {
-					const credentials = await composeAuthentication(connection.authentication);
-
-					if (credentials) {
-						return credentials as string | SystemAuth;
-					}
-
-					return null;
-				},
-			});
-		} catch (err: any) {
-			console.error("Connection failed", err);
-		}
-
-		adapter.log("DB", "Connection established");
-
-		const v = await instance.version();
-		const version = v.version.replace(/^rrflow-/, "");
-		const isPreview = version.includes("-alpha") || version.includes("-beta");
-
-		if (isPreview) {
-			showWarning({
-				autoClose: 10_000,
-				title: "Preview version detected",
-				subtitle:
-					"You are connected to a preview version of RRFlow. Some features may not work as intended.",
-			});
-		}
-
-		adapter.log("DB", `Database version ${version ?? "unknown"}`);
-
-		rrflowql = createRRFlowQL(version);
-
+		const { version } = await instance.version();
+		rrflowql = createRRFlowQL();
 		setVersion(version);
 		setCurrentState("connected");
 		setLatestError("");
-
-		if (connection.id === SANDBOX) {
-			await instance.use({
-				namespace: "sandbox",
-				database: "sandbox",
-			});
-
-			await instance.query(`
-				DEFINE NAMESPACE OVERWRITE sandbox;
-				DEFINE DATABASE OVERWRITE sandbox ${strictSandbox ? "STRICT" : ""};
-			`);
-
-			if (!hasCompletedSandboxOnboarding && adapter.isSampleSandboxEnabled) {
-				const queries = [RRFLOW_START_BASICS];
-
-				const canUse30Queries = compareVersions(version, "3.0.0") >= 0;
-
-				if (canUse30Queries) {
-					queries.push(RRFLOW_START_GRAPH_V3);
-					queries.push(RRFLOW_START_VECTOR_V3);
-				} else {
-					queries.push(RRFLOW_START_GRAPH_V2);
-					queries.push(RRFLOW_START_VECTOR_V2);
-				}
-
-				const configs = queries.map((query) => ({
-					...createBaseQuery(settings, "config"),
-					name: query.name,
-					query: query.query,
-				}));
-
-				// Clear empty queries and existing sample queries
-				const existingQueries = connection.queries.filter(
-					(it) =>
-						it.query.length > 0 &&
-						![
-							RRFLOW_START_BASICS.name,
-							RRFLOW_START_GRAPH_V2.name,
-							RRFLOW_START_GRAPH_V3.name,
-							RRFLOW_START_VECTOR_V2.name,
-							RRFLOW_START_VECTOR_V3.name,
-						].includes(it.name ?? ""),
-				);
-
-				updateConnection({
-					id: connection.id,
-					activeQuery: configs[0].id,
-					queries: [...configs, ...existingQueries],
-				});
-
-				params.delete("queries");
-			}
-		} else {
-			await activateDatabase(namespace, database);
-		}
-
+		adapter.log("RRD", "Authenticated native RRD session attached");
 		ConnectedEvent.dispatch(null);
-
-		tagEvent("connection_connected", {
-			protocol: connection.authentication.protocol.toString(),
-			variant: getConnectionVariant(connection),
-		});
-	} catch (err: any) {
-		console.error("Connection failed", err);
-		instance.close();
-
-		setLatestError(err.message);
-
-		if (err instanceof UnsupportedVersionError) {
-			showErrorNotification({
-				title: "Unsupported version",
-				content: `The database version (${err.version}) must satisfy ">= ${err.minimum} < ${err.maximum}"`,
-			});
-		} else if (!(err instanceof CloudError)) {
-			console.error(err);
-			showErrorNotification({
-				title: "Connection failed",
-				content: err,
-			});
-		}
+	} catch (cause) {
+		await instance.close();
+		const error = cause instanceof Error ? cause : new Error(String(cause));
+		setLatestError(error.message);
+		showErrorNotification({ title: "Connection failed", content: error.message });
 	}
 }
 
@@ -334,7 +119,7 @@ export async function closeConnection(reconnect: boolean = false) {
  * Returns whether the connection is considered active
  */
 export function isConnected() {
-	return instance.status === "connected" || instance.status === "connecting";
+	return instance.isConnected;
 }
 
 /**
@@ -346,9 +131,7 @@ export function isConnected() {
 export async function register(auth: AccessRecordAuth, rrflow?: RRFlow) {
 	const db = rrflow ?? instance;
 
-	await db.signup(auth).catch(() => {
-		throw new Error("Could not sign up");
-	});
+	await db.signup(auth);
 }
 
 /**
@@ -363,9 +146,7 @@ export async function authenticate(auth: ProvidedAuth, rrflow?: RRFlow) {
 	if (auth === undefined) {
 		await db.invalidate();
 	} else if (typeof auth === "string") {
-		await db.authenticate(auth).catch(() => {
-			throw new Error("Authentication token invalid");
-		});
+		await db.authenticate(auth);
 	} else if (auth) {
 		await db.signin(auth).catch((err) => {
 			const { openAccessSignup } = useInterfaceStore.getState();
@@ -373,7 +154,7 @@ export async function authenticate(auth: ProvidedAuth, rrflow?: RRFlow) {
 			if (err.message.includes("No record was returned")) {
 				openAccessSignup();
 			} else {
-				throw new Error(err.message);
+				throw err;
 			}
 		});
 	}
@@ -595,74 +376,22 @@ function getQueryOr(id: string, override?: string) {
 	return useQueryStore.getState().queryState[id]?.doc ?? "";
 }
 
-function isGraphqlSupportedError(err: string) {
-	return (
-		err.includes("Method not found") ||
-		err.includes("A GraphQL request was made, but GraphQL is not supported by the context")
-	);
-}
-
-/**
- * Check whether the active connection supports GraphQL
- */
+/** GraphQL needs a typed native operation before this view can execute it. */
 export async function checkGraphqlSupport() {
-	try {
-		const res = await sendGraphqlRequest("");
-		const someError = res.errors?.some((err: any) => isGraphqlSupportedError(err.message));
-
-		return !!res.errors && !someError;
-	} catch (err: any) {
-		return !isGraphqlSupportedError(err.message);
-	}
+	return false;
 }
 
-/**
- * Send a raw GraphQL request to the active connection
- */
 export async function sendGraphqlRequest(
-	query: string,
-	params?: Record<string, any>,
-	operation?: string,
-) {
-	try {
-		const start = performance.now();
-		const connection = getConnection();
-
-		const { currentState } = useDatabaseStore.getState();
-
-		if (!connection || currentState !== "connected") {
-			throw new Error("Not connected to an instance");
-		}
-
-		const { endpoint, headers } = composeHttpConnection(connection.authentication, "/graphql");
-
-		const response = await fetch(endpoint, {
-			headers,
-			method: "POST",
-			body: JSON.stringify({
-				query,
-				variables: params,
-				operationName: operation,
-			}),
-		});
-
-		const result: GraphqlResponse = await response.json();
-		const end = performance.now();
-
-		return {
-			success: !!response.ok && !result.errors,
-			result: result.result.data,
-			errors: result.errors,
-			execution_time: `${(end - start).toFixed(2)}ms`,
-		};
-	} catch (err: any) {
-		return {
-			success: false,
-			result: null,
-			errors: err.message,
-			execution_time: "",
-		};
-	}
+	_query: string,
+	_params?: Record<string, any>,
+	_operation?: string,
+): Promise<GraphqlResponse & { execution_time: string }> {
+	return {
+		success: false,
+		result: null,
+		errors: "GraphQL is unavailable: the native RRD adapter has no negotiated GraphQL operation",
+		execution_time: "",
+	};
 }
 
 /**
@@ -727,127 +456,21 @@ export function cancelLiveQueries(tab: string) {
 /**
  * Activate the given database within the specified namespace
  */
-export async function activateDatabase(namespace: string, database: string) {
-	const { updateConnection } = useConfigStore.getState();
-	const { setIsSyncingSchema } = useDatabaseStore.getState();
-	const connection = getActiveConnection();
-	let invalidNS = false;
-
-	if (!connection) {
-		return;
-	}
-
-	setIsSyncingSchema(true);
-
-	// Select a namespace only
-	if (namespace) {
-		const isValid = await isNamespaceValid(namespace);
-
-		if (isValid) {
-			updateConnection({
-				id: connection,
-				lastNamespace: namespace,
-				lastDatabase: database,
-			});
-
-			await instance.use({
-				namespace,
-				database: null,
-			});
-		} else {
-			invalidNS = true;
-
-			updateConnection({
-				id: connection,
-				lastNamespace: "",
-				lastDatabase: "",
-			});
-		}
-	} else {
-		updateConnection({
-			id: connection,
-			lastNamespace: "",
-			lastDatabase: "",
-		});
-	}
-
-	// Select a database
-	if (!invalidNS && namespace && database) {
-		const isValid = await isDatabaseValid(database);
-
-		if (isValid) {
-			updateConnection({
-				id: connection,
-				lastDatabase: database,
-			});
-
-			await instance.use({ database });
-		} else {
-			updateConnection({
-				id: connection,
-				lastDatabase: "",
-			});
-		}
-	}
-
-	// Select the default namespace and database
-	if (invalidNS || !namespace) {
-		console.log("Selecting default namespace and database");
-
-		const { namespace, database } = await instance.use({});
-
-		console.log("namespace", namespace);
-		console.log("database", database);
-
-		updateConnection({
-			id: connection,
-			lastNamespace: namespace,
-			lastDatabase: database,
-		});
-	}
-
-	try {
-		ActivateDatabaseEvent.dispatch(null);
-
-		await syncConnectionSchema({
-			clearDatabase: true,
-		});
-	} catch (err: any) {
-		showErrorNotification({
-			title: "Failed to parse schema",
-			content: err,
-		});
-	}
+export async function activateDatabase(_namespace: string, _database: string): Promise<never> {
+	throw new RRFlowCapabilityUnavailableError(
+		"Namespace/database selection",
+		"an RRD session is bound to one exact project estate; use the Runtime instance connection",
+	);
 }
 
-/**
- * Request a database export from the remote connection
- *
- * @param config The export configuration
- */
-export async function requestDatabaseExport(config?: Partial<SqlExportOptions>): Promise<Response> {
-	const { currentState, version } = useDatabaseStore.getState();
-	const connection = getConnection();
-	const useModern = compareVersions(version, "2.1.0");
-
-	if (!connection || currentState !== "connected") {
-		throw new Error("Not connected to an instance");
-	}
-
-	if (useModern) {
-		if (instance.isFeatureSupported(Features.ExportImportRaw)) {
-			return instance.export(config).raw();
-		} else {
-			return new Response(await instance.export(config));
-		}
-	}
-
-	const { endpoint, headers } = composeHttpConnection(connection.authentication, "/export");
-
-	return fetch(endpoint, {
-		headers,
-		method: "GET",
-	});
+/** Preserves the export dialog while refusing an unnegotiated external effect. */
+export async function requestDatabaseExport(
+	_config?: Partial<SqlExportOptions>,
+): Promise<Response> {
+	throw new RRFlowCapabilityUnavailableError(
+		"QL database export",
+		"the native RRD adapter does not expose this export format; no HTTP fallback was sent",
+	);
 }
 
 export type StreamingSupport = "unsupported-browser" | "unsupported-engine" | "supported";
@@ -855,18 +478,8 @@ export type StreamingSupport = "unsupported-browser" | "unsupported-engine" | "s
 /**
  * Returns whether streaming imports or exports are supported
  */
-export function isStreamingSupported() {
-	const rrflow = getRRFlow();
-
-	if (!("showSaveFilePicker" in window) || !("showOpenFilePicker" in window)) {
-		return "unsupported-browser";
-	}
-
-	if (!rrflow.isConnected || !rrflow.isFeatureSupported(Features.ExportImportRaw)) {
-		return "unsupported-engine";
-	}
-
-	return "supported";
+export function isStreamingSupported(): StreamingSupport {
+	return "unsupported-engine";
 }
 
 /**
@@ -892,29 +505,14 @@ export function resetConnection() {
  * Compose HTTP authentication headers
  */
 export function composeHttpConnection(
-	authentication: Authentication,
-	path: string,
-	extraHeaders?: Record<string, string>,
-) {
-	const { protocol, hostname } = authentication;
-
-	const isSecure = protocol === "https" || protocol === "wss";
-	const endpoint = new URL(path, `${isSecure ? "https" : "http"}://${hostname}`).toString();
-
-	const headers: Record<string, string> = {
-		...extraHeaders,
-		Authorization: `Bearer ${authentication.token}`,
-	};
-
-	if (authentication.namespace) {
-		headers["RRFlow-NS"] = authentication.namespace;
-	}
-
-	if (authentication.database) {
-		headers["RRFlow-DB"] = authentication.database;
-	}
-
-	return { endpoint, headers };
+	_authentication: Authentication,
+	_path: string,
+	_extraHeaders?: Record<string, string>,
+): { endpoint: string; headers: Record<string, string> } {
+	throw new RRFlowCapabilityUnavailableError(
+		"Direct renderer HTTP effects",
+		"this action requires an explicit typed operation through the native RRD session",
+	);
 }
 
 /**
@@ -929,45 +527,6 @@ export function getOpenConnection() {
  */
 export function getRRFlow() {
 	return instance;
-}
-
-/**
- * Schedule a reconnect attempt
- */
-function scheduleReconnect(timeout: number) {
-	retryTask = setTimeout(() => {
-		const { currentState } = useDatabaseStore.getState();
-		const connection = getConnection();
-
-		if (currentState !== "connected" && connection) {
-			openConnection({
-				connection,
-				isRetry: true,
-			});
-		}
-	}, timeout);
-}
-
-async function isNamespaceValid(namespace: string) {
-	try {
-		const [result] = await instance.query("INFO FOR KV").collect<[SchemaInfoKV]>();
-		const namespaces = Object.keys(result?.namespaces ?? {}).map((ns) => parseIdent(ns));
-
-		return namespaces.includes(namespace);
-	} catch {
-		return true;
-	}
-}
-
-async function isDatabaseValid(database: string) {
-	try {
-		const [result] = await instance.query("INFO FOR NS").collect<[SchemaInfoNS]>();
-		const databases = Object.keys(result?.databases ?? {}).map((db) => parseIdent(db));
-
-		return databases.includes(database);
-	} catch {
-		return true;
-	}
 }
 
 export function hasRRFlowQL() {

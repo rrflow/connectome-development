@@ -11,13 +11,13 @@ import {
 	Switch,
 	Text,
 } from "@mantine/core";
-import { Icon, iconAuth, iconTarget, Spacer } from "@rrflow/ui";
 import { useMemo, useState } from "react";
 import { useUpdateConfirmation } from "~/cloud/hooks/confirm";
 import { useUpdateInstanceAccessTypeMutation } from "~/cloud/mutations/network";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { useStable } from "~/hooks/stable";
 import { CloudInstance, CloudInstanceAccessType } from "~/types";
+import { Icon, iconAuth, iconTarget, Spacer } from "../../../../../../rrflow/ui/index";
 import classes from "../style.module.scss";
 
 export interface ConfigurationNetworkProps {

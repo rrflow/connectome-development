@@ -1,11 +1,11 @@
 import { ActionIcon, Box, Dialog, Group, Image, Text } from "@mantine/core";
-import { Icon, iconClose, pictoSDBCloud } from "@rrflow/ui";
 import { type MouseEvent, useMemo } from "react";
 import { isDesktop } from "~/adapter";
 import { useStable } from "~/hooks/stable";
 import { useDesktopUpdater } from "~/hooks/updater";
 import { useInterfaceStore } from "~/shell/stores/interface";
 import { useCloudStore } from "~/stores/cloud";
+import { Icon, iconClose, pictoRRFlowCloud } from "../../../../rrflow/ui/index";
 import classes from "../style.module.scss";
 
 export function CloudUpdateRequiredDialog() {
@@ -52,7 +52,7 @@ export function CloudUpdateRequiredDialog() {
 		>
 			<Group>
 				<Image
-					src={pictoSDBCloud}
+					src={pictoRRFlowCloud}
 					alt="RRFlow Cloud"
 					w={48}
 				/>

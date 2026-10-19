@@ -1,7 +1,6 @@
 import { Button, Combobox, Group, Paper, Stack, TagsInput, Text, useCombobox } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
 import { openModal } from "@mantine/modals";
-import { Icon, iconClose, iconPlus, iconSearch, iconTable } from "@rrflow/ui";
 import { useMemo } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
@@ -13,6 +12,7 @@ import { useIsLight } from "~/hooks/theme";
 import { fuzzyMatch } from "~/shared/util/helpers";
 import { syncConnectionSchema } from "~/shared/util/schema";
 import { useConfigStore } from "~/shell/stores/config";
+import { Icon, iconClose, iconPlus, iconSearch, iconTable } from "../rrflow/ui/index";
 
 export async function openGraphLabelEditorModal(callback: () => void) {
 	await syncConnectionSchema();

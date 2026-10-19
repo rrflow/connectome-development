@@ -1,12 +1,12 @@
 import { Alert, Button, Group, Select, Stack, Text, TextInput } from "@mantine/core";
 import { closeAllModals, openModal } from "@mantine/modals";
-import { Icon, iconChevronRight, iconErrorCircle } from "@rrflow/ui";
 import { ErrorBoundary } from "react-error-boundary";
 import { useImmer } from "use-immer";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";
 import { useStable } from "~/hooks/stable";
 import glowUrl from "~/shared/assets/images/glow.png";
+import { Icon, iconChevronRight, iconErrorCircle } from "../../rrflow/ui/index";
 import { fetchAPI } from "../api";
 import classes from "../style.module.scss";
 

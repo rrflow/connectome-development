@@ -1,7 +1,7 @@
 import { Group, Stack, Text, ThemeIcon } from "@mantine/core";
-import { Icon, iconTag } from "@rrflow/ui";
 import { formatRelativeDate } from "~/shared/util/helpers";
 import { IntercomTicket } from "~/types";
+import { Icon, iconTag } from "../../../../../rrflow/ui/index";
 
 export interface TicketCardProps {
 	ticket: IntercomTicket;

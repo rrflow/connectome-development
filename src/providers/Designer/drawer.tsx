@@ -12,15 +12,6 @@ import {
 	Text,
 	ThemeIcon,
 } from "@mantine/core";
-import {
-	Icon,
-	iconCheck,
-	iconClose,
-	iconCopy,
-	iconDelete,
-	iconDesigner,
-	iconWarning,
-} from "@rrflow/ui";
 import { capitalize } from "radash";
 import { useState } from "react";
 import type { Updater } from "use-immer";
@@ -35,7 +26,16 @@ import { executeQuery } from "~/screens/connectome/connection/connection";
 import { getTableVariant, syncConnectionSchema } from "~/shared/util/schema";
 import { useConfigStore } from "~/shell/stores/config";
 import type { TableInfo } from "~/types";
-import { escapeIdent } from "~/vendor/rrflow-client";
+import { escapeIdent } from "../../rrflow/client/values";
+import {
+	Icon,
+	iconCheck,
+	iconClose,
+	iconCopy,
+	iconDelete,
+	iconDesigner,
+	iconWarning,
+} from "../../rrflow/ui/index";
 import { ChangefeedElement } from "./elements/changefeed";
 import { EventsElement } from "./elements/events";
 import { FieldsElement } from "./elements/fields";

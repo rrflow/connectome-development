@@ -1,7 +1,7 @@
 import { Group, Paper, Stack, Text, ThemeIcon } from "@mantine/core";
-import { Icon, iconFile } from "@rrflow/ui";
 import dayjs from "dayjs";
 import { CloudBackup } from "~/types";
+import { Icon, iconFile } from "../../../../../../rrflow/ui/index";
 
 export interface InstanceBackupProps {
 	selected: boolean;

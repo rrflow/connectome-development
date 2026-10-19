@@ -1,8 +1,8 @@
 import { Accordion, TextInput } from "@mantine/core";
-import { iconBullhorn } from "@rrflow/ui";
 import { CodeInput } from "~/components/Inputs";
 import { useStable } from "~/hooks/stable";
 import type { SchemaEvent } from "~/types";
+import { iconBullhorn } from "../../../rrflow/ui/index";
 import { type ElementProps, SectionTitle } from "../helpers";
 import { Lister } from "../lister";
 

@@ -1,9 +1,9 @@
 import { ActionIcon, Box, Dialog, Group, Text } from "@mantine/core";
-import { Icon, iconClose, iconDownload } from "@rrflow/ui";
 import type { MouseEvent } from "react";
 import { useStable } from "~/hooks/stable";
 import { useDesktopUpdater } from "~/hooks/updater";
 import { useInterfaceStore } from "~/shell/stores/interface";
+import { Icon, iconClose, iconDownload } from "../../../../rrflow/ui/index";
 import classes from "../style.module.scss";
 
 export function UpdaterDialog() {

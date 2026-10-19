@@ -1,5 +1,5 @@
-import { iconHistory, iconNamespace, iconRelation, iconUpload } from "@rrflow/ui";
 import { StartingData } from "~/types";
+import { iconHistory, iconNamespace, iconRelation, iconUpload } from "../../../../rrflow/ui/index";
 import { StartingDataInfo } from "./types";
 
 export const STARTING_DATA: Record<StartingData, StartingDataInfo> = {

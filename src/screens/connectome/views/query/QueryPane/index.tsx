@@ -3,16 +3,6 @@ import { syntaxTree } from "@codemirror/language";
 import { EditorState, Prec, type SelectionRange } from "@codemirror/state";
 import { type EditorView, keymap, scrollPastEnd } from "@codemirror/view";
 import { Button, Group, HoverCard, Paper, rem, Text, ThemeIcon, Transition } from "@mantine/core";
-import {
-	Icon,
-	iconAutoFix,
-	iconChevronRight,
-	iconDollar,
-	iconServer,
-	iconStar,
-	iconText,
-	iconWarning,
-} from "@rrflow/ui";
 import { objectify, trim } from "radash";
 import { useMemo, useRef, useState } from "react";
 import { type HtmlPortalNode, OutPortal } from "react-reverse-portal";
@@ -32,7 +22,6 @@ import {
 import { setEditorText } from "~/editor/helpers";
 import { useSetting } from "~/hooks/config";
 import { useConnection } from "~/hooks/connection";
-import { useDatabaseVersionLinter } from "~/hooks/editor";
 import { useConnectionAndView, useIntent } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
 import { useIsLight } from "~/hooks/theme";
@@ -44,7 +33,17 @@ import { parseVariables } from "~/shared/util/language";
 import { useConfigStore } from "~/shell/stores/config";
 import { useQueryStore } from "~/stores/query";
 import type { QueryTab } from "~/types";
-import { rrflowql } from "~/vendor/rrflowql-editor";
+import { rrflowql } from "../../../../../rrflow/editor";
+import {
+	Icon,
+	iconAutoFix,
+	iconChevronRight,
+	iconDollar,
+	iconServer,
+	iconStar,
+	iconText,
+	iconWarning,
+} from "../../../../../rrflow/ui/index";
 import { readQuery, writeQuery } from "../QueryView/strategy";
 
 const SERIALIZE = {
@@ -84,7 +83,6 @@ export function QueryPane({
 	const { inspect } = useInspector();
 	const [connection] = useConnectionAndView();
 	const queryTabList = useConnection((c) => c?.queryTabList);
-	const rrflowqlVersion = useDatabaseVersionLinter(editor);
 	const queryStateMap = useQueryStore((s) => s.queryState);
 	const saveTasks = useRef<Map<string, any>>(new Map());
 	const [executionHidden, setExecutionHidden] = useState(false);
@@ -202,7 +200,6 @@ export function QueryPane({
 	const extensions = useMemo(
 		() => [
 			rrflowql(),
-			rrflowqlVersion,
 			rrflowqlLinting(updateValid),
 			rrflowqlRecordLinks(inspect),
 			rrflowqlTableCompletion(),
@@ -211,7 +208,7 @@ export function QueryPane({
 			Prec.high(keymap.of(runQueryKeymap)),
 			scrollPastEnd(),
 		],
-		[inspect, rrflowqlVersion],
+		[inspect],
 	);
 
 	useIntent("format-query", handleFormat);

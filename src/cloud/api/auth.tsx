@@ -1,6 +1,5 @@
 import { shutdown } from "@intercom/messenger-js-sdk";
 import { showNotification } from "@mantine/notifications";
-import { Icon, iconCheck } from "@rrflow/ui";
 import { sleep } from "radash";
 import { adapter } from "~/adapter";
 import { tagEvent } from "~/shared/util/analytics";
@@ -18,6 +17,7 @@ import {
 } from "~/shared/util/storage";
 import { useCloudStore } from "~/stores/cloud";
 import type { CloudSignin } from "~/types";
+import { Icon, iconCheck } from "../../rrflow/ui/index";
 import { openTermsModal } from "../onboarding/terms-and-conditions";
 import { ApiError, fetchAPI, updateCloudInformation } from ".";
 import { getCloudEndpoints } from "./endpoints";

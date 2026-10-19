@@ -1,6 +1,6 @@
 import { MultiDirectedGraph } from "graphology";
 import { EdgeDisplayData, NodeDisplayData } from "sigma/types";
-import { RecordId } from "~/vendor/rrflow-client";
+import { RecordId } from "../../rrflow/client/values";
 
 export type RelationalGraph = MultiDirectedGraph<RelationGraphNode, RelationGraphEdge>;
 

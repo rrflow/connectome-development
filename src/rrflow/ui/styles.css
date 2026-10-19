@@ -1,0 +1,150 @@
+.rrflow-icon {
+	display: inline-block;
+	flex-shrink: 0;
+	vertical-align: middle;
+}
+
+.rrflow-icon-spinning {
+	animation: rrflow-icon-spin 1s linear infinite;
+}
+
+@keyframes rrflow-icon-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.rrflow-icon-spinning {
+		animation: none;
+	}
+}
+
+.rrflow-code-block {
+	position: relative;
+	border-radius: var(--mantine-radius-sm);
+	background: var(--rrflow-paper-background-filled, var(--mantine-color-default));
+	font-family: var(--mantine-font-family-monospace);
+	font-size: var(--mantine-font-size-sm);
+	user-select: text;
+}
+
+.rrflow-code-block pre {
+	margin: 0;
+	padding: var(--mantine-spacing-md);
+	padding-right: 3rem;
+	overflow: auto;
+	font: inherit;
+	line-height: 1.65;
+	white-space: pre;
+	tab-size: 4;
+}
+
+.rrflow-code-block code {
+	font: inherit;
+}
+
+.rrflow-code-block .tok-keyword,
+.rrflow-code-block .tok-operator {
+	color: light-dark(#9d278b, #f078dd);
+}
+
+.rrflow-code-block .tok-string {
+	color: light-dark(#18733b, #7fdf9c);
+}
+
+.rrflow-code-block .tok-number,
+.rrflow-code-block .tok-bool,
+.rrflow-code-block .tok-null {
+	color: light-dark(#097c92, #70dbec);
+}
+
+.rrflow-code-block .tok-comment {
+	color: light-dark(#73687f, #a598b2);
+	font-style: italic;
+}
+
+.rrflow-code-block .tok-typeName,
+.rrflow-code-block .tok-className {
+	color: light-dark(#6334ad, #bfa2f0);
+}
+
+.rrflow-code-block .tok-variableName {
+	color: light-dark(#935313, #f0c385);
+}
+
+.rrflow-code-block .tok-propertyName,
+.rrflow-code-block .tok-attributeName {
+	color: light-dark(#1a6199, #91c9ef);
+}
+
+.rrflow-code-title {
+	padding: 0.5rem 3rem 0.5rem 1rem;
+	border-bottom: 1px solid var(--mantine-color-default-border);
+	font-family: var(--mantine-font-family);
+	font-weight: 600;
+}
+
+.rrflow-code-copy {
+	position: absolute;
+	top: 0.5rem;
+	right: 0.5rem;
+	z-index: 1;
+}
+
+.rrflow-markdown {
+	line-height: 1.65;
+	overflow-wrap: anywhere;
+	user-select: text;
+}
+
+.rrflow-markdown > :first-child {
+	margin-top: 0;
+}
+.rrflow-markdown > :last-child {
+	margin-bottom: 0;
+}
+.rrflow-markdown a {
+	color: var(--mantine-color-violet-text);
+}
+.rrflow-markdown a:hover {
+	text-decoration: underline;
+}
+.rrflow-markdown pre {
+	padding: var(--mantine-spacing-md);
+	overflow: auto;
+	border-radius: var(--mantine-radius-sm);
+	background: var(--mantine-color-default);
+}
+.rrflow-markdown code {
+	font-family: var(--mantine-font-family-monospace);
+}
+.rrflow-markdown blockquote {
+	margin-inline: 0;
+	padding-left: var(--mantine-spacing-md);
+	border-left: 3px solid var(--mantine-color-violet-6);
+}
+.rrflow-markdown table {
+	border-collapse: collapse;
+	width: 100%;
+}
+.rrflow-markdown th,
+.rrflow-markdown td {
+	padding: 0.5rem 0.75rem;
+	border: 1px solid var(--mantine-color-default-border);
+	text-align: left;
+}
+
+:root[data-mantine-color-scheme="dark"] {
+	--rrflow-color-bright: #f5f3f8;
+	--mantine-color-bright: #f5f3f8;
+	--Connectome-gradient: linear-gradient(135deg, #7c3aed, #d946ef);
+	--rrflow-paper-background-filled: #201829;
+}
+
+:root[data-mantine-color-scheme="light"] {
+	--rrflow-color-bright: #201829;
+	--mantine-color-bright: #201829;
+	--Connectome-gradient: linear-gradient(135deg, #7c3aed, #d946ef);
+	--rrflow-paper-background-filled: #f5f3f8;
+}

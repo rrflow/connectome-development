@@ -1,5 +1,4 @@
 import type { MantineColorScheme } from "@mantine/core";
-import { createWasmEngines } from "@rrflow/wasm";
 import { ORIENTATIONS, RESULT_MODES } from "~/constants";
 import { executeQuery, executeUserQuery } from "~/screens/connectome/connection/connection";
 import { dedent } from "~/shared/util/dedent";
@@ -13,7 +12,6 @@ import { getDatasetURL } from "~/shared/util/language";
 import { broadcastMessage } from "~/shared/util/messaging";
 import { createRRFlowQL } from "~/shared/util/rrflowql";
 import type { ConnectomeConfig, MiniAppearance, Orientation, ResultMode } from "~/types";
-import { RRFlow } from "~/vendor/rrflow-client";
 import { BrowserAdapter } from "./browser";
 
 const THEMES = new Set(["light", "dark", "auto"]);
@@ -36,8 +34,7 @@ export class MiniAdapter extends BrowserAdapter {
 		const settings = createBaseSettings();
 		const mainTab = createBaseQuery(settings, "config");
 		const params = new URL(document.location.toString()).searchParams;
-		const version = await this.#getEmbeddedVersion();
-		const rrflowql = createRRFlowQL(version);
+		const rrflowql = createRRFlowQL();
 
 		const {
 			ref,
@@ -112,7 +109,7 @@ export class MiniAdapter extends BrowserAdapter {
 
 		// Premade dataset loading
 		if (dataset) {
-			const datasetUrl = getDatasetURL(version);
+			const datasetUrl = getDatasetURL("1.0.0");
 
 			if (datasetUrl) {
 				this.#datasetQuery = await fetch(datasetUrl).then((res) => res.text());
@@ -211,20 +208,6 @@ export class MiniAdapter extends BrowserAdapter {
 		}
 
 		broadcastMessage("ready", opts);
-	}
-
-	async #getEmbeddedVersion(): Promise<string> {
-		const rrflow = new RRFlow({
-			engines: createWasmEngines(),
-		});
-
-		await rrflow.connect("mem://");
-
-		try {
-			return (await rrflow.version()).version.replace(/^rrflow-/, "");
-		} finally {
-			await rrflow.close();
-		}
 	}
 }
 

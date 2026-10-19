@@ -1,5 +1,4 @@
 import { Badge, Group } from "@mantine/core";
-import { Icon, iconClose, iconDollar } from "@rrflow/ui";
 import { useMemo } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { CodeEditor } from "~/components/CodeEditor";
@@ -10,7 +9,8 @@ import { useDebouncedFunction } from "~/hooks/debounce";
 import { useConnectionAndView } from "~/hooks/routing";
 import { getRRFlowQL } from "~/screens/connectome/connection/connection";
 import { useConfigStore } from "~/shell/stores/config";
-import { rrflowql } from "~/vendor/rrflowql-editor";
+import { rrflowql } from "../../../../../rrflow/editor";
+import { Icon, iconClose, iconDollar } from "../../../../../rrflow/ui/index";
 
 export interface VariablesPaneProps {
 	isValid: boolean;

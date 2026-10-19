@@ -1,8 +1,15 @@
-import { Icon, iconChat, iconChevronLeft, iconClose, iconList, iconSidekick } from "@rrflow/ui";
 import { Panel } from "react-resizable-panels";
 import { useIsAuthenticated } from "~/hooks/cloud";
 import { useSetting } from "~/hooks/config";
 import { useSidekickStore } from "~/stores/sidekick";
+import {
+	Icon,
+	iconChat,
+	iconChevronLeft,
+	iconClose,
+	iconList,
+	iconSidekick,
+} from "../../rrflow/ui/index";
 import { ActionButton } from "../ActionButton";
 import { ContentPane } from "../Pane";
 import { PanelDragger } from "../Pane/dragger";

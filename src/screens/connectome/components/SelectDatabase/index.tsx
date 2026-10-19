@@ -1,6 +1,6 @@
 import { type BoxProps, Group } from "@mantine/core";
-import { Icon, iconChevronRight } from "@rrflow/ui";
 import { useConnection, useIsConnected } from "~/hooks/connection";
+import { Icon, iconChevronRight } from "../../../../rrflow/ui/index";
 import { DatabaseList } from "../DatabaseList";
 import { NamespaceList } from "../NamespaceList";
 

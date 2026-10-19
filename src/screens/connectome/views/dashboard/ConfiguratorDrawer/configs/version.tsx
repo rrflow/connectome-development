@@ -1,10 +1,10 @@
 import { Box, Button, Divider, Group, ScrollArea, Stack, Text } from "@mantine/core";
-import { Icon, iconOpen } from "@rrflow/ui";
 import { useState } from "react";
 import { Tile } from "~/components/Tile";
 import { useStable } from "~/hooks/stable";
 import { openRRFlowChangelog } from "~/shared/util/cloud";
 import { CloudInstance } from "~/types";
+import { Icon, iconOpen } from "../../../../../../rrflow/ui/index";
 import classes from "../style.module.scss";
 
 export interface ConfigurationVersionProps {

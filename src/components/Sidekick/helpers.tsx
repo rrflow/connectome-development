@@ -1,3 +1,5 @@
+import { SidekickChat } from "~/types";
+import { RecordId } from "../../rrflow/client/values";
 import {
 	iconAccount,
 	iconCreditCard,
@@ -11,9 +13,7 @@ import {
 	iconStar,
 	iconTable,
 	iconTransfer,
-} from "@rrflow/ui";
-import { SidekickChat } from "~/types";
-import { RecordId } from "~/vendor/rrflow-client";
+} from "../../rrflow/ui/index";
 import { GroupedChats } from "./types";
 
 export const SIDEKICK_QUESTIONS = [

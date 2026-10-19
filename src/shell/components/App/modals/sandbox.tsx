@@ -1,11 +1,11 @@
 import { Box, Button, Divider, Modal, Paper, Stack, Text } from "@mantine/core";
-import { Icon, iconChevronRight, iconClose } from "@rrflow/ui";
 import { useEffect } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { SANDBOX } from "~/constants";
 import { useBoolean } from "~/hooks/boolean";
 import { useOnboarding } from "~/hooks/onboarding";
 import { useConnectionAndView } from "~/hooks/routing";
+import { Icon, iconChevronRight, iconClose } from "../../../../rrflow/ui/index";
 
 export function SandboxModal() {
 	const [isOpen, openHandle] = useBoolean();

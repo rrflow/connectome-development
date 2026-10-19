@@ -2,13 +2,22 @@ import { omit } from "radash";
 import { create } from "zustand";
 import type { GraphqlResponse } from "~/screens/connectome/connection/connection";
 import { createConnectionSchema } from "~/shared/util/defaults";
-import type { ConnectionSchema, QueryResponse } from "~/types";
-import { Diagnostic } from "~/vendor/rrflow-client";
+import type {
+	ConnectionSchema,
+	EstateStage,
+	EstateStageName,
+	QueryResponse,
+	ServedEstate,
+} from "~/types";
+import { Diagnostic } from "../rrflow/client/native";
 
 export type State = "disconnected" | "connecting" | "retrying" | "connected";
 export type DiagnosticWithTime = Diagnostic & { timestamp: number };
 
 export type DatabaseStore = {
+	servedEstate: ServedEstate | null;
+	estateStages: Partial<Record<EstateStageName, EstateStage>>;
+	pushStage: (stage: EstateStage) => void;
 	isServing: boolean;
 	servePending: boolean;
 	currentState: State;
@@ -27,7 +36,7 @@ export type DatabaseStore = {
 	setGraphqlQueryActive: (isQueryActive: boolean) => void;
 	clearSchema: () => void;
 	prepareServe: () => void;
-	confirmServing: () => void;
+	confirmServing: (estate: ServedEstate) => void;
 	stopServing: () => void;
 	cancelServe: () => void;
 	pushConsoleLine: (line: string, max: number) => void;
@@ -45,6 +54,10 @@ export type DatabaseStore = {
 };
 
 export const useDatabaseStore = create<DatabaseStore>((set) => ({
+	servedEstate: null,
+	estateStages: {},
+	pushStage: (stage) =>
+		set((state) => ({ estateStages: { ...state.estateStages, [stage.stage]: stage } })),
 	isServing: false,
 	servePending: false,
 	currentState: "disconnected",
@@ -78,16 +91,19 @@ export const useDatabaseStore = create<DatabaseStore>((set) => ({
 		set(() => ({
 			servePending: true,
 			consoleOutput: [],
+			estateStages: {},
 		})),
 
-	confirmServing: () =>
+	confirmServing: (servedEstate) =>
 		set(() => ({
+			servedEstate,
 			isServing: true,
 			servePending: false,
 		})),
 
 	stopServing: () =>
 		set(() => ({
+			servedEstate: null,
 			isServing: false,
 			servePending: false,
 		})),

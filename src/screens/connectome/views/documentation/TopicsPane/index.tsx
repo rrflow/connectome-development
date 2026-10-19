@@ -1,5 +1,4 @@
 import { ScrollArea, Stack } from "@mantine/core";
-import { iconAPI } from "@rrflow/ui";
 import type { RefObject } from "react";
 import { ContentPane } from "~/components/Pane";
 import { ScrollFader } from "~/components/ScrollFader";
@@ -7,6 +6,7 @@ import { useSetting } from "~/hooks/config";
 import { useStable } from "~/hooks/stable";
 import type { DocsTopic } from "~/screens/connectome/docs/types";
 import type { CodeLang } from "~/types";
+import { iconAPI } from "../../../../../rrflow/ui/index";
 import { renderTopics } from "./topics";
 
 export interface TocPaneProps {

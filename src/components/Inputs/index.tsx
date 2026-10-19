@@ -18,7 +18,6 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { clamp, useInputState } from "@mantine/hooks";
-import { Icon, iconCancel, iconCheck } from "@rrflow/ui";
 import clsx from "clsx";
 import {
 	type FocusEvent,
@@ -33,7 +32,8 @@ import { useKindList } from "~/hooks/schema";
 import { useStable } from "~/hooks/stable";
 import { useIsLight, useTheme } from "~/hooks/theme";
 import { useConfigStore } from "~/shell/stores/config";
-import { rrflowql } from "~/vendor/rrflowql-editor";
+import { rrflowql } from "../../rrflow/editor";
+import { Icon, iconCancel, iconCheck } from "../../rrflow/ui/index";
 import { ActionButton } from "../ActionButton";
 
 export interface CodeInputProps
@@ -262,7 +262,7 @@ export function PermissionInput({
 			value={textValue}
 			onChange={handleChange}
 			rightSectionWidth={70}
-			extensions={[rrflowql("permission")]}
+			extensions={[rrflowql()]}
 			rightSection={
 				<Group
 					gap="xs"

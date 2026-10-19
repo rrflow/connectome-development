@@ -1,9 +1,9 @@
 import { AreaChart } from "@mantine/charts";
 import { Box, Group, Paper, Stack, StyleProp, Text, Tooltip } from "@mantine/core";
-import { Icon, iconHelp } from "@rrflow/ui";
 import { format } from "date-fns";
 import { computeMetricRange } from "~/cloud/helpers";
 import { CloudMetrics, MetricsDuration } from "~/types";
+import { Icon, iconHelp } from "../../../../rrflow/ui/index";
 
 export interface BaseAreaChartProps {
 	title: string;

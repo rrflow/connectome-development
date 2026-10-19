@@ -1,7 +1,5 @@
-import type { EditorView } from "@codemirror/view";
 import { Alert, Badge, Box, Group, Stack } from "@mantine/core";
-import { Icon, iconDownload, iconJSON, iconText, iconWarning } from "@rrflow/ui";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import type { Updater } from "use-immer";
 import { adapter } from "~/adapter";
 import { ActionButton } from "~/components/ActionButton";
@@ -15,13 +13,19 @@ import {
 	rrflowqlVariableCompletion,
 } from "~/editor";
 import { useSetting } from "~/hooks/config";
-import { useDatabaseVersionLinter } from "~/hooks/editor";
 import { useStable } from "~/hooks/stable";
 import { getRRFlowQL } from "~/screens/connectome/connection/connection";
 import { showErrorNotification } from "~/shared/util/helpers";
 import { buildFunctionDefinition } from "~/shared/util/schema";
 import type { FunctionDetails, SchemaFunction } from "~/types";
-import { rrflowql } from "~/vendor/rrflowql-editor";
+import { rrflowql } from "../../../../../rrflow/editor";
+import {
+	Icon,
+	iconDownload,
+	iconJSON,
+	iconText,
+	iconWarning,
+} from "../../../../../rrflow/ui/index";
 
 export interface FunctionEditorPanelProps {
 	details: SchemaFunction;
@@ -37,9 +41,6 @@ export function FunctionEditorPanel({
 	onChange,
 }: FunctionEditorPanelProps) {
 	const [hasLineNumbers] = useSetting("appearance", "functionLineNumbers");
-
-	const [editor, setEditor] = useState<EditorView | null>(null);
-	const rrflowqlVersion = useDatabaseVersionLinter(editor);
 
 	const downloadBody = useStable(() => {
 		adapter.saveFile(`Save function`, `${details.name}.rrflowql`, [RRFLOWQL_FILTER], () =>
@@ -75,13 +76,12 @@ export function FunctionEditorPanel({
 	const extensions = useMemo(
 		() => [
 			rrflowql(),
-			rrflowqlVersion,
 			rrflowqlLinting(),
 			rrflowqlVariableCompletion(resolveVariables),
 			rrflowqlCustomFunctionCompletion(),
 			rrflowqlTableCompletion(),
 		],
-		[rrflowqlVersion],
+		[],
 	);
 
 	return (
@@ -142,7 +142,6 @@ export function FunctionEditorPanel({
 						value={details.block}
 						autoFocus
 						lineNumbers={hasLineNumbers}
-						onMount={setEditor}
 						onChange={handleChange}
 						extensions={extensions}
 					/>

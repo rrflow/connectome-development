@@ -1,5 +1,4 @@
 import { Box, Button, Group, Paper, Stack, Text } from "@mantine/core";
-import { Icon, iconOpen, iconPlus, pictoHealthChat } from "@rrflow/ui";
 import { navigate } from "wouter/use-browser-location";
 import { adapter } from "~/adapter";
 import { useCloudOrganizationTicketsQuery } from "~/cloud/queries/context";
@@ -10,6 +9,7 @@ import { Section } from "~/components/Section";
 import { useIsLight } from "~/hooks/theme";
 import { useFeatureFlags } from "~/shared/util/feature-flags";
 import { dispatchIntent } from "~/shared/util/intents";
+import { Icon, iconOpen, iconPlus, pictoHealthChat } from "../../../../../rrflow/ui/index";
 import { StartCloud } from "../../Overview/content/cloud";
 import { OrganizationTabProps } from "../types";
 

@@ -23,11 +23,20 @@ import { ConfigStore, useConfigStore } from "~/shell/stores/config";
 import { useInterfaceStore } from "~/shell/stores/interface";
 import { CloudStore } from "~/stores/cloud";
 import { useDatabaseStore } from "~/stores/database";
-import type { ConnectomeConfig, Platform, QueryTab, ViewPage } from "~/types";
+import type {
+	ConnectomeConfig,
+	EstateServeRequest,
+	EstateStage,
+	Platform,
+	QueryTab,
+	ServedEstate,
+	ViewPage,
+} from "~/types";
+import { describeRrdError } from "../rrflow/runtime";
+import { type RrdConnectionView, RrdSessionClient } from "../rrflow/session";
 import { adapter } from ".";
 import type { ConnectomeAdapter, FileFilter } from "./base";
 
-const WAIT_DURATION = 1000;
 interface Resource {
 	File?: FileResource;
 	Link?: LinkResource;
@@ -57,7 +66,6 @@ export class DesktopAdapter implements ConnectomeAdapter {
 	public titlebarOffset = 0;
 	public platform: Platform = "windows";
 
-	#startTask: any;
 	#arch: string = arch();
 	#system: string = type();
 
@@ -170,23 +178,51 @@ export class DesktopAdapter implements ConnectomeAdapter {
 		});
 	}
 
-	public async startDatabase() {
-		const { username, password, port, driver, storage, executable, logLevel } =
-			useConfigStore.getState().settings.serving;
-
-		return invoke<void>("start_database", {
-			username,
-			password,
-			port,
-			driver,
-			storage,
-			executable,
-			logLevel,
-		});
+	public async serveEstate(request: EstateServeRequest) {
+		return invoke<ServedEstate>("rrd_estate_serve", { request });
 	}
 
-	public stopDatabase() {
-		return invoke<void>("stop_database");
+	public async servedEstate() {
+		return invoke<ServedEstate | null>("rrd_estate_status");
+	}
+
+	public async stopEstate() {
+		let sessionFailure: unknown;
+		try {
+			const estate = await this.servedEstate();
+			if (estate) {
+				const session = await invoke<RrdConnectionView | null>("rrd_session");
+				if (
+					session &&
+					session.instance === estate.instance &&
+					new URL(session.endpoint).origin === new URL(estate.endpoint).origin
+				) {
+					await new RrdSessionClient().disconnect(session);
+				}
+			}
+		} catch (error) {
+			// Closing a session can fail after the native state has released it.
+			// The owned engine child must still be stopped in that case.
+			sessionFailure = error;
+		}
+
+		let stopped: boolean;
+		try {
+			stopped = await invoke<boolean>("rrd_estate_stop");
+		} catch (error) {
+			if (sessionFailure) {
+				throw new Error(
+					`Closing the local session failed: ${describeRrdError(sessionFailure)}. Stopping the engine also failed: ${describeRrdError(error)}`,
+				);
+			}
+			throw error;
+		}
+		if (sessionFailure) {
+			throw new Error(
+				`The local engine is stopped, but closing its session failed: ${describeRrdError(sessionFailure)}`,
+			);
+		}
+		return stopped;
 	}
 
 	public async openUrl(url: string) {
@@ -334,60 +370,31 @@ export class DesktopAdapter implements ConnectomeAdapter {
 			throttleLevel = Math.max(0, throttleLevel - 1);
 		}, 500);
 
-		listen("database:start", () => {
-			this.log("Serve", "Received database start signal");
+		// Each boundary of the serve sequence, in the order the native process
+		// reaches it: install (plan, apply), serve (announced), ready
+		// (authenticated). The serving panel explains each one.
+		listen<EstateStage>("estate:stage", (event) => {
+			const stage = event.payload;
+			const historySize = getSetting("serving", "historySize");
 
-			this.#startTask = setTimeout(() => {
-				useDatabaseStore.getState().confirmServing();
+			this.log("Serve", `${stage.stage} ${stage.state}: ${stage.detail}`);
 
-				showInfo({
-					title: "Serving started",
-					subtitle: "Local database is now online",
-				});
-			}, WAIT_DURATION);
+			useDatabaseStore.getState().pushStage(stage);
+			useDatabaseStore
+				.getState()
+				.pushConsoleLine(`[${stage.stage}] ${stage.detail}`, historySize);
 		});
 
-		listen("database:stop", () => {
-			this.log("Serve", "Received database stop signal");
-
-			if (this.#startTask) {
-				clearTimeout(this.#startTask);
-			}
-
-			useDatabaseStore.getState().stopServing();
-
-			showInfo({
-				title: "Serving stopped",
-				subtitle: "Local database is now offline",
-			});
-		});
-
-		listen("database:output", (event) => {
+		// The engine's own diagnostic output.
+		listen<string>("estate:output", (event) => {
 			if (throttleLevel > 50) {
 				return;
 			}
 
 			const historySize = getSetting("serving", "historySize");
 
-			useDatabaseStore.getState().pushConsoleLine(event.payload as string, historySize);
+			useDatabaseStore.getState().pushConsoleLine(event.payload, historySize);
 			throttleLevel++;
-		});
-
-		listen("database:error", (event) => {
-			this.log("Serve", "Received database error signal");
-
-			const msg = event.payload as string;
-
-			if (this.#startTask) {
-				clearTimeout(this.#startTask);
-			}
-
-			useDatabaseStore.getState().stopServing();
-
-			showErrorNotification({
-				title: "Serving failed",
-				content: msg,
-			});
 		});
 	}
 

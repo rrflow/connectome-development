@@ -1,8 +1,8 @@
 import { Indicator } from "@mantine/core";
-import { Icon, iconSidekick } from "@rrflow/ui";
 import { useOnboarding } from "~/hooks/onboarding";
 import { useStable } from "~/hooks/stable";
 import { dispatchIntent } from "~/shared/util/intents";
+import { Icon, iconSidekick } from "../../rrflow/ui/index";
 import { ActionButton } from "../ActionButton";
 import { StarSparkles } from "../StarSparkles";
 

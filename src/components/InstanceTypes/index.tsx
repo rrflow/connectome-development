@@ -1,5 +1,4 @@
 import { Badge, Box, Divider, Group, Paper, Stack, Text, Tooltip } from "@mantine/core";
-import { Icon, iconAuth } from "@rrflow/ui";
 import { useMemo } from "react";
 import { INSTANCE_PLAN_CATEGORIES } from "~/cloud/helpers";
 import { TypeVariant, useInstanceTypeRegistry } from "~/cloud/hooks/types";
@@ -7,6 +6,7 @@ import { useIsLight } from "~/hooks/theme";
 import { getTypeCategoryDescription, getTypeCategoryName } from "~/shared/util/cloud";
 import { CURRENCY_FORMAT, formatMemory } from "~/shared/util/helpers";
 import { CloudInstanceType, CloudOrganization, InstancePlan } from "~/types";
+import { Icon, iconAuth } from "../../rrflow/ui/index";
 import { Label } from "../Label";
 import { PrimaryTitle } from "../PrimaryTitle";
 

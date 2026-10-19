@@ -1,6 +1,5 @@
 import { Button, Checkbox, Group, Stack, Text } from "@mantine/core";
 import { closeAllModals, openModal } from "@mantine/modals";
-import { Icon, iconCheck } from "@rrflow/ui";
 import { Fragment, useState } from "react";
 import { Link } from "~/components/Link";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
@@ -9,6 +8,7 @@ import { useCheckbox } from "~/hooks/events";
 import { useStable } from "~/hooks/stable";
 import glowUrl from "~/shared/assets/images/glow.png";
 import { showErrorNotification } from "~/shared/util/helpers";
+import { Icon, iconCheck } from "../../rrflow/ui/index";
 import { fetchAPI } from "../api";
 import { invalidateSession } from "../api/auth";
 import classes from "../style.module.scss";

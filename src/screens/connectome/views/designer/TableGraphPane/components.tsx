@@ -1,6 +1,6 @@
 import { Group, Text } from "@mantine/core";
-import { Icon, iconBraces, iconRelation } from "@rrflow/ui";
 import { useIsLight } from "~/hooks/theme";
+import { Icon, iconBraces, iconRelation } from "../../../../../rrflow/ui/index";
 import type { GraphWarning } from "./helpers";
 
 export interface GraphWarningProps {

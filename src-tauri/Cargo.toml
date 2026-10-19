@@ -4,7 +4,7 @@ version = "0.0.0"
 description = "Connectome — native control surface for RRFlow runtimes"
 authors = ["EonsofStupid"]
 license = "MIT"
-repository = "https://github.com/EonsofStupid/rrflow-connectome"
+repository = "https://github.com/rrflow/connectome-development"
 edition = "2021"
 publish = false
 
@@ -29,7 +29,6 @@ tauri-plugin-updater = "2.6.1"
 tauri-plugin-deep-link = "2.2.0"
 tauri-plugin-localhost = "2.2.0"
 tauri-plugin-single-instance = "2.2.2"
-portpicker = "0.1"
 serde_json = "1.0"
 dirs = "5.0.1"
 serde = { version = "1.0", features = ["derive"] }
@@ -43,8 +42,8 @@ tokio = { version = "1", features = ["net", "rt", "sync", "time"] }
 # RRFlow's Rust SDK and contract own every authenticated RRD request and
 # response type. Pinned to one rrflow-development revision so the native client
 # and the engine it targets share one OpenAPI digest.
-rrd-client = { git = "https://github.com/rrflow/rrflow-development", rev = "b27579299b91dbe8fe13893ff66c2cd8906c8466" }
-rrd-contract = { git = "https://github.com/rrflow/rrflow-development", rev = "b27579299b91dbe8fe13893ff66c2cd8906c8466" }
+rrd-client = { git = "https://github.com/rrflow/rrflow-development", rev = "e5672ec1d953c736b2befa38b34a13623a23a5d6" }
+rrd-contract = { git = "https://github.com/rrflow/rrflow-development", rev = "e5672ec1d953c736b2befa38b34a13623a23a5d6" }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 cocoa = "0.26.1"

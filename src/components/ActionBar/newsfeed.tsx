@@ -1,7 +1,7 @@
 import { Indicator } from "@mantine/core";
-import { Icon, iconNewspaper } from "@rrflow/ui";
 import { useUnreadNewsPosts } from "~/hooks/newsfeed";
 import { dispatchIntent } from "~/shared/util/intents";
+import { Icon, iconNewspaper } from "../../rrflow/ui/index";
 import { ActionButton } from "../ActionButton";
 
 export function NewsFeed() {

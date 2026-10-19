@@ -11,16 +11,6 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import {
-	CodeBlock,
-	Icon,
-	iconClose,
-	iconDelete,
-	iconDotsVertical,
-	iconQuery,
-	iconSearch,
-	iconText,
-} from "@rrflow/ui";
 import dayjs from "dayjs";
 import { capitalize } from "radash";
 import { memo, useMemo } from "react";
@@ -33,6 +23,16 @@ import { useConnectionAndView } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
 import { useConfigStore } from "~/shell/stores/config";
 import type { HistoryQuery } from "~/types";
+import {
+	CodeBlock,
+	Icon,
+	iconClose,
+	iconDelete,
+	iconDotsVertical,
+	iconQuery,
+	iconSearch,
+	iconText,
+} from "../../../../../rrflow/ui/index";
 
 const MAX_PREVIEW_LENGTH = 500;
 

@@ -3,6 +3,25 @@ import { invoke, isTauri } from "@tauri-apps/api/core";
 export const RRD_PROTOCOL = "rrd" as const;
 export const RRD_PROTOCOL_VERSION = 1 as const;
 
+/** Native command failures retain their actual diagnostic in the serving UI. */
+export function describeRrdError(error: unknown): string {
+	if (error instanceof Error) return error.message;
+	if (typeof error === "string") return error;
+	if (
+		error &&
+		typeof error === "object" &&
+		"message" in error &&
+		typeof error.message === "string"
+	) {
+		return error.message;
+	}
+	try {
+		return JSON.stringify(error) ?? String(error);
+	} catch {
+		return String(error);
+	}
+}
+
 export interface RrdLiveness {
 	observed_at_unix_ms: number;
 }
@@ -265,11 +284,19 @@ export class RrdRuntimeClient {
 	constructor(
 		private readonly endpoint: string,
 		private readonly expectedInstance?: string,
+		private readonly sshHost?: string,
 	) {}
 
 	private async publicGet(path: string): Promise<unknown> {
 		if (isTauri()) {
-			return invoke<unknown>("rrd_public_request", { endpoint: this.endpoint, path });
+			return invoke<unknown>("rrd_public_request", {
+				endpoint: this.endpoint,
+				path,
+				sshHost: this.sshHost,
+			});
+		}
+		if (this.sshHost) {
+			throw new Error("Configured SSH forwarding requires the native Connectome app");
 		}
 		const response = await fetch(runtimeUrl(this.endpoint, path), {
 			headers: { Accept: "application/json" },

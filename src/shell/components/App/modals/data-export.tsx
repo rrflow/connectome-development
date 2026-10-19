@@ -15,24 +15,6 @@ import {
 } from "@mantine/core";
 import { useInputState, useSet } from "@mantine/hooks";
 import { showNotification, updateNotification } from "@mantine/notifications";
-import {
-	Icon,
-	iconAccount,
-	iconAPI,
-	iconAuth,
-	iconBraces,
-	iconCheck,
-	iconDollar,
-	iconDownload,
-	iconFilter,
-	iconFunction,
-	iconHelp,
-	iconModel,
-	iconNamespace,
-	iconSearch,
-	iconWarning,
-	iconWrench,
-} from "@rrflow/ui";
 import dayjs from "dayjs";
 import { useMemo, useState } from "react";
 import { adapter, isBrowser } from "~/adapter";
@@ -52,7 +34,25 @@ import {
 import { tagEvent } from "~/shared/util/analytics";
 import { fuzzyMatch, slugify } from "~/shared/util/helpers";
 import { syncConnectionSchema } from "~/shared/util/schema";
-import { SqlExportOptions } from "~/vendor/rrflow-client";
+import { SqlExportOptions } from "../../../../rrflow/client/native";
+import {
+	Icon,
+	iconAccount,
+	iconAPI,
+	iconAuth,
+	iconBraces,
+	iconCheck,
+	iconDollar,
+	iconDownload,
+	iconFilter,
+	iconFunction,
+	iconHelp,
+	iconModel,
+	iconNamespace,
+	iconSearch,
+	iconWarning,
+	iconWrench,
+} from "../../../../rrflow/ui/index";
 
 function toggleSet<T>(set: Set<T>, item: T) {
 	if (set.has(item)) {

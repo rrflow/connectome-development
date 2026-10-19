@@ -58,3 +58,77 @@
 			color-mix(in srgb, var(--mantine-color-body) 92%, transparent);
 	}
 }
+
+
+.workspace {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	min-height: 0;
+}
+
+.workspaceHeader {
+	flex-shrink: 0;
+	padding: 12px 20px;
+	border-bottom: 1px solid var(--mantine-color-default-border);
+	background: var(--mantine-color-body);
+}
+
+.endpoint {
+	overflow-wrap: anywhere;
+}
+
+.lensNavigation {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 8px;
+	margin-top: 10px;
+}
+
+.lens {
+	min-width: 0;
+	padding: 8px 12px;
+	border-radius: var(--mantine-radius-md);
+
+	&:focus-visible {
+		outline: 2px solid var(--mantine-color-violet-6);
+		outline-offset: 2px;
+	}
+}
+
+.workspaceScroll {
+	flex: 1;
+	min-height: 0;
+}
+
+.workspaceContent {
+	padding: 12px 20px 32px;
+	max-width: 1600px;
+	margin-inline: auto;
+}
+
+.inspector {
+	overflow-wrap: anywhere;
+}
+
+.runtimeCanvas,
+.runtimePanel {
+	height: clamp(240px, calc(100dvh - 520px), 620px);
+}
+
+.runtimeCanvas { overflow: hidden; }
+.runtimePanel { overflow: auto; }
+
+@media (max-width: 60em) {
+	.workspaceHeader { padding: 10px 12px; }
+	.workspaceContent { padding: 12px 12px 24px; }
+	.connectionActions { width: 100%; }
+	.lensNavigation { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-height: 500px) {
+	.lens { padding-block: 4px; }
+	.lensNavigation { margin-top: 6px; }
+}

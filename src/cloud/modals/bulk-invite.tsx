@@ -1,7 +1,6 @@
 import { ActionIcon, Button, Group, Select, Stack, Text, TextInput } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
 import { closeModal, openModal } from "@mantine/modals";
-import { Icon, iconClose, iconOrganization, iconPlus, iconUpload } from "@rrflow/ui";
 import Papa from "papaparse";
 import { capitalize } from "radash";
 import { useMemo } from "react";
@@ -12,6 +11,7 @@ import { Spacer } from "~/components/Spacer";
 import { useStable } from "~/hooks/stable";
 import { EMAIL_REGEX, showErrorNotification } from "~/shared/util/helpers";
 import { CloudOrganization } from "~/types";
+import { Icon, iconClose, iconOrganization, iconPlus, iconUpload } from "../../rrflow/ui/index";
 import { useInvitationMutation } from "../mutations/invites";
 import { useCloudRolesQuery } from "../queries/roles";
 

@@ -1,6 +1,5 @@
 import { Box, Button, Group, Modal, Stack, Text, TextInput } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { Icon, iconChevronRight, iconOpen, iconPlus, iconVariable } from "@rrflow/ui";
 import { type ChangeEvent, memo, useRef, useState } from "react";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { useImmer } from "use-immer";
@@ -21,6 +20,13 @@ import { executeQuery } from "~/screens/connectome/connection/connection";
 import { showErrorNotification } from "~/shared/util/helpers";
 import { buildParameterDefinition, syncConnectionSchema } from "~/shared/util/schema";
 import type { SchemaParameter } from "~/types";
+import {
+	Icon,
+	iconChevronRight,
+	iconOpen,
+	iconPlus,
+	iconVariable,
+} from "../../../../../rrflow/ui/index";
 import { ParameterEditorPanel } from "../ParameterEditorPanel";
 import { ParameterPropertiesPanel } from "../ParameterPropertiesPanel";
 import { ParametersPanel } from "../ParametersPanel";

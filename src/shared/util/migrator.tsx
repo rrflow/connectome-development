@@ -81,6 +81,15 @@ export function applyMigrations(config: any): ConnectomeConfig {
 	config.settings.behavior.recordDiagnostics ??= false;
 	config.settings.behavior.diagnosticsHistorySize ??= 300;
 
+	// Installed estates replace the old driver/port/password launcher. Existing
+	// configuration keeps its executable and console history; new fields default
+	// to Connectome's local estate and RRFlow's fresh installation plan.
+	config.settings.serving ??= {};
+	config.settings.serving.project ??= "";
+	config.settings.serving.mode ??= "fresh";
+	config.settings.serving.executable ??= "";
+	config.settings.serving.historySize ??= 250;
+
 	return config;
 }
 

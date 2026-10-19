@@ -10,7 +10,6 @@ import {
 	Text,
 	Textarea,
 } from "@mantine/core";
-import { Icon, iconCheck, iconCopy, iconDelete, iconList, iconPlus } from "@rrflow/ui";
 import { Updater } from "use-immer";
 import { ActionButton } from "~/components/ActionButton";
 import { PermissionInput } from "~/components/Inputs";
@@ -19,6 +18,14 @@ import { SaveBox } from "~/components/SaveBox";
 import { Spacer } from "~/components/Spacer";
 import { SaveableHandle } from "~/hooks/save";
 import { SchemaParameter } from "~/types";
+import {
+	Icon,
+	iconCheck,
+	iconCopy,
+	iconDelete,
+	iconList,
+	iconPlus,
+} from "../../../../../rrflow/ui/index";
 import classes from "./style.module.scss";
 
 export interface ParameterPropertiesPanelProps {

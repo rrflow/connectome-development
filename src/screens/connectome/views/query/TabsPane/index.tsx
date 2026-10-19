@@ -1,20 +1,4 @@
 import { Badge, type BoxProps, Divider, type ElementProps, ScrollArea, Stack } from "@mantine/core";
-import {
-	Icon,
-	iconArrowUpRight,
-	iconChevronLeft,
-	iconChevronRight,
-	iconClose,
-	iconCopy,
-	iconFile,
-	iconHistory,
-	iconList,
-	iconPlus,
-	iconQuery,
-	iconSearch,
-	iconStar,
-	iconText,
-} from "@rrflow/ui";
 import clsx from "clsx";
 import { useContextMenu } from "mantine-contextmenu";
 import { useState } from "react";
@@ -37,6 +21,22 @@ import { useConfigStore } from "~/shell/stores/config";
 import { useInterfaceStore } from "~/shell/stores/interface";
 import { useQueryStore } from "~/stores/query";
 import type { QueryTab, QueryType } from "~/types";
+import {
+	Icon,
+	iconArrowUpRight,
+	iconChevronLeft,
+	iconChevronRight,
+	iconClose,
+	iconCopy,
+	iconFile,
+	iconHistory,
+	iconList,
+	iconPlus,
+	iconQuery,
+	iconSearch,
+	iconStar,
+	iconText,
+} from "../../../../../rrflow/ui/index";
 import classes from "./style.module.scss";
 
 const TYPE_ICONS: Record<QueryType, string> = {

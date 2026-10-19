@@ -8,7 +8,6 @@ import {
 	Stack,
 	Text,
 } from "@mantine/core";
-import { Icon, iconNamespace, iconPlus, iconTrash } from "@rrflow/ui";
 import { useMutation } from "@tanstack/react-query";
 import { type SyntheticEvent, useMemo } from "react";
 import { ActionButton } from "~/components/ActionButton";
@@ -22,7 +21,8 @@ import { useConfirmation } from "~/providers/Confirmation";
 import { getAuthLevel, getAuthNS } from "~/shared/util/connection";
 import { createBaseAuthentication } from "~/shared/util/defaults";
 import { parseIdent } from "~/shared/util/language";
-import { escapeIdent } from "~/vendor/rrflow-client";
+import { escapeIdent } from "../../../../rrflow/client/values";
+import { Icon, iconNamespace, iconPlus, iconTrash } from "../../../../rrflow/ui/index";
 import { activateDatabase, executeQuery } from "../../connection/connection";
 import classes from "./style.module.scss";
 

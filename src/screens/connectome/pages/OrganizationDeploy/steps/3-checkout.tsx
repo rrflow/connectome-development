@@ -12,20 +12,6 @@ import {
 	Stack,
 	Text,
 } from "@mantine/core";
-import {
-	Icon,
-	iconArrowUpRight,
-	iconCreditCard,
-	iconDatabase,
-	iconHistory,
-	iconMarker,
-	iconMemory,
-	iconPackageClosed,
-	iconQuery,
-	iconRelation,
-	iconTag,
-	pictoSDBCloud,
-} from "@rrflow/ui";
 import { ChangeEvent } from "react";
 import { navigate } from "wouter/use-browser-location";
 import {
@@ -54,6 +40,20 @@ import { APPLY_DATA_FILE_KEY, APPLY_DATASET_KEY } from "~/shared/util/storage";
 import { openResourcesLockedModal } from "~/shell/components/App/modals/resources-locked";
 import { useConfigStore } from "~/shell/stores/config";
 import { useCloudStore } from "~/stores/cloud";
+import {
+	Icon,
+	iconArrowUpRight,
+	iconCreditCard,
+	iconDatabase,
+	iconHistory,
+	iconMarker,
+	iconMemory,
+	iconPackageClosed,
+	iconQuery,
+	iconRelation,
+	iconTag,
+	pictoRRFlowCloud,
+} from "../../../../../rrflow/ui/index";
 import { STARTING_DATA } from "../constants";
 import classes from "../style.module.scss";
 import { StepProps } from "../types";
@@ -307,7 +307,7 @@ export function CheckoutStep({ organisation, details, setDetails, setStep }: Ste
 						</Box>
 					</Stack>
 					<Image
-						src={pictoSDBCloud}
+						src={pictoRRFlowCloud}
 						className={classes.cloudImage}
 					/>
 					<Image

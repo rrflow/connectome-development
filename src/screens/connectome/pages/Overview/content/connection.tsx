@@ -11,15 +11,6 @@ import {
 	ThemeIcon,
 	UnstyledButton,
 } from "@mantine/core";
-import {
-	Icon,
-	iconCopy,
-	iconDatabase,
-	iconDelete,
-	iconDotsVertical,
-	iconEdit,
-	Spacer,
-} from "@rrflow/ui";
 import { PropsWithChildren, useRef } from "react";
 import { SANDBOX } from "~/constants";
 import { useStable } from "~/hooks/stable";
@@ -31,6 +22,15 @@ import { newId, ON_STOP_PROPAGATION } from "~/shared/util/helpers";
 import { USER_ICONS } from "~/shared/util/user-icons";
 import { useConfigStore } from "~/shell/stores/config";
 import { Connection } from "~/types";
+import {
+	Icon,
+	iconCopy,
+	iconDatabase,
+	iconDelete,
+	iconDotsVertical,
+	iconEdit,
+	Spacer,
+} from "../../../../../rrflow/ui/index";
 
 export interface StartConnectionProps extends BoxProps {
 	connection: Connection;

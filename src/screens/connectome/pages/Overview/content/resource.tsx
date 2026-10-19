@@ -1,7 +1,7 @@
 import { Anchor, Box, BoxProps, Group, Image, Paper, Text, UnstyledButton } from "@mantine/core";
-import { Icon, iconChevronRight } from "@rrflow/ui";
 import { useRef } from "react";
 import { Faint } from "~/components/Faint";
+import { Icon, iconChevronRight } from "../../../../../rrflow/ui/index";
 
 export interface StartResourceProps extends BoxProps {
 	title: string;

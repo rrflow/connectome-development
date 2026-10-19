@@ -10,7 +10,6 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useDebouncedValue, useInputState } from "@mantine/hooks";
-import { Icon, iconHelp } from "@rrflow/ui";
 import clsx from "clsx";
 import { navigate } from "wouter/use-browser-location";
 import { useSearchHelpArticlesQuery } from "~/cloud/queries/context";
@@ -22,6 +21,7 @@ import { useIntent } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
 import { Y_SLIDE_TRANSITION } from "~/shared/util/helpers";
 import { IntercomSupportArticle } from "~/types";
+import { Icon, iconHelp } from "../../../../rrflow/ui/index";
 import classes from "../style.module.scss";
 
 export function HelpSearchModal() {

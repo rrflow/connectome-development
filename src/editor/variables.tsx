@@ -1,6 +1,6 @@
 import type { CompletionSource } from "@codemirror/autocomplete";
 import type { Extension } from "@codemirror/state";
-import { rrflowqlLanguage } from "~/vendor/rrflowql-editor";
+import { rrflowqlLanguage } from "../rrflow/editor";
 
 type Resolver = () => string[] | Promise<string[]>;
 

@@ -12,7 +12,6 @@ import {
 	Text,
 	ThemeIcon,
 } from "@mantine/core";
-import { Icon, iconDatabase, iconErrorCircle, iconRefresh } from "@rrflow/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { Link, Redirect } from "wouter";
@@ -20,6 +19,7 @@ import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { RRFlowControlPlaneClient, type RRFlowManagedInstance } from "~/rrflow/control-plane";
 import { useConfigStore } from "~/shell/stores/config";
+import { Icon, iconDatabase, iconErrorCircle, iconRefresh } from "../../../../rrflow/ui/index";
 import classes from "./style.module.scss";
 
 const STATUS_COLOR: Record<RRFlowManagedInstance["status"], string> = {

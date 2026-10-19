@@ -1,6 +1,5 @@
 import { ActionIcon, Box, Button, Group, Menu, Modal, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { Icon, iconCopy, iconDelete, iconDotsVertical, iconPlus } from "@rrflow/ui";
 import { type HTMLAttributes, type MouseEvent, useState } from "react";
 import { useImmer } from "use-immer";
 import { ConnectionAddressDetails } from "~/components/ConnectionDetails/address";
@@ -18,6 +17,13 @@ import { newId, ON_STOP_PROPAGATION, uniqueName } from "~/shared/util/helpers";
 import { USER_ICONS } from "~/shared/util/user-icons";
 import { useConfigStore } from "~/shell/stores/config";
 import type { Connection, Template } from "~/types";
+import {
+	Icon,
+	iconCopy,
+	iconDelete,
+	iconDotsVertical,
+	iconPlus,
+} from "../../../../../rrflow/ui/index";
 import { SettingsSection } from "../utilities";
 
 const CAT = "templates";

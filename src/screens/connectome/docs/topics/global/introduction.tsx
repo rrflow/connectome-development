@@ -1,10 +1,10 @@
 import { Box, Button, Paper, Text, Title } from "@mantine/core";
-import { Icon, iconOpen } from "@rrflow/ui";
 import { adapter } from "~/adapter";
 import { DriverSelector } from "~/components/DriverSelector";
 import { DRIVERS } from "~/constants";
 import { useSetting } from "~/hooks/config";
 import { Article } from "~/screens/connectome/docs/components";
+import { Icon, iconOpen } from "../../../../../rrflow/ui/index";
 
 export function DocsGlobalIntroduction() {
 	const [language, setLanguage] = useSetting("behavior", "docsLanguage");

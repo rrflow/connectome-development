@@ -1,7 +1,7 @@
 import { Alert } from "@mantine/core";
-import { Icon, iconErrorCircle } from "@rrflow/ui";
 import type { UseQueryResult } from "@tanstack/react-query";
 import { isRetryable } from "~/rrflow/session";
+import { Icon, iconErrorCircle } from "../../../../rrflow/ui/index";
 import { formatMoment } from "./format";
 
 export interface ReadNoticeProps {

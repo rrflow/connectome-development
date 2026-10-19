@@ -14,18 +14,6 @@ import {
 	UnstyledButton,
 } from "@mantine/core";
 import { closeModal, openModal } from "@mantine/modals";
-import {
-	CodeBlock,
-	Icon,
-	iconArrowLeft,
-	iconAuth,
-	iconDownload,
-	iconFilter,
-	iconQuery,
-	iconServer,
-	iconTransfer,
-	iconWrench,
-} from "@rrflow/ui";
 import { formatDistanceToNow } from "date-fns";
 import { FC, memo, useMemo, useState } from "react";
 import { adapter } from "~/adapter";
@@ -38,6 +26,18 @@ import { useStable } from "~/hooks/stable";
 import { useIsLight } from "~/hooks/theme";
 import { showInfo } from "~/shared/util/helpers";
 import { DiagnosticWithTime, useDatabaseStore } from "~/stores/database";
+import {
+	CodeBlock,
+	Icon,
+	iconArrowLeft,
+	iconAuth,
+	iconDownload,
+	iconFilter,
+	iconQuery,
+	iconServer,
+	iconTransfer,
+	iconWrench,
+} from "../rrflow/ui/index";
 
 interface DiagnosticEntry {
 	id: string;

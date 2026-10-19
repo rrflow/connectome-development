@@ -3,7 +3,7 @@ import { immer } from "zustand/middleware/immer";
 import { chatOf, messageOf } from "~/components/Sidekick/helpers";
 import { StreamEvent } from "~/components/Sidekick/types";
 import type { SidekickChat, SidekickChatMessage } from "~/types";
-import { RecordId } from "~/vendor/rrflow-client";
+import { RecordId } from "../rrflow/client/values";
 
 export interface SidekickChatWithHistory extends SidekickChat {
 	history: SidekickChatMessage[];

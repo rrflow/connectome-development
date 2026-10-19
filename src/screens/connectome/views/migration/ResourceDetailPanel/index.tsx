@@ -10,6 +10,15 @@ import {
 	Text,
 	Transition,
 } from "@mantine/core";
+import { useMemo } from "react";
+import { adapter } from "~/adapter";
+import { ActionButton } from "~/components/ActionButton";
+import { RecordLink } from "~/components/RecordLink";
+import { Spacer } from "~/components/Spacer";
+import { RRFLOWQL_FILTER } from "~/constants";
+import { useIsLight } from "~/hooks/theme";
+import { getRRFlowQL } from "~/screens/connectome/connection/connection";
+import { MigrationKind, MigrationResourceType, MigrationSeverity } from "~/types";
 import {
 	CodeBlock,
 	Icon,
@@ -20,16 +29,7 @@ import {
 	iconChevronLeft,
 	iconClose,
 	iconDownload,
-} from "@rrflow/ui";
-import { useMemo } from "react";
-import { adapter } from "~/adapter";
-import { ActionButton } from "~/components/ActionButton";
-import { RecordLink } from "~/components/RecordLink";
-import { Spacer } from "~/components/Spacer";
-import { RRFLOWQL_FILTER } from "~/constants";
-import { useIsLight } from "~/hooks/theme";
-import { getRRFlowQL } from "~/screens/connectome/connection/connection";
-import { MigrationKind, MigrationResourceType, MigrationSeverity } from "~/types";
+} from "../../../../../rrflow/ui/index";
 import { kindMeta } from "../MigrationView/kinds";
 import { DiagnosticEntry, DiagnosticResource } from "../MigrationView/organizer";
 import { severityMeta } from "../MigrationView/severities";

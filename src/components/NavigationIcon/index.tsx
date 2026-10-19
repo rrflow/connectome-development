@@ -1,11 +1,11 @@
 import { Box, Indicator, type IndicatorProps, Text, Tooltip } from "@mantine/core";
-import { Icon } from "@rrflow/ui";
 import clsx from "clsx";
 import { isObject } from "radash";
 import type { HTMLProps, ReactNode } from "react";
 import { useRouteMatcher } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
 import { useInterfaceStore } from "~/shell/stores/interface";
+import { Icon } from "../../rrflow/ui/index";
 import { Entry, type EntryProps } from "../Entry";
 import classes from "./style.module.scss";
 

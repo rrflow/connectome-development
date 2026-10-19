@@ -1,8 +1,8 @@
 import { Alert, Group, Select, Text } from "@mantine/core";
-import { Icon, iconWarning } from "@rrflow/ui";
 import { useMemo } from "react";
 import { useTableNames } from "~/hooks/schema";
 import { useInterfaceStore } from "~/shell/stores/interface";
+import { Icon, iconWarning } from "../../../../../rrflow/ui/index";
 import { Article } from "../../components";
 
 export function DocsTablesSelector() {

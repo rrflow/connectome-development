@@ -1,6 +1,6 @@
 import "@mantine/core/styles.layer.css";
 import "@mantine/notifications/styles.css";
-import "@rrflow/ui/styles.css";
+import "../rrflow/ui/styles.css";
 
 import "~/shared/assets/styles/layers.scss";
 import "~/shared/assets/styles/fonts.scss";
@@ -16,7 +16,6 @@ import { createRoot } from "react-dom/client";
 import { openConnection } from "~/screens/connectome/connection/connection";
 import { MiniRunScreen } from "~/screens/mini-embed";
 import { startConfigSync } from "~/shared/util/config";
-import { HeadInjector } from "~/shared/util/head";
 import { handleWindowMessage } from "~/shared/util/messaging";
 import { adapter } from "../adapter";
 import type { MiniAdapter } from "../adapter/mini";
@@ -37,12 +36,7 @@ import type { MiniAdapter } from "../adapter/mini";
 		throw new Error("Root element not found");
 	}
 
-	createRoot(root).render(
-		<>
-			<HeadInjector />
-			<MiniRunScreen />
-		</>,
-	);
+	createRoot(root).render(<MiniRunScreen />);
 
 	// Connect and initialize the dataset
 	openConnection().then(() => {

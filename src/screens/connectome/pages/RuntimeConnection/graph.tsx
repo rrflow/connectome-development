@@ -10,16 +10,6 @@ import {
 	UnstyledButton,
 	useMantineTheme,
 } from "@mantine/core";
-import {
-	Icon,
-	iconChevronDown,
-	iconChevronUp,
-	iconFullscreen,
-	iconMagnifyMinus,
-	iconMagnifyPlus,
-	iconMaximize,
-	iconMinimize,
-} from "@rrflow/ui";
 import Graph from "graphology";
 import { circular } from "graphology-layout";
 import forceAtlas2, { inferSettings } from "graphology-layout-forceatlas2";
@@ -29,6 +19,16 @@ import type { EdgeDisplayData, NodeDisplayData } from "sigma/types";
 import { ActionButton } from "~/components/ActionButton";
 import { useStable } from "~/hooks/stable";
 import { getIsLight, useIsLight } from "~/hooks/theme";
+import {
+	Icon,
+	iconChevronDown,
+	iconChevronUp,
+	iconFullscreen,
+	iconMagnifyMinus,
+	iconMagnifyPlus,
+	iconMaximize,
+	iconMinimize,
+} from "../../../../rrflow/ui/index";
 import type { ColorGroup } from "./groups";
 import { createLabelLayer, type ScreenBox } from "./labels";
 

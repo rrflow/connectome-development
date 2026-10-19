@@ -1,5 +1,5 @@
-import { iconErrorCircle, iconHelp, iconWarning } from "@rrflow/ui";
 import { MigrationSeverity } from "~/types";
+import { iconErrorCircle, iconHelp, iconWarning } from "../../../../../rrflow/ui/index";
 
 export const severityMeta: Record<
 	MigrationSeverity,

@@ -10,7 +10,6 @@ import {
 	ThemeIcon,
 	UnstyledButton,
 } from "@mantine/core";
-import { Icon, iconCloud, iconDotsVertical, Spacer } from "@rrflow/ui";
 import { PropsWithChildren, useMemo, useRef } from "react";
 import { Faint } from "~/components/Faint";
 import { InstanceActions } from "~/components/InstanceActions";
@@ -19,6 +18,7 @@ import { useStable } from "~/hooks/stable";
 import { ON_STOP_PROPAGATION } from "~/shared/util/helpers";
 import { USER_ICONS } from "~/shared/util/user-icons";
 import { CloudInstance, CloudOrganization, CloudRegion } from "~/types";
+import { Icon, iconCloud, iconDotsVertical, Spacer } from "../../../../../rrflow/ui/index";
 import { StateBadge } from "../badge";
 
 export interface StartInstanceProps extends BoxProps {

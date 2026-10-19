@@ -1,7 +1,7 @@
 import { Box, BoxProps, Button, Image, Paper, Stack, Text } from "@mantine/core";
-import { Icon, iconChevronRight } from "@rrflow/ui";
 import { PropsWithChildren } from "react";
 import glow from "~/shared/assets/images/radial-glow.png";
+import { Icon, iconChevronRight } from "../../../../../rrflow/ui/index";
 import classes from "../style.module.scss";
 
 export interface StartCloudProps extends BoxProps {

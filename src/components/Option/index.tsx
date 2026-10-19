@@ -1,6 +1,6 @@
 import { Box, BoxProps, Text, Transition, UnstyledButton } from "@mantine/core";
-import { Icon, iconCheck } from "@rrflow/ui";
 import { FC, ReactNode } from "react";
+import { Icon, iconCheck } from "../../rrflow/ui/index";
 import classes from "./style.module.scss";
 
 export interface OptionProps extends BoxProps {

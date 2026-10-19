@@ -1,10 +1,10 @@
 import { Anchor, Box, Button, Group, Image, Paper, Text } from "@mantine/core";
-import { Icon, iconArrowUpRight, pictoFullTextSearch } from "@rrflow/ui";
 import { satisfies } from "compare-versions";
 import { Link } from "wouter";
 import { hasOrganizationRoles, ORG_ROLES_ADMIN } from "~/cloud/helpers";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { CloudInstance, CloudOrganization } from "~/types";
+import { Icon, iconArrowUpRight, pictoFullTextSearch } from "../../../../../rrflow/ui/index";
 
 export interface MajorUpdateSectionProps {
 	instance: CloudInstance;

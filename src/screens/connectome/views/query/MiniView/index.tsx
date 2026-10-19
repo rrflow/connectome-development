@@ -1,7 +1,6 @@
 import type { SelectionRange } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { Box, Group, Image, noop, SegmentedControl, Stack } from "@mantine/core";
-import { pictoBrain } from "@rrflow/ui";
 import { memo, useState } from "react";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { createHtmlPortalNode, InPortal } from "react-reverse-portal";
@@ -21,6 +20,7 @@ import { useConnectionAndView, useIntent } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
 import { SetQueryEvent } from "~/shared/util/global-events";
 import { useConfigStore } from "~/shell/stores/config";
+import { pictoBrain } from "../../../../../rrflow/ui/index";
 import { QueryPane } from "../QueryPane";
 import { ResultPane } from "../ResultPane";
 import { VariablesPane } from "../VariablesPane";

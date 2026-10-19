@@ -1,13 +1,4 @@
 import { Avatar, Badge, Box, Button, Group, Menu, Paper, Stack, Table, Text } from "@mantine/core";
-import {
-	Icon,
-	iconAccountPlus,
-	iconClose,
-	iconDelete,
-	iconDotsVertical,
-	iconExitToAp,
-	iconServerSecure,
-} from "@rrflow/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import {
@@ -31,6 +22,15 @@ import { useConfirmation } from "~/providers/Confirmation";
 import { showInfo } from "~/shared/util/helpers";
 import { useCloudStore } from "~/stores/cloud";
 import { CloudMember } from "~/types";
+import {
+	Icon,
+	iconAccountPlus,
+	iconClose,
+	iconDelete,
+	iconDotsVertical,
+	iconExitToAp,
+	iconServerSecure,
+} from "../../../../../rrflow/ui/index";
 import classes from "../style.module.scss";
 import { OrganizationTabProps } from "../types";
 

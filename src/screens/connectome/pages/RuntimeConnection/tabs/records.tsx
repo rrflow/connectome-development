@@ -20,6 +20,12 @@ import {
 	Textarea,
 	UnstyledButton,
 } from "@mantine/core";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMemo, useRef, useState } from "react";
+import { Label } from "~/components/Label";
+import { Section } from "~/components/Section";
+import type { RrdEdgeView, RrdNodeView } from "~/rrflow/session";
+import { plural } from "~/shared/util/helpers";
 import {
 	Icon,
 	iconChevronDown,
@@ -31,13 +37,7 @@ import {
 	iconRelation,
 	iconSearch,
 	iconTarget,
-} from "@rrflow/ui";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useMemo, useRef, useState } from "react";
-import { Label } from "~/components/Label";
-import { Section } from "~/components/Section";
-import type { RrdEdgeView, RrdNodeView } from "~/rrflow/session";
-import { plural } from "~/shared/util/helpers";
+} from "../../../../../rrflow/ui/index";
 import { formatCount, formatSize, formatTime } from "../format";
 import { Term } from "../glossary";
 import { type CanvasEdge, type CanvasNode, GraphCanvas } from "../graph";
@@ -58,7 +58,6 @@ const CONSOLE_CELL_WIDTH = 320;
 const START_HERE_RECORDS = 8;
 /** Linked records listed per direction before the list says how many remain. */
 const MAX_LINKED_LISTED = 50;
-const CANVAS_HEIGHT = 620;
 
 function recordQuery(node: RrdNodeView): string {
 	return `FROM record:${node.kind} AT VALID ${Date.now()} KNOWN HEAD WHERE id = "${node.key}" PROJECT *`;
@@ -176,6 +175,7 @@ export function RecordRow({ record, color, detail, onSelect }: RecordRowProps) {
 
 export function RecordsTab({
 	client,
+	connection,
 	sessionKey,
 	selected,
 	onSelect,
@@ -194,7 +194,7 @@ export function RecordsTab({
 	const [draft, setDraft] = useState<string | null>(null);
 	const consoleRef = useRef<HTMLDivElement>(null);
 	const execution = useMutation({
-		mutationFn: (query: string) => client.query(query),
+		mutationFn: (query: string) => client.query(query, connection.instance),
 	});
 
 	const view = database.data;
@@ -320,6 +320,7 @@ export function RecordsTab({
 	return (
 		<Stack gap="xl">
 			<Section
+				compact
 				title="Records & relations"
 				description={
 					<>
@@ -459,10 +460,7 @@ export function RecordsTab({
 
 				<Grid>
 					<Grid.Col span={{ base: 12, lg: 8 }}>
-						<Paper
-							h={CANVAS_HEIGHT}
-							style={{ overflow: "hidden" }}
-						>
+						<Paper className={classes.runtimeCanvas}>
 							{graph.nodes.length === 0 ? (
 								<Group
 									h="100%"
@@ -564,7 +562,7 @@ export function RecordsTab({
 					<Grid.Col span={{ base: 12, lg: 4 }}>
 						<Paper
 							p="md"
-							h={CANVAS_HEIGHT}
+							className={classes.runtimePanel}
 						>
 							{node ? (
 								<Stack
@@ -815,6 +813,7 @@ export function RecordsTab({
 
 			<Box ref={consoleRef}>
 				<Section
+					compact
 					title={<Term id="query">RRFlowQL console</Term>}
 					description="Read-only queries in RRFlow's query language, run through this session under the estate's query budget."
 					rightSection={

@@ -14,16 +14,6 @@ import {
 	TextInput,
 	ThemeIcon,
 } from "@mantine/core";
-import {
-	Icon,
-	iconChart,
-	iconChevronDown,
-	iconChevronRight,
-	iconDatabase,
-	iconHomePlus,
-	iconQuery,
-	iconRelation,
-} from "@rrflow/ui";
 import { useMemo } from "react";
 import { useImmer } from "use-immer";
 import { Link, useLocation } from "wouter";
@@ -41,7 +31,18 @@ import { createBaseConnection } from "~/shared/util/defaults";
 import { dispatchIntent } from "~/shared/util/intents";
 import { USER_ICONS } from "~/shared/util/user-icons";
 import { useConfigStore } from "~/shell/stores/config";
+import { useDatabaseStore } from "~/stores/database";
 import { Template } from "~/types";
+import {
+	Icon,
+	iconChart,
+	iconChevronDown,
+	iconChevronRight,
+	iconDatabase,
+	iconHomePlus,
+	iconQuery,
+	iconRelation,
+} from "../../../../rrflow/ui/index";
 import classes from "./style.module.scss";
 
 function parseRuntimeEndpoint(value: string | null) {
@@ -143,6 +144,11 @@ export function CreateConnectionPage() {
 			draft.icon = template.icon;
 			draft.labels = template.labels;
 			draft.authentication = template.values;
+			if (template.id === "_localhost" && servedEstate) {
+				draft.target = "runtime";
+				draft.runtimeInstance = servedEstate.instance;
+				draft.runtimeCredential = servedEstate.credential_path;
+			}
 		});
 	};
 
@@ -175,27 +181,28 @@ export function CreateConnectionPage() {
 	// 	openedHandle.close();
 	// });
 
+	const servedEstate = useDatabaseStore((state) => state.servedEstate);
 	const localhost = useMemo(() => {
-		const { username, password, port } = useConfigStore.getState().settings.serving;
+		const endpoint = servedEstate ? new URL(servedEstate.endpoint) : null;
 
 		return {
 			id: "_localhost",
-			name: "Local database",
+			name: "Local estate",
 			icon: 0,
 			values: {
-				mode: "root",
+				mode: "none",
 				database: "",
 				namespace: "",
-				protocol: "ws",
-				hostname: `localhost:${port}`,
+				protocol: "http",
+				hostname: endpoint?.host ?? "",
 				accessFields: [],
 				access: "",
 				token: "",
-				username,
-				password,
+				username: "",
+				password: "",
 			},
 		} as Template;
-	}, []);
+	}, [servedEstate]);
 
 	const templates = useConfigStore((s) => s.settings.templates.list);
 	const savepoint = useLastSavepoint();
@@ -248,6 +255,7 @@ export function CreateConnectionPage() {
 									{adapter.isServeSupported && (
 										<>
 											<Menu.Item
+												disabled={!servedEstate}
 												onClick={() => applyTemplate(localhost)}
 												leftSection={
 													<ThemeIcon

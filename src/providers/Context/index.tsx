@@ -1,11 +1,6 @@
-import { createContext, PropsWithChildren, useContext, useEffect, useRef, useState } from "react";
-import { adapter } from "~/adapter";
-import { useStable } from "~/hooks/stable";
+import { createContext, PropsWithChildren, useContext, useState } from "react";
 import { __throw } from "~/shared/util/helpers";
-import { useCloudStore } from "~/stores/cloud";
-import { RRFlow } from "~/vendor/rrflow-client";
-
-const CONTEXT_ENDPOINT = "wss://rrflow-cloud-06bu9hntp1rdd9dgg57rc0v87s.aws-euw1.rrflow.cloud";
+import { RRFlow } from "../../rrflow/client/native";
 
 const ContextContext = createContext<{
 	rrflow: RRFlow;
@@ -22,63 +17,12 @@ export function useContextConnection() {
 }
 
 export function ContextProvider({ children }: PropsWithChildren) {
-	const accessToken = useCloudStore((s) => s.accessToken);
-
 	const [rrflow] = useState(new RRFlow());
-	const [connected, setConnected] = useState(false);
-	const [authenticated, setAuthenticated] = useState(false);
-	const initializedRef = useRef(false);
-
-	const connect = useStable(() => {});
-
-	useEffect(() => {
-		if (initializedRef.current) return;
-
-		rrflow.subscribe("connecting", () => {
-			adapter.log("Context", "Attempting to connect to RRFlow Cloud instance");
-		});
-
-		rrflow.subscribe("connected", () => {
-			adapter.log("Context", "Connected to RRFlow Cloud instance");
-			setConnected(true);
-		});
-
-		rrflow.subscribe("disconnected", () => {
-			adapter.log("Context", "Disconnected from RRFlow Cloud instance");
-			setConnected(false);
-			setTimeout(connect, 3000);
-		});
-
-		rrflow.subscribe("error", (error) => {
-			console.error(error);
-		});
-
-		initializedRef.current = true;
-
-		adapter.log("Context", "Connecting to RRFlow Cloud instance");
-		rrflow.connect(CONTEXT_ENDPOINT, {
-			namespace: "rrflow",
-			database: "cloud",
-		});
-		connect();
-	}, [rrflow]);
-
-	useEffect(() => {
-		if (!rrflow || !connected) return;
-
-		if (accessToken) {
-			rrflow.authenticate(accessToken).then(() => {
-				setAuthenticated(true);
-			});
-		} else {
-			rrflow.invalidate().then(() => {
-				setAuthenticated(false);
-			});
-		}
-	}, [rrflow, connected, accessToken]);
-
+	// Sidekick views remain available as authored. Their data requests stay
+	// disabled until an explicit RRFlow cloud context capability is connected.
+	// An account access token does not authorize an implicit database connection.
 	return (
-		<ContextContext.Provider value={{ rrflow, connected, authenticated }}>
+		<ContextContext.Provider value={{ rrflow, connected: false, authenticated: false }}>
 			{children}
 		</ContextContext.Provider>
 	);

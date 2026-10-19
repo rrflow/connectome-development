@@ -1,9 +1,9 @@
 import { ActionIcon, Box, Dialog, Group, Image, Text } from "@mantine/core";
-import { Icon, iconClose, pictoSDBCloud } from "@rrflow/ui";
 import type { MouseEvent } from "react";
 import { openCloudAuthentication } from "~/cloud/api/auth";
 import { useStable } from "~/hooks/stable";
 import { useCloudStore } from "~/stores/cloud";
+import { Icon, iconClose, pictoRRFlowCloud } from "../../../../rrflow/ui/index";
 import classes from "../style.module.scss";
 
 export function CloudExpiredDialog() {
@@ -40,7 +40,7 @@ export function CloudExpiredDialog() {
 		>
 			<Group>
 				<Image
-					src={pictoSDBCloud}
+					src={pictoRRFlowCloud}
 					alt="RRFlow Cloud"
 					w={48}
 				/>

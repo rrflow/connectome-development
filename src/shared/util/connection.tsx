@@ -9,7 +9,6 @@ import { connectionUri, fastParseJwt } from "./helpers";
 /**
  * Returns the currently active connection
  *
- * FIXME: Completely repulsive hack, please lord forgive me for I have sinned
  */
 export function getActiveConnection() {
 	if (adapter instanceof MiniAdapter) {
@@ -20,7 +19,7 @@ export function getActiveConnection() {
 
 	parts.shift();
 
-	if (parts[0] === "c") {
+	if (["c", "runtime", "diagnostics", "control"].includes(parts[0])) {
 		return parts[1];
 	}
 

@@ -1,5 +1,4 @@
 import { ActionIcon, Box, Button, Group, Modal, Stack, Text } from "@mantine/core";
-import { Icon, iconCircleFilled, iconClose, iconPlus } from "@rrflow/ui";
 import { klona } from "klona";
 import { replace } from "radash";
 import { type ReactNode, useState } from "react";
@@ -8,6 +7,7 @@ import { Form } from "~/components/Form";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { useBoolean } from "~/hooks/boolean";
 import { useStable } from "~/hooks/stable";
+import { Icon, iconCircleFilled, iconClose, iconPlus } from "../../rrflow/ui/index";
 
 export interface ListerProps<T> {
 	name: string;

@@ -1,10 +1,10 @@
 import { Drawer, Group, Tabs, Text } from "@mantine/core";
-import { Icon, iconClose, iconTune } from "@rrflow/ui";
 import { useState } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { DrawerResizer } from "~/components/DrawerResizer";
 import { Spacer } from "~/components/Spacer";
 import { CloudInstance, CloudOrganization } from "~/types";
+import { Icon, iconClose, iconTune } from "../../../../../rrflow/ui/index";
 import { ConfigurationCapabilities } from "./configs/capabilities";
 import { ImportExport } from "./configs/import-export";
 import { ConfigurationNetwork } from "./configs/network";

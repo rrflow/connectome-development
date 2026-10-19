@@ -1,16 +1,5 @@
 import { Accordion, Badge, Center, Group, ScrollArea, Stack, Text } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
-import {
-	Icon,
-	iconBroadcastOff,
-	iconBroadcastOn,
-	iconClose,
-	iconCopy,
-	iconDelete,
-	iconHammer,
-	iconHelp,
-	iconPlus,
-} from "@rrflow/ui";
 import { useContextMenu } from "mantine-contextmenu";
 import { useEffect, useMemo, useState } from "react";
 import { CodeEditor } from "~/components/CodeEditor";
@@ -23,7 +12,18 @@ import { executeQuery } from "~/screens/connectome/connection/connection";
 import { ON_FOCUS_SELECT } from "~/shared/util/helpers";
 import { useInterfaceStore } from "~/shell/stores/interface";
 import type { LiveMessage } from "~/types";
-import { rrflowql } from "~/vendor/rrflowql-editor";
+import { rrflowql } from "../../../../../../rrflow/editor";
+import {
+	Icon,
+	iconBroadcastOff,
+	iconBroadcastOn,
+	iconClose,
+	iconCopy,
+	iconDelete,
+	iconHammer,
+	iconHelp,
+	iconPlus,
+} from "../../../../../../rrflow/ui/index";
 import { attemptFormat, type PreviewProps } from ".";
 
 const LIVE_ACTION_COLORS: Record<string, [string, string]> = {

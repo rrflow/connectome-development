@@ -17,15 +17,6 @@ import {
 } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
 import { closeModal, openModal } from "@mantine/modals";
-import {
-	Icon,
-	iconArrowLeft,
-	iconBullhorn,
-	iconChat,
-	iconClock,
-	iconFile,
-	iconPlus,
-} from "@rrflow/ui";
 import { useEffect } from "react";
 import { navigate } from "wouter/use-browser-location";
 import { adapter } from "~/adapter";
@@ -45,6 +36,15 @@ import { SUPPORT_STATES } from "~/constants";
 import { useCloudProfile } from "~/hooks/cloud";
 import { fileToBase64 } from "~/shared/util/file-system";
 import { formatRelativeDate, showErrorNotification } from "~/shared/util/helpers";
+import {
+	Icon,
+	iconArrowLeft,
+	iconBullhorn,
+	iconChat,
+	iconClock,
+	iconFile,
+	iconPlus,
+} from "../../../../../rrflow/ui/index";
 import { ConversationPart } from "../ConversationPart";
 import classes from "../style.module.scss";
 

@@ -1,9 +1,9 @@
 import { Box, Button, Divider, Group, Stack, Text, Title } from "@mantine/core";
 import { openModal } from "@mantine/modals";
-import { CodeBlock, Icon, iconBug, iconWarning } from "@rrflow/ui";
 import { ReactNode } from "react";
 import { adapter } from "~/adapter";
 import { Spacer } from "~/components/Spacer";
+import { CodeBlock, Icon, iconBug, iconWarning } from "../../rrflow/ui/index";
 
 /**
  * Thrown during a failure in a cloud operation.

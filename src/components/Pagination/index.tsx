@@ -1,8 +1,8 @@
 import { type ComboboxData, Group, Select, Text, TextInput } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconChevronLeft, iconChevronRight } from "@rrflow/ui";
 import { type FocusEvent, type KeyboardEvent, useLayoutEffect } from "react";
 import { useStable } from "~/hooks/stable";
+import { Icon, iconChevronLeft, iconChevronRight } from "../../rrflow/ui/index";
 import { ActionButton } from "../ActionButton";
 import type { PaginationStore } from "./hook";
 

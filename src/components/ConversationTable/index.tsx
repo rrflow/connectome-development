@@ -11,13 +11,20 @@ import {
 	ThemeIcon,
 	UnstyledButton,
 } from "@mantine/core";
-import { Icon, iconChat, iconChevronDown, iconFilter, iconTag, Spacer } from "@rrflow/ui";
 import { useEffect, useMemo, useState } from "react";
 import { navigate } from "wouter/use-browser-location";
 import { useCloudOrganizationQuery } from "~/cloud/queries/organizations";
 import { SUPPORT_STATES } from "~/constants";
 import { formatRelativeDate } from "~/shared/util/helpers";
 import { IntercomConversation, IntercomTicket } from "~/types";
+import {
+	Icon,
+	iconChat,
+	iconChevronDown,
+	iconFilter,
+	iconTag,
+	Spacer,
+} from "../../rrflow/ui/index";
 import { Pagination } from "../Pagination";
 import { usePagination } from "../Pagination/hook";
 import classes from "./style.module.scss";

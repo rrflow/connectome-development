@@ -1,13 +1,4 @@
 import { Menu } from "@mantine/core";
-import {
-	Icon,
-	iconBug,
-	iconDelete,
-	iconEdit,
-	iconOrganization,
-	iconPause,
-	iconPlay,
-} from "@rrflow/ui";
 import { PropsWithChildren, useMemo } from "react";
 import { Link } from "wouter";
 import { hasOrganizationRoles, ORG_ROLES_ADMIN } from "~/cloud/helpers";
@@ -20,6 +11,15 @@ import { showErrorNotification, showInfo } from "~/shared/util/helpers";
 import { dispatchIntent } from "~/shared/util/intents";
 import { openResourcesLockedModal } from "~/shell/components/App/modals/resources-locked";
 import { CloudInstance, CloudOrganization } from "~/types";
+import {
+	Icon,
+	iconBug,
+	iconDelete,
+	iconEdit,
+	iconOrganization,
+	iconPause,
+	iconPlay,
+} from "../../rrflow/ui/index";
 
 export interface InstanceActionsProps {
 	instance: CloudInstance;

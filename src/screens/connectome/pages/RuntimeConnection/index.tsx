@@ -3,15 +3,29 @@ import {
 	Badge,
 	Box,
 	Button,
+	Drawer,
 	Group,
 	Paper,
-	Progress,
 	ScrollArea,
 	SimpleGrid,
 	Stack,
 	Text,
 	UnstyledButton,
 } from "@mantine/core";
+import { useIsFetching, useQuery } from "@tanstack/react-query";
+import { isTauri } from "@tauri-apps/api/core";
+import { type ReactNode, useMemo, useRef, useState } from "react";
+import { Redirect } from "wouter";
+import { PrimaryTitle } from "~/components/PrimaryTitle";
+import { openConnectionEditModal } from "~/modals/edit-connection";
+import {
+	ATTUNEMENT_ESTIMATE_MINUTES,
+	ATTUNEMENT_PHASES,
+	AUTOMATION_PRIMITIVES,
+} from "~/rrflow/attunement";
+import { describeRrdError, RrdRuntimeClient } from "~/rrflow/runtime";
+import { RrdSessionClient } from "~/rrflow/session";
+import { useConfigStore } from "~/shell/stores/config";
 import {
 	Icon,
 	iconBook,
@@ -20,26 +34,13 @@ import {
 	iconRefresh,
 	iconRelation,
 	iconTarget,
-} from "@rrflow/ui";
-import { useQuery } from "@tanstack/react-query";
-import { isTauri } from "@tauri-apps/api/core";
-import { type ReactNode, useMemo, useState } from "react";
-import { Redirect } from "wouter";
-import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
-import { PrimaryTitle } from "~/components/PrimaryTitle";
-import {
-	ATTUNEMENT_ESTIMATE_MINUTES,
-	ATTUNEMENT_PHASES,
-	AUTOMATION_PRIMITIVES,
-} from "~/rrflow/attunement";
-import { RrdRuntimeClient } from "~/rrflow/runtime";
-import { RrdSessionClient } from "~/rrflow/session";
-import { useConfigStore } from "~/shell/stores/config";
+} from "../../../../rrflow/ui/index";
 import { formatCount } from "./format";
-import { GlossaryDrawer, Term } from "./glossary";
+import { GlossaryDrawer } from "./glossary";
 import { databaseQuery } from "./queries";
-import { SESSION_QUERY_KEY, SessionPanel } from "./session";
+import { allowSessionReconnect, SESSION_QUERY_KEY, SessionPanel } from "./session";
 import classes from "./style.module.scss";
+import { KnowledgeTab } from "./tabs/knowledge";
 import { RecordsTab } from "./tabs/records";
 import { StorageTab } from "./tabs/storage";
 import { VectorsTab } from "./tabs/vectors";
@@ -59,47 +60,30 @@ function LensCard({ active, icon, title, purpose, reading, onOpen }: LensCardPro
 		<UnstyledButton
 			onClick={onOpen}
 			aria-pressed={active}
+			aria-label={title}
+			title={purpose}
+			className={classes.lens}
+			data-active={active || undefined}
 		>
-			<Paper
-				p="md"
-				h="100%"
-				className={classes.lens}
-				data-active={active || undefined}
+			<Group
+				gap="xs"
+				wrap="nowrap"
 			>
-				<Group
-					gap="sm"
-					wrap="nowrap"
-					align="flex-start"
+				<Icon path={icon} />
+				<Text
+					fw={650}
+					fz="sm"
 				>
-					<Box
-						c={active ? "violet" : "slate"}
-						mt={2}
-					>
-						<Icon path={icon} />
-					</Box>
-					<Box miw={0}>
-						<Text
-							fw={700}
-							c="bright"
-						>
-							{title}
-						</Text>
-						<Text
-							fz="sm"
-							c="slate"
-						>
-							{purpose}
-						</Text>
-						<Text
-							fz="sm"
-							fw={600}
-							mt={6}
-						>
-							{reading}
-						</Text>
-					</Box>
-				</Group>
-			</Paper>
+					{title}
+				</Text>
+			</Group>
+			<Text
+				fz="xs"
+				c="slate"
+				mt={3}
+			>
+				{reading}
+			</Text>
 		</UnstyledButton>
 	);
 }
@@ -112,11 +96,18 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 		? `${connection.authentication.protocol}://${connection.authentication.hostname}`
 		: "";
 	const client = useMemo(
-		() => new RrdRuntimeClient(endpoint, connection?.runtimeInstance),
-		[connection?.runtimeInstance, endpoint],
+		() =>
+			new RrdRuntimeClient(endpoint, connection?.runtimeInstance, connection?.runtimeSshHost),
+		[connection?.runtimeInstance, connection?.runtimeSshHost, endpoint],
 	);
 	const query = useQuery({
-		queryKey: ["rrd-runtime-handshake", id, endpoint, connection?.runtimeInstance],
+		queryKey: [
+			"rrd-runtime-handshake",
+			id,
+			endpoint,
+			connection?.runtimeInstance,
+			connection?.runtimeSshHost,
+		],
 		enabled: Boolean(connection && connection.target === "runtime"),
 		queryFn: () => client.handshake(),
 		retry: false,
@@ -133,10 +124,13 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 	const [colorBy, setColorBy] = useState("cluster");
 	const [showIdentity, setShowIdentity] = useState(false);
 	const [glossaryOpen, setGlossaryOpen] = useState(false);
+	const viewport = useRef<HTMLDivElement>(null);
 
-	const handshake = query.data;
-	const current = nativeSession.data ?? null;
+	const handshake = query.isError ? undefined : query.data;
+	const current = nativeSession.isError ? null : (nativeSession.data ?? null);
 	const ownsSession =
+		!query.isError &&
+		!nativeSession.isError &&
 		current !== null &&
 		handshake !== undefined &&
 		current.endpoint === endpoint &&
@@ -145,6 +139,7 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 	const foreign = ownsSession ? null : current;
 	const sessionKey = session ? `${session.instance}:${session.connected_at_unix_ms}` : "";
 
+	const buildingMaps = useIsFetching({ queryKey: ["rrd-vector-map", sessionKey] });
 	// The lens cards read the same cached snapshots the lenses render.
 	const database = useQuery({
 		...databaseQuery(sessionClient, sessionKey),
@@ -161,20 +156,19 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 	}
 
 	// With a live session the lenses lead; the handshake evidence stays one click away.
-	const identityVisible = !session || showIdentity;
 	const stages = [
 		{
-			label: "HTTP transport",
+			label: "Connection reachable",
 			detail: handshake ? `Responded at ${handshake.endpoint}` : "Awaiting liveness response",
 		},
 		{
-			label: "Engine readiness",
+			label: "Engine ready",
 			detail: handshake
 				? `Cursor ${handshake.readiness.runtime_cursor} on ${handshake.readiness.backend}`
 				: "Awaiting ready response",
 		},
 		{
-			label: "RRD protocol + identity",
+			label: "Correct RRFlow engine",
 			detail: handshake
 				? `${handshake.service.instance.id} · rrd v${handshake.service.protocol_version}`
 				: "Awaiting capability negotiation",
@@ -185,6 +179,10 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 	const namedVectors =
 		collections?.reduce((count, collection) => count + collection.vectors.length, 0) ?? 0;
 	const storageProfile = session?.service.storage_profile;
+	const openLens = (next: RuntimeLens) => {
+		setLens(next);
+		viewport.current?.scrollTo({ top: 0 });
+	};
 	const lensProps = {
 		client: sessionClient,
 		sessionKey,
@@ -192,392 +190,546 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 		onSelect: setSelected,
 		colorBy,
 		onColorBy: setColorBy,
-		onOpenLens: setLens,
+		onOpenLens: openLens,
 	};
+
+	const views = [
+		{
+			id: "records" as const,
+			title: "Records & relations",
+			icon: iconRelation,
+			purpose: "Browse what RRFlow knows and how records connect.",
+			reading: graph
+				? `${formatCount(graph.nodes.length)} records · ${formatCount(graph.edges.length)} relations`
+				: database.isError
+					? "Could not read records"
+					: "Reading records…",
+		},
+		{
+			id: "vectors" as const,
+			title: "Vectors",
+			icon: iconTarget,
+			purpose: buildingMaps
+				? "A similarity map is building in the background. Open Vectors to see progress."
+				: "Find similar records by comparing their vectors.",
+			reading: buildingMaps
+				? "Building similarity map…"
+				: collections
+					? `${formatCount(collections.length)} collection${collections.length === 1 ? "" : "s"} · ${formatCount(namedVectors)} vector${namedVectors === 1 ? "" : "s"}`
+					: catalogue.isError
+						? "Could not read vectors"
+						: "Reading vectors…",
+		},
+		{
+			id: "knowledge" as const,
+			title: "Knowledge trees",
+			icon: iconBook,
+			purpose: "Organize knowledge sources and configure paths to external services.",
+			reading: "Sources & connections",
+		},
+		{
+			id: "storage" as const,
+			title: "Storage",
+			icon: iconMemory,
+			purpose: "Check how RRFlow keeps your data on disk and in memory.",
+			reading: `${storageProfile === "rrflow_kv" ? "rrflowKV" : (storageProfile ?? "Storage")} · live counters`,
+		},
+	];
 
 	return (
 		<Box
 			flex={1}
 			pos="relative"
+			mih={0}
+			miw={0}
 		>
-			<ScrollArea
-				pos="absolute"
-				inset={0}
-				type="scroll"
-				scrollbars="y"
+			<Box
+				className={classes.workspace}
+				data-testid="runtime-workspace"
 			>
-				<Stack
-					px="xl"
-					py="lg"
-					mx="auto"
-					maw={1400}
-					pb={72}
-				>
-					<PageBreadcrumbs
-						items={[
-							{ label: "Connectome", href: "/overview" },
-							{ label: "RRD runtimes" },
-							{ label: connection.name },
-						]}
-					/>
-
+				<Box className={classes.workspaceHeader}>
 					<Group
-						align="flex-start"
 						justify="space-between"
+						gap="sm"
+						align="center"
 					>
-						<Box>
-							<Badge
-								variant="dot"
-								color={handshake ? "green" : query.isError ? "red" : "gray"}
-							>
-								{handshake
-									? "RRD connected"
-									: query.isError
-										? "Rejected"
-										: "Negotiating"}
-							</Badge>
-							<PrimaryTitle
-								fz={32}
-								mt="xs"
-							>
-								{connection.name}
-							</PrimaryTitle>
-							<Group
-								gap={6}
-								mt={4}
-							>
-								<Text
-									ff="monospace"
-									fz="sm"
+						<Box
+							miw={0}
+							flex={1}
+						>
+							<Group gap="sm">
+								<PrimaryTitle
+									fz={24}
+									className={classes.endpoint}
 								>
-									{handshake?.service.instance.id ?? "instance not confirmed"}
-								</Text>
-								<Text
-									fz="sm"
-									c="slate"
+									{connection.name}
+								</PrimaryTitle>
+								<Badge
+									variant="dot"
+									color={
+										session
+											? "green"
+											: query.isError
+												? "red"
+												: handshake
+													? "blue"
+													: "gray"
+									}
 								>
-									· {endpoint}
-								</Text>
+									{session
+										? "Signed in"
+										: query.isError
+											? "Connection failed"
+											: handshake
+												? "Engine available"
+												: "Connecting…"}
+								</Badge>
 							</Group>
+							<Text
+								fz="xs"
+								c="slate"
+								className={classes.endpoint}
+							>
+								{endpoint}
+							</Text>
 						</Box>
-						<Group gap="xs">
+						<Group
+							gap={4}
+							className={classes.connectionActions}
+						>
 							<Button
+								size="xs"
 								variant="subtle"
 								color="obsidian"
-								leftSection={<Icon path={iconBook} />}
-								onClick={() => setGlossaryOpen(true)}
+								onClick={() => openConnectionEditModal(connection)}
 							>
-								What do these words mean?
+								Edit connection
 							</Button>
-							{session && (
-								<Button
-									variant="subtle"
-									color="obsidian"
-									onClick={() => setShowIdentity((visible) => !visible)}
-								>
-									{showIdentity ? "Hide engine identity" : "Engine identity"}
-								</Button>
-							)}
 							<Button
+								size="xs"
+								variant="subtle"
+								color="obsidian"
+								onClick={() => setGlossaryOpen(true)}
+								leftSection={<Icon path={iconBook} />}
+							>
+								Help
+							</Button>
+							<Button
+								size="xs"
+								variant="subtle"
+								color="obsidian"
+								onClick={() => setShowIdentity(true)}
+								aria-haspopup="dialog"
+							>
+								Engine details
+							</Button>
+							<Button
+								size="xs"
 								variant="light"
 								leftSection={<Icon path={iconRefresh} />}
-								onClick={() => query.refetch()}
-								loading={query.isFetching}
+								loading={query.isFetching || nativeSession.isFetching}
+								onClick={() => {
+									allowSessionReconnect(connection.id);
+									return Promise.all([
+										query.refetch(),
+										isTauri() ? nativeSession.refetch() : Promise.resolve(),
+									]);
+								}}
 							>
 								Reconnect
 							</Button>
 						</Group>
 					</Group>
-
-					{query.isError && (
-						<Alert
-							color="red"
-							title="RRD handshake failed"
-							icon={<Icon path={iconErrorCircle} />}
-						>
-							{query.error instanceof Error
-								? query.error.message
-								: "Unknown RRD connection error"}
-						</Alert>
-					)}
-
-					{identityVisible && (
-						<SimpleGrid cols={{ base: 1, md: 3 }}>
-							{stages.map((stage, index) => (
-								<Paper
-									key={stage.label}
-									p="lg"
-									className={classes.stage}
-								>
-									<Group justify="space-between">
-										<Text fw={650}>{stage.label}</Text>
-										<Badge
-											variant="light"
-											color={
-												handshake ? "green" : query.isError ? "red" : "gray"
-											}
-										>
-											{handshake
-												? "verified"
-												: query.isError
-													? "stopped"
-													: `${index + 1}/3`}
-										</Badge>
-									</Group>
-									<Text
-										fz="sm"
-										mt="sm"
-									>
-										{stage.detail}
-									</Text>
-								</Paper>
-							))}
-						</SimpleGrid>
-					)}
-
-					{identityVisible && handshake && (
-						<Paper
-							p="lg"
-							className={classes.identity}
-						>
-							<Group justify="space-between">
-								<Box>
-									<Text
-										fz="xs"
-										tt="uppercase"
-										c="slate"
-									>
-										Verified engine identity
-									</Text>
-									<Text
-										fz="xl"
-										fw={700}
-									>
-										{handshake.service.implementation}{" "}
-										{handshake.service.implementation_version}
-									</Text>
-									<Text fz="sm">
-										{handshake.service.deployment.deployment_form} ·{" "}
-										{handshake.service.deployment.storage_profile} ·{" "}
-										{handshake.service.deployment.endpoint_presentation}
-									</Text>
-									{handshake.service.installed_estate && (
-										<Text
-											fz="sm"
-											ff="monospace"
-										>
-											{handshake.service.installed_estate.project_id} ·{" "}
-											{handshake.service.installed_estate.estate_id} ·
-											configuration r
-											{handshake.service.configuration.revision}
-										</Text>
-									)}
-								</Box>
-								<Badge variant="outline">
-									{handshake.service.capabilities.length} capabilities
-								</Badge>
-							</Group>
-							<Group
-								gap="xs"
-								mt="lg"
-							>
-								{handshake.service.capabilities.map((capability) => (
-									<Badge
-										key={capability.name}
-										variant="light"
-										color={capability.status === "available" ? "green" : "gray"}
-									>
-										{capability.name} · v{capability.contract_version}
-									</Badge>
-								))}
-							</Group>
-						</Paper>
-					)}
-
-					<SessionPanel
-						client={sessionClient}
-						connection={connection}
-						endpoint={endpoint}
-						handshake={handshake}
-						session={session}
-						foreign={foreign}
-						ready={nativeSession.isFetched}
-					/>
-
 					{session && (
-						<>
-							<Text>
-								One <Term id="estate">estate</Term>, one database: RRFlow keeps the
-								records, the relations between them, and their vectors together in
-								rrflowDB, and stores all of it with{" "}
-								<Term id="rrflowKV">rrflowKV</Term>. The three views below are three
-								ways into the same data.
-							</Text>
-							<SimpleGrid cols={{ base: 1, md: 3 }}>
+						<Box
+							component="nav"
+							aria-label="RRFlow views"
+							className={classes.lensNavigation}
+						>
+							{views.map((view) => (
 								<LensCard
-									active={lens === "records"}
-									icon={iconRelation}
-									title="Records & relations"
-									purpose="What the estate knows and how it links together."
-									reading={
-										graph
-											? `${formatCount(graph.nodes.length)} records · ${formatCount(graph.edges.length)} relations`
-											: "Reading…"
-									}
-									onOpen={() => setLens("records")}
+									key={view.id}
+									active={lens === view.id}
+									icon={view.icon}
+									title={view.title}
+									purpose={view.purpose}
+									reading={view.reading}
+									onOpen={() => openLens(view.id)}
 								/>
-								<LensCard
-									active={lens === "vectors"}
-									icon={iconTarget}
-									title="Vectors"
-									purpose="Find records with similar content by comparing their vectors."
-									reading={
-										collections
-											? `${formatCount(collections.length)} collection${collections.length === 1 ? "" : "s"} · ${formatCount(namedVectors)} named vector${namedVectors === 1 ? "" : "s"}`
-											: "Reading…"
-									}
-									onOpen={() => setLens("vectors")}
-								/>
-								<LensCard
-									active={lens === "storage"}
-									icon={iconMemory}
-									title="Storage engine"
-									purpose="How the data is kept safe on disk and quick in memory."
-									reading={`${storageProfile === "rrflow_kv" ? "rrflowKV" : storageProfile} · live counters`}
-									onOpen={() => setLens("storage")}
-								/>
-							</SimpleGrid>
-
-							<Box mt="md">
+							))}
+						</Box>
+					)}
+				</Box>
+				<ScrollArea
+					className={classes.workspaceScroll}
+					viewportRef={viewport}
+					type="auto"
+					scrollbars="y"
+					viewportProps={{ "aria-label": "RRFlow working area", tabIndex: 0 }}
+				>
+					<Stack
+						className={classes.workspaceContent}
+						gap="md"
+					>
+						{query.isError && (
+							<Alert
+								color="red"
+								title="Could not connect to RRFlow"
+								icon={<Icon path={iconErrorCircle} />}
+							>
+								<Text fz="sm">{describeRrdError(query.error)}</Text>
+								<Text
+									fz="sm"
+									mt="xs"
+								>
+									Check the address in Edit connection, then choose Reconnect to
+									try this saved connection again.
+								</Text>
+							</Alert>
+						)}
+						{nativeSession.isError && (
+							<Alert
+								color="red"
+								title="Could not check your sign-in"
+								icon={<Icon path={iconErrorCircle} />}
+							>
+								{describeRrdError(nativeSession.error)}
+							</Alert>
+						)}
+						<SessionPanel
+							key={id}
+							client={sessionClient}
+							connection={connection}
+							endpoint={endpoint}
+							handshake={handshake}
+							session={session}
+							foreign={foreign}
+							ready={nativeSession.isFetched && !nativeSession.isError}
+						/>
+						{session ? (
+							<Box>
 								{lens === "records" && (
 									<RecordsTab
+										key={sessionKey}
 										connection={session}
 										{...lensProps}
 									/>
 								)}
 								{lens === "vectors" && (
 									<VectorsTab
+										key={sessionKey}
 										connection={session}
 										{...lensProps}
 									/>
 								)}
+								<Box hidden={lens !== "knowledge"}>
+									<KnowledgeTab
+										key={sessionKey}
+										active={lens === "knowledge"}
+										connection={session}
+										client={sessionClient}
+										sessionKey={sessionKey}
+									/>
+								</Box>
 								{lens === "storage" && (
 									<StorageTab
+										key={sessionKey}
 										connection={session}
 										client={sessionClient}
 										sessionKey={sessionKey}
 									/>
 								)}
 							</Box>
-						</>
-					)}
-
-					{!session && (
-						<>
-							<Box mt="md">
-								<Group justify="space-between">
-									<Box>
-										<Text
-											fz="xl"
-											fw={650}
-											c="bright"
+						) : (
+							<Box>
+								<Text
+									fw={650}
+									mb="xs"
+								>
+									Connection checks
+								</Text>
+								<Text
+									fz="sm"
+									c="slate"
+									mb="sm"
+								>
+									RRFlow must answer all three checks before you can sign in and
+									open your data.
+								</Text>
+								<SimpleGrid cols={{ base: 1, sm: 3 }}>
+									{stages.map((stage) => (
+										<Paper
+											key={stage.label}
+											p="sm"
+											className={classes.stage}
 										>
-											Existing-project attunement
-										</Text>
-										<Text>
-											Designed as a resumable{" "}
-											{ATTUNEMENT_ESTIMATE_MINUTES.minimum}–
-											{ATTUNEMENT_ESTIMATE_MINUTES.maximum} minute engine job.
-										</Text>
-									</Box>
-									<Badge
-										variant="outline"
-										color="gray"
-									>
-										Contract pending
-									</Badge>
-								</Group>
-								<Progress
-									value={handshake ? 100 / ATTUNEMENT_PHASES.length : 0}
-									mt="md"
-									color="violet"
-								/>
+											<Group justify="space-between">
+												<Text
+													fz="sm"
+													fw={650}
+												>
+													{stage.label}
+												</Text>
+												<Badge
+													size="xs"
+													color={
+														handshake
+															? "green"
+															: query.isError
+																? "red"
+																: "gray"
+													}
+												>
+													{handshake
+														? "verified"
+														: query.isError
+															? "failed"
+															: "waiting"}
+												</Badge>
+											</Group>
+											<Text
+												fz="xs"
+												mt="xs"
+												className={classes.endpoint}
+											>
+												{stage.detail}
+											</Text>
+										</Paper>
+									))}
+								</SimpleGrid>
 							</Box>
-
-							<SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
-								{ATTUNEMENT_PHASES.map((phase) => (
+						)}
+					</Stack>
+				</ScrollArea>
+				<Drawer
+					opened={showIdentity}
+					onClose={() => setShowIdentity(false)}
+					title="Engine details"
+					position="right"
+					size="lg"
+				>
+					<Stack
+						gap="md"
+						className={classes.inspector}
+					>
+						<Text fz="sm">
+							These checks identify the RRFlow engine at this saved address. Signing
+							in separately verifies your permission to use its data.
+						</Text>
+						{
+							<SimpleGrid cols={{ base: 1, md: 3 }}>
+								{stages.map((stage, index) => (
 									<Paper
-										key={phase.id}
-										p="md"
-										className={classes.phase}
+										key={stage.label}
+										p="lg"
+										className={classes.stage}
 									>
 										<Group justify="space-between">
-											<Text fw={650}>{phase.label}</Text>
+											<Text fw={650}>{stage.label}</Text>
 											<Badge
 												variant="light"
 												color={
-													phase.state === "implemented" ? "green" : "gray"
+													handshake
+														? "green"
+														: query.isError
+															? "red"
+															: "gray"
 												}
 											>
-												{phase.state === "implemented"
-													? "available"
-													: "planned"}
+												{handshake
+													? "verified"
+													: query.isError
+														? "stopped"
+														: `${index + 1}/3`}
 											</Badge>
 										</Group>
 										<Text
 											fz="sm"
-											mt="xs"
+											mt="sm"
 										>
-											{phase.description}
+											{stage.detail}
 										</Text>
 									</Paper>
 								))}
 							</SimpleGrid>
+						}
 
+						{handshake && (
 							<Paper
 								p="lg"
-								className={classes.boundary}
+								className={classes.identity}
 							>
 								<Group justify="space-between">
 									<Box>
 										<Text
-											fz="lg"
-											fw={650}
+											fz="xs"
+											tt="uppercase"
+											c="slate"
 										>
-											Mesh discovery boundary
+											Verified engine identity
+										</Text>
+										<Text
+											fz="xl"
+											fw={700}
+										>
+											{handshake.service.implementation}{" "}
+											{handshake.service.implementation_version}
 										</Text>
 										<Text fz="sm">
-											Zuul Zero or shippin.ai mesh may resolve a devspace
-											endpoint; Connectome still performs this RRD HTTP
-											handshake and never treats network reachability as
-											engine identity.
+											{handshake.service.deployment.deployment_form} ·{" "}
+											{handshake.service.deployment.storage_profile} ·{" "}
+											{handshake.service.deployment.endpoint_presentation}
 										</Text>
+										{handshake.service.installed_estate && (
+											<Text
+												fz="sm"
+												ff="monospace"
+											>
+												{handshake.service.installed_estate.project_id} ·{" "}
+												{handshake.service.installed_estate.estate_id} ·
+												configuration r
+												{handshake.service.configuration.revision}
+											</Text>
+										)}
 									</Box>
-									<Badge variant="outline">Adapter pending</Badge>
+									<Badge variant="outline">
+										{handshake.service.capabilities.length} capabilities
+									</Badge>
 								</Group>
-								<SimpleGrid
-									cols={{ base: 1, sm: 2, lg: 4 }}
+								<Group
+									gap="xs"
 									mt="lg"
 								>
-									{AUTOMATION_PRIMITIVES.map((primitive) => (
-										<Box
-											key={primitive.name}
-											className={classes.primitive}
+									{handshake.service.capabilities.map((capability) => (
+										<Badge
+											key={capability.name}
+											variant="light"
+											color={
+												capability.status === "available" ? "green" : "gray"
+											}
 										>
-											<Text fw={650}>{primitive.name}</Text>
-											<Text fz="sm">{primitive.contract}</Text>
+											{capability.name} · v{capability.contract_version} ·{" "}
+											{capability.status}
+										</Badge>
+									))}
+								</Group>
+							</Paper>
+						)}
+
+						{handshake && (
+							<Text
+								fz="sm"
+								ff="monospace"
+								className={classes.endpoint}
+							>
+								{handshake.service.instance.id}
+							</Text>
+						)}
+						{!session && (
+							<>
+								<Box mt="md">
+									<Group justify="space-between">
+										<Box>
+											<Text
+												fz="xl"
+												fw={650}
+												c="bright"
+											>
+												Existing-project attunement
+											</Text>
+											<Text>
+												Planned as a resumable{" "}
+												{ATTUNEMENT_ESTIMATE_MINUTES.minimum}–
+												{ATTUNEMENT_ESTIMATE_MINUTES.maximum} minute engine
+												job.
+											</Text>
 										</Box>
+										<Badge
+											variant="outline"
+											color="gray"
+										>
+											Contract pending
+										</Badge>
+									</Group>
+								</Box>
+
+								<SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
+									{ATTUNEMENT_PHASES.map((phase) => (
+										<Paper
+											key={phase.id}
+											p="md"
+											className={classes.phase}
+										>
+											<Group justify="space-between">
+												<Text fw={650}>{phase.label}</Text>
+												<Badge
+													variant="light"
+													color={
+														phase.state === "implemented"
+															? "green"
+															: "gray"
+													}
+												>
+													{phase.state === "implemented"
+														? "available"
+														: "planned"}
+												</Badge>
+											</Group>
+											<Text
+												fz="sm"
+												mt="xs"
+											>
+												{phase.description}
+											</Text>
+										</Paper>
 									))}
 								</SimpleGrid>
-							</Paper>
-						</>
-					)}
-				</Stack>
-			</ScrollArea>
-			<GlossaryDrawer
-				opened={glossaryOpen}
-				onClose={() => setGlossaryOpen(false)}
-			/>
+
+								<Paper
+									p="lg"
+									className={classes.boundary}
+								>
+									<Group justify="space-between">
+										<Box>
+											<Text
+												fz="lg"
+												fw={650}
+											>
+												Mesh discovery boundary
+											</Text>
+											<Text fz="sm">
+												Zuul Zero or shippin.ai mesh may resolve a devspace
+												endpoint; Connectome still performs this RRD HTTP
+												handshake and never treats network reachability as
+												engine identity.
+											</Text>
+										</Box>
+										<Badge variant="outline">Adapter pending</Badge>
+									</Group>
+									<SimpleGrid
+										cols={{ base: 1, sm: 2, lg: 4 }}
+										mt="lg"
+									>
+										{AUTOMATION_PRIMITIVES.map((primitive) => (
+											<Box
+												key={primitive.name}
+												className={classes.primitive}
+											>
+												<Text fw={650}>{primitive.name}</Text>
+												<Text fz="sm">{primitive.contract}</Text>
+											</Box>
+										))}
+									</SimpleGrid>
+								</Paper>
+							</>
+						)}
+					</Stack>
+				</Drawer>
+				<GlossaryDrawer
+					opened={glossaryOpen}
+					onClose={() => setGlossaryOpen(false)}
+				/>
+			</Box>
 		</Box>
 	);
 }

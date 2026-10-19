@@ -1,6 +1,5 @@
 import type { EditorView } from "@codemirror/view";
 import { ActionIcon, Button, Center, Group, Paper, Stack, Text } from "@mantine/core";
-import { Icon, iconCursor, iconGraphql, iconOpen, iconWarning } from "@rrflow/ui";
 import clsx from "clsx";
 import { memo, useMemo, useState } from "react";
 import { Panel, PanelGroup } from "react-resizable-panels";
@@ -18,6 +17,13 @@ import { checkGraphqlSupport } from "~/screens/connectome/connection/connection"
 import { createBaseAuthentication } from "~/shared/util/defaults";
 import { useConfigStore } from "~/shell/stores/config";
 import { useDatabaseStore } from "~/stores/database";
+import {
+	Icon,
+	iconCursor,
+	iconGraphql,
+	iconOpen,
+	iconWarning,
+} from "../../../../../rrflow/ui/index";
 import { QueryPane } from "../QueryPane";
 import { ResultPane } from "../ResultPane";
 import { VariablesPane } from "../VariablesPane";

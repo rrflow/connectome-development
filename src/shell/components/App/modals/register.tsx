@@ -1,6 +1,4 @@
 import { Button, Group, Modal, PasswordInput, Table, Text, TextInput } from "@mantine/core";
-import { Icon, iconAccountPlus } from "@rrflow/ui";
-import { parser } from "@surrealdb/lezer";
 import { useState } from "react";
 import { useImmer } from "use-immer";
 import { adapter } from "~/adapter";
@@ -18,6 +16,8 @@ import { composeAuthentication } from "~/screens/connectome/connection/helpers";
 import { showErrorNotification, showInfo } from "~/shared/util/helpers";
 import { parseVariables } from "~/shared/util/language";
 import type { AccessField, SchemaAccess } from "~/types";
+import { rrflowqlPresentationParser as parser } from "../../../../rrflow/editor/parser";
+import { Icon, iconAccountPlus } from "../../../../rrflow/ui/index";
 
 export function RegisterUserModal() {
 	const schema = useDatabaseSchema();

@@ -10,12 +10,12 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useDebouncedValue, useInputState } from "@mantine/hooks";
-import { Icon, iconPlus, iconSearch } from "@rrflow/ui";
 import { Label } from "~/components/Label";
 import { useSidekickChatsQuery, useSidekickMessagesMutation } from "~/hooks/sidekick";
 import { useStable } from "~/hooks/stable";
 import { useSidekickStore } from "~/stores/sidekick";
 import { SidekickChat } from "~/types";
+import { Icon, iconPlus, iconSearch } from "../../../rrflow/ui/index";
 import { groupChatsByDate } from "../helpers";
 import { SidekickHistoryEntry } from "./entry";
 

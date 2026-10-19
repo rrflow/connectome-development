@@ -1,9 +1,9 @@
 import { Box, Button, Center, Loader, ScrollArea, Stack, Text } from "@mantine/core";
-import { Icon, iconArrowLeft } from "@rrflow/ui";
 import { navigate } from "wouter/use-browser-location";
 import { useSupportCollectionQuery } from "~/cloud/queries/context";
 import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
+import { Icon, iconArrowLeft } from "../../../../../rrflow/ui/index";
 import { ArticleCard } from "../ArticleCard";
 import classes from "../style.module.scss";
 

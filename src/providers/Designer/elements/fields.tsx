@@ -1,8 +1,8 @@
 import { Accordion, Checkbox, Flex, Text, TextInput } from "@mantine/core";
-import { iconBraces } from "@rrflow/ui";
 import { CodeInput, FieldKindInput, PermissionInput } from "~/components/Inputs";
 import { useStable } from "~/hooks/stable";
 import type { SchemaField } from "~/types";
+import { iconBraces } from "../../../rrflow/ui/index";
 import { type ElementProps, SectionTitle } from "../helpers";
 import { Lister } from "../lister";
 import classes from "../style.module.scss";

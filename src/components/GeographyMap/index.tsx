@@ -16,7 +16,7 @@ import type {
 	GeometryMultiPolygon,
 	GeometryPoint,
 	GeometryPolygon,
-} from "~/vendor/rrflow-client";
+} from "../../rrflow/client/values";
 
 // leaflet is a tragedy
 delete (window.L.Icon.Default.prototype as any)._getIconUrl;

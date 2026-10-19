@@ -1,9 +1,9 @@
 import { Button, Group, type GroupProps, Notification, Portal } from "@mantine/core";
-import { Icon, iconCheck, iconHelp } from "@rrflow/ui";
 import { clsx } from "clsx";
 import { capitalize } from "radash";
 import type { ReactNode } from "react";
 import type { SaveableHandle } from "~/hooks/save";
+import { Icon, iconCheck, iconHelp } from "../../rrflow/ui/index";
 import { Spacer } from "../Spacer";
 import classes from "./style.module.scss";
 

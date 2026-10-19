@@ -1,7 +1,7 @@
 import type { ElementProps, MantineColorScheme } from "@mantine/core";
 import { AboutMetadata } from "@tauri-apps/api/menu";
 import type { FeatureFlagMap } from "~/shared/util/feature-flags";
-import type { Duration, RecordId } from "~/vendor/rrflow-client";
+import type { Duration, RecordId } from "./rrflow/client/values";
 
 export type AccessType = "JWT" | "RECORD";
 export type BannerType = "info" | "warning" | "important";
@@ -18,6 +18,7 @@ export type DiagramLinks = "default" | "hidden" | "visible";
 export type DiagramMode = "default" | "fields" | "summary" | "simple";
 export type DiagramHoverFocus = "default" | "none" | "neighbours" | "chain" | "recursive";
 export type DriverType = "file" | "rrflowkv" | "memory" | "tikv";
+export type InstallMode = "fresh" | "existing";
 export type InvoiceStatus = "succeeded" | "pending" | "failed";
 export type LogLevel = "error" | "warn" | "info" | "debug" | "trace";
 export type MetricsDuration = "hour" | "half" | "day" | "week" | "month";
@@ -150,6 +151,10 @@ export interface Connection {
 	name: string;
 	target?: "runtime" | "diagnostics" | "control-plane";
 	runtimeInstance?: string;
+	/** An existing installed project; native RRFlow validates its locator before opening. */
+	runtimeProject?: string;
+	/** Explicit existing SSH config host for forwarding this saved loopback endpoint. */
+	runtimeSshHost?: string;
 	/** Path to the installed RRD operator credential file. A reference only: the native process reads it. */
 	runtimeCredential?: string;
 	icon: number;
@@ -237,14 +242,48 @@ export interface ConnectomeTemplateSettings {
 }
 
 export interface ConnectomeServingSettings {
-	driver: DriverType;
-	logLevel: LogLevel;
-	storage: string;
+	/** The project directory that holds, or will hold, the estate. Empty means the app's default estate. */
+	project: string;
+	/** Installation mode used when the project has no estate yet. */
+	mode: InstallMode;
+	/** An explicit `rrflow` executable; empty means the one on PATH. */
 	executable: string;
-	username: string;
-	password: string;
-	port: number;
 	historySize: number;
+}
+
+/** The estate the native process is serving, as the webview may see it: coordinates only. */
+export interface ServedEstate {
+	project: string;
+	endpoint: string;
+	instance: string;
+	credential_path: string;
+	installed: boolean;
+}
+
+/** Explicit desktop intent; opening an existing profile never authorizes installation. */
+export type EstateServeRequest =
+	| {
+			operation: "open_installed";
+			project: string;
+			endpoint: string;
+			expected_instance?: string;
+			executable?: string;
+	  }
+	| {
+			operation: "install_and_serve";
+			project: string;
+			mode: InstallMode;
+			executable?: string;
+	  };
+
+export type EstateStageName = "install" | "serve" | "ready";
+export type EstateStageState = "running" | "done" | "skipped" | "failed" | "stopped";
+
+/** One boundary of the serve sequence, reported by the native process as it is reached. */
+export interface EstateStage {
+	stage: EstateStageName;
+	state: EstateStageState;
+	detail: string;
 }
 
 export interface ConnectomeCloudSettings {

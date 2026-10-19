@@ -8,8 +8,8 @@ import { type Formatter, useResultFormatter } from "~/hooks/rrflowql";
 import { useStable } from "~/hooks/stable";
 import { useInspector } from "~/providers/Inspector";
 import { QueryResponse } from "~/types";
-import { Duration } from "~/vendor/rrflow-client";
-import { rrflowql } from "~/vendor/rrflowql-editor";
+import { Duration } from "../../../../../../rrflow/client/values";
+import { rrflowql } from "../../../../../../rrflow/editor";
 import classes from "../style.module.scss";
 import { attemptFormat, type PreviewProps } from ".";
 
@@ -128,7 +128,7 @@ const combinedPreview = memo(function CombinedPreview({ responses, query }: Prev
 	}, [responses, format, noneResultMode]);
 
 	const extensions = useMemo(() => {
-		return [rrflowql("combined-results"), rrflowqlRecordLinks(inspect)];
+		return [rrflowql(), rrflowqlRecordLinks(inspect)];
 	}, [inspect]);
 
 	const applyFolding = useCallback(

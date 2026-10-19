@@ -10,20 +10,6 @@ import {
 	ThemeIcon,
 	Title,
 } from "@mantine/core";
-import {
-	Icon,
-	iconBalance,
-	iconChevronRight,
-	iconClose,
-	iconCommand,
-	iconDownload,
-	iconFlag,
-	iconHelp,
-	iconPlay,
-	iconServer,
-	iconTransfer,
-	iconTune,
-} from "@rrflow/ui";
 import { useState } from "react";
 import { isDesktop } from "~/adapter";
 import { ActionButton } from "~/components/ActionButton";
@@ -37,6 +23,20 @@ import { useDesktopUpdater } from "~/hooks/updater";
 import { useFeatureFlags } from "~/shared/util/feature-flags";
 import { useInterfaceStore } from "~/shell/stores/interface";
 import type { Assign, FeatureCondition } from "~/types";
+import {
+	Icon,
+	iconBalance,
+	iconChevronRight,
+	iconClose,
+	iconCommand,
+	iconDownload,
+	iconFlag,
+	iconHelp,
+	iconPlay,
+	iconServer,
+	iconTransfer,
+	iconTune,
+} from "../../../../rrflow/ui/index";
 import classes from "./style.module.scss";
 import { AboutTab } from "./tabs/About";
 import { FeatureFlagsTab } from "./tabs/FeatureFlags";

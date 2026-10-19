@@ -13,7 +13,6 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconClose, iconPlus, iconWarning } from "@rrflow/ui";
 import { omit } from "radash";
 import { useLayoutEffect, useMemo, useState } from "react";
 import { ActionButton } from "~/components/ActionButton";
@@ -31,8 +30,9 @@ import { executeQuery, getRRFlowQL } from "~/screens/connectome/connection/conne
 import { RecordsChangedEvent } from "~/shared/util/global-events";
 import { extractEdgeRecords, getTableVariant } from "~/shared/util/schema";
 import type { QueryResponse } from "~/types";
-import { RecordId, StringRecordId, Table } from "~/vendor/rrflow-client";
-import { rrflowql } from "~/vendor/rrflowql-editor";
+import { RecordId, StringRecordId, Table } from "../../../../../rrflow/client/values";
+import { rrflowql } from "../../../../../rrflow/editor";
+import { Icon, iconClose, iconPlus, iconWarning } from "../../../../../rrflow/ui/index";
 
 type EdgeInfo = [string[], string[]];
 

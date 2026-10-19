@@ -1,6 +1,6 @@
 import { Box, type BoxProps, type MantineColor } from "@mantine/core";
-import { Icon, iconCircleFilled } from "@rrflow/ui";
 import clsx from "clsx";
+import { Icon, iconCircleFilled } from "../../rrflow/ui/index";
 import classes from "./style.module.scss";
 
 export interface LiveIndicatorProps extends BoxProps {

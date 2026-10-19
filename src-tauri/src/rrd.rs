@@ -1,4 +1,5 @@
 use reqwest::{redirect::Policy, Client};
+use serde::Deserialize;
 use serde_json::Value;
 use std::sync::Arc;
 use std::time::Duration;
@@ -7,12 +8,15 @@ use tauri::{ipc::Channel, State};
 mod client;
 mod cluster;
 mod error;
+pub mod estate;
+pub mod ssh_forward;
 mod transport;
 mod view;
 
 use client::{
-    NativeRrdClient, RrdConnectRequest, RrdQueryRequest, RrdVectorMapRequest,
-    RrdVectorPointsRequest, RrdVectorSearchRequest,
+    NativeRrdClient, RrdConnectRequest, RrdKnowledgeTreesRequest, RrdQueryRequest,
+    RrdReplaceKnowledgeTreesRequest, RrdVectorMapRequest, RrdVectorPointsRequest,
+    RrdVectorSearchRequest,
 };
 use error::RrdError;
 use transport::public_rrd_url;
@@ -30,6 +34,14 @@ const NOT_CONNECTED: &str = "Connectome is not connected to RRD";
 #[derive(Default)]
 pub struct RrdClientState(tokio::sync::Mutex<Option<Arc<NativeRrdClient>>>);
 
+/// The exact native connection the operator intends to close; no credentials.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RrdDisconnectRequest {
+    pub endpoint: String,
+    pub instance: String,
+}
+
 impl RrdClientState {
     async fn client(&self) -> Result<Arc<NativeRrdClient>, RrdError> {
         self.0
@@ -37,6 +49,26 @@ impl RrdClientState {
             .await
             .clone()
             .ok_or_else(|| NOT_CONNECTED.into())
+    }
+
+    async fn disconnect(&self, request: RrdDisconnectRequest) -> Result<(), RrdError> {
+        let client = {
+            let mut guard = self.0.lock().await;
+            let Some(client) = guard.as_ref() else {
+                return Ok(());
+            };
+            let current = client.connection();
+            if current.endpoint != request.endpoint || current.instance != request.instance {
+                return Err("the requested RRD disconnect target differs from the native session; no session was closed".into());
+            }
+            // Match and removal share the same lock. A different window cannot
+            // rotate the connection between the identity check and the take.
+            guard.take()
+        };
+        match client {
+            Some(client) => client.close().await,
+            None => Ok(()),
+        }
     }
 }
 
@@ -93,6 +125,22 @@ pub async fn rrd_query(
 }
 
 #[tauri::command]
+pub async fn rrd_knowledge_trees(
+    request: RrdKnowledgeTreesRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<rrd_contract::KnowledgeTreeCatalogue, RrdError> {
+    state.client().await?.knowledge_trees(request).await
+}
+
+#[tauri::command]
+pub async fn rrd_replace_knowledge_trees(
+    request: RrdReplaceKnowledgeTreesRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<rrd_contract::ReplaceKnowledgeTreesResult, RrdError> {
+    state.client().await?.replace_knowledge_trees(request).await
+}
+
+#[tauri::command]
 pub async fn rrd_vector_collections(
     state: State<'_, RrdClientState>,
 ) -> Result<VectorCollectionsView, RrdError> {
@@ -134,17 +182,36 @@ pub async fn rrd_vector_map(
 }
 
 #[tauri::command]
-pub async fn rrd_disconnect(state: State<'_, RrdClientState>) -> Result<(), RrdError> {
-    let client = state.0.lock().await.take();
-    match client {
-        Some(client) => client.close().await,
-        None => Ok(()),
-    }
+pub async fn rrd_disconnect(
+    request: RrdDisconnectRequest,
+    state: State<'_, RrdClientState>,
+    forward_state: State<'_, ssh_forward::SshForwardState>,
+) -> Result<(), RrdError> {
+    let endpoint = request.endpoint.clone();
+    state.disconnect(request).await?;
+    forward_state
+        .stop_endpoint(&endpoint)
+        .await
+        .map_err(RrdError::from)
 }
 
 #[tauri::command]
-pub async fn rrd_public_request(endpoint: String, path: String) -> Result<Value, String> {
+pub async fn rrd_public_request(
+    endpoint: String,
+    path: String,
+    ssh_host: Option<String>,
+    forward_state: State<'_, ssh_forward::SshForwardState>,
+) -> Result<Value, String> {
+    // Check the public route before any SSH effect. Only an explicitly
+    // configured host may create a forwarding process.
     let url = public_rrd_url(&endpoint, &path)?;
+    forward_state
+        .prepare(&endpoint, ssh_host.as_deref())
+        .await?;
+    public_http_get(url).await
+}
+
+async fn public_http_get(url: url::Url) -> Result<Value, String> {
     let client = Client::builder()
         .connect_timeout(Duration::from_secs(4))
         .timeout(Duration::from_secs(15))
@@ -220,9 +287,8 @@ mod tests {
             .expect("write RRD response");
         });
 
-        let response = tauri::async_runtime::block_on(rrd_public_request(
-            format!("http://{address}"),
-            "/v1/health/live".into(),
+        let response = tauri::async_runtime::block_on(public_http_get(
+            public_rrd_url(&format!("http://{address}"), "/v1/health/live").unwrap(),
         ))
         .expect("native RRD request succeeds");
         assert_eq!(response["protocol"], "rrd");

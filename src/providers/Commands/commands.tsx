@@ -1,3 +1,29 @@
+import { invoke } from "@tauri-apps/api/core";
+import { dash } from "radash";
+import { useMemo } from "react";
+import { adapter, isDesktop } from "~/adapter";
+import type { DesktopAdapter } from "~/adapter/desktop";
+import { DRIVERS, SANDBOX } from "~/constants";
+import { useAvailableViews, useConnectionList } from "~/hooks/connection";
+import { useConnectionAndView, useConnectionNavigator } from "~/hooks/routing";
+import { openConnectionDiagnosticsModal } from "~/modals/connection-diagnostics";
+import { showNodeStatus } from "~/modals/node-status";
+import {
+	closeConnection,
+	openConnection,
+	resetConnection,
+} from "~/screens/connectome/connection/connection";
+import { featureFlags } from "~/shared/util/feature-flags";
+import { optional } from "~/shared/util/helpers";
+import type { IntentPayload, IntentType } from "~/shared/util/intents";
+import {
+	FlagSetController,
+	type PreferenceController,
+	useComputedPreferences,
+} from "~/shared/util/preferences";
+import { syncConnectionSchema } from "~/shared/util/schema";
+import { useConfigStore } from "~/shell/stores/config";
+import { useDatabaseStore } from "~/stores/database";
 import {
 	iconAccountPlus,
 	iconAccountSecure,
@@ -44,33 +70,7 @@ import {
 	iconTune,
 	iconUpload,
 	iconWrench,
-} from "@rrflow/ui";
-import { invoke } from "@tauri-apps/api/core";
-import { dash } from "radash";
-import { useMemo } from "react";
-import { adapter, isDesktop } from "~/adapter";
-import type { DesktopAdapter } from "~/adapter/desktop";
-import { DRIVERS, SANDBOX } from "~/constants";
-import { useAvailableViews, useConnectionList } from "~/hooks/connection";
-import { useConnectionAndView, useConnectionNavigator } from "~/hooks/routing";
-import { openConnectionDiagnosticsModal } from "~/modals/connection-diagnostics";
-import { showNodeStatus } from "~/modals/node-status";
-import {
-	closeConnection,
-	openConnection,
-	resetConnection,
-} from "~/screens/connectome/connection/connection";
-import { featureFlags } from "~/shared/util/feature-flags";
-import { optional } from "~/shared/util/helpers";
-import type { IntentPayload, IntentType } from "~/shared/util/intents";
-import {
-	FlagSetController,
-	type PreferenceController,
-	useComputedPreferences,
-} from "~/shared/util/preferences";
-import { syncConnectionSchema } from "~/shared/util/schema";
-import { useConfigStore } from "~/shell/stores/config";
-import { useDatabaseStore } from "~/stores/database";
+} from "../../rrflow/ui/index";
 import type { CommandCategory } from "./types";
 
 /** Create a launch command */

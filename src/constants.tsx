@@ -1,4 +1,19 @@
 import type { MantineColor, MantineColorScheme } from "@mantine/core";
+import { satisfies } from "compare-versions";
+import flagIE from "flag-icons/flags/4x3/ie.svg";
+import flagIN from "flag-icons/flags/4x3/in.svg";
+import flagUS from "flag-icons/flags/4x3/us.svg";
+import {
+	CIcon,
+	DotNetIcon,
+	GoLangIcon,
+	JavaIcon,
+	JavaScriptIcon,
+	PhpIcon,
+	PythonIcon,
+	RRFlowIcon,
+	RustIcon,
+} from "~/shared/util/drivers";
 import {
 	iconAPI,
 	iconAuth,
@@ -33,22 +48,7 @@ import {
 	iconVariable,
 	iconWarning,
 	iconXml,
-} from "@rrflow/ui";
-import { satisfies } from "compare-versions";
-import flagIE from "flag-icons/flags/4x3/ie.svg";
-import flagIN from "flag-icons/flags/4x3/in.svg";
-import flagUS from "flag-icons/flags/4x3/us.svg";
-import {
-	CIcon,
-	DotNetIcon,
-	GoLangIcon,
-	JavaIcon,
-	JavaScriptIcon,
-	PhpIcon,
-	PythonIcon,
-	RRFlowIcon,
-	RustIcon,
-} from "~/shared/util/drivers";
+} from "./rrflow/ui/index";
 import type {
 	AuthMode,
 	DiagramAlgorithm,

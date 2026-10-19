@@ -13,15 +13,6 @@ import {
 } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 import { useInputState } from "@mantine/hooks";
-import {
-	Icon,
-	iconChat,
-	iconComment,
-	iconCursor,
-	iconHelp,
-	iconTag,
-	iconWarning,
-} from "@rrflow/ui";
 import { useEffect } from "react";
 import { navigate } from "wouter/use-browser-location";
 import { useConversationCreateMutation, useCreateTicketMutation } from "~/cloud/mutations/context";
@@ -35,6 +26,15 @@ import { SALES_ENQUIRY_TAG } from "~/constants";
 import { useBoolean } from "~/hooks/boolean";
 import { useIntent } from "~/hooks/routing";
 import { IntercomTicketTypeAttribute } from "~/types";
+import {
+	Icon,
+	iconChat,
+	iconComment,
+	iconCursor,
+	iconHelp,
+	iconTag,
+	iconWarning,
+} from "../../../../rrflow/ui/index";
 
 const CONVERSATION_TYPES = [
 	{

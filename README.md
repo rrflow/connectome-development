@@ -2,42 +2,50 @@
 
 Connectome is the native desktop control surface for RRFlow. It runs as a Tauri application on Windows, macOS, and Linux and connects to a separately deployed RRFlow runtime.
 
-This is the standalone
-[`EonsofStupid/rrflow-connectome`](https://github.com/EonsofStupid/rrflow-connectome)
-Git repository. It may be checked out beside the engine while the repositories
-are developed together, but it is not part of the database engine and it is
-not an embedded browser panel.
+This is [`rrflow/connectome-development`](https://github.com/rrflow/connectome-development),
+with the owner's authored UI from `agent/layman-lenses-wip`. The RRFlow development
+repository includes it as the optional `connectome/` submodule. Its source,
+history, tests, and release remain independently owned by this repository.
 
 ## Current alpha
 
 Connectome currently provides:
 
-- locally persisted RRFlow connection profiles;
+- locally persisted RRFlow connection profiles, editable in place;
+- managed SSH forwarding for an explicitly configured existing remote runtime;
 - a real RRD HTTP bootstrap over `/v1/health/live`, `/v1/health/ready`, and
   `/v1/capabilities`;
 - strict `rrd` protocol-version and instance-identity validation before a
   runtime is considered connected;
 - a native transport allowlist with bounded responses, redirects disabled,
   loopback-only plaintext HTTP, and HTTPS required off-loopback;
-- root, namespace, database, record-access, token, and anonymous authentication;
-- namespace and database selection;
-- a RRFlowQL query studio with table, graph, JSON, and live-result lenses;
-- record and table exploration;
-- visual data-model and relationship design;
-- authentication, parameter, function, GraphQL, and runtime-diagnostics tools;
-- a strict `vyrm-diagnostics` v1 client with custom prompt flights, persisted
-  past-run replay, reverse/forward transport, scrubbing, 0.5×–8× playback,
-  observable event lanes, and a runtime-owned capability/evidence ledger;
+- installation from a sealed RRFlow plan, kernel-selected loopback serving,
+  and an authenticated readiness check before opening the estate;
+- native operator-credential sessions; credential contents and session bearers
+  remain in Rust;
+- the owner's Records & relations, Vectors, and Storage engine lenses, with
+  persistent connection controls and a compact view switcher;
+- capability-gated knowledge trees with native vector bindings, external source
+  configuration, retained drafts and concurrent-edit recovery; saving a source
+  does not enable an external connector or synchronization;
+- bounded RRFlowQL queries through the pinned native RRD SDK;
+- authored CodeMirror presentation support, value formatting, icons, code
+  blocks, Markdown, theme, and offline pictograms;
+- the existing runtime-diagnostics tools and playback surfaces;
 - separate project-runtime and optional enterprise-control-plane profiles;
 - multi-window native desktop operation.
 
-Connectome uses RRFlow-native runtime and control-plane contracts. A new
-runtime profile opens the RRD bootstrap screen; it does not route through the
-inherited Surreal-compatible query client. The inherited query, graph, and
-schema surfaces remain available for migration, but are not evidence that the
-native RRD operations behind those surfaces are finished. The optional
-enterprise control-plane connection remains a separate fleet-management
-boundary. There is no runtime compatibility fallback.
+Connectome uses RRFlow-native runtime and control-plane contracts. There are
+no Surreal packages, npm aliases, package-name path aliases, vendor re-export
+wrappers, embedded WASM engines, or alternate database transports. Application
+consumers import the authored modules under `src/rrflow/` by relative path.
+
+The retained query/schema/administration forms are part of the existing UI.
+Password and record sign-up, GraphQL, SQL import/export, embedded execution,
+live-query delivery, and query bindings report explicit unavailable errors
+until their real RRD contracts are connected. Presentation formatting never
+claims to validate RRFlowQL semantics; the engine remains the parser authority.
+The optional enterprise control plane is a separate fleet-management boundary.
 
 The connection sequence is deliberately narrow:
 
@@ -90,6 +98,21 @@ protocol:
 - an invalid or mismatched handshake is rejected and is never routed into the
   runtime query client.
 
+## Reconnect an existing runtime
+
+Open the saved connection and choose **Edit connection**. Keep its original
+HTTP origin, expected instance and operator credential reference. For a runtime
+already running on another machine, set **SSH host** to that machine's existing
+SSH config alias (for example `devstation`). Connectome manages the loopback
+forward at the saved port, verifies the instance and opens the authenticated
+session. Use **Reconnect** to retry. Closing Connectome stops its forward;
+the remote engine continues serving.
+
+For a locally installed runtime, select its existing project directory. It
+must already contain the RRFlow locator; opening an existing profile never
+installs a new empty estate. Installation is an explicit separate operation
+using the project selected in Serving settings.
+
 ## Repository boundary
 
 ```text
@@ -124,20 +147,36 @@ Run the actual desktop shell:
 pnpm tauri:dev
 ```
 
+Build `rrflow` from `e5672ec1d953c736b2befa38b34a13623a23a5d6` and put it on
+the process PATH, or select that executable in **Settings → Serving**. Choose
+an empty project directory for a fresh installation, then click **Start serving**.
+The console reports `[install]`, `[serve] Listening at … as instance-…`, and
+`[ready] The estate answered an authenticated readiness check`. Connectome opens
+the native session and the Records & relations lens; **Engine details** shows
+the three verified handshake cards. Serving uses the installed estate's own
+credential file and never asks for a root password or storage driver.
+
 Verification:
 
 ```bash
 pnpm build
+pnpm test:rrflow
+pnpm check:dependencies
 cargo check --manifest-path src-tauri/Cargo.toml
 ```
 
-The production TypeScript/Vite build is green. The inherited whole-repository
-Biome assist baseline still reports import-order debt, so CI intentionally uses
-the build as its frontend gate until that mechanical cleanup is isolated.
+Run `pnpm check` for the full Biome, identity/dependency and TypeScript checks,
+and `pnpm test:smoke` after building for the production browser smoke suite.
+Browser smoke verifies presentation and public bootstrap fixtures; native
+session and installed-engine acceptance are verified separately.
 
 ## Packaging
 
 The Tauri bundle configuration emits NSIS installers for Windows, app/DMG bundles for macOS, and AppImage/DEB/RPM packages for Linux. The inherited release workflow already covers macOS x86-64 and ARM64 plus Windows and Linux x86-64; Linux ARM packaging still needs a dedicated runner or cross-compilation pipeline.
+
+A cloud version is planned around the same authored UI and public RRD boundary.
+Browser authentication, deployment, and hosted conformance are not implemented
+by this desktop qualification.
 
 ## Origin and license
 

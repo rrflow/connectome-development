@@ -1,7 +1,7 @@
 import { type BoxProps, Group } from "@mantine/core";
-import { Icon, iconHelp } from "@rrflow/ui";
 import clsx from "clsx";
 import type { HTMLAttributes, PropsWithChildren } from "react";
+import { Icon, iconHelp } from "../../rrflow/ui/index";
 import { Link } from "../Link";
 import classes from "./style.module.scss";
 

@@ -85,19 +85,8 @@ export default defineConfig(({ mode }) => {
 					experimentalMinChunkSize: 5000,
 					manualChunks: {
 						react: ["react", "react-dom"],
-						codemirror: [
-							"codemirror",
-							"@surrealdb/codemirror",
-							"@surrealdb/lezer",
-							"@replit/codemirror-indentation-markers",
-						],
+						codemirror: ["codemirror", "@replit/codemirror-indentation-markers"],
 						mantime: ["@mantine/core", "@mantine/hooks", "@mantine/notifications"],
-						rrflow: [
-							"@rrflow/client",
-							"@rrflow/wasm",
-							"@surrealdb/ql-wasm-v2",
-							"@surrealdb/ql-wasm-v3",
-						],
 					},
 				},
 			},
@@ -131,15 +120,9 @@ export default defineConfig(({ mode }) => {
 			"import.meta.env.GTM_ID": JSON.stringify(""),
 		},
 		optimizeDeps: {
-			exclude: ["@rrflow/wasm", "@surrealdb/ql-wasm-v2", "@surrealdb/ql-wasm-v3"],
 			esbuildOptions: {
 				target: "esnext",
 			},
 		},
-		assetsInclude: [
-			"**/@rrflow/wasm/dist/*.wasm",
-			"**/@surrealdb/ql-wasm-v2/dist/*.wasm",
-			"**/@surrealdb/ql-wasm-v3/dist/*.wasm",
-		],
 	};
 });

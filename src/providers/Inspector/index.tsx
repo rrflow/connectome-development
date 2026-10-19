@@ -6,7 +6,7 @@ import { useStable } from "~/hooks/stable";
 import { getRRFlowQL } from "~/screens/connectome/connection/connection";
 import { tagEvent } from "~/shared/util/analytics";
 import { RecordsChangedEvent } from "~/shared/util/global-events";
-import { RecordId } from "~/vendor/rrflow-client";
+import { RecordId } from "../../rrflow/client/values";
 import { InspectorDrawer } from "./drawer";
 
 type InspectFunction = (record: RecordId | string) => Promise<void>;

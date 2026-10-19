@@ -24,7 +24,7 @@ test("renders the Connectome overview from the production bundle", async ({ page
 	).toEqual([]);
 });
 
-test("creates an RRD HTTP runtime profile by default", async ({ page }) => {
+test("creates an RRD HTTP runtime profile by default", async ({ page }, testInfo) => {
 	const pageErrors: Error[] = [];
 	const requests: string[] = [];
 	page.on("pageerror", (error) => pageErrors.push(error));
@@ -90,8 +90,45 @@ test("creates an RRD HTTP runtime profile by default", async ({ page }) => {
 	await expect(connect).toBeEnabled();
 	await connect.click();
 
-	await expect(page.getByText("RRD connected", { exact: true })).toBeVisible();
-	await expect(page.getByText("rrd-smoke", { exact: true })).toBeVisible();
+	await expect(page.getByText("Engine available", { exact: true })).toBeVisible();
+	await expect(page.getByText("Signed in", { exact: true })).toHaveCount(0);
+	const workspace = page.getByTestId("runtime-workspace");
+	const workingArea = page.getByLabel("RRFlow working area", { exact: true });
+	for (const size of [
+		{ width: 1366, height: 768 },
+		{ width: 1024, height: 768 },
+		{ width: 390, height: 844 },
+		{ width: 1366, height: 360 },
+		{ width: 390, height: 600 },
+	]) {
+		await page.setViewportSize(size);
+		const reconnect = workspace.getByRole("button", { name: "Reconnect", exact: true });
+		await expect(reconnect).toBeInViewport();
+		await expect(
+			workspace.getByRole("button", { name: "Edit connection", exact: true }),
+		).toBeInViewport();
+		const before = await reconnect.boundingBox();
+		await workingArea.evaluate((element) => {
+			element.scrollTop = element.scrollHeight;
+		});
+		await expect(reconnect).toBeInViewport();
+		if (size.height <= 600)
+			expect(await workingArea.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+		expect((await reconnect.boundingBox())?.y).toBe(before?.y);
+		expect(
+			await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+		).toBe(true);
+		await testInfo.attach(`runtime-${size.width}x${size.height}`, {
+			body: await page.screenshot(),
+			contentType: "image/png",
+		});
+	}
+	await workspace.getByRole("button", { name: "Engine details", exact: true }).click();
+	await expect(
+		page
+			.getByRole("dialog", { name: "Engine details", exact: true })
+			.getByText("rrd-smoke · rrd v1", { exact: true }),
+	).toBeVisible();
 	expect(requests).toEqual(["/v1/health/live", "/v1/health/ready", "/v1/capabilities"]);
 	expect(
 		pageErrors,

@@ -1,7 +1,7 @@
-import { CodeBlock, CodeBlockProps } from "@rrflow/ui";
 import { useMemo } from "react";
 import { dedent } from "~/shared/util/dedent";
 import type { CodeLang, Snippets } from "~/types";
+import { CodeBlock, CodeBlockProps } from "../../rrflow/ui/index";
 
 export interface CodeSnippetProps extends Omit<CodeBlockProps, "value"> {
 	values: Snippets;

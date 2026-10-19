@@ -10,7 +10,6 @@ import {
 	Tooltip,
 } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconCreditCard } from "@rrflow/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDistance } from "date-fns";
 import { fetchAPI } from "~/cloud/api";
@@ -23,6 +22,7 @@ import { Section } from "~/components/Section";
 import { useStable } from "~/hooks/stable";
 import { showErrorNotification, showInfo } from "~/shared/util/helpers";
 import { CloudCoupon } from "~/types";
+import { Icon, iconCreditCard } from "../../../../../rrflow/ui/index";
 import classes from "../style.module.scss";
 import { OrganizationTabProps } from "../types";
 

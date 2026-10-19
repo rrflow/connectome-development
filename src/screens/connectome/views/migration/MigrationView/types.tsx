@@ -1,3 +1,5 @@
+import { ReactNode } from "react";
+import { MigrationDiagnosticResult, MigrationResourceType } from "~/types";
 import {
 	iconAPI,
 	iconAuth,
@@ -7,9 +9,7 @@ import {
 	iconIndex,
 	iconJSON,
 	iconTable,
-} from "@rrflow/ui";
-import { ReactNode } from "react";
-import { MigrationDiagnosticResult, MigrationResourceType } from "~/types";
+} from "../../../../../rrflow/ui/index";
 
 type ResourceTypeMeta = {
 	label: string;

@@ -1,9 +1,9 @@
 import { ActionIcon, Box, Group, Popover, SimpleGrid, TextInput, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { Icon } from "@rrflow/ui";
 import { Updater } from "use-immer";
 import { USER_ICONS } from "~/shared/util/user-icons";
 import { Connection } from "~/types";
+import { Icon } from "../../rrflow/ui/index";
 
 export interface ConnectionNameDetailsProps {
 	value: Connection;

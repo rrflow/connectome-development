@@ -9,7 +9,6 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { Icon, iconPlus, iconRelation, iconSearch, iconTable } from "@rrflow/ui";
 import { useLayoutEffect, useMemo, useState } from "react";
 import { Form } from "~/components/Form";
 import { CodeInput } from "~/components/Inputs";
@@ -24,7 +23,8 @@ import { dispatchIntent } from "~/shared/util/intents";
 import { syncConnectionSchema } from "~/shared/util/schema";
 import { useInterfaceStore } from "~/shell/stores/interface";
 import { type SchemaMode, TableVariant } from "~/types";
-import { escapeIdent } from "~/vendor/rrflow-client";
+import { escapeIdent } from "../../../../rrflow/client/values";
+import { Icon, iconPlus, iconRelation, iconSearch, iconTable } from "../../../../rrflow/ui/index";
 
 export function TableCreatorModal() {
 	const { openTableCreator, closeTableCreator } = useInterfaceStore.getState();

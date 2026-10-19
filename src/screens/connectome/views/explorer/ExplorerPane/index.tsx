@@ -12,18 +12,6 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useDebouncedValue, useInputState } from "@mantine/hooks";
-import {
-	Icon,
-	iconChevronDown,
-	iconChevronRight,
-	iconCopy,
-	iconDelete,
-	iconFilter,
-	iconPlus,
-	iconRefresh,
-	iconServer,
-	iconTable,
-} from "@rrflow/ui";
 import clsx from "clsx";
 import { useContextMenu } from "mantine-contextmenu";
 import { type MouseEvent, useEffect, useLayoutEffect, useState } from "react";
@@ -49,7 +37,19 @@ import { RecordsChangedEvent } from "~/shared/util/global-events";
 import { showInfo } from "~/shared/util/helpers";
 import { getTableVariant } from "~/shared/util/schema";
 import { useConfigStore } from "~/shell/stores/config";
-import { escapeIdent, RecordId, StringRecordId } from "~/vendor/rrflow-client";
+import { escapeIdent, RecordId, StringRecordId } from "../../../../../rrflow/client/values";
+import {
+	Icon,
+	iconChevronDown,
+	iconChevronRight,
+	iconCopy,
+	iconDelete,
+	iconFilter,
+	iconPlus,
+	iconRefresh,
+	iconServer,
+	iconTable,
+} from "../../../../../rrflow/ui/index";
 import { type SortMode, usePaginationQuery, useRecordQuery } from "./hooks";
 import classes from "./style.module.scss";
 

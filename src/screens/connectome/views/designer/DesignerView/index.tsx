@@ -1,5 +1,4 @@
 import { Box, Button, Group, Text } from "@mantine/core";
-import { Icon, iconDesigner, iconEye, iconOpen, iconPlus } from "@rrflow/ui";
 import { ReactFlowProvider } from "@xyflow/react";
 import { memo, useEffect } from "react";
 import { Panel, PanelGroup } from "react-resizable-panels";
@@ -18,6 +17,7 @@ import { dispatchIntent } from "~/shared/util/intents";
 import { syncConnectionSchema } from "~/shared/util/schema";
 import { useConfigStore } from "~/shell/stores/config";
 import { useInterfaceStore } from "~/shell/stores/interface";
+import { Icon, iconDesigner, iconEye, iconOpen, iconPlus } from "../../../../../rrflow/ui/index";
 import { TableGraphPane } from "../TableGraphPane";
 
 const TableGraphPaneLazy = memo(TableGraphPane);

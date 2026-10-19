@@ -10,7 +10,6 @@ import {
 	Text,
 	Title,
 } from "@mantine/core";
-import { Icon, iconDownload, iconReset, iconTransfer, pictoBadgeAccess } from "@rrflow/ui";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { LearnMore } from "~/components/LearnMore";
@@ -21,6 +20,13 @@ import { useStable } from "~/hooks/stable";
 import { getRRFlow } from "~/screens/connectome/connection/connection";
 import { dispatchIntent } from "~/shared/util/intents";
 import { MigrationDiagnosticResult, MigrationResourceType } from "~/types";
+import {
+	Icon,
+	iconDownload,
+	iconReset,
+	iconTransfer,
+	pictoBadgeAccess,
+} from "../../../../../rrflow/ui/index";
 import { ResourceDetailPanel } from "../ResourceDetailPanel";
 import { ResourceOverviewPanel } from "../ResourceOverviewPanel";
 import { DiagnosticResource, organizeDiagnostics, ResourceMap } from "./organizer";

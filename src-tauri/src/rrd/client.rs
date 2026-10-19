@@ -9,6 +9,9 @@
 //! until it completes, and the lease is renewed or replaced only while no
 //! request pins it, because a renewal rotates the bearer the engine accepts.
 
+mod knowledge;
+pub use knowledge::{RrdKnowledgeTreesRequest, RrdReplaceKnowledgeTreesRequest};
+
 use super::error::RrdError;
 use super::transport::{is_loopback_origin, rrd_origin};
 use super::view::{
@@ -75,6 +78,8 @@ pub struct RrdConnectRequest {
 #[serde(deny_unknown_fields)]
 pub struct RrdQueryRequest {
     pub query: String,
+    /// The instance the requesting lens is displaying. Rotation cannot retarget it.
+    pub expected_instance: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -569,6 +574,9 @@ impl NativeRrdClient {
     }
 
     pub async fn query(&self, request: RrdQueryRequest) -> Result<QueryView, RrdError> {
+        if request.expected_instance != self.instance.as_str() {
+            return Err("the query's expected RRD instance differs from the native session".into());
+        }
         if request.query.trim().is_empty()
             || request.query.len() > MAX_QUERY_BYTES
             || request.query.contains('\0')
@@ -1004,5 +1012,254 @@ mod tests {
         std::fs::write(&path, r#"{"principal_id":"Local","credential":"x"}"#).expect("rewrite");
         assert!(read_credential(path.to_str().expect("utf-8 path")).is_err());
         std::fs::remove_dir_all(directory).expect("remove credential directory");
+    }
+
+    /// Installed-process qualification, deliberately separate from unit tests.
+    /// The fixture script must supply the exact endpoint and credential path;
+    /// absent inputs fail instead of replacing the process with a mock.
+    #[test]
+    #[ignore = "run scripts/test-native-client.ps1 against the pinned RRFlow executable"]
+    fn installed_rrflow_session_query_and_denial() {
+        use rrd_contract::{
+            transaction_operation_sha256, BeginTransaction, CommitTransaction,
+            EnsureVectorCollection, KnowledgePath, KnowledgePathBinding, KnowledgeTree,
+            NamedVectorDefinition, TransactionMutation, VectorMemoryTier, VectorSearchMetric,
+            VectorValueKind,
+        };
+
+        let endpoint = std::env::var("RRFLOW_CONNECTOME_TEST_ENDPOINT")
+            .expect("the installed-process test requires its explicit endpoint");
+        let instance = std::env::var("RRFLOW_CONNECTOME_TEST_INSTANCE")
+            .expect("the installed-process test requires its exact instance");
+        let credential_path = std::env::var("RRFLOW_CONNECTOME_TEST_CREDENTIAL")
+            .expect("the installed-process test requires its native credential file path");
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .expect("test runtime")
+            .block_on(async {
+                let wrong_instance = NativeRrdClient::connect(RrdConnectRequest {
+                    endpoint: endpoint.clone(),
+                    instance: "connectome-wrong-instance".into(),
+                    credential_path: credential_path.clone(),
+                })
+                .await;
+                assert!(wrong_instance.is_err(), "wrong instance must fail closed");
+
+                let invalid_path = Path::new(&credential_path)
+                    .with_file_name("connectome-invalid-credential.json");
+                let invalid_credential = serde_json::json!({
+                    "principal_id": "local-operator",
+                    "credential": "deliberately-invalid-connectome-test"
+                });
+                std::fs::write(&invalid_path, invalid_credential.to_string())
+                    .expect("write a deliberately invalid credential in the test estate");
+                let denied = NativeRrdClient::connect(RrdConnectRequest {
+                    endpoint: endpoint.clone(),
+                    instance: instance.clone(),
+                    credential_path: invalid_path.to_string_lossy().into_owned(),
+                })
+                .await;
+                let denied = match denied {
+                    Err(error) => error,
+                    Ok(_) => panic!("the installed engine accepted an invalid credential"),
+                };
+                assert!(denied.message.contains("401"), "authentication must be denied by RRD");
+                std::fs::remove_file(invalid_path).expect("remove invalid fixture credential");
+
+                let client = NativeRrdClient::connect(RrdConnectRequest {
+                    endpoint,
+                    instance: instance.clone(),
+                    credential_path,
+                })
+                .await
+                .expect("authenticate against the installed RRFlow process");
+                let connection = client.connection();
+                assert_eq!(connection.instance, instance);
+                assert_eq!(connection.principal, "local-operator");
+                assert_eq!(connection.service.implementation, "rrflow");
+                assert!(connection.session.idle_timeout_ms > 0);
+
+                // Qualify the actual native knowledge bridge against this
+                // disposable installed binary; never substitute this for the
+                // original estate/profile recovery evidence.
+                let empty = client.knowledge_trees(RrdKnowledgeTreesRequest {
+                    expected_instance: instance.clone(),
+                }).await.expect("read the real installed knowledge catalogue");
+                assert_eq!(empty.revision, 0);
+                assert!(empty.trees.is_empty());
+                let lease = client.lease().await.expect("vector catalogue fixture lease");
+                client.client.ensure_vector_collection(
+                    &lease.session,
+                    EnsureVectorCollection {
+                        scope: client.scope(),
+                        collection_id: canonical("native-fixture-vectors", "collection").unwrap(),
+                        vectors: vec![NamedVectorDefinition {
+                            name: canonical("semantic", "vector name").unwrap(),
+                            field: canonical("embedding", "vector field").unwrap(),
+                            kind: VectorValueKind::Dense,
+                            dimensions: 3,
+                            metric: VectorSearchMetric::Cosine,
+                            embedding_model: None,
+                            memory_tier: VectorMemoryTier::Cached,
+                        }],
+                    },
+                    client.ids.next(true).unwrap(),
+                ).await.expect("create an actual collection for native path qualification");
+                drop(lease);
+                let trees = vec![KnowledgeTree {
+                    id: canonical("native-bridge-tree", "tree").unwrap(),
+                    name: "Native bridge verification".into(),
+                    paths: vec![
+                        KnowledgePath {
+                            id: canonical("root", "path").unwrap(),
+                            name: "Knowledge".into(), parent_id: None,
+                            binding: KnowledgePathBinding::Group,
+                        },
+                        KnowledgePath {
+                            id: canonical("native-vectors", "path").unwrap(),
+                            name: "Native vectors".into(),
+                            parent_id: Some(canonical("root", "path").unwrap()),
+                            binding: KnowledgePathBinding::Native {
+                                collection_id: canonical("native-fixture-vectors", "collection").unwrap(),
+                                vector_name: canonical("semantic", "vector").unwrap(),
+                            },
+                        },
+                    ],
+                }];
+                let saved = client.replace_knowledge_trees(RrdReplaceKnowledgeTreesRequest {
+                    expected_instance: instance.clone(), expected_revision: 0, trees: trees.clone(),
+                }).await.expect("save native knowledge paths through the real SDK bridge");
+                assert_eq!(saved.catalogue.revision, 1);
+                assert_eq!(saved.catalogue.project_id.as_str(), connection.service.installed_estate.as_ref().unwrap().project_id);
+                assert_eq!(saved.catalogue.scope, client.scope());
+                assert_eq!(client.knowledge_trees(RrdKnowledgeTreesRequest {
+                    expected_instance: instance.clone(),
+                }).await.unwrap(), saved.catalogue);
+                let stale = client.replace_knowledge_trees(RrdReplaceKnowledgeTreesRequest {
+                    expected_instance: instance.clone(), expected_revision: 0, trees,
+                }).await.expect_err("stale native knowledge writes must not overwrite");
+                assert!(stale.message.contains("revision"));
+                let wrong = client.knowledge_trees(RrdKnowledgeTreesRequest {
+                    expected_instance: "another-instance".into(),
+                }).await.expect_err("knowledge reads cannot follow a rotated native session");
+                assert!(wrong.message.contains("expected RRD instance"));
+
+                // Seed only this explicit test estate through the public typed
+                // transaction operation. No private store or fixture backdoor.
+                let at = now_unix_ms().expect("test clock");
+                let lease = client.lease().await.expect("authenticated lease");
+                let transaction = client
+                    .client
+                    .begin_transaction(
+                        &lease.session,
+                        BeginTransaction {
+                            scope: canonical("claims", "fixture scope").unwrap(),
+                            timeout_ms: 10_000,
+                        },
+                        client.ids.next(true).unwrap(),
+                    )
+                    .await
+                    .expect("begin the authorized test fixture transaction");
+                let mutations = vec![TransactionMutation::AssertClaim {
+                    subject: canonical("connectome-native-client", "fixture subject").unwrap(),
+                    predicate: canonical("status", "fixture predicate").unwrap(),
+                    object: "native-query-confirmed".into(),
+                    valid_from: at,
+                    tx_time: at,
+                    producer: canonical("local-operator", "fixture producer").unwrap(),
+                    confidence: Some(1.0),
+                }];
+                let mut commit_options = client.ids.next(true).unwrap();
+                commit_options.deadline_unix_ms = Some(at + 30_000);
+                let receipt = client
+                    .client
+                    .commit_transaction(
+                        &lease.session,
+                        &transaction.transaction_id,
+                        CommitTransaction {
+                            operation_sha256: transaction_operation_sha256(&mutations),
+                            mutations,
+                        },
+                        commit_options,
+                    )
+                    .await
+                    .expect("commit one fixture claim through RRD");
+                assert_eq!(receipt.mutation_count, 1);
+                drop(lease);
+
+                let query = format!(
+                    "FROM claim:status AT VALID {at} KNOWN HEAD WHERE subject = \"connectome-native-client\" PROJECT subject, object EXPLAIN CONTRACT"
+                );
+                let result = client
+                    .query(RrdQueryRequest {
+                        query: query.clone(),
+                        expected_instance: instance.clone(),
+                    })
+                    .await
+                    .expect("execute native RRFlowQL against the committed fixture");
+                assert_eq!(result.rows.len(), 1);
+                assert_eq!(result.returned_rows, 1);
+                assert!(!result.truncated);
+                assert_eq!(result.rows[0].identity, "claim:connectome-native-client:status");
+                assert_eq!(result.rows[0].values.get("object").map(String::as_str), Some("native-query-confirmed"));
+                assert!(result.known_at_cursor > 0);
+                assert!(result.keys_examined > 0);
+
+                let wrong_target = client
+                    .query(RrdQueryRequest {
+                        query: query.clone(),
+                        expected_instance: "another-instance".into(),
+                    })
+                    .await
+                    .expect_err("a stale lens must not execute against a replacement instance");
+                assert_eq!(wrong_target.message, "the query's expected RRD instance differs from the native session");
+
+                let rejected = client
+                    .query(RrdQueryRequest {
+                        query: "NOT RRFLOWQL".into(),
+                        expected_instance: instance.clone(),
+                    })
+                    .await
+                    .expect_err("the real engine must reject invalid query syntax");
+                assert!(!rejected.message.is_empty());
+                assert!(!rejected.retryable);
+
+                // The desktop stop path must not close a foreign connection
+                // if another window rotated it after the renderer's read.
+                let client = Arc::new(client);
+                let state = super::super::RrdClientState::default();
+                *state.0.lock().await = Some(Arc::clone(&client));
+                for (target_endpoint, target_instance) in [
+                    ("http://127.0.0.1:1".to_owned(), instance.clone()),
+                    (connection.endpoint.clone(), "another-instance".into()),
+                ] {
+                    let rejected = state.disconnect(super::super::RrdDisconnectRequest {
+                        endpoint: target_endpoint,
+                        instance: target_instance,
+                    }).await.expect_err("a foreign disconnect target must be rejected");
+                    assert!(rejected.message.contains("no session was closed"));
+                    assert!(Arc::ptr_eq(&state.client().await.unwrap(), &client));
+                }
+                let still_open = client.query(RrdQueryRequest {
+                    query: query.clone(),
+                    expected_instance: instance.clone(),
+                }).await.expect("the real session remains queryable after foreign disconnect attempts");
+                assert_eq!(still_open.rows.len(), 1);
+                state.disconnect(super::super::RrdDisconnectRequest {
+                    endpoint: connection.endpoint,
+                    instance: instance.clone(),
+                }).await.expect("close only the exact authenticated connection");
+                assert!(state.client().await.is_err(), "native state releases the closed session");
+                let closed = client
+                    .query(RrdQueryRequest {
+                        query,
+                        expected_instance: instance,
+                    })
+                    .await
+                    .expect_err("a closed session must not execute another query");
+                assert_eq!(closed.message, SESSION_CLOSED);
+                println!("installed RRFlow: authenticated session, native knowledge read/write and real collection binding, stale knowledge write denial, typed fixture commit, exact query row, syntax denial, invalid credential, instance mismatch, atomic foreign-disconnect refusal, and closed-session denial passed");
+            });
     }
 }

@@ -11,11 +11,11 @@ import {
 	ThemeIcon,
 	UnstyledButton,
 } from "@mantine/core";
-import { Icon, iconRefresh, iconReset, iconTransfer } from "@rrflow/ui";
 import { useMemo } from "react";
 import { Spacer } from "~/components/Spacer";
 import { useIsLight } from "~/hooks/theme";
 import { MigrationResourceType } from "~/types";
+import { Icon, iconRefresh, iconReset, iconTransfer } from "../../../../../rrflow/ui/index";
 import { DiagnosticResource, ResourceMap } from "../MigrationView/organizer";
 import { resourceTypeMeta } from "../MigrationView/types";
 import { UnresolvedBadge } from "../MigrationView/unresolved";

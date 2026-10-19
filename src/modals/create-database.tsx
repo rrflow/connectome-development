@@ -1,7 +1,6 @@
 import { Button, Group, Stack, Text, TextInput } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
 import { closeModal, openModal } from "@mantine/modals";
-import { Icon, iconPlus } from "@rrflow/ui";
 import { useMutation } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { Form } from "~/components/Form";
@@ -11,7 +10,8 @@ import { useNamespaceSchema } from "~/hooks/schema";
 import { useStable } from "~/hooks/stable";
 import { activateDatabase, executeQuery } from "~/screens/connectome/connection/connection";
 import { getConnection } from "~/shared/util/connection";
-import { escapeIdent } from "~/vendor/rrflow-client";
+import { escapeIdent } from "../rrflow/client/values";
+import { Icon, iconPlus } from "../rrflow/ui/index";
 
 export function openCreateDatabaseModal() {
 	openModal({

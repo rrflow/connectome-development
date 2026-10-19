@@ -1,6 +1,7 @@
 import { Anchor, Badge, Group, Paper, SimpleGrid, Stack, Switch, Text } from "@mantine/core";
-import { Icon, iconAuth, iconTarget, Spacer, useStable } from "@rrflow/ui";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
+import { useStable } from "../../../../../hooks/stable";
+import { Icon, iconAuth, iconTarget, Spacer } from "../../../../../rrflow/ui/index";
 import { DeploySectionProps } from "../types";
 
 export function NetworkAccessSection({ details, setDetails }: DeploySectionProps) {

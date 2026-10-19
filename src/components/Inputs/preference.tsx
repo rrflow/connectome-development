@@ -1,5 +1,4 @@
 import { type BoxProps, Checkbox, NumberInput, Select, SimpleGrid, TextInput } from "@mantine/core";
-import { Icon } from "@rrflow/ui";
 import { isNumber } from "radash";
 import {
 	CheckboxController,
@@ -10,6 +9,7 @@ import {
 	TextController,
 } from "~/shared/util/preferences";
 import { useConfigStore } from "~/shell/stores/config";
+import { Icon } from "../../rrflow/ui/index";
 import { Option } from "../Option";
 
 export interface PreferenceInputProps extends BoxProps {

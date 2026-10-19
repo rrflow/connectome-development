@@ -1,7 +1,7 @@
 import { ActionIcon, Box, Dialog, Group, Text, ThemeIcon } from "@mantine/core";
-import { Icon, iconClose, iconWarning } from "@rrflow/ui";
 import { useStable } from "~/hooks/stable";
 import { useCloudStore } from "~/stores/cloud";
+import { Icon, iconClose, iconWarning } from "../../../../rrflow/ui/index";
 import classes from "../style.module.scss";
 
 export function FailedConnectDialog() {

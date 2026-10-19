@@ -11,15 +11,6 @@ import {
 	Text,
 	TextInput,
 } from "@mantine/core";
-import {
-	Icon,
-	iconCheck,
-	iconChevronRight,
-	iconCloud,
-	iconReset,
-	iconStar,
-	iconTable,
-} from "@rrflow/ui";
 import { useEffect, useState } from "react";
 import { openCloudAuthentication } from "~/cloud/api/auth";
 import { INSTANCE_PLAN_SUGGESTIONS, isOrganisationBillable } from "~/cloud/helpers";
@@ -60,6 +51,15 @@ import { useCloudStore } from "~/stores/cloud";
 import { useDatabaseStore } from "~/stores/database";
 import { useDeployStore } from "~/stores/deploy";
 import { CloudDeployConfig } from "~/types";
+import {
+	Icon,
+	iconCheck,
+	iconChevronRight,
+	iconCloud,
+	iconReset,
+	iconStar,
+	iconTable,
+} from "../../rrflow/ui/index";
 import { ConnectionStatus } from "./components/ConnectionStatus";
 import { DatabaseList } from "./components/DatabaseList";
 import { NamespaceList } from "./components/NamespaceList";

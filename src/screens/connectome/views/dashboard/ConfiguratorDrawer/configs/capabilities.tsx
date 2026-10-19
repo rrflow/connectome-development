@@ -9,7 +9,6 @@ import {
 	ThemeIcon,
 	Tooltip,
 } from "@mantine/core";
-import { Icon, iconWarning } from "@rrflow/ui";
 import { compareVersions, satisfies } from "compare-versions";
 import equal from "fast-deep-equal";
 import { useMemo, useState } from "react";
@@ -22,6 +21,7 @@ import {
 	transformCapabilities,
 } from "~/shared/util/capabilities";
 import { CloudInstance, CloudInstanceCapabilities } from "~/types";
+import { Icon, iconWarning } from "../../../../../../rrflow/ui/index";
 import { BooleanCapability } from "../capabilities/boolean";
 import { FixedRuleSetCapability } from "../capabilities/fixed-rule-set";
 import { FreeRuleSetCapability } from "../capabilities/free-rule-set";

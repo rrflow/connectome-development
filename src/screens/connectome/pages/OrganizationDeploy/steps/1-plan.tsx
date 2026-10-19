@@ -1,5 +1,4 @@
 import { Box, Button, SimpleGrid, Skeleton, Stack, Text } from "@mantine/core";
-import { Icon, iconArrowUpRight } from "@rrflow/ui";
 import { useLayoutEffect } from "react";
 import { useSearchParams } from "wouter";
 import { isInstancePlan } from "~/cloud/helpers";
@@ -7,6 +6,7 @@ import { PricingConfigCloud, useCloudPricingQuery } from "~/cloud/queries/pricin
 import { useHasCloudFeature } from "~/hooks/cloud";
 import { useStable } from "~/hooks/stable";
 import { PricingCard } from "~/screens/connectome/components/PricingCard";
+import { Icon, iconArrowUpRight } from "../../../../../rrflow/ui/index";
 import classes from "../style.module.scss";
 import { StepProps } from "../types";
 

@@ -12,6 +12,17 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useDebouncedState } from "@mantine/hooks";
+import { useEffect } from "react";
+import { navigate } from "wouter/use-browser-location";
+import { adapter } from "~/adapter";
+import { openCloudAuthentication } from "~/cloud/api/auth";
+import { useConversationsQuery, useSupportCollectionsQuery } from "~/cloud/queries/context";
+import { ConversationTable } from "~/components/ConversationTable";
+import { PrimaryTitle } from "~/components/PrimaryTitle";
+import { Spacer } from "~/components/Spacer";
+import { useIsAuthenticated } from "~/hooks/cloud";
+import { useFeatureFlags } from "~/shared/util/feature-flags";
+import { dispatchIntent } from "~/shared/util/intents";
 import {
 	Icon,
 	iconPlus,
@@ -24,18 +35,7 @@ import {
 	pictoPlay,
 	pictoSidekick,
 	pictoUniversity,
-} from "@rrflow/ui";
-import { useEffect } from "react";
-import { navigate } from "wouter/use-browser-location";
-import { adapter } from "~/adapter";
-import { openCloudAuthentication } from "~/cloud/api/auth";
-import { useConversationsQuery, useSupportCollectionsQuery } from "~/cloud/queries/context";
-import { ConversationTable } from "~/components/ConversationTable";
-import { PrimaryTitle } from "~/components/PrimaryTitle";
-import { Spacer } from "~/components/Spacer";
-import { useIsAuthenticated } from "~/hooks/cloud";
-import { useFeatureFlags } from "~/shared/util/feature-flags";
-import { dispatchIntent } from "~/shared/util/intents";
+} from "../../../../rrflow/ui/index";
 import { StartCloud } from "../Overview/content/cloud";
 import { ResourceTile } from "./ResourceTile";
 import { SupportCollection } from "./SupportCollection";

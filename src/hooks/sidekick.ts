@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useContextConnection } from "~/providers/Context";
 import { showErrorNotification } from "~/shared/util/helpers";
 import { SidekickChat, SidekickChatMessage } from "~/types";
-import { RecordId, rrflowql } from "~/vendor/rrflow-client";
+import { RecordId, rrflowql } from "../rrflow/client/values";
 
 export function useSidekickChatsQuery(search?: string) {
 	const [rrflow, isAvailable] = useContextConnection();

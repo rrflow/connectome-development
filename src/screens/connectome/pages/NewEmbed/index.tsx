@@ -14,12 +14,12 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useDebouncedState, useDisclosure } from "@mantine/hooks";
-import { Icon, iconCheck, iconClose, iconTransfer, iconXml } from "@rrflow/ui";
 import { useMemo, useRef, useState } from "react";
 import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { useStable } from "~/hooks/stable";
 import { dedent } from "~/shared/util/dedent";
+import { Icon, iconCheck, iconClose, iconTransfer, iconXml } from "../../../../rrflow/ui/index";
 import { DEFAULT_STATE, Embedder, EmbedState } from "./embedder";
 import classes from "./style.module.scss";
 

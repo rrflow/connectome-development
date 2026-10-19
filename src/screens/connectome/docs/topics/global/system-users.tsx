@@ -10,11 +10,11 @@ export function DocsGlobalSystemUsers({ language, topic }: TopicProps) {
 			rrflow sql --endpoint ${topic.extra?.connectionUri} --namespace ${topic.extra?.namespace} --database ${topic.extra?.database}
 		`,
 			js: `
-		import { RRFlow } from '~/vendor/rrflow-client';
+		import { RRFlow } from "../../../../../rrflow/client/native";
 
 		const db = new RRFlow();
 
-		import { RRFlow } from '~/vendor/rrflow-client';
+		import { RRFlow } from "../../../../../rrflow/client/native";
 		const db = new RRFlow();
 		await db.connect('<the actual address of the connection>/rpc', {
 			namespace: '<the actual ns of the connection>',

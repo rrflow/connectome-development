@@ -1,6 +1,6 @@
 import { ActionIcon, type ActionIconProps, Affix } from "@mantine/core";
-import { Icon } from "@rrflow/ui";
 import clsx from "clsx";
+import { Icon } from "../../rrflow/ui/index";
 import classes from "./style.module.scss";
 
 export interface FloatingButtonProps extends ActionIconProps {

@@ -11,7 +11,6 @@ import {
 	Text,
 	UnstyledButton,
 } from "@mantine/core";
-import { Icon, iconArrowLeft, iconOpen } from "@rrflow/ui";
 import { navigate } from "wouter/use-browser-location";
 import { adapter } from "~/adapter";
 import { useSupportArticleQuery } from "~/cloud/queries/context";
@@ -19,6 +18,7 @@ import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";
 import { formatRelativeDate } from "~/shared/util/helpers";
+import { Icon, iconArrowLeft, iconOpen } from "../../../../../rrflow/ui/index";
 import classes from "../style.module.scss";
 
 export interface ArticlePageProps {

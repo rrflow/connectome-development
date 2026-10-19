@@ -11,7 +11,6 @@ import {
 } from "@mantine/core";
 
 import { useDisclosure } from "@mantine/hooks";
-import { Icon, iconWarning } from "@rrflow/ui";
 import { useLayoutEffect, useState } from "react";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";
@@ -22,6 +21,7 @@ import { openConnectionEditModal } from "~/modals/edit-connection";
 import { openConnection } from "~/screens/connectome/connection/connection";
 import { getConnection, getConnectionById } from "~/shared/util/connection";
 import { useInterfaceStore } from "~/shell/stores/interface";
+import { Icon, iconWarning } from "../../../../rrflow/ui/index";
 
 export function AccessSignupModal() {
 	const { closeAccessSignup } = useInterfaceStore.getState();

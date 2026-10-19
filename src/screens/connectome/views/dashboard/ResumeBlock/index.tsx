@@ -1,10 +1,10 @@
 import { ActionIcon, Button, Center, Paper, Stack, Text, Tooltip } from "@mantine/core";
-import { Icon, iconPause, iconPlay } from "@rrflow/ui";
 import { hasOrganizationRoles, ORG_ROLES_OWNER } from "~/cloud/helpers";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { useResumeInstance } from "~/hooks/cloud";
 import { openResourcesLockedModal } from "~/shell/components/App/modals/resources-locked";
 import { CloudInstance, CloudOrganization } from "~/types";
+import { Icon, iconPause, iconPlay } from "../../../../../rrflow/ui/index";
 
 export interface ResumelockProps {
 	instance: CloudInstance;

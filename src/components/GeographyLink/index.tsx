@@ -1,8 +1,8 @@
 import { Group, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { Icon, iconMarker } from "@rrflow/ui";
 import type { ComponentPropsWithoutRef, MouseEvent } from "react";
 import { useStable } from "~/hooks/stable";
+import { Icon, iconMarker } from "../../rrflow/ui/index";
 import { GeographyDrawer } from "../GeographyDrawer";
 import type { GeographyInput } from "../GeographyMap";
 

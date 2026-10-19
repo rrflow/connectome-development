@@ -1,9 +1,9 @@
 import { Alert, Box, Button, Group } from "@mantine/core";
-import { Icon, iconOpen, iconReset } from "@rrflow/ui";
 import { hasOrganizationRoles, ORG_ROLES_ADMIN } from "~/cloud/helpers";
 import { useStable } from "~/hooks/stable";
 import { openRRFlowChangelog } from "~/shared/util/cloud";
 import { CloudInstance, CloudOrganization } from "~/types";
+import { Icon, iconOpen, iconReset } from "../../../../../rrflow/ui/index";
 
 export interface UpdateBlockProps {
 	instance: CloudInstance;

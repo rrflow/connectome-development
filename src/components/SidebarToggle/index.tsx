@@ -1,6 +1,6 @@
-import { Icon, iconChevronRight } from "@rrflow/ui";
 import { useStable } from "~/hooks/stable";
 import { useInterfaceStore } from "~/shell/stores/interface";
+import { Icon, iconChevronRight } from "../../rrflow/ui/index";
 import { ActionButton } from "../ActionButton";
 
 export function SidebarToggle() {

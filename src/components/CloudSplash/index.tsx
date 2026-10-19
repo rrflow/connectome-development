@@ -1,11 +1,11 @@
 import { Button, Center, Group, Image, Stack, Text } from "@mantine/core";
-import { Icon, iconChevronRight, iconOpen, pictoSDBCloud } from "@rrflow/ui";
 import { adapter } from "~/adapter";
 import { openCloudAuthentication } from "~/cloud/api/auth";
 import { useThemeImage } from "~/hooks/theme";
 import logoDarkImg from "~/shared/assets/images/dark/cloud-logo.svg";
 import logoLightImg from "~/shared/assets/images/light/cloud-logo.svg";
 import { useCloudStore } from "~/stores/cloud";
+import { Icon, iconChevronRight, iconOpen, pictoRRFlowCloud } from "../../rrflow/ui/index";
 
 export function CloudSplash() {
 	const authState = useCloudStore((s) => s.authState);
@@ -22,7 +22,7 @@ export function CloudSplash() {
 		>
 			<Stack align="center">
 				<Image
-					src={pictoSDBCloud}
+					src={pictoRRFlowCloud}
 					alt=""
 					maw={125}
 				/>

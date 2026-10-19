@@ -1,5 +1,5 @@
 import { Radio, type RadioProps, Text } from "@mantine/core";
-import { Icon } from "@rrflow/ui";
+import { Icon } from "../../rrflow/ui/index";
 
 export interface FancyRadioProps extends RadioProps {
 	title: string;
