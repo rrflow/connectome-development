@@ -40,17 +40,9 @@ an explicitly configured model capability. Existing inherited editor/query
 surfaces are not the native RRD workbench and do not prove engine support;
 [sprint 009](.agents/sprints/009-connectome-ownership.md) owns their convergence.
 
-The enterprise contract is deliberately separate from the runtime query
-protocol:
-
-- `GET /rrflow/v1/control/handshake` must identify `rrflow-control` protocol
-  version `1`;
-- `GET /rrflow/v1/control/instances` returns the project runtimes managed by
-  that control plane;
-- requests use bearer authentication and the `RRFlow-Control-Protocol: 1`
-  header;
-- an invalid or mismatched handshake is rejected and is never routed into the
-  runtime query client.
+Inherited enterprise/control-plane screens are not an implemented RRFlow fleet
+service. Only the catalogue-derived public RRD operations define engine
+capabilities; the client cannot establish another control authority.
 
 ## Repository boundary
 
@@ -62,7 +54,7 @@ RRFlow engine repository             Connectome repository
                                       └── native desktop UI
 ```
 
-After the source-integration change lands, acquire the pinned UI from an RRFlow
+Acquire the pinned UI from an RRFlow
 checkout with:
 
 ```bash
@@ -72,12 +64,10 @@ git submodule status -- connectome
 
 A standalone clone of this public repository also supports UI development.
 Neither checkout layout makes UI source an engine build or readiness dependency.
-The [RRFlow client contract](https://github.com/rrflow/rrflow-development/blob/agent/connectome-product-integration/docs/reference/client/connectome.md)
+The [RRFlow client contract](https://github.com/rrflow/rrflow-development/blob/main/docs/reference/client/connectome.md)
 owns the integration requirements; a source pin alone does not qualify the UI.
-Connectome visualizes and controls project RRFlow instances. The optional
-enterprise profile connects to a distinct control plane for fleet and
-deployment management; it does not change or proxy the project-runtime
-contract.
+Connectome visualizes project RRFlow instances through their public operations.
+Fleet management requires a separately accepted engine contract and evidence.
 
 ## Development
 
@@ -102,9 +92,9 @@ pnpm build
 cargo check --manifest-path src-tauri/Cargo.toml
 ```
 
-The production TypeScript/Vite build is green. The inherited whole-repository
-Biome assist baseline still reports import-order debt, so CI intentionally uses
-the build as its frontend gate until that mechanical cleanup is isolated.
+Candidate CI runs `pnpm check`, the production build and browser smoke tests,
+plus native format/check/test/clippy on Windows, macOS and Linux and the pinned
+RRFlow real-process suite. See the workbench guide for local commands.
 
 ## The bundled engine
 

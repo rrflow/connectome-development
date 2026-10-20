@@ -11,3 +11,5 @@ Each sprint contains:
 - Definition of done
 
 - [Native turnkey workbench evidence](011-native-turnkey-workbench.md)
+
+- [Workbench README correction](011a-workbench-readme-correction.md)
