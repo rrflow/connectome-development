@@ -22,6 +22,7 @@ import { useInterfaceStore } from "~/shell/stores/interface";
 import { useDatabaseStore } from "~/stores/database";
 import type {
 	ConnectomeConfig,
+	EstatePreview,
 	EstateStage,
 	Platform,
 	QueryTab,
@@ -165,11 +166,18 @@ export class DesktopAdapter implements ConnectomeAdapter {
 		});
 	}
 
-	public async serveEstate() {
+	public async previewEstate() {
+		const { project, mode, executable } = useConfigStore.getState().settings.serving;
+		return invoke<EstatePreview>("rrd_estate_preview", {
+			request: { project, mode, executable },
+		});
+	}
+
+	public async serveEstate(acceptedPlanSha256?: string) {
 		const { project, mode, executable } = useConfigStore.getState().settings.serving;
 
 		return invoke<ServedEstate>("rrd_estate_serve", {
-			request: { project, mode, executable },
+			request: { project, mode, executable, accepted_plan_sha256: acceptedPlanSha256 },
 		});
 	}
 

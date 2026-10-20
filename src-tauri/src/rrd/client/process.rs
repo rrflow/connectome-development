@@ -9,7 +9,8 @@
 
 use super::*;
 use crate::rrd::estate::{
-    serve_estate, EstateServeRequest, EstateStage, InstallMode, ServeObserver, ServedEstate,
+    preview_estate, serve_estate, EstateServeRequest, EstateStage, InstallMode, ServeObserver,
+    ServedEstate,
 };
 use rrd_contract::{
     BeginTransaction, CommitTransaction, DataSchemaRegistry, EnsureVectorCollection,
@@ -67,6 +68,19 @@ fn rrflow() -> PathBuf {
     )
 }
 
+fn accepted(mut request: EstateServeRequest) -> EstateServeRequest {
+    let preview = preview_estate(&request).expect("native installation preview");
+    assert!(!PathBuf::from(&preview.project)
+        .join(".rrflow/config.toml")
+        .exists());
+    request.accepted_plan_sha256 = preview
+        .installation
+        .as_ref()
+        .and_then(|p| p["installation"]["plan_sha256"].as_str())
+        .map(str::to_owned);
+    request
+}
+
 impl Estate {
     /// Installs a fresh estate and serves it exactly as the desktop does.
     fn install_and_serve() -> Self {
@@ -76,11 +90,12 @@ impl Estate {
         ));
         let observer = Arc::new(RecordingObserver::default());
         let served = serve_estate(
-            EstateServeRequest {
+            accepted(EstateServeRequest {
                 project: project.to_string_lossy().into_owned(),
                 mode: InstallMode::Fresh,
                 executable: rrflow().to_string_lossy().into_owned(),
-            },
+                accepted_plan_sha256: None,
+            }),
             observer.clone(),
         )
         .unwrap_or_else(|error| {
@@ -290,6 +305,13 @@ async fn load_fixture(estate: &Estate) {
         }
     }
     batch.push(link("a1", "b1"));
+    batch.extend([
+        json!({"mutation":"put_record", "reference":{"kind":"settings","id":"local"}, "valid_from":1, "properties":{"enabled":{"type":"bool","value":true}}}),
+        json!({"mutation":"put_record", "reference":{"kind":"series_root","id":"latency"}, "valid_from":1,"properties":{}}),
+        json!({"mutation":"append_event", "kind":"observed", "subject":{"kind":"document","id":"a1"}, "properties":{"source":{"type":"string","value":"native-test"}}}),
+        json!({"mutation":"append_series_sample", "reference":{"kind":"sample","id":"latency-one"}, "series":{"kind":"series_root","id":"latency"}, "observed_at":1, "value":{"type":"unsigned","value":17}, "properties":{}}),
+        json!({"mutation":"put_geo", "reference":{"kind":"location","id":"office"}, "subject":{"kind":"document","id":"a1"}, "field":"office", "valid_from":1, "value":{"kind":"point","point":{"longitude":-73.0,"latitude":40.0}}, "properties":{}}),
+    ]);
     commit(&client, session, &ids, Value::Array(batch)).await;
 }
 
@@ -304,6 +326,18 @@ fn fixture_schema(current: Option<DataSchemaRegistry>) -> Value {
     registry["tables"]["document"] = json!({ "model": "relational", "mode": "strict" });
     registry["tables"]["links_to"] = json!({ "model": "graph_relation", "mode": "strict" });
     registry["tables"]["embedding"] = json!({ "model": "vector", "mode": "schemaless" });
+    for (name, model) in [
+        ("settings", "key_value"),
+        ("series_root", "relational"),
+        ("observed", "event"),
+        ("sample", "time_series"),
+        ("location", "geo"),
+        ("object", "object"),
+    ] {
+        registry["tables"][name] = json!({"model":model,"mode": if matches!(name, "observed" | "settings") { "strict" } else { "schemaless" }});
+    }
+    registry["records"]["settings"] = json!({"properties":{"enabled":{"value_type":"bool","required":true}},"allow_additional_properties":false,"unique_properties":[]});
+    registry["events"]["observed"] = json!({"subject_required":true,"subject_types":["document"],"properties":{},"allow_additional_properties":true});
     registry["records"]["document"] = json!({
         "properties": {
             "title": { "value_type": "string", "required": true },
@@ -384,6 +418,34 @@ fn the_lenses_read_a_live_estate() {
         assert_eq!(connection.instance, estate.instance);
         assert_eq!(connection.session.idle_timeout_ms, SESSION_IDLE_TIMEOUT_MS);
 
+        let schema = client.schema().await.expect("authenticated native schema");
+        assert!(schema.known_at_cursor > 0);
+        let registry = schema.schema.expect("installed schema");
+        assert_eq!(
+            registry
+                .tables
+                .get(&canonical("document", "table").unwrap())
+                .unwrap()
+                .model,
+            rrd_contract::DataLogicalModel::Relational
+        );
+        assert_eq!(
+            registry
+                .tables
+                .get(&canonical("links_to", "table").unwrap())
+                .unwrap()
+                .model,
+            rrd_contract::DataLogicalModel::GraphRelation
+        );
+        assert_eq!(
+            registry
+                .tables
+                .get(&canonical("embedding", "table").unwrap())
+                .unwrap()
+                .model,
+            rrd_contract::DataLogicalModel::Vector
+        );
+
         // Records & relations: the graph and its clusters. A fresh estate also
         // holds the engine's own records, so the fixture's kinds are counted.
         let database = client.database().await.expect("database view");
@@ -415,6 +477,21 @@ fn the_lenses_read_a_live_estate() {
             .expect("record query");
         assert_eq!(rows.returned_rows, DOCUMENTS as u64);
 
+        for source in [
+            "record:settings",
+            "event:observed",
+            "series:series_root",
+            "geo:location",
+        ] {
+            let result = client
+                .query(RrdQueryRequest {
+                    query: format!("FROM {source} AT VALID {at} KNOWN HEAD PROJECT * LIMIT 50"),
+                })
+                .await
+                .expect("native family query");
+            assert_eq!(result.returned_rows, 1, "{source}");
+            assert!(result.known_at_cursor > 0);
+        }
         // Storage engine: rrflowKV's live counters.
         let storage = client.storage().await.expect("storage view");
         assert_eq!(storage.physical.profile, "rrflow_kv");
@@ -536,11 +613,12 @@ fn the_bundled_engine_serves_as_the_verified_sidecar() {
     ));
     let observer = Arc::new(RecordingObserver::default());
     let served = serve_estate(
-        EstateServeRequest {
+        accepted(EstateServeRequest {
             project: project.to_string_lossy().into_owned(),
             mode: InstallMode::Fresh,
             executable: String::new(),
-        },
+            accepted_plan_sha256: None,
+        }),
         observer.clone(),
     );
     let _ = std::fs::remove_file(&beside_exe);
@@ -576,4 +654,38 @@ fn the_bundled_engine_serves_as_the_verified_sidecar() {
         "{}",
         lines.join("\n")
     );
+}
+
+#[test]
+#[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
+fn native_preview_requires_exact_acceptance_and_reopens() {
+    let project =
+        std::env::temp_dir().join(format!("connectome-preview-{}", Uuid::new_v4().simple()));
+    let observer = Arc::new(RecordingObserver::default());
+    let mut request = EstateServeRequest {
+        project: project.to_string_lossy().into_owned(),
+        mode: InstallMode::Fresh,
+        executable: rrflow().to_string_lossy().into_owned(),
+        accepted_plan_sha256: None,
+    };
+    assert!(serve_estate(request.clone(), observer.clone()).is_err());
+    assert!(!project.join(".rrflow/config.toml").exists());
+    request.accepted_plan_sha256 = Some("0".repeat(64));
+    assert!(serve_estate(request.clone(), observer.clone()).is_err());
+    assert!(!project.join(".rrflow/config.toml").exists());
+    request = accepted(request);
+    let mut served =
+        serve_estate(request.clone(), observer.clone()).expect("approved installation");
+    let instance = served.view.instance.clone();
+    served.server.kill().unwrap();
+    served.server.wait().unwrap();
+    let reopened_preview = preview_estate(&request).unwrap();
+    assert!(reopened_preview.installation.is_none());
+    request.accepted_plan_sha256 = None;
+    let mut reopened = serve_estate(request, observer).expect("open installed estate");
+    assert!(!reopened.view.installed);
+    assert_eq!(reopened.view.instance, instance);
+    reopened.server.kill().unwrap();
+    reopened.server.wait().unwrap();
+    std::fs::remove_dir_all(&project).unwrap();
 }

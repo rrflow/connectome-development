@@ -40,6 +40,7 @@ import { GlossaryDrawer, Term } from "./glossary";
 import { databaseQuery } from "./queries";
 import { SESSION_QUERY_KEY, SessionPanel } from "./session";
 import classes from "./style.module.scss";
+import { ModelsTab } from "./tabs/models";
 import { RecordsTab } from "./tabs/records";
 import { StorageTab } from "./tabs/storage";
 import { VectorsTab } from "./tabs/vectors";
@@ -128,7 +129,7 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 		queryFn: () => sessionClient.current(),
 		staleTime: Number.POSITIVE_INFINITY,
 	});
-	const [lens, setLens] = useState<RuntimeLens>("records");
+	const [lens, setLens] = useState<RuntimeLens>("models");
 	const [selected, setSelected] = useState<string | null>(null);
 	const [colorBy, setColorBy] = useState("cluster");
 	const [showIdentity, setShowIdentity] = useState(false);
@@ -408,10 +409,18 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 								One <Term id="estate">estate</Term>, one database: RRFlow keeps the
 								records, the relations between them, and their vectors together in
 								rrflowDB, and stores all of it with{" "}
-								<Term id="rrflowKV">rrflowKV</Term>. The three views below are three
+								<Term id="rrflowKV">rrflowKV</Term>. The views below are different
 								ways into the same data.
 							</Text>
-							<SimpleGrid cols={{ base: 1, md: 3 }}>
+							<SimpleGrid cols={{ base: 1, md: 2, lg: 4 }}>
+								<LensCard
+									active={lens === "models"}
+									icon={iconBook}
+									title="Data models"
+									purpose="Learn the database and browse its native tables."
+									reading="Live schema and guided queries"
+									onOpen={() => setLens("models")}
+								/>
 								<LensCard
 									active={lens === "records"}
 									icon={iconRelation}
@@ -447,6 +456,13 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 							</SimpleGrid>
 
 							<Box mt="md">
+								{lens === "models" && (
+									<ModelsTab
+										client={sessionClient}
+										sessionKey={sessionKey}
+										onOpenLens={setLens}
+									/>
+								)}
 								{lens === "records" && (
 									<RecordsTab
 										connection={session}

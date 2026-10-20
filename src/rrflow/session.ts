@@ -60,6 +60,20 @@ export interface RrdConnectionView {
 	service: RrdServiceView;
 }
 
+export interface RrdSchemaView {
+	known_at_cursor: number;
+	read_manifest_sha256: string;
+	schema_revision: number | null;
+	truncated: boolean;
+	tables: {
+		name: string;
+		model: string;
+		mode: string;
+		properties: Record<string, unknown>;
+		additional_properties: boolean;
+	}[];
+}
+
 export interface RrdTableView {
 	name: string;
 	model: string;
@@ -420,6 +434,11 @@ export class RrdSessionClient {
 	async capabilities(): Promise<RrdServiceView> {
 		this.requireNative();
 		return call<RrdServiceView>("rrd_capabilities");
+	}
+
+	async schema(): Promise<RrdSchemaView> {
+		this.requireNative();
+		return call<RrdSchemaView>("rrd_schema");
 	}
 
 	async database(): Promise<RrdDatabaseView> {

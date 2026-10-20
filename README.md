@@ -18,86 +18,31 @@ with the desktop application.
 
 ## Current alpha
 
-Connectome currently provides:
+The native workbench provides an explicit local start with an engine-owned
+installation preview, authenticated native sessions, a live schema/data-model
+browser, bounded rrflowQL row queries, record/relationship graphs, vector point
+and similarity views, and storage evidence. The desktop bundle includes the
+exact pinned `rrflow` executable, verified by its embedded SHA-256 before use.
+No Node.js, Rust toolchain, separate database service or cloud account is needed
+to run the built desktop bundle on a supported desktop with its WebView runtime.
 
-- locally persisted RRFlow connection profiles;
-- a real RRD HTTP bootstrap over `/v1/health/live`, `/v1/health/ready`, and
-  `/v1/capabilities`;
-- strict `rrd` protocol-version and instance-identity validation before a
-  runtime is considered connected;
-- a native transport allowlist with bounded responses, redirects disabled,
-  loopback-only plaintext HTTP, and HTTPS required off-loopback;
-- root, namespace, database, record-access, token, and anonymous authentication;
-- namespace and database selection;
-- a RRFlowQL query studio with table, graph, JSON, and live-result lenses;
-- record and table exploration;
-- visual data-model and relationship design;
-- authentication, parameter, function, GraphQL, and runtime-diagnostics tools;
-- a strict `vyrm-diagnostics` v1 client with custom prompt flights, persisted
-  past-run replay, reverse/forward transport, scrubbing, 0.5×–8× playback,
-  observable event lanes, and a runtime-owned capability/evidence ledger;
-- separate project-runtime and optional enterprise-control-plane profiles;
-- multi-window native desktop operation.
+Start with **Start local RRFlow** on the home screen, review **Install and open
+RRFlow**, then explore **Data models**, **Records & relations**, **Vectors** and
+**Storage engine**. The home screen's **How RRFlow fits together** guide explains
+rrflowDB, rrflowQL and rrflowKV. [Native workbench instructions](docs/native-workbench.md)
+cover building, startup, persistence, exact limits and validation.
 
-Connectome uses RRFlow-native runtime and control-plane contracts. A new
-runtime profile opens the RRD bootstrap screen; it does not route through the
-inherited query client. The inherited query, graph, and schema surfaces still
-run on the inherited client and are being replaced view by view with surfaces
-on the generated RRD SDK (`.agents/sprints/009-connectome-ownership.md`);
-their presence is not evidence that the native RRD operations behind them are
-finished. The optional enterprise control-plane connection remains a separate
-fleet-management boundary. There is no runtime compatibility fallback.
+Credentials and session tokens remain in the native process. The renderer
+receives bounded public results and catalogue metadata. Cloud synchronization,
+PostgreSQL wire/SQL compatibility, full attunement and automatic image/audio/video
+understanding are not implemented by this workbench. Media inference requires
+an explicitly configured model capability. Existing inherited editor/query
+surfaces are not the native RRD workbench and do not prove engine support;
+[sprint 009](.agents/sprints/009-connectome-ownership.md) owns their convergence.
 
-The connection sequence is deliberately narrow:
-
-```text
-direct origin or mesh-resolved origin
-                 |
-                 v
-  HTTP liveness -> readiness -> capabilities
-                 |
-                 v
-    validate rrd v1 + exact instance identity
-```
-
-A mesh integration may supply a private devspace endpoint and opaque
-attestation reference. It does not become a database transport, store
-credentials in the connection model, or make network reachability equivalent
-to RRD identity. No Zuul Zero or shippin.ai command has been invented in this
-repository; their adapter remains pending an exact installation and discovery
-contract.
-
-Existing-project attunement is scaffolded as a future resumable, checkpointed
-RRD engine job with a 30–45 minute planning estimate. Its phases are connect,
-inventory, parse, normalize, entity-link, lexical index, embed, vector index,
-graph, ground, and verify. Only `connect` is implemented here. The UI labels
-the remaining phases `planned` until RRD advertises and executes a canonical
-attunement contract.
-
-Triggers, routines, hook adapters, and skills follow the same authority rule:
-triggers are conditions over canonical engine events; routines are authorized
-RRD operations; hook adapters may submit typed host events; skills are
-versioned instruction/resource references. Connectome can configure and
-observe them, but it cannot execute a parallel lifecycle or write directly to
-RRFlowDB.
-
-Native RRD bootstrap requests cross the Tauri command boundary instead of
-relying on WebView CORS. That transport accepts only the three public bootstrap
-GETs, caps responses at 1 MiB, disables redirects, permits plaintext HTTP only
-for loopback, and requires HTTPS for a remote runtime. The older diagnostics
-transport remains isolated for existing diagnostic profiles.
-
-The enterprise contract is deliberately separate from the runtime query
-protocol:
-
-- `GET /rrflow/v1/control/handshake` must identify `rrflow-control` protocol
-  version `1`;
-- `GET /rrflow/v1/control/instances` returns the project runtimes managed by
-  that control plane;
-- requests use bearer authentication and the `RRFlow-Control-Protocol: 1`
-  header;
-- an invalid or mismatched handshake is rejected and is never routed into the
-  runtime query client.
+Inherited enterprise/control-plane screens are not an implemented RRFlow fleet
+service. Only the catalogue-derived public RRD operations define engine
+capabilities; the client cannot establish another control authority.
 
 ## Repository boundary
 
@@ -109,7 +54,7 @@ RRFlow engine repository             Connectome repository
                                       └── native desktop UI
 ```
 
-After the source-integration change lands, acquire the pinned UI from an RRFlow
+Acquire the pinned UI from an RRFlow
 checkout with:
 
 ```bash
@@ -119,12 +64,10 @@ git submodule status -- connectome
 
 A standalone clone of this public repository also supports UI development.
 Neither checkout layout makes UI source an engine build or readiness dependency.
-The [RRFlow client contract](https://github.com/rrflow/rrflow-development/blob/agent/connectome-product-integration/docs/reference/client/connectome.md)
+The [RRFlow client contract](https://github.com/rrflow/rrflow-development/blob/main/docs/reference/client/connectome.md)
 owns the integration requirements; a source pin alone does not qualify the UI.
-Connectome visualizes and controls project RRFlow instances. The optional
-enterprise profile connects to a distinct control plane for fleet and
-deployment management; it does not change or proxy the project-runtime
-contract.
+Connectome visualizes project RRFlow instances through their public operations.
+Fleet management requires a separately accepted engine contract and evidence.
 
 ## Development
 
@@ -149,9 +92,9 @@ pnpm build
 cargo check --manifest-path src-tauri/Cargo.toml
 ```
 
-The production TypeScript/Vite build is green. The inherited whole-repository
-Biome assist baseline still reports import-order debt, so CI intentionally uses
-the build as its frontend gate until that mechanical cleanup is isolated.
+Candidate CI runs `pnpm check`, the production build and browser smoke tests,
+plus native format/check/test/clippy on Windows, macOS and Linux and the pinned
+RRFlow real-process suite. See the workbench guide for local commands.
 
 ## The bundled engine
 

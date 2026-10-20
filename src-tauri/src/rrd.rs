@@ -77,6 +77,22 @@ pub async fn rrd_capabilities(state: State<'_, RrdClientState>) -> Result<Servic
 }
 
 #[tauri::command]
+pub async fn rrd_schema(state: State<'_, RrdClientState>) -> Result<Value, RrdError> {
+    let snapshot = state.client().await?.schema().await?;
+    // Only catalogue metadata; no credential or application records cross this command.
+    let tables = snapshot.schema.as_ref().map(|schema| schema.tables.iter().take(256).map(|(name, table)| {
+        serde_json::json!({"name": name, "model": table.model, "mode": table.mode,
+            "properties": {"table": table.properties, "record":schema.records.get(name), "relation":schema.relations.get(name), "event":schema.events.get(name)}, "additional_properties": table.allow_additional_properties})
+    }).collect::<Vec<_>>()).unwrap_or_default();
+    Ok(
+        serde_json::json!({"known_at_cursor":snapshot.known_at_cursor,
+        "read_manifest_sha256":snapshot.read_manifest_sha256,
+        "schema_revision":snapshot.schema.as_ref().map(|s| s.revision),
+        "tables":tables, "truncated":snapshot.schema.as_ref().is_some_and(|s| s.tables.len()>256)}),
+    )
+}
+
+#[tauri::command]
 pub async fn rrd_database(state: State<'_, RrdClientState>) -> Result<DatabaseView, RrdError> {
     state.client().await?.database().await
 }

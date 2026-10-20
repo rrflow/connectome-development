@@ -60,8 +60,6 @@
 			"timestampUrl": "",
 			"nsis": {
 				"installerIcon": "icons/icon.ico",
-				"headerImage": "res/nsis-header.bmp",
-				"sidebarImage": "res/nsis-sidebar.bmp",
 				"template": "res/installer.nsi"
 			}
 		}
