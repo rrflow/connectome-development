@@ -98,3 +98,21 @@ test("creates an RRD HTTP runtime profile by default", async ({ page }) => {
 		pageErrors.map((error) => error.stack ?? error.message).join("\n\n"),
 	).toEqual([]);
 });
+
+test("explains the local database and keeps native startup explicit", async ({
+	page,
+}, testInfo) => {
+	await page.goto("/", { waitUntil: "domcontentloaded" });
+	await expect(page.getByText("Your AI data, running locally", { exact: true })).toBeVisible();
+	await expect(
+		page.getByRole("button", { name: "Start local RRFlow", exact: true }),
+	).toBeDisabled();
+	await page.getByRole("button", { name: "How RRFlow fits together", exact: true }).click();
+	await expect(page.getByText("rrflowDB - Your data", { exact: true })).toBeVisible();
+	await expect(page.getByText("rrflowQL - Your questions", { exact: true })).toBeVisible();
+	await expect(page.getByText("rrflowKV - Your persistence", { exact: true })).toBeVisible();
+	await testInfo.attach("local-learning-guide", {
+		body: await page.screenshot({ fullPage: true }),
+		contentType: "image/png",
+	});
+});

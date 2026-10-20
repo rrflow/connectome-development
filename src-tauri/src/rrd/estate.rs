@@ -65,7 +65,7 @@ impl ServeObserver for AppHandle {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum InstallMode {
     Fresh,
@@ -95,6 +95,89 @@ pub struct EstateServeRequest {
     /// An explicit `rrflow` executable; empty means the one on `PATH`.
     #[serde(default)]
     pub executable: String,
+    /// Exact installation preview accepted by the operator; absent never installs.
+    #[serde(default)]
+    pub accepted_plan_sha256: Option<String>,
+}
+
+/// Non-secret engine-owned installation preview, before any installed state exists.
+#[derive(Debug, Serialize)]
+pub struct EstatePreview {
+    pub project: String,
+    pub mode: InstallMode,
+    pub engine: EngineBinding,
+    pub installation: Option<Value>,
+}
+
+#[tauri::command]
+pub async fn rrd_estate_preview(request: EstateServeRequest) -> Result<EstatePreview, RrdError> {
+    tauri::async_runtime::spawn_blocking(move || preview_estate(&request))
+        .await
+        .map_err(|error| RrdError::from(format!("preview task failed: {error}")))?
+}
+
+pub fn preview_estate(request: &EstateServeRequest) -> Result<EstatePreview, RrdError> {
+    let project = project_directory(request)?;
+    let engine = resolve_engine(&request.executable)?;
+    let installation = if project.join(LOCATOR).is_file() {
+        None
+    } else {
+        Some(
+            serde_json::from_slice(&installation_plan(&engine.path, &project, request.mode)?)
+                .map_err(|error| format!("the installation plan is not JSON: {error}"))?,
+        )
+    };
+    Ok(EstatePreview {
+        project: project.to_string_lossy().into_owned(),
+        mode: request.mode,
+        engine,
+        installation,
+    })
+}
+
+fn project_directory(request: &EstateServeRequest) -> Result<PathBuf, RrdError> {
+    let project = match request.project.trim() {
+        "" => get_data_directory().join(DEFAULT_ESTATE),
+        configured => PathBuf::from(configured),
+    };
+    if !project.is_absolute() {
+        return Err("the estate project must be an absolute directory path".into());
+    }
+    // Planning requires a directory; this does not create installed state.
+    std::fs::create_dir_all(&project)
+        .map_err(|error| format!("cannot create the project directory: {error}"))?;
+    Ok(project)
+}
+
+fn installation_plan(
+    executable: &Path,
+    project: &Path,
+    mode: InstallMode,
+) -> Result<Vec<u8>, RrdError> {
+    run(
+        executable,
+        &[
+            "install".as_ref(),
+            "plan".as_ref(),
+            "--project".as_ref(),
+            project.as_os_str(),
+            "--mode".as_ref(),
+            mode.argument().as_ref(),
+        ],
+    )
+}
+
+// Background engine helpers must not create a console window on Windows.
+fn engine_command(executable: &Path) -> Command {
+    let command = Command::new(executable);
+    #[cfg(windows)]
+    let command = {
+        let mut command = command;
+        use std::os::windows::process::CommandExt;
+        command.creation_flags(0x08000000);
+        command
+    };
+    command
 }
 
 /// The served estate as the webview may see it: coordinates only.
@@ -210,15 +293,7 @@ pub fn serve_estate(
     observer: Arc<dyn ServeObserver>,
 ) -> Result<ServedEstate, RrdError> {
     let app = observer.as_ref();
-    let project = match request.project.trim() {
-        "" => get_data_directory().join(DEFAULT_ESTATE),
-        configured => PathBuf::from(configured),
-    };
-    if !project.is_absolute() {
-        return Err("the estate project must be an absolute directory path".into());
-    }
-    std::fs::create_dir_all(&project)
-        .map_err(|error| format!("cannot create the estate project directory: {error}"))?;
+    let project = project_directory(&request)?;
 
     // The engine: the configured override, else the bundled sidecar verified
     // against the digest this build embeds, else PATH. Reported first, so the
@@ -245,7 +320,13 @@ pub fn serve_estate(
         );
         false
     } else {
-        install(app, &executable, &project, request.mode)?;
+        install(
+            app,
+            &executable,
+            &project,
+            request.mode,
+            request.accepted_plan_sha256.as_deref(),
+        )?;
         true
     };
 
@@ -257,7 +338,7 @@ pub fn serve_estate(
         "running",
         "Starting the engine on a loopback port the kernel chooses.",
     );
-    let mut server = Command::new(&executable)
+    let mut server = engine_command(&executable)
         .args(["--json", "serve", "--bind", "127.0.0.1:0", "--project"])
         .arg(&project)
         .stdin(Stdio::null())
@@ -299,7 +380,7 @@ pub fn serve_estate(
     let address = endpoint.trim_start_matches("http://").to_owned();
     let deadline = Instant::now() + READY_TIMEOUT;
     loop {
-        let ready = Command::new(&executable)
+        let ready = engine_command(&executable)
             .args(["ready", "--address", &address, "--project"])
             .arg(&project)
             .stdin(Stdio::null())
@@ -379,6 +460,7 @@ fn install(
     executable: &Path,
     project: &Path,
     mode: InstallMode,
+    accepted_digest: Option<&str>,
 ) -> Result<(), RrdError> {
     stage(
         app,
@@ -386,23 +468,18 @@ fn install(
         "running",
         "Sealing an installation plan for this project; nothing is written yet.",
     );
-    let preview = run(
-        executable,
-        &[
-            "install".as_ref(),
-            "plan".as_ref(),
-            "--project".as_ref(),
-            project.as_os_str(),
-            "--mode".as_ref(),
-            mode.argument().as_ref(),
-        ],
-    )?;
+    let accepted_digest = accepted_digest
+        .ok_or("Review and accept the installation preview before starting a new estate")?;
+    let preview = installation_plan(executable, project, mode)?;
     let plan: Value = serde_json::from_slice(&preview)
         .map_err(|error| format!("the installation plan is not JSON: {error}"))?;
     let digest = plan["installation"]["plan_sha256"]
         .as_str()
         .ok_or("the installation plan does not name its digest")?
         .to_owned();
+    if accepted_digest != digest {
+        return Err("The installation plan changed; review a fresh preview before applying".into());
+    }
     let instance = plan["installation"]["target"]["instance_id"]
         .as_str()
         .unwrap_or("the estate")
@@ -449,7 +526,7 @@ fn install(
 
 /// Runs one `rrflow` command to completion and returns its standard output.
 fn run(executable: &Path, arguments: &[&std::ffi::OsStr]) -> Result<Vec<u8>, RrdError> {
-    let output = Command::new(executable)
+    let output = engine_command(executable)
         .args(arguments)
         .stdin(Stdio::null())
         .output()

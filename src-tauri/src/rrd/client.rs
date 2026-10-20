@@ -562,6 +562,19 @@ impl NativeRrdClient {
         .await
     }
 
+    pub async fn schema(&self) -> Result<rrd_contract::DataSchemaSnapshot, RrdError> {
+        let request = rrd_contract::ReadDataSchema {
+            scope: self.scope(),
+            max_storage_keys: 4096,
+        };
+        self.send(false, |session, options| async move {
+            self.client
+                .read_data_schema(&session, request, options)
+                .await
+        })
+        .await
+    }
+
     pub async fn database(&self) -> Result<DatabaseView, RrdError> {
         Ok(view::database(&self.diagnostic_snapshot().await?))
     }

@@ -1,4 +1,4 @@
-import type { ConnectomeConfig, Platform, ServedEstate, UrlTarget } from "~/types";
+import type { ConnectomeConfig, EstatePreview, Platform, ServedEstate, UrlTarget } from "~/types";
 
 export interface FileFilter {
 	name: string;
@@ -83,7 +83,8 @@ export interface ConnectomeAdapter {
 	 * estate yet, start the engine on a loopback port, and wait until it is
 	 * ready. Resolves with the served estate's coordinates.
 	 */
-	serveEstate(): Promise<ServedEstate>;
+	previewEstate(): Promise<EstatePreview>;
+	serveEstate(acceptedPlanSha256?: string): Promise<ServedEstate>;
 
 	/**
 	 * The estate this process is already serving, if any

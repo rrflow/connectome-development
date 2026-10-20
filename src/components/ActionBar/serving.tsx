@@ -1,3 +1,4 @@
+import { Alert, Button, Group, Modal, ScrollArea, Stack, Text } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { adapter } from "~/adapter";
 import { Icon } from "~/components/Icon";
@@ -10,7 +11,7 @@ import { showErrorNotification, showInfo } from "~/shared/util/helpers";
 import { dispatchIntent } from "~/shared/util/intents";
 import { useConfigStore } from "~/shell/stores/config";
 import { useDatabaseStore } from "~/stores/database";
-import type { ServedEstate } from "~/types";
+import type { EstatePreview, ServedEstate } from "~/types";
 import { ActionButton } from "../ActionButton";
 
 /**
@@ -19,7 +20,7 @@ import { ActionButton } from "../ActionButton";
  * wrote, updated with the address the engine announced this time (the kernel
  * chooses the port), and created on first serve.
  */
-function resolveServedConnection(estate: ServedEstate) {
+export function resolveServedConnection(estate: ServedEstate) {
 	const { settings, connections, addConnection, updateConnection } = useConfigStore.getState();
 
 	const hostname = estate.endpoint.replace(/^https?:\/\//, "");
@@ -67,6 +68,7 @@ function resolveServedConnection(estate: ServedEstate) {
 
 export function DatabaseServing() {
 	const [hasStarted, setHasStarted] = useState(false);
+	const [preview, setPreview] = useState<EstatePreview | null>(null);
 
 	const cancelServe = useDatabaseStore((s) => s.cancelServe);
 	const prepareServe = useDatabaseStore((s) => s.prepareServe);
@@ -117,28 +119,39 @@ export function DatabaseServing() {
 		}
 
 		prepareServe();
-		setHasStarted(true);
-
 		try {
-			const estate = await adapter.serveEstate();
-
-			confirmServing(estate);
-
-			showInfo({
-				title: estate.installed ? "Estate installed and serving" : "Serving started",
-				subtitle: `${estate.instance} at ${estate.endpoint}`,
-			});
-
-			navigateConnection(resolveServedConnection(estate));
+			const next = await adapter.previewEstate();
+			if (next.installation) {
+				setPreview(next);
+				return;
+			}
+			await start();
 		} catch (error) {
 			stopServing();
-
 			showErrorNotification({
-				title: "Serving failed",
+				title: "Cannot prepare local RRFlow",
 				content: describeRrdError(error),
 			});
 		}
 	});
+
+	const start = async (digest?: string) => {
+		setPreview(null);
+		prepareServe();
+		setHasStarted(true);
+		try {
+			const estate = await adapter.serveEstate(digest);
+			confirmServing(estate);
+			navigateConnection(resolveServedConnection(estate));
+		} catch (error) {
+			stopServing();
+			showErrorNotification({ title: "Serving failed", content: describeRrdError(error) });
+		}
+	};
+	const cancelPreview = () => {
+		setPreview(null);
+		stopServing();
+	};
 
 	const openConsole = useStable(() => {
 		dispatchIntent("open-serving-console");
@@ -148,6 +161,59 @@ export function DatabaseServing() {
 
 	return (
 		<>
+			<Modal
+				opened={preview !== null}
+				onClose={cancelPreview}
+				title="Review your local RRFlow installation"
+				size="xl"
+			>
+				{preview && (
+					<Stack>
+						<Text>
+							RRFlow will create its database and local credentials in this project.
+							No cloud account or upload is enabled.
+						</Text>
+						<Text fw={600}>{preview.project}</Text>
+						<Text size="sm">
+							Mode: {preview.mode}; Engine: {preview.engine.source}
+						</Text>
+						<Alert
+							title="Exact installation preview"
+							color="blue"
+						>
+							Review the managed paths, configuration and permissions below. Cancel
+							leaves the project uninstalled; an empty project folder may have been
+							created.
+						</Alert>
+						<ScrollArea h={280}>
+							<pre
+								style={{
+									whiteSpace: "pre-wrap",
+									overflowWrap: "anywhere",
+									fontSize: 12,
+								}}
+							>
+								{JSON.stringify(preview.installation, null, 2)}
+							</pre>
+						</ScrollArea>
+						<Group justify="flex-end">
+							<Button
+								variant="subtle"
+								onClick={cancelPreview}
+							>
+								Cancel
+							</Button>
+							<Button
+								onClick={() =>
+									start(preview.installation?.installation.plan_sha256)
+								}
+							>
+								Install and open RRFlow
+							</Button>
+						</Group>
+					</Stack>
+				)}
+			</Modal>
 			<ActionButton
 				w={36}
 				h={36}
