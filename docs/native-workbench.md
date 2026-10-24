@@ -7,7 +7,8 @@ The UI never opens the database files itself.
 ## Use the built bundle
 
 Keep `connectome.exe` and `rrflow.exe` together on Windows. Open Connectome,
-choose **Start local RRFlow**, inspect the exact installation preview, and
+choose **Start local RRFlow**, choose a project folder in **Project engines**,
+inspect the exact installation preview, and
 choose **Install and open RRFlow**. Cancel leaves the estate uninstalled; an
 empty project folder may have been created for planning. A changed project,
 configuration or executable requires a fresh preview. An existing estate opens
@@ -18,12 +19,50 @@ The default project is in Connectome's application-data directory under
 `estates/local`. The serving settings can select an absolute project path,
 fresh/existing mode, and an explicit engine override. Startup binds a free
 loopback port and creates or updates its local connection profile. Close the
-app or use its stop control to stop the owned engine process; data remains.
+app to stop all owned engines, or use **Stop this engine** for one project; data remains.
 Restart and **Start local RRFlow** to reopen it.
 
 The binary digest is part of the installed estate identity. Retain the engine
 that installed your project; replacing it is not an automatic data upgrade.
 No account is required and this path does not enable synchronization.
+
+## Project workspaces and parallel engines
+
+**Manage project engines** lists only the local processes this desktop owns.
+Choose another absolute project directory and fresh/existing mode, preview its
+installation, then open it. Up to four projects can run together, with up to eight
+native authenticated connection profiles. These admission limits do not reserve
+aggregate CPU, memory or disk; each engine retains its configured resource limits.
+Startup errors release their slot and reap the child. The manager never stops an
+arbitrary external engine. A directory already running reuses its owned process.
+
+**Selected project** switches saved runtime profiles while preserving the current
+section. Every native operation selects that profile's session explicitly; reads
+and graph focus cannot fall back to a global active project. The engine's installed
+project/estate identity is available under **Advanced details**. Profile display
+names are not authority. Identical inventories can have the same deterministic
+instance ID in the pinned engine; endpoint, native credential path and owned
+project directory remain distinct. Stopping one never uses instance ID alone.
+
+The project URL keeps the section and knowledge lens across back/reload:
+`/runtime/<profile>/knowledge/records`, for example. **Overview** explains the
+native components; **Knowledge** opens their existing live lenses. **Advanced
+details** reveals protocol, installed identity, readiness cursor and capabilities.
+The glossary remains available. Actual errors remain visible in either view.
+
+**Knowledge paths**, **Activity**, **Learning**, and **Services** explain the
+requirements and explicitly show what this build cannot enable: remote source
+activation, session replay, training, provider billing and cloud synchronization.
+The page has no synthetic progress, generated run history or enabled learning
+switch. rrflow.ai, rroflow.ai and shippin.cloud are planned service roles, not
+verified login endpoints. Running projects in parallel does not authorize context
+sharing or training; each requires separate engine-backed consent.
+
+The [research and implementation sequence](project-workspace-research.md) connects
+this layout to published UX research and current vendor workflows, with evidence
+limits. Browser smoke proves navigation and rendering; the native process corpus
+proves two owned engines, project-scoped records/relations/vectors, session
+reconnect and targeted stop while the other engine continues to answer.
 
 ## Learn and navigate
 

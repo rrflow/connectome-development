@@ -13,7 +13,7 @@ import { formatMoment, formatSpan } from "./format";
 import { Hint, Term } from "./glossary";
 import classes from "./style.module.scss";
 
-export const SESSION_QUERY_KEY = ["rrd-session"] as const;
+export const sessionQueryKey = (profile: string) => ["rrd-session", profile] as const;
 
 /**
  * Connections whose session the operator closed in this app run. A saved
@@ -53,8 +53,7 @@ export function SessionPanel({
 			if (!handshake) {
 				throw new Error("Complete the public RRD handshake first");
 			}
-			// Connectome holds one native session; a session for another
-			// endpoint or instance is closed before this one opens.
+			// A changed endpoint closes only this profile's previous session.
 			if (foreign) {
 				await client.disconnect();
 			}
@@ -64,13 +63,13 @@ export function SessionPanel({
 				credential_path: credentialPath,
 			});
 		},
-		onSuccess: (view) => queryClient.setQueryData(SESSION_QUERY_KEY, view),
+		onSuccess: (view) => queryClient.setQueryData(sessionQueryKey(connection.id), view),
 	});
 
 	const disconnect = useMutation({
 		mutationFn: () => client.disconnect(),
 		onMutate: () => closedByOperator.add(connection.id),
-		onSettled: () => queryClient.setQueryData(SESSION_QUERY_KEY, null),
+		onSettled: () => queryClient.setQueryData(sessionQueryKey(connection.id), null),
 	});
 
 	// Reopen the session from the saved credential once per visit, unless the

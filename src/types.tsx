@@ -234,6 +234,12 @@ export interface EngineBinding {
 	revision?: string;
 }
 
+export interface EstateSelection {
+	project: string;
+	mode: InstallMode;
+	executable: string;
+}
+
 export interface EstatePreview {
 	project: string;
 	mode: InstallMode;

@@ -1,4 +1,5 @@
 import {
+	Alert,
 	Badge,
 	Box,
 	Button,
@@ -14,7 +15,7 @@ import {
 	TextInput,
 	ThemeIcon,
 } from "@mantine/core";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useImmer } from "use-immer";
 import { Link, useLocation } from "wouter";
 import { adapter } from "~/adapter";
@@ -56,6 +57,8 @@ function parseRuntimeEndpoint(value: string | null) {
 
 export function CreateConnectionPage() {
 	const { settings, addConnection } = useConfigStore.getState();
+	const [saving, setSaving] = useState(false);
+	const [saveError, setSaveError] = useState<string | null>(null);
 	const [, navigate] = useLocation();
 
 	const [connection, setConnection] = useImmer(() => {
@@ -95,15 +98,23 @@ export function CreateConnectionPage() {
 		return connection.name && isConnectionValid(connection.authentication);
 	}, [connection.authentication, connection.name, connection.target]);
 
-	const handleCreate = useStable(() => {
-		addConnection(connection);
-
-		if (connection.target === "control-plane") {
-			navigate(`/control/${connection.id}`);
-		} else if (connection.target === "diagnostics") {
-			navigate(`/diagnostics/${connection.id}`);
-		} else {
-			navigateConnection(connection.id);
+	const handleCreate = useStable(async () => {
+		if (saving) return;
+		setSaving(true);
+		setSaveError(null);
+		try {
+			if (!useConfigStore.getState().connections.some((c) => c.id === connection.id))
+				addConnection(connection);
+			// A successful Save must survive an immediate reload; the ordinary
+			// settings debounce is not a durable acknowledgement for this action.
+			await adapter.saveConfig(useConfigStore.getState());
+			if (connection.target === "control-plane") navigate(`/control/${connection.id}`);
+			else if (connection.target === "diagnostics") navigate(`/diagnostics/${connection.id}`);
+			else navigateConnection(connection.id);
+		} catch (error) {
+			setSaveError(error instanceof Error ? error.message : String(error));
+		} finally {
+			setSaving(false);
 		}
 	});
 
@@ -513,6 +524,14 @@ export function CreateConnectionPage() {
 						value={connection}
 						onChange={setConnection}
 					/>
+					{saveError && (
+						<Alert
+							color="red"
+							title="Could not save connection"
+						>
+							{saveError}
+						</Alert>
+					)}
 					<Group mt={24}>
 						<Link to={savepoint.path}>
 							<Button
@@ -526,6 +545,7 @@ export function CreateConnectionPage() {
 							type="submit"
 							variant="gradient"
 							disabled={!isValid}
+							loading={saving}
 							onClick={handleCreate}
 						>
 							{connection.target === "control-plane"

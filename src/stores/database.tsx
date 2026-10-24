@@ -104,7 +104,7 @@ export const useDatabaseStore = create<DatabaseStore>((set) => ({
 
 	pushStage: (stage) =>
 		set((state) => ({
-			estateStages: [...state.estateStages, stage],
+			estateStages: [...state.estateStages, stage].slice(-128),
 		})),
 
 	cancelServe: () =>

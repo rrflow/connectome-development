@@ -77,8 +77,8 @@ export class BrowserAdapter implements ConnectomeAdapter {
 		throw new Error("Not supported");
 	}
 
-	public async servedEstate(): Promise<ServedEstate | null> {
-		return null;
+	public async servedEstates(): Promise<ServedEstate[]> {
+		return [];
 	}
 
 	public async stopEstate(): Promise<boolean> {

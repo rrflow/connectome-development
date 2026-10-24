@@ -13,3 +13,5 @@ Each sprint contains:
 - [Native turnkey workbench evidence](011-native-turnkey-workbench.md)
 
 - [Workbench README correction](011a-workbench-readme-correction.md)
+
+- [Project workspaces and parallel engines](012-project-workspaces.md)
