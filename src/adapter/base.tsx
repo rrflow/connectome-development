@@ -1,4 +1,11 @@
-import type { ConnectomeConfig, EstatePreview, Platform, ServedEstate, UrlTarget } from "~/types";
+import type {
+	ConnectomeConfig,
+	EstatePreview,
+	EstateSelection,
+	Platform,
+	ServedEstate,
+	UrlTarget,
+} from "~/types";
 
 export interface FileFilter {
 	name: string;
@@ -83,18 +90,19 @@ export interface ConnectomeAdapter {
 	 * estate yet, start the engine on a loopback port, and wait until it is
 	 * ready. Resolves with the served estate's coordinates.
 	 */
-	previewEstate(): Promise<EstatePreview>;
-	serveEstate(acceptedPlanSha256?: string): Promise<ServedEstate>;
+	previewEstate(selection?: EstateSelection): Promise<EstatePreview>;
+	serveEstate(acceptedPlanSha256?: string, selection?: EstateSelection): Promise<ServedEstate>;
 
 	/**
-	 * The estate this process is already serving, if any
+	 * The living project engines owned by this desktop process
 	 */
-	servedEstate(): Promise<ServedEstate | null>;
+	servedEstates(): Promise<ServedEstate[]>;
 
 	/**
-	 * Stop the served estate. Resolves with whether one was running.
+	 * Stop only the owned engine at the exact returned canonical project path.
+	 * Resolves with whether that engine was running.
 	 */
-	stopEstate(): Promise<boolean>;
+	stopEstate(project: string): Promise<boolean>;
 
 	/**
 	 * Open the given URL in the default browser

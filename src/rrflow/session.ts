@@ -407,6 +407,11 @@ async function call<T>(command: string, args?: InvokeArgs): Promise<T> {
 
 /** One authenticated RRD session held by Connectome's native process. */
 export class RrdSessionClient {
+	constructor(readonly profile: string) {}
+	private call<T>(command: string, args?: InvokeArgs): Promise<T> {
+		return call<T>(command, { ...args, profile: this.profile });
+	}
+
 	private requireNative() {
 		if (!isTauri()) {
 			throw new Error("Authenticated RRD sessions require the native Connectome client");
@@ -415,7 +420,7 @@ export class RrdSessionClient {
 
 	async connect(request: RrdConnectRequest): Promise<RrdConnectionView> {
 		this.requireNative();
-		const connection = await call<RrdConnectionView>("rrd_connect", { request });
+		const connection = await this.call<RrdConnectionView>("rrd_connect", { request });
 		if (
 			connection.instance !== request.instance ||
 			connection.service.instance !== request.instance
@@ -428,47 +433,47 @@ export class RrdSessionClient {
 	/** The live native session, if one survives from an earlier visit. */
 	async current(): Promise<RrdConnectionView | null> {
 		this.requireNative();
-		return call<RrdConnectionView | null>("rrd_session");
+		return this.call<RrdConnectionView | null>("rrd_session");
 	}
 
 	async capabilities(): Promise<RrdServiceView> {
 		this.requireNative();
-		return call<RrdServiceView>("rrd_capabilities");
+		return this.call<RrdServiceView>("rrd_capabilities");
 	}
 
 	async schema(): Promise<RrdSchemaView> {
 		this.requireNative();
-		return call<RrdSchemaView>("rrd_schema");
+		return this.call<RrdSchemaView>("rrd_schema");
 	}
 
 	async database(): Promise<RrdDatabaseView> {
 		this.requireNative();
-		return call<RrdDatabaseView>("rrd_database");
+		return this.call<RrdDatabaseView>("rrd_database");
 	}
 
 	async storage(): Promise<RrdStorageView> {
 		this.requireNative();
-		return call<RrdStorageView>("rrd_storage");
+		return this.call<RrdStorageView>("rrd_storage");
 	}
 
 	async query(query: string): Promise<RrdQueryView> {
 		this.requireNative();
-		return call<RrdQueryView>("rrd_query", { request: { query } });
+		return this.call<RrdQueryView>("rrd_query", { request: { query } });
 	}
 
 	async vectorCollections(): Promise<RrdVectorCollectionsView> {
 		this.requireNative();
-		return call<RrdVectorCollectionsView>("rrd_vector_collections");
+		return this.call<RrdVectorCollectionsView>("rrd_vector_collections");
 	}
 
 	async vectorPoints(request: RrdVectorPointsRequest): Promise<RrdVectorPointsView> {
 		this.requireNative();
-		return call<RrdVectorPointsView>("rrd_vector_points", { request });
+		return this.call<RrdVectorPointsView>("rrd_vector_points", { request });
 	}
 
 	async vectorSearch(request: RrdVectorSearchRequest): Promise<RrdVectorSearchView> {
 		this.requireNative();
-		return call<RrdVectorSearchView>("rrd_vector_search", { request });
+		return this.call<RrdVectorSearchView>("rrd_vector_search", { request });
 	}
 
 	/**
@@ -482,11 +487,11 @@ export class RrdSessionClient {
 		this.requireNative();
 		const progress = new Channel<RrdVectorMapProgressView>();
 		if (onProgress) progress.onmessage = onProgress;
-		return call<RrdVectorMapView>("rrd_vector_map", { request, onProgress: progress });
+		return this.call<RrdVectorMapView>("rrd_vector_map", { request, onProgress: progress });
 	}
 
 	async disconnect(): Promise<void> {
 		this.requireNative();
-		await call<void>("rrd_disconnect");
+		await this.call<void>("rrd_disconnect");
 	}
 }

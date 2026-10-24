@@ -5,8 +5,8 @@ import {
 	Button,
 	Group,
 	Paper,
-	Progress,
 	ScrollArea,
+	Select,
 	SimpleGrid,
 	Stack,
 	Text,
@@ -15,7 +15,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { isTauri } from "@tauri-apps/api/core";
 import { type ReactNode, useMemo, useState } from "react";
-import { Redirect } from "wouter";
+import { Redirect, useLocation } from "wouter";
 import { Icon } from "~/components/Icon";
 import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
@@ -27,24 +27,21 @@ import {
 	iconRelation,
 	iconTarget,
 } from "~/icons";
-import {
-	ATTUNEMENT_ESTIMATE_MINUTES,
-	ATTUNEMENT_PHASES,
-	AUTOMATION_PRIMITIVES,
-} from "~/rrflow/attunement";
 import { describeRrdError, RrdRuntimeClient } from "~/rrflow/runtime";
 import { RrdSessionClient } from "~/rrflow/session";
+import { dispatchIntent } from "~/shared/util/intents";
 import { useConfigStore } from "~/shell/stores/config";
 import { formatCount } from "./format";
 import { GlossaryDrawer, Term } from "./glossary";
 import { databaseQuery } from "./queries";
-import { SESSION_QUERY_KEY, SessionPanel } from "./session";
+import { SessionPanel, sessionQueryKey } from "./session";
 import classes from "./style.module.scss";
 import { ModelsTab } from "./tabs/models";
 import { RecordsTab } from "./tabs/records";
 import { StorageTab } from "./tabs/storage";
 import { VectorsTab } from "./tabs/vectors";
 import type { RuntimeLens } from "./types";
+import { ProjectSection } from "./workspace";
 
 interface LensCardProps {
 	active: boolean;
@@ -105,31 +102,40 @@ function LensCard({ active, icon, title, purpose, reading, onOpen }: LensCardPro
 	);
 }
 
-export function RuntimeConnectionPage({ id }: { id: string }) {
+export function RuntimeConnectionPage({
+	id,
+	section = "overview",
+	detail,
+}: {
+	id: string;
+	section?: string;
+	detail?: string;
+}) {
+	const [, navigate] = useLocation();
+	const connections = useConfigStore((state) => state.connections);
+	const openSection = (next: string) => navigate(`/runtime/${id}/${next}`);
+	const lens: RuntimeLens =
+		detail === "records" || detail === "vectors" || detail === "storage" ? detail : "models";
+	const setLens = (next: RuntimeLens) => openSection(`knowledge/${next}`);
 	const connection = useConfigStore((state) =>
 		state.connections.find((candidate) => candidate.id === id),
 	);
 	const endpoint = connection
 		? `${connection.authentication.protocol}://${connection.authentication.hostname}`
 		: "";
-	const client = useMemo(
-		() => new RrdRuntimeClient(endpoint, connection?.runtimeInstance),
-		[connection?.runtimeInstance, endpoint],
-	);
 	const query = useQuery({
 		queryKey: ["rrd-runtime-handshake", id, endpoint, connection?.runtimeInstance],
 		enabled: Boolean(connection && connection.target === "runtime"),
-		queryFn: () => client.handshake(),
+		queryFn: () => new RrdRuntimeClient(endpoint, connection?.runtimeInstance).handshake(),
 		retry: false,
 	});
-	const sessionClient = useMemo(() => new RrdSessionClient(), []);
+	const sessionClient = useMemo(() => new RrdSessionClient(id), [id]);
 	const nativeSession = useQuery({
-		queryKey: SESSION_QUERY_KEY,
+		queryKey: sessionQueryKey(id),
 		enabled: isTauri(),
 		queryFn: () => sessionClient.current(),
 		staleTime: Number.POSITIVE_INFINITY,
 	});
-	const [lens, setLens] = useState<RuntimeLens>("models");
 	const [selected, setSelected] = useState<string | null>(null);
 	const [colorBy, setColorBy] = useState("cluster");
 	const [showIdentity, setShowIdentity] = useState(false);
@@ -144,7 +150,7 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 		current.instance === handshake.service.instance.id;
 	const session = ownsSession ? current : null;
 	const foreign = ownsSession ? null : current;
-	const sessionKey = session ? `${session.instance}:${session.connected_at_unix_ms}` : "";
+	const sessionKey = session ? `${id}:${session.instance}:${session.connected_at_unix_ms}` : "";
 
 	// The lens cards read the same cached snapshots the lenses render.
 	const database = useQuery({
@@ -162,7 +168,7 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 	}
 
 	// With a live session the lenses lead; the handshake evidence stays one click away.
-	const identityVisible = !session || showIdentity;
+	const identityVisible = showIdentity;
 	const stages = [
 		{
 			label: "HTTP transport",
@@ -217,8 +223,9 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 					<PageBreadcrumbs
 						items={[
 							{ label: "Connectome", href: "/overview" },
-							{ label: "RRD runtimes" },
+							{ label: "Projects" },
 							{ label: connection.name },
+							{ label: section },
 						]}
 					/>
 
@@ -270,15 +277,15 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 							>
 								What do these words mean?
 							</Button>
-							{session && (
+							{
 								<Button
 									variant="subtle"
 									color="obsidian"
 									onClick={() => setShowIdentity((visible) => !visible)}
 								>
-									{showIdentity ? "Hide engine identity" : "Engine identity"}
+									{showIdentity ? "Hide advanced details" : "Advanced details"}
 								</Button>
-							)}
+							}
 							<Button
 								variant="light"
 								leftSection={<Icon path={iconRefresh} />}
@@ -290,6 +297,56 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 						</Group>
 					</Group>
 
+					<Group
+						align="end"
+						justify="space-between"
+					>
+						<Select
+							label="Selected project"
+							description="A saved connection; engine identity is verified independently."
+							value={id}
+							data={connections
+								.filter((c) => c.target === "runtime")
+								.map((c) => ({ value: c.id, label: c.name }))}
+							onChange={(next) => {
+								if (next)
+									navigate(
+										`/runtime/${next}/${section}${detail ? `/${detail}` : ""}`,
+									);
+							}}
+							searchable
+							allowDeselect={false}
+							w={320}
+						/>
+						<Button
+							variant="light"
+							onClick={() => dispatchIntent("toggle-serving")}
+						>
+							Manage project engines
+						</Button>
+					</Group>
+					<Group
+						component="nav"
+						aria-label="Project sections"
+						gap="xs"
+					>
+						{[
+							["overview", "Overview"],
+							["knowledge", "Knowledge"],
+							["activity", "Activity"],
+							["learning", "Learning"],
+							["services", "Services"],
+						].map(([value, label]) => (
+							<Button
+								key={value}
+								variant={section === value ? "filled" : "subtle"}
+								aria-current={section === value ? "page" : undefined}
+								onClick={() => openSection(value)}
+							>
+								{label}
+							</Button>
+						))}
+					</Group>
 					{query.isError && (
 						<Alert
 							color="red"
@@ -403,7 +460,7 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 						ready={nativeSession.isFetched}
 					/>
 
-					{session && (
+					{(section === "overview" || section === "knowledge") && (
 						<>
 							<Text>
 								One <Term id="estate">estate</Term>, one database: RRFlow keeps the
@@ -412,9 +469,21 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 								<Term id="rrflowKV">rrflowKV</Term>. The views below are different
 								ways into the same data.
 							</Text>
+							{session && (database.isError || catalogue.isError) && (
+								<Alert
+									color="red"
+									title="Project data could not be read"
+								>
+									{describeRrdError(database.error ?? catalogue.error)}
+								</Alert>
+							)}
 							<SimpleGrid cols={{ base: 1, md: 2, lg: 4 }}>
 								<LensCard
-									active={lens === "models"}
+									active={
+										section === "knowledge" &&
+										detail !== "paths" &&
+										lens === "models"
+									}
 									icon={iconBook}
 									title="Data models"
 									purpose="Learn the database and browse its native tables."
@@ -422,60 +491,71 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 									onOpen={() => setLens("models")}
 								/>
 								<LensCard
-									active={lens === "records"}
+									active={section === "knowledge" && lens === "records"}
 									icon={iconRelation}
 									title="Records & relations"
 									purpose="What the estate knows and how it links together."
 									reading={
 										graph
-											? `${formatCount(graph.nodes.length)} records · ${formatCount(graph.edges.length)} relations`
-											: "Reading…"
+											? `${formatCount(graph.nodes.length)} records in view · ${formatCount(graph.edges.length)} relations`
+											: session
+												? "Reading..."
+												: "Open a native session to inspect"
 									}
 									onOpen={() => setLens("records")}
 								/>
 								<LensCard
-									active={lens === "vectors"}
+									active={section === "knowledge" && lens === "vectors"}
 									icon={iconTarget}
 									title="Vectors"
 									purpose="Find records with similar content by comparing their vectors."
 									reading={
 										collections
 											? `${formatCount(collections.length)} collection${collections.length === 1 ? "" : "s"} · ${formatCount(namedVectors)} named vector${namedVectors === 1 ? "" : "s"}`
-											: "Reading…"
+											: session
+												? "Reading..."
+												: "Open a native session to inspect"
 									}
 									onOpen={() => setLens("vectors")}
 								/>
 								<LensCard
-									active={lens === "storage"}
+									active={section === "knowledge" && lens === "storage"}
 									icon={iconMemory}
 									title="Storage engine"
 									purpose="How the data is kept safe on disk and quick in memory."
-									reading={`${storageProfile === "rrflow_kv" ? "rrflowKV" : storageProfile} · live counters`}
+									reading={
+										session
+											? `${storageProfile === "rrflow_kv" ? "rrflowKV" : storageProfile} - live counters`
+											: "Open a native session to inspect"
+									}
 									onOpen={() => setLens("storage")}
 								/>
 							</SimpleGrid>
 
 							<Box mt="md">
-								{lens === "models" && (
-									<ModelsTab
-										client={sessionClient}
-										sessionKey={sessionKey}
-										onOpenLens={setLens}
-									/>
-								)}
-								{lens === "records" && (
+								{session &&
+									section === "knowledge" &&
+									detail !== "paths" &&
+									lens === "models" && (
+										<ModelsTab
+											client={sessionClient}
+											sessionKey={sessionKey}
+											onOpenLens={setLens}
+										/>
+									)}
+								{session && section === "knowledge" && lens === "records" && (
 									<RecordsTab
 										connection={session}
 										{...lensProps}
 									/>
 								)}
-								{lens === "vectors" && (
+								{session && section === "knowledge" && lens === "vectors" && (
 									<VectorsTab
 										connection={session}
 										{...lensProps}
 									/>
 								)}
-								{lens === "storage" && (
+								{session && section === "knowledge" && lens === "storage" && (
 									<StorageTab
 										connection={session}
 										client={sessionClient}
@@ -486,106 +566,12 @@ export function RuntimeConnectionPage({ id }: { id: string }) {
 						</>
 					)}
 
-					{!session && (
-						<>
-							<Box mt="md">
-								<Group justify="space-between">
-									<Box>
-										<Text
-											fz="xl"
-											fw={650}
-											c="bright"
-										>
-											Existing-project attunement
-										</Text>
-										<Text>
-											Designed as a resumable{" "}
-											{ATTUNEMENT_ESTIMATE_MINUTES.minimum}–
-											{ATTUNEMENT_ESTIMATE_MINUTES.maximum} minute engine job.
-										</Text>
-									</Box>
-									<Badge
-										variant="outline"
-										color="gray"
-									>
-										Contract pending
-									</Badge>
-								</Group>
-								<Progress
-									value={handshake ? 100 / ATTUNEMENT_PHASES.length : 0}
-									mt="md"
-									color="violet"
-								/>
-							</Box>
-
-							<SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
-								{ATTUNEMENT_PHASES.map((phase) => (
-									<Paper
-										key={phase.id}
-										p="md"
-										className={classes.phase}
-									>
-										<Group justify="space-between">
-											<Text fw={650}>{phase.label}</Text>
-											<Badge
-												variant="light"
-												color={
-													phase.state === "implemented" ? "green" : "gray"
-												}
-											>
-												{phase.state === "implemented"
-													? "available"
-													: "planned"}
-											</Badge>
-										</Group>
-										<Text
-											fz="sm"
-											mt="xs"
-										>
-											{phase.description}
-										</Text>
-									</Paper>
-								))}
-							</SimpleGrid>
-
-							<Paper
-								p="lg"
-								className={classes.boundary}
-							>
-								<Group justify="space-between">
-									<Box>
-										<Text
-											fz="lg"
-											fw={650}
-										>
-											Mesh discovery boundary
-										</Text>
-										<Text fz="sm">
-											Zuul Zero or shippin.ai mesh may resolve a devspace
-											endpoint; Connectome still performs this RRD HTTP
-											handshake and never treats network reachability as
-											engine identity.
-										</Text>
-									</Box>
-									<Badge variant="outline">Adapter pending</Badge>
-								</Group>
-								<SimpleGrid
-									cols={{ base: 1, sm: 2, lg: 4 }}
-									mt="lg"
-								>
-									{AUTOMATION_PRIMITIVES.map((primitive) => (
-										<Box
-											key={primitive.name}
-											className={classes.primitive}
-										>
-											<Text fw={650}>{primitive.name}</Text>
-											<Text fz="sm">{primitive.contract}</Text>
-										</Box>
-									))}
-								</SimpleGrid>
-							</Paper>
-						</>
-					)}
+					<ProjectSection
+						detail={detail}
+						section={section}
+						connected={Boolean(session)}
+						onOpen={openSection}
+					/>
 				</Stack>
 			</ScrollArea>
 			<GlossaryDrawer

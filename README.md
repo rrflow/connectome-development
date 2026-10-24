@@ -28,7 +28,11 @@ to run the built desktop bundle on a supported desktop with its WebView runtime.
 
 Start with **Start local RRFlow** on the home screen, review **Install and open
 RRFlow**, then explore **Data models**, **Records & relations**, **Vectors** and
-**Storage engine**. The home screen's **How RRFlow fits together** guide explains
+**Storage engine** under the selected project. **Manage project engines** runs
+up to four independent local projects; **Advanced details** exposes engine
+identity and evidence. Project sections preserve their URL across navigation.
+Learning, knowledge-path setup and cloud services are labelled unavailable until
+their engine contracts are implemented. The home screen's **How RRFlow fits together** guide explains
 rrflowDB, rrflowQL and rrflowKV. [Native workbench instructions](docs/native-workbench.md)
 cover building, startup, persistence, exact limits and validation.
 

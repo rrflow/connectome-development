@@ -85,3 +85,21 @@ project authorization and cannot turn parallel operation into context sharing.
 This order maps UI work to existing RRFlow owners (H-06, connector/data,
 G controller learning, H improvement and DevPulse/cloud contracts). It does not
 reorder the engine dependency spine or mark its C-07 qualification complete.
+
+## Competitive acceptance, not a feature-name comparison
+
+The useful comparison is an end-to-end task on the same authorized corpus:
+source import and change/delete propagation; bounded hybrid retrieval; relationship
+and provenance inspection; a supported model/client handoff; and a corrected run
+whose evaluation can be repeated. Report retrieval recall/precision against a
+labelled set, answer citation correctness, stale-source rate, p50/p95 latency,
+resource use, provider cost and failure recovery. Publish configuration, corpus,
+model version and limits with results. A vendor's marketing claim or a drawn
+graph is not comparative performance evidence. No superiority, successful
+learning or frontier-model cost reduction is established by this UI package.
+
+The native two-project test intentionally permits identical deterministic engine
+instance IDs for identical source inventories. Local process ownership uses the
+canonical directory; session ownership uses a saved profile with a verified
+endpoint and native credential. An instance label alone is not a globally unique
+project selector or an authorization boundary.

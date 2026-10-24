@@ -1,26 +1,14 @@
 import { Alert, Button, Group, Paper, SimpleGrid, Stack, Text } from "@mantine/core";
 import { useState } from "react";
 import { adapter } from "~/adapter";
-import { resolveServedConnection } from "~/components/ActionBar/serving";
-import { useConnectionNavigator } from "~/hooks/routing";
 import { dispatchIntent } from "~/shared/util/intents";
 import { useDatabaseStore } from "~/stores/database";
 
 export function LocalStart() {
 	const isServing = useDatabaseStore((s) => s.isServing);
 	const pending = useDatabaseStore((s) => s.servePending);
-	const navigate = useConnectionNavigator();
 	const [learn, setLearn] = useState(false);
-	const open = async () => {
-		if (isServing) {
-			const estate = await adapter.servedEstate();
-			if (estate) {
-				navigate(resolveServedConnection(estate));
-				return;
-			}
-		}
-		dispatchIntent("toggle-serving");
-	};
+	const open = () => dispatchIntent("toggle-serving");
 	return (
 		<Paper
 			withBorder
@@ -46,7 +34,7 @@ export function LocalStart() {
 						loading={pending}
 						onClick={open}
 					>
-						{isServing ? "Open local RRFlow" : "Start local RRFlow"}
+						{isServing ? "Manage project engines" : "Start local RRFlow"}
 					</Button>
 					<Button
 						variant="light"
