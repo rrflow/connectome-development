@@ -304,3 +304,64 @@ Branch `agent/connectome-icons` from `main` `1f34a3d` (Slice B merged as PR #7).
   render smoke 2/2; screenshots of the Overview and the connection page show
   the new icons and pictograms with zero page errors.
 
+### 2026-10-18 — Slice C2: Connectome's own look (Decision 10 = A)
+
+Branch `agent/connectome-theme` from `main` `ce08e2f` (Slice C1 merged as PR #8).
+
+- Decision 10 (owner, 2026-10-18): Connectome theme now, ColdLight tokens
+  later. `src/shared/util/mantine.tsx` is Connectome's theme — type (Inter
+  Variable, JetBrains Mono Variable, self-hosted from `@fontsource-variable/*`,
+  OFL-1.1; no runtime fetch from Google Fonts), sizes, spacing, radii, the
+  `obsidian` and `slate` neutral scales, the `rrflow` accent scale (also
+  bound to `violet`), the violet → cyan gradient, and component defaults on
+  Mantine's built-in variants. `src/shared/assets/styles/theme.scss` carries
+  the same identity as `--connectome-*` custom properties (the previous
+  `--rrflow-energy`/`--rrflow-passion`/`--Connectome-*` names — the vendor's
+  token vocabulary, inconsistently renamed — are gone; `--Connectome-gradient`
+  was referenced in four places and defined nowhere). The dead
+  `coldlight.scss` (a neon palette nothing imported) is removed; ColdLight
+  arrives as generated tokens mapped in `mantine.tsx`.
+- Found while replacing the theme: the tree still shipped the vendor's
+  bowler-hat logo as **the application icon on every platform**
+  (`src-tauri/icons/*`, `public/favicon.ico`), its wordmark as the settings
+  and mini-view logo, its "Sandbox" screenshot, its referral-program art,
+  its glow images, its SurrealQL/SurrealML logos renamed, its social-link and
+  README imagery under `.github/images`, and `CODEOWNERS` naming its
+  maintainers as owners of this repository. All deleted or replaced: an
+  original application icon (`src/shared/assets/brand/app-icon.svg`,
+  rendered to every platform format by `tauri icon`), a text `Wordmark`
+  component, a CSS `TopGlow`, `CODEOWNERS` = the owner. The unmounted
+  `new-domain` screen (the vendor's domain-move notice) is deleted.
+- `@surrealdb/ui` removed from `package.json`; identity gate 7 → 6. The six
+  that remain are the engine, client and editor packages Slice D removes.
+- Verification: `pnpm check` green; production build green; render smoke
+  2/2; screenshots of the Overview, the connection page and the settings
+  modal under the new theme with zero page errors; fonts verified loaded
+  from the bundle (`document.fonts.check`).
+
+### 2026-10-18 — Slice C2 CI blocked; Slice D paused (Decision 11)
+
+- PR #9's CI did not start: every job failed in four seconds with the
+  GitHub annotation "The job was not started because recent account
+  payments have failed or your spending limit needs to be increased"
+  (the `rrflow` organization's Actions billing). The workflow is unchanged
+  and was green on `main` twelve minutes earlier. The owner clears it under
+  the organization's Billing & plans; CI is then re-run and PR #9 merges on
+  green.
+- Decision 11 (owner, 2026-10-18): pause Slice D until billing is fixed and
+  the Slice C2 build is verified on the owner's desktop. The two orders
+  considered for the first D increment stay recorded for that moment:
+  delete the inherited engine surface first (recommended: the RRD runtime
+  page already carries the graph lens with scope/depth/direction drill-down,
+  an RRFlowQL console, vector and storage lenses; the nine SurrealDB views,
+  the Sandbox, the datasets, `src/vendor` and the six remaining vendor
+  packages would go, the connection model would lose its SurrealDB
+  authentication fields with a config migration, and the identity gate
+  would reach zero), or build the RRFlowQL studio on RRD first and delete
+  afterwards.
+- Desktop verification of `agent/connectome-theme` (PR #9): check out the
+  branch, `pnpm install`, `pnpm engine:stage` (or `--from <path to a built
+  rrflow>`), `pnpm tauri:dev`; expect the Connectome application icon, the
+  text wordmark in Settings, the violet → cyan theme, Start serving →
+  engine/install/serve/ready stage cards → the runtime lenses.
+

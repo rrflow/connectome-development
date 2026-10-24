@@ -1,11 +1,12 @@
 import "@mantine/core/styles.layer.css";
 import "@mantine/notifications/styles.css";
-import "@surrealdb/ui/styles.css";
+
+import "@fontsource-variable/inter";
+import "@fontsource-variable/jetbrains-mono";
 
 import "~/shared/assets/styles/layers.scss";
-import "~/shared/assets/styles/fonts.scss";
 import "~/shared/assets/styles/global.scss";
-import "~/shared/assets/styles/override.scss";
+import "~/shared/assets/styles/theme.scss";
 import "~/shared/assets/styles/variants.scss";
 
 import "../adapter";
@@ -16,7 +17,6 @@ import { createRoot } from "react-dom/client";
 import { openConnection } from "~/screens/connectome/connection/connection";
 import { MiniRunScreen } from "~/screens/mini-embed";
 import { startConfigSync } from "~/shared/util/config";
-import { HeadInjector } from "~/shared/util/head";
 import { handleWindowMessage } from "~/shared/util/messaging";
 import { adapter } from "../adapter";
 import type { MiniAdapter } from "../adapter/mini";
@@ -39,7 +39,6 @@ import type { MiniAdapter } from "../adapter/mini";
 
 	createRoot(root).render(
 		<>
-			<HeadInjector />
 			<MiniRunScreen />
 		</>,
 	);

@@ -1,0 +1,14 @@
+.wordmark {
+	display: inline-block;
+	letter-spacing: 0.12em;
+	background: linear-gradient(100deg, #f5f0ff 10%, #b891ff 55%, #66d9ff 100%);
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	user-select: none;
+
+	@include light {
+		background: linear-gradient(100deg, #21113d 10%, #6936c8 58%, #08779b 100%);
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+	}
+}

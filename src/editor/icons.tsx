@@ -17,7 +17,7 @@ export function generateEditorIcons() {
 			`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="${info.icon}" fill="${info.color}" stroke="${info.color}" stroke-width="0.75"></path></svg>`,
 		);
 
-		return `\t--Connectome-editor-icon-${info.type}: url('data:image/svg+xml;base64,${svg}')`;
+		return `\t--connectome-editor-icon-${info.type}: url('data:image/svg+xml;base64,${svg}')`;
 	});
 
 	const css = `:root {\n${definitions.join(";\n")}}`;
