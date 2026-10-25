@@ -15,6 +15,14 @@ the inherited vendor to RRFlow/Connectome, the repository has to belong to
 `github.com/rrflow/`, and the code has to be properly the owner's. The owner
 also raised licensing exposure.
 
+Owner instruction, 2026-10-24: the inherited vendor's database, client,
+query language, editor, engine and branding come out of Connectome
+completely. They were never meant to stay; they arrived while the owner was
+working with the vendor, who is fine with the change. RRFlow's own rrflowDB
+and rrflowQL, with TurboQuant vector search, are the engine. The owner asked
+for the conversion to be researched and done methodically and properly,
+not by renaming or by deleting work without a researched destination.
+
 ## Baseline captured 2026-10-18 (main `29c9a14`)
 
 Facts, from the tree and the remote, not from memory:
@@ -76,6 +84,13 @@ rest are engineering decisions recorded here for review.
    bound by the one pinned engine revision. No Git submodule in either
    direction: RRFlow's `AGENTS.md` forbids submodules, and sprint 007's "parent
    engine submodule pointer" step is retired by this decision.
+   **Corrected 2026-10-24.** The submodule prohibition was an agent-written
+   rule, not the owner's. On 2026-10-19 the owner permitted Git submodules,
+   and RRFlow now pins this repository as the declared `connectome/`
+   submodule at a credential-free HTTPS URL (RRFlow `AGENTS.md`). Connectome
+   still builds from no engine source: its one engine association remains the
+   pinned `rrd-client`/`rrd-contract` revision and the digest-verified
+   sidecar.
 2. The MIT License stays, with Connectome's own copyright line in `LICENSE`.
    The inherited vendor's copyright and permission notice is preserved,
    unchanged, in `NOTICE` for the portions still derived from its work, as
@@ -117,6 +132,42 @@ rest are engineering decisions recorded here for review.
 9. The 73 inherited release changelogs are deleted and Connectome's own
    `0.0.5.md` is authored in their place; the in-application changelog shows
    only Connectome's releases.
+
+Decisions 10 (Connectome theme now, ColdLight tokens later) and 11 (pause
+Slice D until Actions billing was fixed and Slice C2 was checked on the
+owner's desktop) were recorded on the unmerged `agent/connectome-theme` branch
+(PR #9) and land with Slice C2. Decisions 12 to 15 are the owner's answers of
+2026-10-24; decision 16 is the engineering decision those answers asked for.
+
+12. The inherited vendor leaves Connectome completely: every package, alias,
+    type, query language, editor language, engine and asset. rrflowDB is the
+    only database, rrflowQL the only query language, and Connectome is a
+    projection client of RRFlow's public operations. Decision 11's pause
+    ends: Actions run green on this public repository again (since
+    2026-10-19), and the desktop check of the theme becomes part of Slice
+    C2's acceptance.
+13. The application icon is the Connectome mark already drawn in the
+    application (`src/shared/assets/pictograms/connectome.svg`, shown in the
+    sidebar and on the Overview), converted to every platform format. The
+    hub icon generated on PR #9 is not used. The owner also allowed a mark
+    inspired by nomen; the in-application mark is chosen because it is
+    already Connectome's.
+14. PR #10 (`agent/rrflow-native-connectome`) is salvaged and closed. It
+    branched before PRs #1 to #8 and overlaps 279 files changed since. Its
+    rrflowQL lexer and parser, dependency gate and knowledge-tree work are
+    rebuilt inside the matching Slice D increments on current `main`, with
+    credit; the commit is not merged.
+15. `main` carries the same ruleset as `rrflow/rrflow-development`: pull
+    request required, `ci-gate` required, no force push or deletion, merge
+    queue (merge commits, all-green groups), and administrator bypass only
+    while merging a pull request.
+16. Fold, then delete. Each inherited screen's useful components move into
+    the RRFlow runtime workbench lens that owns the same subject, and the
+    inherited screen and its vendor code are deleted in that same increment.
+    A subject RRFlow does not yet serve through a public operation is deleted
+    with no stand-in client, placeholder or dual path, and is rebuilt when
+    its RRFlow operation lands (the rebuild table below). This follows
+    decision 4 and RRFlow's Connectome contract (direct-convergence step 4).
 
 ## Ordered implementation slices
 
@@ -175,6 +226,98 @@ deleted with the last importer, together with `surrealdb`, `@surrealdb/wasm`,
 `@surrealdb/ql-wasm-v2`, `@surrealdb/ql-wasm-v3`, `@surrealdb/codemirror` and
 `@surrealdb/lezer`. The gate's allowed set reaches zero and the `src/vendor/`
 exemption is removed from it.
+
+#### Researched disposition (2026-10-24, `main` `38142b7`)
+
+Inventory: 66 source files run on the inherited client (60 through the two
+`src/vendor/` re-export files, 6 importing the packages directly), plus 12
+documentation topics of client snippets and `vite.config.ts`. Seventy-one
+files reach the inherited engine through the wrappers in
+`src/screens/connectome/connection/connection.tsx`. The RRFlow-native pages
+(the runtime workbench, diagnostics, serving) still load that module through
+`~/types`, `~/stores/database`, `~/modals/edit-connection` and the globally
+mounted `useConnectionSwitch`. The RRFlow side was read at
+`rrflow-development` `4dc93b7f`: 44 catalogued HTTP operations, all
+dispatched; the Rust `rrd-client` already wraps transactions, query
+execution and export, changefeed and subscriptions over `/v1/ws`, backups,
+audit, context, vectors and schema reads; WebSocket request execution,
+GraphQL, governed functions, the quantization lifecycle and principal
+administration have no public route yet.
+
+| Inherited subject | What it did | RRFlow destination | Public operation today | Increment |
+|---|---|---|---|---|
+| Connection, namespace and database pickers, node status | connect, sign in, select a namespace and database, server info | project, estate and instance; native session; capabilities, readiness, `estate-read` | yes | D0, D8 |
+| Sandbox | in-browser engine on `mem://` | a scratch project estate served by the bundled sidecar (sprints 011 and 012) | yes | D1 |
+| Mini runner and embed generator | in-browser engine inside an iframe | RRFlow's browser deployment (planned, not built) | no | D1 removes; rebuild later |
+| Record-access sign-up and sign-in | vendor access methods | native API-key session; human login follows RRFlow's identity package | machine keys only | D1 removes |
+| Users and access view | vendor users and access definitions | RRFlow principals, grants and credential revisions | no | D1 removes; rebuild later |
+| GraphQL view (already unreachable) | vendor `/graphql` endpoint | RRFlow's GraphQL lowering (B-05), served by H-04 | no | D1 removes; rebuild later |
+| Functions view and model upload | vendor functions and ML models | RRFlow governed functions and admitted model manifests | no | D1 removes; rebuild later |
+| Parameters view | vendor global parameters | rrflowQL `$name` parameters bound per query; estate configuration owns lasting settings | yes | D4 (query variables) |
+| 2.x to 3.0 migration view | vendor version migration | none needed; RRFlow backup and restore | yes | D1 removes; D7 |
+| Query view | vendor query execution, live results, graph preview, formatting | `query-execute` with `EXPLAIN`, `traverse:` sources, `query-export`, live results through a native `/v1/ws` subscription | yes | D4 |
+| Editor language, highlighting, linting, formatting | vendor CodeMirror and Lezer language and WASM parser | a Connectome rrflowQL language built from RRFlow's lexer (`rrd-query/src/syntax.rs`) and tested against RRFlow's `query-vectors.json`; the engine (`EXPLAIN CONTRACT`) validates, the client only highlights; no formatter | yes | D3 |
+| Explorer, record inspector, data table, relation graph, map | vendor reads, creates, relates, updates and deletes; binary value types | `record:`, `relation:`, `geo:` and `traverse:` queries; transaction preview then commit with `PutRecord`, `PutRelation`, `PutGeo`, `RetireData`; one engine query per graph expansion | yes | D5 |
+| Designer | vendor schema definitions and introspection | `data-schema-read`; next registry revision through `PutSchema` with preview; `query-index-ensure` | yes (instance-level grant) | D6 |
+| Import and export | vendor statement import and export | `query-export` (Parquet), `backup-create`, `backup-list`, `restore-create`; typed record batches for import | yes, import as batches | D7 |
+| Documentation topics | vendor client snippets | RRFlow SDK reference | — | D1 removes |
+| Shared types and stores | vendor record identifiers, durations, decimals, geometry | RRFlow value model from the generated OpenAPI types | yes | D0 |
+
+#### Ordered increments
+
+Each increment is one pull request through the merge queue with `pnpm check`,
+the production build, the render smoke, the native checks and the RRD
+process tests, plus the tests named. RRFlow moves its `connectome/` pin after
+each one lands.
+
+- **D0: cut the RRFlow pages loose.** The runtime workbench, diagnostics and
+  serving stop loading `connection.tsx`. Add the RRFlow value model; scope
+  `useConnectionSwitch` to the inherited routes. Oracle: a module-graph test
+  shows no RRFlow page reaches `src/vendor/`.
+- **D1: remove the subjects RRFlow does not serve, and replace the Sandbox.**
+  Remove the mini runner and embed, record-access sign-up, users and access,
+  GraphQL, functions and model upload, the migration view and the
+  documentation topics. The Sandbox becomes a scratch project estate on the
+  sidecar. Removes `@surrealdb/wasm`.
+- **D2: native surface.** Tauri commands over the existing `rrd-client`
+  methods for transactions, query export, changefeed, `/v1/ws` subscriptions,
+  backups and audit. The renderer gets opaque handles and never holds a
+  credential. Oracle: the RRD process tests drive each command against a real
+  engine, including restart and denial.
+- **D3: rrflowQL language.** A CodeMirror language from RRFlow's token set
+  (salvaged from PR #10), with golden tests against RRFlow's query vectors.
+  It replaces highlighting everywhere and removes `@surrealdb/codemirror`,
+  `@surrealdb/lezer`, `@surrealdb/ql-wasm-v2` and `@surrealdb/ql-wasm-v3`.
+- **D4: Query lens.** Fold the editor, variables (which replace global
+  parameters), result table and JSON, `EXPLAIN` plan, graph preview,
+  Parquet export and live results into the workbench; delete the inherited
+  query view.
+- **D5: Records and graph lens.** Fold the explorer, inspector, data table,
+  relation graph and map; edits go through preview then commit; delete the
+  inherited explorer.
+- **D6: Schema lens.** Fold the designer onto the schema registry and
+  `PutSchema`; delete the inherited designer.
+- **D7: Storage lens.** Backup, restore and Parquet export; typed import.
+- **D8: final cut.** Delete the inherited `/c/:id/:view` routes,
+  `connection.tsx`, `src/vendor/`, `surrealdb`, the vendor chunks and
+  aliases in `vite.config.ts`, and the vendor fields of the connection model
+  (with a configuration migration). The identity gate reaches zero and loses
+  its `src/vendor/` exemption.
+
+#### Rebuilt when RRFlow serves them
+
+| Subject | RRFlow operation needed | RRFlow owner |
+|---|---|---|
+| GraphQL lens | GraphQL over HTTP | H-04 |
+| Functions lens | governed function catalogue, install and execute | H-04, I-06 |
+| AI models lens (the workbench's existing Models tab covers data models) | model manifest admission | Gate G |
+| Principals and access lens | principal, grant and credential administration | POAM-016 |
+| Vector index lens (TurboQuant build, activate and retire) | quantization lifecycle and HNSW build | OBJ-13, E-04 |
+| Live operations beyond subscriptions | WebSocket request execution | H-04 |
+| Browser runner and embed | browser deployment | RRFlow deployment profiles |
+
+These follow RRFlow's dependency order, which the owner kept strict on
+2026-10-24.
 
 ## Definition of done
 
@@ -365,6 +508,26 @@ Branch `agent/connectome-theme` from `main` `ce08e2f` (Slice C1 merged as PR #8)
   text wordmark in Settings, the violet → cyan theme, Start serving →
   engine/install/serve/ready stage cards → the runtime lenses.
 
+### 2026-10-24 — Slice D researched; `main` protected
+
+Branch `docs/sprint-009-rrflow-conversion` from `main` `38142b7`.
+
+- Owner instruction and decisions 12 to 15 recorded; decision 1's
+  submodule prohibition corrected; decision 16 records fold-then-delete.
+- Three read-only inventories, of `main` `38142b7`, the unmerged branches and
+  `rrflow-development` `4dc93b7f`, produced the disposition and increment
+  tables above. The seven `agent/*` branches squash-merged as PRs #2 to #8
+  are identical to their merge commits. `agent/connectome-rrd-only` is an
+  unverified deletion draft whose committed tree leaves 15 imports pointing
+  at deleted modules; its deletion list informs D1 and D8, and it is not
+  merged.
+- PR #14 adds the `merge_group` trigger and one stable `ci-gate` check.
+  Ruleset 25803168 now protects `main` (decision 15): the effective rules
+  read back as deletion, non_fast_forward, pull_request,
+  required_status_checks (`ci-gate`, GitHub Actions) and merge_queue (merge
+  commits, all-green groups, five entries, 120-minute check timeout against
+  observed 8- to 13-minute runs). PR #14 is the first merge-queue candidate.
+- Next: Slice C2 (rebase PR #9, application icon from decision 13), then D0.
 
 ### 2026-10-24 — Slice C2 completed on current `main` (decisions 12 and 13)
 
