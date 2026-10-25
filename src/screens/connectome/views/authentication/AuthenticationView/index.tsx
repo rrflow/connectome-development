@@ -71,7 +71,7 @@ export function AuthenticationView() {
 				<Panel minSize={15}>
 					<LevelPanelLazy
 						level="DATABASE"
-						color="var(--rrflow-energy)"
+						color="var(--connectome-gradient-from)"
 						icon={iconDatabaseSecure}
 						users={databaseUsers}
 						accesses={databaseAccesses}

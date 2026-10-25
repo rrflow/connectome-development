@@ -1,5 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none" role="img" aria-labelledby="title">
-  <title id="title">Connected nodes</title>
+  <title id="title">Connectome</title>
+  <!--
+    The Connectome mark. The gradient uses each element's bounding box, so a
+    horizontal link (zero-height box) would never paint; the mark is the four
+    links and five nodes every renderer shows. The application icon
+    (src/shared/assets/brand/app-icon.svg) draws the same mark on a tile.
+  -->
   <defs>
     <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#7c6cff"/>
@@ -11,8 +17,6 @@
     <line x1="180" y1="70" x2="120" y2="120"/>
     <line x1="60" y1="170" x2="120" y2="120"/>
     <line x1="180" y1="170" x2="120" y2="120"/>
-    <line x1="60" y1="70" x2="180" y2="70"/>
-    <line x1="60" y1="170" x2="180" y2="170"/>
   </g>
   <g fill="url(#g)">
     <circle cx="120" cy="120" r="22"/>
