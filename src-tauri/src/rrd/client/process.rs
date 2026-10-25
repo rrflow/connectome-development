@@ -857,3 +857,35 @@ fn project_registry_keeps_parallel_estates_and_sessions_isolated() {
         std::fs::remove_dir_all(request.project).expect("remove test-owned project");
     }
 }
+
+/// Seeds the estate the desktop is serving with the lens fixture, for the
+/// visual baseline (`tests/visual/capture-native.mjs`, sprint 009 decision
+/// 17). The capture passes the served estate's endpoint, instance and
+/// operator credential path in `CONNECTOME_CAPTURE_ENDPOINT`,
+/// `CONNECTOME_CAPTURE_INSTANCE` and `CONNECTOME_CAPTURE_CREDENTIAL`; the
+/// credential file is read only here, inside the native process. Without all
+/// three it does nothing, so CI's `--ignored` run passes over it.
+#[test]
+#[ignore = "seeds a desktop-served estate for the visual capture"]
+fn seed_served_estate_for_visual_capture() {
+    let variable = |name: &str| std::env::var(name).ok().filter(|value| !value.is_empty());
+    let (Some(endpoint), Some(instance), Some(credential_path)) = (
+        variable("CONNECTOME_CAPTURE_ENDPOINT"),
+        variable("CONNECTOME_CAPTURE_INSTANCE"),
+        variable("CONNECTOME_CAPTURE_CREDENTIAL"),
+    ) else {
+        return;
+    };
+    let address: SocketAddr = endpoint
+        .strip_prefix("http://")
+        .and_then(|address| address.parse().ok())
+        .expect("the capture names a loopback HTTP endpoint");
+    tauri::async_runtime::block_on(load_fixture_at(
+        RrdConnectRequest {
+            endpoint,
+            instance,
+            credential_path,
+        },
+        address,
+    ));
+}

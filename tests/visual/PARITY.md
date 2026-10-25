@@ -80,10 +80,72 @@ moves, as in Slice D0.
 | `sandbox-onboarding` | Sandbox introduction dialog | Scratch project introduction (D1b) |
 | `settings-*` | Preferences, keybindings, templates, backup and restore, licences, about | Kept; the inherited wordmark is replaced in Slice C2 |
 
+## RRFlow-native desktop screens
+
+Baseline: the desktop preview build of `main` `83804c3`, both themes,
+1440x1800, an estate installed fresh by the capture and seeded with the lens
+fixture (12 records, 14 relations, one collection of 8 vectors). Image names
+are the capture names under `baseline/native/83804c3/<theme>/`. These screens
+are already RRFlow; the rule still applies when a slice changes them (D1 to
+D7 rebuild the query, records, schema and storage lenses in place).
+
+### Records & relations graph — `native-lens-records-relations`, `native-records-*`
+
+- [ ] One dot per record, sized by its relation count, labelled with the
+      record's title; one directed arrow per relation.
+- [ ] Zoom in, zoom out, fit and full-screen controls; scroll to zoom, drag to
+      move, click a dot for its details.
+- [ ] "Find a record" search by title or identity; the selection highlights
+      its neighbours and dims the rest (`native-records-selected`).
+- [ ] Show the whole estate or the selection's neighbourhood, with steps
+      away 1 to 3 and links followed both ways, out or in
+      (`native-records-around-selection`).
+- [ ] Colour by cluster, kind or a field, with a legend and counts per colour
+      and an unlinked-records entry (`native-records-color-kind`); a Kinds
+      filter.
+- [ ] "Drawing N of M records and N of M relations, read at cursor C" under
+      the controls.
+- [ ] Start-here list of the most linked records; the record panel: kind
+      badge, title, identity, show what is around it, similar records, query,
+      links to and from with each relation's kind, fields, valid from.
+- [ ] RRFlowQL console: the record's query, run with Ctrl/⌘ + Enter or the
+      run button; one traversal button per relation kind from the selection;
+      the result's row count, keys examined, output size and cursor badges
+      over a result table (`native-records-query`, `native-records-traverse`).
+
+### Vector map — `native-lens-vectors`
+
+- [ ] One dot per vector, placed so close dots have similar vectors; a line
+      to each vector's nearest neighbours from the engine's exact search;
+      colours shared with Records & relations.
+- [ ] Collection facts: field, dimensions, similarity, storage tier, vector
+      source; "How to read this map"; vectors drawn, exact searches, keys
+      examined, build time, cursor.
+- [ ] Stored points: point, record, dimensions, length, first numbers and
+      cursor per vector, in reference order, with more on demand
+      (`native-vectors-points`).
+- [ ] Selecting a point: the selected record, its identity, a link to its
+      relations and its most similar records with their scores
+      (`native-vectors-nearest`).
+
+### Workbench and lenses
+
+| Baseline capture | Visual elements and interactions to keep |
+|---|---|
+| `native-overview` | Hero with mark, wordmark and version; local RRFlow card with "Start local RRFlow" and "How RRFlow fits together"; instance list with filters, search and the empty state; resources |
+| `native-project-engines` | Project engines dialog: engine and connection limits, running engines, project directory with folder picker, fresh or existing project mode, preview or open |
+| `native-installation-preview` | The exact installation preview: target path, the review notice (paths, permissions, configuration; no cloud upload or training) and the attunement plan as JSON. Improvement target: show the path without the `\\?\` prefix |
+| `native-serving-stages`, `native-served` | Serving stages while the estate installs and starts; the served project's running state |
+| `native-workbench-overview` | Breadcrumb; connection badge; project name, instance identity and endpoint; project switcher; tabs; session strip with sign-in, renewal and disconnect; the four lens cards with live counts; reasoning workspace with explore and knowledge-path actions |
+| `native-workbench-knowledge`, `native-lens-data-models` | Native data-model catalogue (relational, vector, graph relation, geo, object, event, graph node, time series, key value) with schema and cursor badges; native table chooser; the multimodal notice; refresh schema |
+| `native-models-document-rows` | A chosen table's name, mode and purpose; browse up to 50 rows; the query that read them, the row and key counts and the bounded-preview note; the row table |
+| `native-lens-storage-engine` | rrflowKV pipeline: write-ahead log, memtable, segments on disk and page cache, each with its live counter and fill bar |
+| `native-storage-counters`, `native-storage-history` | Every engine counter by stage (page cache, memtable, write-ahead log, segments, flush and compaction, segment I/O, sequences) with fill bars; history, retention and indexes: backend, cursors, change head, retention, sequences, revisions, manifest |
+| `native-workbench-activity`, `native-workbench-learning`, `native-workbench-services` | The honest unavailable states: no fabricated activity, learning controls and provider setup unavailable in this build, planned cloud roles |
+| `native-panel-*` | Glossary drawer; advanced details (HTTP transport, engine readiness, protocol and identity, verified engine identity with its capability list); explore knowledge; knowledge paths; manage project engines |
+| `native-settings-*` | Preferences; keybindings; templates; Database Serving (project directory, installation mode, engine path, console history); backup and restore; open-source licences; About (version, build, protocol and engine revision, repositories). The inherited wordmark here is replaced in Slice C2 |
+
 ## Not yet captured
 
-- RRFlow-native screens (the runtime workbench lenses, diagnostics, serving
-  and project stages) need the desktop build and a running engine; they are
-  captured through the desktop webview before D4 changes them.
 - `migration` is reachable only for engine versions 2.6.1 to 3.0, which the
   in-browser engine (3.0.2) is not; the view's source is its only record.

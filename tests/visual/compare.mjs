@@ -30,9 +30,12 @@ const after = resolve(args.after);
 const out = resolve(args.out ?? "visual-compare");
 const tolerance = Number(args.tolerance ?? 8);
 // Force-directed layouts and live map tiles move with timing and with the
-// order in which code consumes the seeded random sequence, so their pixels are
-// reported but reviewed by eye for structure (records, edges, legend).
-const DYNAMIC = /graph-visualize|geography/;
+// order in which code consumes the seeded random sequence, and the storage
+// engine's live counters move when the estate writes during the capture
+// (most likely an automatic session renewal), so their pixels are reported but
+// reviewed by eye for structure (records, edges, legend, counters).
+const DYNAMIC =
+	/graph-visualize|geography|native-lens-records-relations|native-records-|native-lens-storage-engine|native-storage-/;
 mkdirSync(out, { recursive: true });
 
 const IMAGE = new Set([".png", ".webp"]);

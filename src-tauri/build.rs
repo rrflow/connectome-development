@@ -45,6 +45,10 @@ fn main() {
     tauri_build::build();
     embed_engine_manifest();
 
+    // The preview flag chooses the application's data directory
+    // (`paths::get_data_directory`), so a change to it must rerun this script;
+    // otherwise a preview build silently keeps the release data directory.
+    println!("cargo:rerun-if-env-changed=VITE_CONNECTOME_PREVIEW");
     if std::env::var("VITE_CONNECTOME_PREVIEW").is_err() {
         println!("cargo:rustc-env=VITE_CONNECTOME_PREVIEW=false");
     }
