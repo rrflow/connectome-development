@@ -9,7 +9,6 @@ import { ConnectionLabelsDetails } from "~/components/ConnectionDetails/labels";
 import { Form } from "~/components/Form";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { useStable } from "~/hooks/stable";
-import { openConnection } from "~/screens/connectome/connection/connection";
 import { getActiveConnection, isConnectionValid } from "~/shared/util/connection";
 import { useConfigStore } from "~/shell/stores/config";
 import { Connection } from "~/types";
@@ -39,7 +38,13 @@ function ConnectionEditor({ value }: ConnectionEditorProps) {
 
 	const handleSave = useStable(() => {
 		updateConnection(connection);
-		if (getActiveConnection() === connection.id) openConnection({ connection });
+		// Only an active inherited connection is reopened. Its client loads on
+		// demand, so the RRFlow pages that open this editor never load it.
+		if (getActiveConnection() === connection.id) {
+			import("~/screens/connectome/connection/connection").then(({ openConnection }) =>
+				openConnection({ connection }),
+			);
+		}
 		closeModal("connection-edit");
 	});
 

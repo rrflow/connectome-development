@@ -5,6 +5,7 @@ export * from "./graphql";
 export * from "./icons";
 export * from "./keybinds";
 export * from "./keymaps";
+export * from "./query-keymaps";
 export * from "./records";
 export * from "./rrflowql";
 export * from "./tables";

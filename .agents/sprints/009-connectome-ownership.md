@@ -304,3 +304,55 @@ Branch `agent/connectome-icons` from `main` `1f34a3d` (Slice B merged as PR #7).
   render smoke 2/2; screenshots of the Overview and the connection page show
   the new icons and pictograms with zero page errors.
 
+
+### 2026-10-24 — Slice D0: RRFlow pages load no inherited client
+
+Branch `agent/slice-d0-rrflow-isolation` from `main` `38142b7`. Plan and
+decisions 12 to 16: PR #15.
+
+- Oracle first: `scripts/check-rrflow-isolation.mjs` walks the runtime import
+  graph from the nine RRFlow entry modules (`src/rrflow/*`, the Overview,
+  Create Connection, Control Plane, runtime workbench and diagnostics pages)
+  and fails, naming a shortest path, when one reaches `src/vendor/`,
+  `connection/connection.tsx` or an inherited vendor package. Dynamic
+  `import()` and statement-level `import type` edges are not followed; they
+  load nothing with the page. On `main` it failed for every page. It is now
+  part of `pnpm check` (`pnpm check:isolation`) and is proven to fail on an
+  injected value import, re-export and side-effect import, and to pass a
+  type-only and a lazy import. The identity gate exempts it, like itself,
+  because it must name the packages it forbids.
+- The chains it found, and the cut for each:
+  - every page → `shell/stores/config` → `shared/util/helpers` →
+    `connection.tsx` (one value parser): `tryParseParams` moves into
+    `connection.tsx`, which also ends a module cycle;
+  - helpers → `adapter/index` → the mini adapter → the in-browser engine,
+    the client and both WASM parsers: the mini runner and its embed
+    generator are deleted here instead of in D1, because they sat on every
+    page's load path (adapter, startup entry, `tools/mini-embed.html`, the
+    screen, the `/mini/new` page, route, command, navigation entry, the
+    `isMini` branches, the Vite entry and rename plugin, and the nginx
+    routes, with the leftover cloud routes from Slice B);
+  - the error dialog → `CodeBlock` → the inherited editor language: the
+    RRFlowQL language is loaded on demand until D3 replaces it;
+  - `CodeEditor` → the `~/editor` barrel → editor extensions on the
+    inherited language: it imports `base`, `folding` and `theme` directly,
+    and the query and GraphQL keymaps move to `editor/query-keymaps.tsx`;
+  - `stores/database` imported a type as a value: now `import type`;
+  - Create Connection → `useConnectionLabels` → the connection hooks →
+    the namespace and database modal: `useRequireDatabase` moves into
+    `modals/require-database.tsx`;
+  - the Overview → the connection editor → `openConnection` and the address
+    probe's client: both load on demand; the probe moves to RRFlow
+    readiness in D2.
+- Dead code removed on the way: the `GraphqlQuery`, `SidekickChat` and
+  `SidekickChatMessage` types and `MiniAppearance`.
+- Not in D0: the application shell still loads the inherited client at
+  startup through the Designer and Inspector providers, two application
+  modals, the inherited views and the inherited UI kit (Slice C2, PR #9).
+  They leave with their lenses in D4 to D6 and in D8, where the startup entry
+  joins this gate. D1 keeps the remaining removals and the Sandbox.
+- Verification: `pnpm check` green (identity gate across 503 files with 7
+  vendor dependencies on this `main`-based branch, isolation gate 9 entries,
+  dependency authority, version contract, `tsc`); `pnpm build` green with no
+  `mini/` output; `pnpm test:smoke` 4 passed. Native and RRD process checks
+  run in CI.

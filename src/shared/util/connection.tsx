@@ -1,5 +1,3 @@
-import { adapter } from "~/adapter";
-import { MiniAdapter } from "~/adapter/mini";
 import { SANDBOX } from "~/constants";
 import { useConfigStore } from "~/shell/stores/config";
 import type { Authentication, AuthLevel, Connection } from "~/types";
@@ -11,10 +9,6 @@ import { connectionUri, fastParseJwt } from "./helpers";
  * FIXME: Completely repulsive hack, please lord forgive me for I have sinned
  */
 export function getActiveConnection() {
-	if (adapter instanceof MiniAdapter) {
-		return SANDBOX;
-	}
-
 	const parts = location.pathname.split("/");
 
 	parts.shift();

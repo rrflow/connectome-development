@@ -18,16 +18,12 @@ import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { SidebarToggle } from "~/components/SidebarToggle";
 import { Spacer } from "~/components/Spacer";
 import { useBoolean } from "~/hooks/boolean";
-import {
-	useConnection,
-	useIsConnected,
-	useMinimumVersion,
-	useRequireDatabase,
-} from "~/hooks/connection";
+import { useConnection, useIsConnected, useMinimumVersion } from "~/hooks/connection";
 import { useDatasets } from "~/hooks/dataset";
 import { useDatabaseSchema } from "~/hooks/schema";
 import { useStable } from "~/hooks/stable";
 import { iconChevronRight, iconReset, iconStar, iconTable } from "~/icons";
+import { useRequireDatabase } from "~/modals/require-database";
 import { useConfirmation } from "~/providers/Confirmation";
 import { useFeatureFlags } from "~/shared/util/feature-flags";
 import { dispatchIntent } from "~/shared/util/intents";

@@ -20,8 +20,8 @@ import { useDebouncedFunction } from "~/hooks/debounce";
 import { useConnectionAndView, useIntent } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
 import { iconAutoFix, iconDollar, iconGraphql, iconOpen, iconRefresh, iconText } from "~/icons";
-import { getRRFlowQL } from "~/screens/connectome/connection/connection";
-import { showErrorNotification, showInfo, tryParseParams } from "~/shared/util/helpers";
+import { getRRFlowQL, tryParseParams } from "~/screens/connectome/connection/connection";
+import { showErrorNotification, showInfo } from "~/shared/util/helpers";
 import { useConfigStore } from "~/shell/stores/config";
 import classes from "./style.module.scss";
 

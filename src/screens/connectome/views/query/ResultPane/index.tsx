@@ -5,7 +5,7 @@ import dayjs from "dayjs";
 import { unparse } from "papaparse";
 import { isArray, isObject } from "radash";
 import { useLayoutEffect, useMemo, useState } from "react";
-import { adapter, isMini } from "~/adapter";
+import { adapter } from "~/adapter";
 import { ActionButton } from "~/components/ActionButton";
 import { Icon } from "~/components/Icon";
 import { ListMenu } from "~/components/ListMenu";
@@ -165,7 +165,7 @@ export function ResultPane({ activeTab, selection, editor, corners }: ResultPane
 
 	const Preview = PREVIEW_MODES[resultMode];
 
-	const showFormat = !isMini && (resultMode === "combined" || resultMode === "single");
+	const showFormat = resultMode === "combined" || resultMode === "single";
 
 	const selectedResponse = responses[selectedTab] ?? { result: null };
 	const isExportVisible = resultMode === "table";
@@ -320,28 +320,17 @@ export function ResultPane({ activeTab, selection, editor, corners }: ResultPane
 							label="Change result mode"
 							openDelay={300}
 						>
-							{isMini ? (
-								<ActionButton
-									label="Change result mode"
-									variant="light"
-									h={30}
-									w={30}
-								>
-									<Icon path={activeMode?.icon ?? iconHelp} />
-								</ActionButton>
-							) : (
-								<Button
-									size="xs"
-									aria-label="Change result mode"
-									variant="light"
-									color="obsidian"
-									leftSection={
-										activeMode && <Icon path={activeMode?.icon ?? iconHelp} />
-									}
-								>
-									{activeMode?.label ?? "Unknown"}
-								</Button>
-							)}
+							<Button
+								size="xs"
+								aria-label="Change result mode"
+								variant="light"
+								color="obsidian"
+								leftSection={
+									activeMode && <Icon path={activeMode?.icon ?? iconHelp} />
+								}
+							>
+								{activeMode?.label ?? "Unknown"}
+							</Button>
 						</Tooltip>
 					</ListMenu>
 

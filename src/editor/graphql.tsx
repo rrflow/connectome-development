@@ -5,7 +5,7 @@ import { EditorView, keymap, ViewPlugin } from "@codemirror/view";
 import { fillAllFieldsCommands, graphqlLanguage, type Position } from "cm6-graphql";
 import { type DocumentNode, type GraphQLSchema, parse } from "graphql";
 import { fillGraphqlFields } from "./keybinds";
-import { graphqlSuggestions } from "./keymaps";
+import { graphqlSuggestions } from "./query-keymaps";
 
 const documentEffect = StateEffect.define<DocumentNode | undefined>();
 

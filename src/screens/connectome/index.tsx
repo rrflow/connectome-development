@@ -14,7 +14,6 @@ import { useInterfaceStore } from "~/shell/stores/interface";
 import type { ViewPage } from "~/types";
 import { ControlPlanePage } from "./pages/ControlPlane";
 import { CreateConnectionPage } from "./pages/CreateConnection";
-import { NewEmbedPage } from "./pages/NewEmbed";
 import { OverviewPage } from "./pages/Overview";
 import { RuntimeConnectionPage } from "./pages/RuntimeConnection";
 import { RuntimeDiagnosticsPage } from "./pages/RuntimeDiagnostics";
@@ -33,7 +32,6 @@ import QueryView from "./views/query/QueryView";
 
 const DatabaseSidebarLazy = memo(ConnectomeSidebar);
 const OverviewPageLazy = memo(OverviewPage);
-const NewEmbedPageLazy = memo(NewEmbedPage);
 const CreateConnectionPageLazy = memo(CreateConnectionPage);
 
 const PORTAL_OPTIONS = {
@@ -145,10 +143,6 @@ export function ConnectomeScreen() {
 
 							<Route path="/overview">
 								<OverviewPageLazy />
-							</Route>
-
-							<Route path="/mini/new">
-								<NewEmbedPageLazy />
 							</Route>
 
 							<Route path="/connections/create">

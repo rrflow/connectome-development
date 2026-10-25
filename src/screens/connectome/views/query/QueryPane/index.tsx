@@ -37,8 +37,8 @@ import {
 	iconWarning,
 } from "~/icons";
 import { useInspector } from "~/providers/Inspector";
-import { getRRFlowQL } from "~/screens/connectome/connection/connection";
-import { showErrorNotification, tryParseParams } from "~/shared/util/helpers";
+import { getRRFlowQL, tryParseParams } from "~/screens/connectome/connection/connection";
+import { showErrorNotification } from "~/shared/util/helpers";
 import { dispatchIntent } from "~/shared/util/intents";
 import { parseVariables } from "~/shared/util/language";
 import { useConfigStore } from "~/shell/stores/config";

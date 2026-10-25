@@ -1,7 +1,7 @@
 import type { ElementProps, MantineColorScheme } from "@mantine/core";
 import { AboutMetadata } from "@tauri-apps/api/menu";
 import type { FeatureFlagMap } from "~/shared/util/feature-flags";
-import type { Duration, RecordId } from "~/vendor/rrflow-client";
+import type { Duration } from "~/vendor/rrflow-client";
 
 export type AccessType = "JWT" | "RECORD";
 export type BannerType = "info" | "warning" | "important";
@@ -17,7 +17,6 @@ export type DiagramLinks = "default" | "hidden" | "visible";
 export type DiagramMode = "default" | "fields" | "summary" | "simple";
 export type DiagramHoverFocus = "default" | "none" | "neighbours" | "chain" | "recursive";
 export type InstallMode = "fresh" | "existing";
-export type MiniAppearance = "normal" | "compact" | "plain";
 export type NoneResultMode = "default" | "show" | "hide" | "collapse";
 export type Orientation = "horizontal" | "vertical";
 export type Platform = "darwin" | "windows" | "linux";
@@ -49,7 +48,7 @@ export type AuthMode =
 	| "token"
 	| "access"
 	| "access-signup";
-export type GlobalPage = "/overview" | "/mini/new";
+export type GlobalPage = "/overview";
 export type ViewPage =
 	| "query"
 	| "explorer"
@@ -265,12 +264,6 @@ export interface EstateStage {
 	stage: EstateStageName;
 	state: EstateStageState;
 	detail: string;
-}
-
-export interface GraphqlQuery {
-	query?: string;
-	variables?: Record<string, any>;
-	operationName?: string;
 }
 
 export interface QueryResponse {
@@ -583,28 +576,6 @@ export interface Driver {
 	name: string;
 	icon: React.FC<{ active?: boolean } & ElementProps<"svg">>;
 	link: string;
-}
-
-export interface SidekickChatMessage {
-	id: RecordId | null;
-	sent_at: Date;
-	content: string;
-	role: "user" | "assistant";
-	sources?: {
-		header: string;
-		links: {
-			url: string;
-			title: string;
-			img_url: string | null;
-		}[];
-	};
-}
-
-export interface SidekickChat {
-	id: RecordId;
-	author: string;
-	title: string;
-	last_activity: Date;
 }
 
 export interface AppMenu {

@@ -1,5 +1,4 @@
-import { mkdirSync, readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type PluginOption } from "vite";
@@ -37,11 +36,6 @@ const isDocker = process.env.VITE_CONNECTOME_DOCKER === "true";
 
 const ENTRYPOINTS = {
 	connectome: "/index.html",
-	mini_embed: "/tools/mini-embed.html",
-};
-
-const TOOLS = {
-	"tools/mini-embed.html": "mini/run/index.html",
 };
 
 export default defineConfig(({ mode }) => {
@@ -56,20 +50,6 @@ export default defineConfig(({ mode }) => {
 		markdown({
 			mode: [Mode.HTML],
 		}),
-		{
-			name: "rename-html",
-			enforce: "post",
-			generateBundle(_, bundle) {
-				for (const chunk of Object.values(bundle)) {
-					if (TOOLS[chunk.fileName]) {
-						const endpoint = TOOLS[chunk.fileName];
-						const target = dirname(resolve("dist", endpoint));
-						mkdirSync(target, { recursive: true });
-						chunk.fileName = endpoint;
-					}
-				}
-			},
-		},
 	];
 
 	// Configure compression for web builds
