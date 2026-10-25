@@ -608,6 +608,17 @@ decisions 12 to 16: PR #15.
   modals, the inherited views and the inherited UI kit (Slice C2, PR #9).
   They leave with their lenses in D4 to D6 and in D8, where the startup entry
   joins this gate. Decision 17 re-scopes D1: nothing is deleted before its RRFlow lens exists.
+- Visual proof (decision 17), with the `tests/visual/` harness of Slice V0
+  run on PR #9 (C2) and on this branch: the first capture found every
+  RRFlowQL `CodeBlock` empty (the empty-state examples of the explorer,
+  functions and parameters views and the query-history previews, 3.4 to 9.6
+  percent of each image). `CodeEditor` rebuilds its state without the
+  document when its extensions change, and the on-demand language changed
+  them after mount. `CodeBlock` now remounts the editor once the language
+  arrives and keeps the loaded language for later blocks. The recapture
+  compares 46 identical, 48 negligible and 0 changed against PR #9; the 4
+  dynamic captures show the same 5 records, 6 edges and legend in the result
+  graph and the same map contents.
 - Verification, with Slice C2 and the plan merged in: `pnpm check` green
   (identity gate across 510 files with 6 vendor dependencies, isolation gate
   9 entries, dependency authority, version contract, `tsc`); `pnpm build`

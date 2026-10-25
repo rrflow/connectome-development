@@ -27,14 +27,19 @@ export interface CodeBlockProps extends Omit<PaperProps, "children" | "styles"> 
 	copyCodeProps?: ActionIconProps;
 }
 
+/** The inherited RRFlowQL language once loaded, shared by every block. */
+let loadedRrflowql: (() => Extension) | null = null;
+
 /**
- * The highlighting extension for `lang`. The RRFlowQL language is still the
+ * The highlighting extensions for `lang`. The RRFlowQL language is still the
  * inherited editor's (sprint 009 Slice D3 replaces it), so it is loaded on
  * demand: a page that shows only plain or JSON blocks, such as the error
- * dialog every RRFlow page can open, never loads the inherited editor.
+ * dialog every RRFlow page can open, never loads the inherited editor. Once
+ * loaded it is kept, so later blocks are highlighted from their first frame.
+ * `ready` is false only while an RRFlowQL block waits for that first load.
  */
-function useLanguageExtension(lang: string | undefined): Extension[] {
-	const [rrflowql, setRrflowql] = useState<Extension[] | null>(null);
+function useLanguageExtension(lang: string | undefined) {
+	const [rrflowql, setRrflowql] = useState<(() => Extension) | null>(() => loadedRrflowql);
 
 	useEffect(() => {
 		if (lang !== "rrflowql" || rrflowql) {
@@ -44,8 +49,9 @@ function useLanguageExtension(lang: string | undefined): Extension[] {
 		let active = true;
 
 		import("~/vendor/rrflowql-editor").then((editor) => {
+			loadedRrflowql = editor.rrflowql;
 			if (active) {
-				setRrflowql([editor.rrflowql()]);
+				setRrflowql(() => editor.rrflowql);
 			}
 		});
 
@@ -54,16 +60,18 @@ function useLanguageExtension(lang: string | undefined): Extension[] {
 		};
 	}, [lang, rrflowql]);
 
-	return useMemo(() => {
+	const extensions = useMemo(() => {
 		switch (lang) {
 			case "rrflowql":
-				return rrflowql ?? [];
+				return rrflowql ? [rrflowql()] : [];
 			case "json":
 				return [json()];
 			default:
 				return [];
 		}
 	}, [lang, rrflowql]);
+
+	return { extensions, ready: lang !== "rrflowql" || rrflowql !== null };
 }
 
 /**
@@ -83,8 +91,8 @@ export function CodeBlock({
 	const language = useLanguageExtension(lang);
 
 	const extensions = useMemo(
-		() => [...language, EditorView.lineWrapping, EditorView.editable.of(false)],
-		[language],
+		() => [...language.extensions, EditorView.lineWrapping, EditorView.editable.of(false)],
+		[language.extensions],
 	);
 
 	return (
@@ -110,6 +118,10 @@ export function CodeBlock({
 			)}
 			<Box className={classes.body}>
 				<CodeEditor
+					// CodeEditor rebuilds its state without the document when its
+					// extensions change, so the block remounts once the language
+					// arrives instead of changing them in place.
+					key={language.ready ? "ready" : "pending"}
 					className={classes.editor}
 					value={value}
 					extensions={extensions}
