@@ -6,14 +6,13 @@
 
 ## Scope
 
-Governs the 3 screen directories and the 9 views + 7 pages within the main connectome screen. On 2026-10-18 (sprint 009, Slice B) the inherited vendor's hosted-cloud surface was deleted: the auth-callback screen, the dashboard, monitor and sidekick views, the eight cloud/organization pages, and the metrics charts. Every remaining view still runs on the inherited query client and moves onto the RRD SDK or is deleted in Slice D.
+Governs the 2 screen directories and the 9 views + 7 pages within the main connectome screen. On 2026-10-18 (sprint 009, Slice B) the inherited vendor's hosted-cloud surface was deleted: the auth-callback screen, the dashboard, monitor and sidekick views, the eight cloud/organization pages, and the metrics charts; Slice C2 deleted the unmounted new-domain screen (the vendor's domain-move notice). Every remaining view still runs on the inherited query client and moves onto the RRD SDK or is deleted in Slice D.
 
 ## Current Screen Structure
 
 ```
 src/screens/
 ├── mini-embed/         # Embeddable mini query editor
-├── new-domain/         # Domain redirect handler
 └── connectome/         # Main application screen
     ├── components/     # Screen-specific shared components
     ├── connection/     # Connection management
@@ -54,7 +53,7 @@ Deleted 2026-10-18: CreateOrganization, OrganizationDeploy, OrganizationManage, 
 
 ## Terminology
 
-- **Screen**: A top-level entrypoint (connectome, mini-embed, new-domain)
+- **Screen**: A top-level entrypoint (connectome, mini-embed)
 - **View**: A feature tab within the main screen (query, explorer, designer...)
 - **Page**: A routed page of the main screen outside the connection views
 

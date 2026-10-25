@@ -16,7 +16,7 @@
 	0% {
 		opacity: 0;
 		transform: translate(-50%, -50%) scale(0.5);
-		color: var(--rrflow-energy);
+		color: var(--connectome-gradient-from);
 	}
 
 	20% {
@@ -27,6 +27,6 @@
 	100% {
 		opacity: 0;
 		transform: translate(-50%, -50%) scale(0.8);
-		color: var(--rrflow-passion);
+		color: var(--connectome-gradient-to);
 	}
 }
