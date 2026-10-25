@@ -1,0 +1,92 @@
+/*
+ * Connectome's theme tokens. The Mantine theme in `src/shared/util/mantine.tsx`
+ * defines the scales and component defaults; these custom properties carry
+ * the same identity into plain CSS. When ColdLight's generated tokens are
+ * adopted, they are mapped here.
+ */
+:root {
+	--connectome-gradient-from: #7c5cf6;
+	--connectome-gradient-to: #06b6d4;
+	--connectome-gradient: linear-gradient(135deg, var(--connectome-gradient-from), var(--connectome-gradient-to));
+	--connectome-glass-subtle: rgb(255 255 255 / 0.05);
+	--connectome-paper-background-filled: rgb(21 17 31 / 0.94);
+	--connectome-focus-outline: color-mix(in srgb, var(--mantine-color-rrflow-3) 75%, var(--connectome-glass-subtle));
+	--connectome-focus-background: color-mix(in srgb, var(--mantine-color-rrflow-3) 7%, var(--connectome-glass-subtle));
+	--connectome-divider-size: 0.75rem;
+	--mantine-color-rrflow-text: var(--mantine-color-rrflow-4);
+}
+
+:root[data-mantine-color-scheme="light"] {
+	--connectome-glow: 0 3px 15px rgb(124 92 246 / 0.35);
+	--connectome-glass-subtle: rgb(0 0 0 / 0.04);
+	--connectome-paper-background-filled: rgb(255 255 255 / 0.94);
+	--mantine-color-body: var(--mantine-color-obsidian-1);
+}
+
+:root[data-mantine-color-scheme="dark"] {
+	--connectome-glow: 0 3px 20px -4px rgb(124 92 246 / 0.6), 0 3px 15px rgb(6 182 212 / 0.25);
+	--mantine-color-body: var(--mantine-color-obsidian-9);
+}
+
+/* Surfaces */
+.mantine-Paper-root {
+	background-color: var(--mantine-color-obsidian-8);
+	border-color: var(--mantine-color-obsidian-7);
+
+	:root[data-mantine-color-scheme="light"] & {
+		background-color: var(--mantine-color-white);
+		border-color: var(--mantine-color-obsidian-2);
+	}
+}
+
+.mantine-Modal-content,
+.mantine-Drawer-content,
+.mantine-Popover-dropdown,
+.mantine-Menu-dropdown,
+.mantine-HoverCard-dropdown,
+.mantine-Tooltip-tooltip {
+	background-color: var(--connectome-paper-background-filled);
+	backdrop-filter: blur(12px);
+	border: 1px solid var(--mantine-color-obsidian-7);
+
+	:root[data-mantine-color-scheme="light"] & {
+		border-color: var(--mantine-color-obsidian-2);
+	}
+}
+
+.mantine-Tooltip-tooltip {
+	color: var(--mantine-color-bright);
+}
+
+/* Gradient surfaces */
+.mantine-Button-root[data-variant="gradient"],
+.mantine-ActionIcon-root[data-variant="gradient"],
+.mantine-Badge-root[data-variant="gradient"],
+.mantine-ThemeIcon-root[data-variant="gradient"] {
+	background: var(--connectome-gradient);
+	color: var(--mantine-color-white);
+}
+
+.mantine-Menu-item[data-variant="gradient"] {
+	background: var(--connectome-gradient);
+}
+
+.mantine-Button-section {
+	padding-inline: 0.1rem;
+}
+
+/* Inputs */
+.mantine-Input-input[data-variant="filled"] {
+	background-color: var(--connectome-glass-subtle);
+	border: 1px solid transparent;
+
+	&:focus,
+	&:focus-within {
+		border-color: var(--connectome-focus-outline);
+		background-color: var(--connectome-focus-background);
+	}
+}
+
+.mantine-Drawer-inner {
+	margin-top: var(--titlebar-offset);
+}

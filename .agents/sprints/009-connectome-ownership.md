@@ -465,6 +465,66 @@ Branch `agent/connectome-icons` from `main` `1f34a3d` (Slice B merged as PR #7).
   render smoke 2/2; screenshots of the Overview and the connection page show
   the new icons and pictograms with zero page errors.
 
+### 2026-10-18 — Slice C2: Connectome's own look (Decision 10 = A)
+
+Branch `agent/connectome-theme` from `main` `ce08e2f` (Slice C1 merged as PR #8).
+
+- Decision 10 (owner, 2026-10-18): Connectome theme now, ColdLight tokens
+  later. `src/shared/util/mantine.tsx` is Connectome's theme — type (Inter
+  Variable, JetBrains Mono Variable, self-hosted from `@fontsource-variable/*`,
+  OFL-1.1; no runtime fetch from Google Fonts), sizes, spacing, radii, the
+  `obsidian` and `slate` neutral scales, the `rrflow` accent scale (also
+  bound to `violet`), the violet → cyan gradient, and component defaults on
+  Mantine's built-in variants. `src/shared/assets/styles/theme.scss` carries
+  the same identity as `--connectome-*` custom properties (the previous
+  `--rrflow-energy`/`--rrflow-passion`/`--Connectome-*` names — the vendor's
+  token vocabulary, inconsistently renamed — are gone; `--Connectome-gradient`
+  was referenced in four places and defined nowhere). The dead
+  `coldlight.scss` (a neon palette nothing imported) is removed; ColdLight
+  arrives as generated tokens mapped in `mantine.tsx`.
+- Found while replacing the theme: the tree still shipped the vendor's
+  bowler-hat logo as **the application icon on every platform**
+  (`src-tauri/icons/*`, `public/favicon.ico`), its wordmark as the settings
+  and mini-view logo, its "Sandbox" screenshot, its referral-program art,
+  its glow images, its SurrealQL/SurrealML logos renamed, its social-link and
+  README imagery under `.github/images`, and `CODEOWNERS` naming its
+  maintainers as owners of this repository. All deleted or replaced: an
+  original application icon (`src/shared/assets/brand/app-icon.svg`,
+  rendered to every platform format by `tauri icon`), a text `Wordmark`
+  component, a CSS `TopGlow`, `CODEOWNERS` = the owner. The unmounted
+  `new-domain` screen (the vendor's domain-move notice) is deleted.
+- `@surrealdb/ui` removed from `package.json`; identity gate 7 → 6. The six
+  that remain are the engine, client and editor packages Slice D removes.
+- Verification: `pnpm check` green; production build green; render smoke
+  2/2; screenshots of the Overview, the connection page and the settings
+  modal under the new theme with zero page errors; fonts verified loaded
+  from the bundle (`document.fonts.check`).
+
+### 2026-10-18 — Slice C2 CI blocked; Slice D paused (Decision 11)
+
+- PR #9's CI did not start: every job failed in four seconds with the
+  GitHub annotation "The job was not started because recent account
+  payments have failed or your spending limit needs to be increased"
+  (the `rrflow` organization's Actions billing). The workflow is unchanged
+  and was green on `main` twelve minutes earlier. The owner clears it under
+  the organization's Billing & plans; CI is then re-run and PR #9 merges on
+  green.
+- Decision 11 (owner, 2026-10-18): pause Slice D until billing is fixed and
+  the Slice C2 build is verified on the owner's desktop. The two orders
+  considered for the first D increment stay recorded for that moment:
+  delete the inherited engine surface first (recommended: the RRD runtime
+  page already carries the graph lens with scope/depth/direction drill-down,
+  an RRFlowQL console, vector and storage lenses; the nine SurrealDB views,
+  the Sandbox, the datasets, `src/vendor` and the six remaining vendor
+  packages would go, the connection model would lose its SurrealDB
+  authentication fields with a config migration, and the identity gate
+  would reach zero), or build the RRFlowQL studio on RRD first and delete
+  afterwards.
+- Desktop verification of `agent/connectome-theme` (PR #9): check out the
+  branch, `pnpm install`, `pnpm engine:stage` (or `--from <path to a built
+  rrflow>`), `pnpm tauri:dev`; expect the Connectome application icon, the
+  text wordmark in Settings, the violet → cyan theme, Start serving →
+  engine/install/serve/ready stage cards → the runtime lenses.
 
 ### 2026-10-24 — Slice D researched; `main` protected
 
@@ -486,6 +546,38 @@ Branch `docs/sprint-009-rrflow-conversion` from `main` `38142b7`.
   commits, all-green groups, five entries, 120-minute check timeout against
   observed 8- to 13-minute runs). PR #14 is the first merge-queue candidate.
 - Next: Slice C2 (rebase PR #9, application icon from decision 13), then D0.
+
+### 2026-10-24 — Slice C2 completed on current `main` (decisions 12 and 13)
+
+Branch `agent/connectome-theme` (PR #9), with `main` `38142b7` merged in
+(clean; the lockfile installs frozen).
+
+- Application icon (owner decision 13): `src/shared/assets/brand/app-icon.svg`
+  is now the Connectome mark already shown in the sidebar and on the Overview
+  (`src/shared/assets/pictograms/connectome.svg`), with its own geometry,
+  stroke and gradient, on a dark tile on the 824-unit macOS grid. It replaces
+  the redrawn hub of 2026-10-18, which used other proportions and the theme
+  gradient. `tauri icon` re-rendered all 50 platform files; `public/favicon.ico`
+  is the rendered `icon.ico` (16 to 256 pixels).
+- Found while converting: the mark's gradient uses each element's bounding
+  box, so its two horizontal links (zero-height boxes) never painted in
+  Chromium or in the icon renderer. The mark users know is four links and
+  five nodes; the two dead links are removed from both files.
+- Installer art: `src-tauri/res/dmg-background.png` (the inherited hat and
+  wordmark) is re-rendered from the mark, the bundled Inter font and the
+  `Wordmark` gradient by `scripts/brand/render-installer-art.mjs`, at Tauri's
+  default disk-image layout. The unreferenced `dmg-background-original.png`,
+  `nsis-header.bmp` and `nsis-sidebar.bmp` are deleted.
+- Biome fixes left by the theme change: the unused `Image` import in the
+  settings dialog and the single-child fragments left in both startup
+  entrypoints after `FontLinks` was removed.
+- Verification: `pnpm check` green (identity gate across 508 files, six
+  inherited vendor dependencies still declared, dependency authority,
+  version contract 0.0.5 alpha, `tsc`); `pnpm build` green; `pnpm test:smoke`
+  4 passed; production-bundle screenshots of the Overview and the settings
+  dialog show the mark and the text wordmark with zero page errors. Native
+  checks and the RRD process tests run in CI. The desktop check of decision 11
+  is the owner's on the built bundle.
 
 ### 2026-10-24 — Slice V0: inherited visual baseline (decision 17)
 
@@ -575,8 +667,9 @@ the desktop application and a running engine.
   PNG capture. `PARITY.md` lists, per native screen and graph, what each
   later slice must keep or improve.
 - Found while capturing: the desktop Settings dialog still showed the
-  inherited "Surrealist" wordmark at `83804c3`; Slice C2 (PR #9) replaces it,
-  and the owner approved landing it on 2026-10-25. The installation preview
+  inherited "Surrealist" wordmark at `83804c3`. Slice C2 (PR #9) replaces it;
+  on the owner's approval it landed in `main` as `942b76bf` on 2026-10-25, and
+  that `main` is merged into this branch. The installation preview
   shows the project path with a raw `\\?\` prefix, recorded in `PARITY.md`
   as an improvement target.
 - Verified locally: `pnpm check` (Biome, identity, dependency authority,
