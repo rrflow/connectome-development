@@ -168,6 +168,20 @@ owner's desktop) were recorded on the unmerged `agent/connectome-theme` branch
     with no stand-in client, placeholder or dual path, and is rebuilt when
     its RRFlow operation lands (the rebuild table below). This follows
     decision 4 and RRFlow's Connectome contract (direct-convergence step 4).
+    **Amended by decision 17:** "deleted with no stand-in" no longer applies
+    to anything visual.
+17. No visual regression, only improvements (owner, 2026-10-24: "I better
+    not lose one visual regression but only improvements"). Every inherited
+    screen, graph and visual is captured first (`tests/visual/`, baseline at
+    `main` `38142b7`, both themes) and listed in `tests/visual/PARITY.md`. Its
+    RRFlow lens must reproduce or improve every listed item, shown by a
+    before/after capture, before the inherited screen and its vendor code are
+    deleted. A subject RRFlow does not yet serve keeps its inherited screen
+    until its RRFlow lens exists; that lens may be authored ahead of its
+    RRFlow operation and show the engine's capability state, with no vendor
+    code behind it. A refactor that moves code without changing a screen
+    (such as Slice D0) is compared pixel by pixel against the build before
+    it.
 
 ## Ordered implementation slices
 
@@ -274,11 +288,15 @@ each one lands.
   serving stop loading `connection.tsx`. Add the RRFlow value model; scope
   `useConnectionSwitch` to the inherited routes. Oracle: a module-graph test
   shows no RRFlow page reaches `src/vendor/`.
-- **D1: remove the subjects RRFlow does not serve, and replace the Sandbox.**
-  Remove the mini runner and embed, record-access sign-up, users and access,
-  GraphQL, functions and model upload, the migration view and the
-  documentation topics. The Sandbox becomes a scratch project estate on the
-  sidecar. Removes `@surrealdb/wasm`.
+- **D1: re-scoped by decision 17.** The Sandbox's entry points move to
+  Connectome's default local estate on the sidecar, which already exists;
+  its reset returns with RRFlow's uninstall (D-11). The subjects RRFlow does
+  not serve (record-access sign-up, users and access, GraphQL, functions and
+  model upload, migration, the documentation topics, the mini runner and
+  embed) keep their inherited screens until their RRFlow lenses exist; the
+  API reference is rebuilt first, from RRFlow's public operation catalogue,
+  which RRFlow already serves. `@surrealdb/wasm` leaves with the last screen
+  that needs it.
 - **D2: native surface.** Tauri commands over the existing `rrd-client`
   methods for transactions, query export, changefeed, `/v1/ws` subscriptions,
   backups and audit. The renderer gets opaque handles and never holds a
@@ -468,3 +486,39 @@ Branch `docs/sprint-009-rrflow-conversion` from `main` `38142b7`.
   commits, all-green groups, five entries, 120-minute check timeout against
   observed 8- to 13-minute runs). PR #14 is the first merge-queue candidate.
 - Next: Slice C2 (rebase PR #9, application icon from decision 13), then D0.
+
+### 2026-10-24 — Slice V0: inherited visual baseline (decision 17)
+
+Branch `agent/slice-v0-visual-baseline` from `main` `83804c3` (#14 and #15
+merged). After the owner's rule, the uncommitted D1a deletion of five
+inherited views was discarded and PR #16 (D0) was revised to keep the mini
+runner and embed generator.
+
+- `tests/visual/` captures every reachable inherited screen and state from a
+  production build of `main` `38142b7` (the UI is unchanged through
+  `83804c3`): 49 states per theme, dark and light, at 1440x900, with the
+  in-browser Sandbox seeded from `seed.surql`. `PARITY.md` lists, per screen
+  and graph, the visual elements and interactions its RRFlow lens must keep
+  or improve.
+- Found while capturing, recorded in `tests/visual/README.md`: the inherited
+  screens are unreachable in the shipped app (the Sandbox defaults to an
+  RRFlow runtime profile) and broken when reached (a renamed version prefix
+  fails every inherited connection; the mini page lost its adapter meta tag;
+  the embed generator builds its URLs without the serving port).
+  `capture-only.mjs` undoes the first three in a working tree for capture
+  and restores the files byte for byte.
+- Determinism: two captures of one build first differed in 18 of 98 images
+  (random relation ids and their row order, query timings, animations still
+  running, random force-layout starts). The seed now uses fixed relation
+  ids, the capture masks timings, turns on the application's "Disable
+  animations" preference with reduced motion, and seeds `Math.random`.
+- After those fixes two captures of one build compare 51 identical, 47
+  negligible (the largest 0.044 percent, the About tab's build time) and 0
+  changed. The result graph and the map are reported as dynamic and reviewed
+  by eye. The committed baseline is the second of those runs: 98 lossless
+  WebP images (5.4 MB) with a manifest of revision, seed digest, capture-only
+  patches and per-image SHA-256.
+- First use: comparing PR #9 with PR #16 caught D0 emptying every RRFlowQL
+  code block (recorded under Slice D0); after its fix the two compare with 0
+  changed screens. PR #9 against this baseline changes all 98 images by
+  design (theme, wordmark, icon); its before/after is for the owner's review.
