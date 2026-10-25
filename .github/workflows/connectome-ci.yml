@@ -2,6 +2,9 @@ name: Connectome CI
 
 on:
   pull_request:
+  # Merge-queue candidates run the same jobs on the merged result before it
+  # lands; the main ruleset requires the stable ci-gate check below.
+  merge_group:
   push:
     branches:
       - main
@@ -206,3 +209,26 @@ jobs:
           export RRFLOW_BIN="$HOME/.rrflow-engine/rrflow"
           "$RRFLOW_BIN" version
           cargo test --manifest-path src-tauri/Cargo.toml --locked rrd::client::process:: -- --ignored
+
+  # One stable required check for the main ruleset and the merge queue. The
+  # native matrix names follow runner images, so branch protection binds to
+  # this reduction instead of to each job.
+  ci-gate:
+    name: ci-gate
+    if: always()
+    needs:
+      - frontend
+      - native
+      - rrd-process
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Require every CI job
+        env:
+          FRONTEND: ${{ needs.frontend.result }}
+          NATIVE: ${{ needs.native.result }}
+          RRD_PROCESS: ${{ needs.rrd-process.result }}
+        run: |
+          echo "frontend=$FRONTEND native=$NATIVE rrd-process=$RRD_PROCESS"
+          test "$FRONTEND" = success
+          test "$NATIVE" = success
+          test "$RRD_PROCESS" = success
