@@ -624,6 +624,14 @@ export function useInternalCommandBuilder(): CommandCategory[] {
 						action: intent("open-settings"),
 					},
 					{
+						id: "open-embedder",
+						name: "Open mini generator",
+						icon: iconWrench,
+						aliases: ["mini", "embed"],
+						binding: true,
+						action: navigate("/mini/new"),
+					},
+					{
 						id: "open-changelog",
 						name: "View release changelogs",
 						icon: iconStar,

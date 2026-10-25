@@ -3,6 +3,7 @@ import { AboutMetadata } from "@tauri-apps/api/menu";
 import type { FeatureFlagMap } from "~/shared/util/feature-flags";
 import type { Duration } from "~/vendor/rrflow-client";
 
+export type MiniAppearance = "normal" | "compact" | "plain";
 export type AccessType = "JWT" | "RECORD";
 export type BannerType = "info" | "warning" | "important";
 export type AuthLevel = "root" | "namespace" | "database";
@@ -48,7 +49,7 @@ export type AuthMode =
 	| "token"
 	| "access"
 	| "access-signup";
-export type GlobalPage = "/overview";
+export type GlobalPage = "/overview" | "/mini/new";
 export type ViewPage =
 	| "query"
 	| "explorer"

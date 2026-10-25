@@ -6,17 +6,18 @@
 
 ## Scope
 
-Governs the 1 screen directory and the 9 views + 6 pages within the main connectome screen. On 2026-10-18 (sprint 009, Slice B) the inherited vendor's hosted-cloud surface was deleted: the auth-callback screen, the dashboard, monitor and sidekick views, the eight cloud/organization pages, and the metrics charts; Slice C2 deleted the unmounted new-domain screen (the vendor's domain-move notice). Every remaining view still runs on the inherited query client and moves onto the RRD SDK or is deleted in Slice D. On 2026-10-24 (Slice D0) the mini runner screen and its embed generator page were deleted: they ran the inherited engine in the browser, RRFlow has no browser deployment yet, and the shared adapter selector loaded that engine into every RRFlow page.
+Governs the 2 screen directories and the 9 views + 7 pages within the main connectome screen. On 2026-10-18 (sprint 009, Slice B) the inherited vendor's hosted-cloud surface was deleted: the auth-callback screen, the dashboard, monitor and sidekick views, the eight cloud/organization pages, and the metrics charts; Slice C2 deleted the unmounted new-domain screen (the vendor's domain-move notice). Every remaining view still runs on the inherited query client and moves onto the RRD SDK or is deleted in Slice D. On 2026-10-24 (Slice D0) the mini runner and its embed generator were kept, by the owner's no-visual-regression rule: the mini adapter now loads the inherited engine, client and message channel on demand, so the shared adapter selector no longer loads them into every RRFlow page.
 
 ## Current Screen Structure
 
 ```
 src/screens/
+├── mini-embed/         # Embeddable mini query editor
 └── connectome/         # Main application screen
     ├── components/     # Screen-specific shared components
     ├── connection/     # Connection management
     ├── docs/           # Documentation viewer
-    ├── pages/          # Overview, connection and runtime pages (6)
+    ├── pages/          # Overview, connection, runtime and embed pages (7)
     └── views/          # Feature views (9)
 ```
 
@@ -36,12 +37,13 @@ src/screens/
 
 Deleted 2026-10-18: `dashboard` and `monitor` (the vendor's hosted-instance dashboard and monitoring, gated to cloud connections) and `sidekick` (the vendor's assistant).
 
-## Page Inventory (6)
+## Page Inventory (7)
 
 | Page | Purpose |
 |------|---------|
 | ControlPlane | Optional enterprise control-plane profile |
 | CreateConnection | New runtime profile or served estate |
+| NewEmbed | Mini embed generator |
 | Overview | Hero, runtime profiles, resources |
 | Placeholder | Empty-state placeholder |
 | RuntimeConnection | RRD handshake and session |
@@ -51,7 +53,7 @@ Deleted 2026-10-18: CreateOrganization, OrganizationDeploy, OrganizationManage, 
 
 ## Terminology
 
-- **Screen**: A top-level entrypoint (connectome)
+- **Screen**: A top-level entrypoint (connectome, mini-embed)
 - **View**: A feature tab within the main screen (query, explorer, designer...)
 - **Page**: A routed page of the main screen outside the connection views
 

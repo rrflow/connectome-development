@@ -29,7 +29,7 @@ import { useInterfaceStore } from "~/shell/stores/interface";
 import type { GlobalPage, SidebarMode, ViewPage } from "~/types";
 import classes from "./style.module.scss";
 
-const GLOBAL_NAVIGATION: GlobalPage[][] = [["/overview"]];
+const GLOBAL_NAVIGATION: GlobalPage[][] = [["/overview"], ["/mini/new"]];
 
 const VIEW_NAVIGATION: ViewPage[][] = [
 	["migrations"],

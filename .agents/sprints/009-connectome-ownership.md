@@ -582,12 +582,13 @@ decisions 12 to 16: PR #15.
     `connection.tsx` (one value parser): `tryParseParams` moves into
     `connection.tsx`, which also ends a module cycle;
   - helpers → `adapter/index` → the mini adapter → the in-browser engine,
-    the client and both WASM parsers: the mini runner and its embed
-    generator are deleted here instead of in D1, because they sat on every
-    page's load path (adapter, startup entry, `tools/mini-embed.html`, the
-    screen, the `/mini/new` page, route, command, navigation entry, the
-    `isMini` branches, the Vite entry and rename plugin, and the nginx
-    routes, with the leftover cloud routes from Slice B);
+    the client, both WASM parsers and the embed message channel: the mini
+    adapter now loads them on demand inside the methods that run on the mini
+    page, so the selector imports only the class. The mini runner and its
+    embed generator stay, by the owner's 2026-10-24 rule that no visual is
+    removed before its RRFlow replacement exists (decision 17, recorded with
+    the visual baseline). The nginx routes left over from Slice B's deleted
+    cloud pages are removed;
   - the error dialog → `CodeBlock` → the inherited editor language: the
     RRFlowQL language is loaded on demand until D3 replaces it;
   - `CodeEditor` → the `~/editor` barrel → editor extensions on the
@@ -601,14 +602,16 @@ decisions 12 to 16: PR #15.
     probe's client: both load on demand; the probe moves to RRFlow
     readiness in D2.
 - Dead code removed on the way: the `GraphqlQuery`, `SidekickChat` and
-  `SidekickChatMessage` types and `MiniAppearance`.
+  `SidekickChatMessage` types.
 - Not in D0: the application shell still loads the inherited client at
   startup through the Designer and Inspector providers, two application
   modals, the inherited views and the inherited UI kit (Slice C2, PR #9).
   They leave with their lenses in D4 to D6 and in D8, where the startup entry
-  joins this gate. D1 keeps the remaining removals and the Sandbox.
-- Verification: `pnpm check` green (identity gate across 503 files with 7
-  vendor dependencies on this `main`-based branch, isolation gate 9 entries,
-  dependency authority, version contract, `tsc`); `pnpm build` green with no
-  `mini/` output; `pnpm test:smoke` 4 passed. Native and RRD process checks
-  run in CI.
+  joins this gate. Decision 17 re-scopes D1: nothing is deleted before its RRFlow lens exists.
+- Verification, with Slice C2 and the plan merged in: `pnpm check` green
+  (identity gate across 510 files with 6 vendor dependencies, isolation gate
+  9 entries, dependency authority, version contract, `tsc`); `pnpm build`
+  green with the `mini/run` output kept; `pnpm test:smoke` 4 passed. A first
+  smoke run lost one test to a timeout while two stray preview servers from
+  the visual-baseline captures were still running; with them stopped, all
+  four pass. Native and RRD process checks run in CI.

@@ -28,6 +28,7 @@ import {
 	iconTransfer,
 	iconVariable,
 	iconWarning,
+	iconXml,
 } from "~/icons";
 import {
 	CIcon,
@@ -210,6 +211,11 @@ export const GLOBAL_PAGES: Record<GlobalPage, GlobalPageInfo> = {
 		id: "/overview",
 		name: "Overview",
 		icon: iconExplorer,
+	},
+	"/mini/new": {
+		id: "/mini/new",
+		name: "Embed Connectome",
+		icon: iconXml,
 	},
 };
 
