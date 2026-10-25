@@ -43,11 +43,7 @@ import { generateEditorIcons } from "../editor/icons";
 		throw new Error("Root element not found");
 	}
 
-	createRoot(root).render(
-		<>
-			<App />
-		</>,
-	);
+	createRoot(root).render(<App />);
 
 	// Preload images
 	preloadImages();

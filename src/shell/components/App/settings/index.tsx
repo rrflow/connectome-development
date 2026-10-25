@@ -3,7 +3,6 @@ import {
 	Center,
 	Drawer,
 	Group,
-	Image,
 	Modal,
 	Stack,
 	Text,

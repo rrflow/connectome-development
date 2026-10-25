@@ -365,3 +365,35 @@ Branch `agent/connectome-theme` from `main` `ce08e2f` (Slice C1 merged as PR #8)
   text wordmark in Settings, the violet → cyan theme, Start serving →
   engine/install/serve/ready stage cards → the runtime lenses.
 
+
+### 2026-10-24 — Slice C2 completed on current `main` (decisions 12 and 13)
+
+Branch `agent/connectome-theme` (PR #9), with `main` `38142b7` merged in
+(clean; the lockfile installs frozen).
+
+- Application icon (owner decision 13): `src/shared/assets/brand/app-icon.svg`
+  is now the Connectome mark already shown in the sidebar and on the Overview
+  (`src/shared/assets/pictograms/connectome.svg`), with its own geometry,
+  stroke and gradient, on a dark tile on the 824-unit macOS grid. It replaces
+  the redrawn hub of 2026-10-18, which used other proportions and the theme
+  gradient. `tauri icon` re-rendered all 50 platform files; `public/favicon.ico`
+  is the rendered `icon.ico` (16 to 256 pixels).
+- Found while converting: the mark's gradient uses each element's bounding
+  box, so its two horizontal links (zero-height boxes) never painted in
+  Chromium or in the icon renderer. The mark users know is four links and
+  five nodes; the two dead links are removed from both files.
+- Installer art: `src-tauri/res/dmg-background.png` (the inherited hat and
+  wordmark) is re-rendered from the mark, the bundled Inter font and the
+  `Wordmark` gradient by `scripts/brand/render-installer-art.mjs`, at Tauri's
+  default disk-image layout. The unreferenced `dmg-background-original.png`,
+  `nsis-header.bmp` and `nsis-sidebar.bmp` are deleted.
+- Biome fixes left by the theme change: the unused `Image` import in the
+  settings dialog and the single-child fragments left in both startup
+  entrypoints after `FontLinks` was removed.
+- Verification: `pnpm check` green (identity gate across 508 files, six
+  inherited vendor dependencies still declared, dependency authority,
+  version contract 0.0.5 alpha, `tsc`); `pnpm build` green; `pnpm test:smoke`
+  4 passed; production-bundle screenshots of the Overview and the settings
+  dialog show the mark and the text wordmark with zero page errors. Native
+  checks and the RRD process tests run in CI. The desktop check of decision 11
+  is the owner's on the built bundle.

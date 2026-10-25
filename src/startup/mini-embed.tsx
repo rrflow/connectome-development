@@ -37,11 +37,7 @@ import type { MiniAdapter } from "../adapter/mini";
 		throw new Error("Root element not found");
 	}
 
-	createRoot(root).render(
-		<>
-			<MiniRunScreen />
-		</>,
-	);
+	createRoot(root).render(<MiniRunScreen />);
 
 	// Connect and initialize the dataset
 	openConnection().then(() => {
