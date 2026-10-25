@@ -163,8 +163,32 @@ export function ConnectomeScreen() {
 								{({ id }) => <RuntimeDiagnosticsPage id={id} />}
 							</Route>
 
+							<Route path="/runtime/:id/:section/:detail">
+								{({ id, section, detail }) => (
+									<RuntimeConnectionPage
+										key={id}
+										id={id}
+										section={section}
+										detail={detail}
+									/>
+								)}
+							</Route>
+							<Route path="/runtime/:id/:section">
+								{({ id, section }) => (
+									<RuntimeConnectionPage
+										key={id}
+										id={id}
+										section={section}
+									/>
+								)}
+							</Route>
 							<Route path="/runtime/:id">
-								{({ id }) => <RuntimeConnectionPage id={id} />}
+								{({ id }) => (
+									<RuntimeConnectionPage
+										key={id}
+										id={id}
+									/>
+								)}
 							</Route>
 
 							<Route path="/c/:connection/:view">

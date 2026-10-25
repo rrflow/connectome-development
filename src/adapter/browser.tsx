@@ -6,7 +6,7 @@ import {
 } from "~/shared/util/file-system";
 import * as idxdb from "~/shared/util/idxdb";
 import { CONFIG_KEY } from "~/shared/util/storage";
-import type { ConnectomeConfig, Platform, ServedEstate, UrlTarget } from "~/types";
+import type { ConnectomeConfig, EstatePreview, Platform, ServedEstate, UrlTarget } from "~/types";
 import type { ConnectomeAdapter, FileFilter } from "./base";
 
 /**
@@ -69,12 +69,16 @@ export class BrowserAdapter implements ConnectomeAdapter {
 		localStorage.removeItem(CONFIG_KEY);
 	}
 
+	public async previewEstate(): Promise<EstatePreview> {
+		throw new Error("Use the native desktop to start RRFlow");
+	}
+
 	public async serveEstate(): Promise<ServedEstate> {
 		throw new Error("Not supported");
 	}
 
-	public async servedEstate(): Promise<ServedEstate | null> {
-		return null;
+	public async servedEstates(): Promise<ServedEstate[]> {
+		return [];
 	}
 
 	public async stopEstate(): Promise<boolean> {

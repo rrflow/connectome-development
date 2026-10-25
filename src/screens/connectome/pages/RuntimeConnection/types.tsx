@@ -1,6 +1,6 @@
 import type { RrdConnectionView, RrdSessionClient } from "~/rrflow/session";
 
-export type RuntimeLens = "records" | "vectors" | "storage";
+export type RuntimeLens = "models" | "records" | "vectors" | "storage";
 
 export interface RuntimeLensProps {
 	client: RrdSessionClient;

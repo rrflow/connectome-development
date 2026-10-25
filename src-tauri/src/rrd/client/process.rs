@@ -9,7 +9,8 @@
 
 use super::*;
 use crate::rrd::estate::{
-    serve_estate, EstateServeRequest, EstateStage, InstallMode, ServeObserver, ServedEstate,
+    preview_estate, serve_estate, EstateServeRequest, EstateStage, InstallMode, ServeObserver,
+    ServedEstate,
 };
 use rrd_contract::{
     BeginTransaction, CommitTransaction, DataSchemaRegistry, EnsureVectorCollection,
@@ -67,6 +68,19 @@ fn rrflow() -> PathBuf {
     )
 }
 
+fn accepted(mut request: EstateServeRequest) -> EstateServeRequest {
+    let preview = preview_estate(&request).expect("native installation preview");
+    assert!(!PathBuf::from(&preview.project)
+        .join(".rrflow/config.toml")
+        .exists());
+    request.accepted_plan_sha256 = preview
+        .installation
+        .as_ref()
+        .and_then(|p| p["installation"]["plan_sha256"].as_str())
+        .map(str::to_owned);
+    request
+}
+
 impl Estate {
     /// Installs a fresh estate and serves it exactly as the desktop does.
     fn install_and_serve() -> Self {
@@ -76,11 +90,12 @@ impl Estate {
         ));
         let observer = Arc::new(RecordingObserver::default());
         let served = serve_estate(
-            EstateServeRequest {
+            accepted(EstateServeRequest {
                 project: project.to_string_lossy().into_owned(),
                 mode: InstallMode::Fresh,
                 executable: rrflow().to_string_lossy().into_owned(),
-            },
+                accepted_plan_sha256: None,
+            }),
             observer.clone(),
         )
         .unwrap_or_else(|error| {
@@ -191,11 +206,14 @@ fn vector(group: usize, index: usize) -> Vec<f64> {
 /// Two groups of four documents, densely linked inside each group and joined
 /// by one link, each with a vector near its group's.
 async fn load_fixture(estate: &Estate) {
-    let request = estate.connect_request();
+    load_fixture_at(estate.connect_request(), estate.address).await;
+}
+
+async fn load_fixture_at(request: RrdConnectRequest, address: SocketAddr) {
     let (principal, api_key) = read_credential(&request.credential_path).expect("credential");
     let client = RrdClient::connect_local(
-        estate.address,
-        canonical(&estate.instance, "instance").expect("instance"),
+        address,
+        canonical(&request.instance, "instance").expect("instance"),
         ClientConfig {
             request_timeout: REQUEST_TIMEOUT,
             ..ClientConfig::default()
@@ -215,7 +233,7 @@ async fn load_fixture(estate: &Estate) {
         .read_diagnostic_snapshot(
             session,
             ReadDiagnosticSnapshot {
-                scope: format!("instance:{}", estate.instance),
+                scope: format!("instance:{}", request.instance),
                 graph_valid_at_unix_ms: now_unix_ms().expect("clock"),
                 graph_known_at_cursor: None,
                 graph_compare_cursor: 0,
@@ -242,7 +260,7 @@ async fn load_fixture(estate: &Estate) {
         .ensure_vector_collection(
             session,
             EnsureVectorCollection {
-                scope: format!("instance:{}", estate.instance),
+                scope: format!("instance:{}", request.instance),
                 collection_id: canonical(FIXTURE_COLLECTION, "collection").expect("collection"),
                 vectors: serde_json::from_value(json!([{
                     "name": FIXTURE_VECTOR,
@@ -290,6 +308,13 @@ async fn load_fixture(estate: &Estate) {
         }
     }
     batch.push(link("a1", "b1"));
+    batch.extend([
+        json!({"mutation":"put_record", "reference":{"kind":"settings","id":"local"}, "valid_from":1, "properties":{"enabled":{"type":"bool","value":true}}}),
+        json!({"mutation":"put_record", "reference":{"kind":"series_root","id":"latency"}, "valid_from":1,"properties":{}}),
+        json!({"mutation":"append_event", "kind":"observed", "subject":{"kind":"document","id":"a1"}, "properties":{"source":{"type":"string","value":"native-test"}}}),
+        json!({"mutation":"append_series_sample", "reference":{"kind":"sample","id":"latency-one"}, "series":{"kind":"series_root","id":"latency"}, "observed_at":1, "value":{"type":"unsigned","value":17}, "properties":{}}),
+        json!({"mutation":"put_geo", "reference":{"kind":"location","id":"office"}, "subject":{"kind":"document","id":"a1"}, "field":"office", "valid_from":1, "value":{"kind":"point","point":{"longitude":-73.0,"latitude":40.0}}, "properties":{}}),
+    ]);
     commit(&client, session, &ids, Value::Array(batch)).await;
 }
 
@@ -304,6 +329,18 @@ fn fixture_schema(current: Option<DataSchemaRegistry>) -> Value {
     registry["tables"]["document"] = json!({ "model": "relational", "mode": "strict" });
     registry["tables"]["links_to"] = json!({ "model": "graph_relation", "mode": "strict" });
     registry["tables"]["embedding"] = json!({ "model": "vector", "mode": "schemaless" });
+    for (name, model) in [
+        ("settings", "key_value"),
+        ("series_root", "relational"),
+        ("observed", "event"),
+        ("sample", "time_series"),
+        ("location", "geo"),
+        ("object", "object"),
+    ] {
+        registry["tables"][name] = json!({"model":model,"mode": if matches!(name, "observed" | "settings") { "strict" } else { "schemaless" }});
+    }
+    registry["records"]["settings"] = json!({"properties":{"enabled":{"value_type":"bool","required":true}},"allow_additional_properties":false,"unique_properties":[]});
+    registry["events"]["observed"] = json!({"subject_required":true,"subject_types":["document"],"properties":{},"allow_additional_properties":true});
     registry["records"]["document"] = json!({
         "properties": {
             "title": { "value_type": "string", "required": true },
@@ -384,6 +421,34 @@ fn the_lenses_read_a_live_estate() {
         assert_eq!(connection.instance, estate.instance);
         assert_eq!(connection.session.idle_timeout_ms, SESSION_IDLE_TIMEOUT_MS);
 
+        let schema = client.schema().await.expect("authenticated native schema");
+        assert!(schema.known_at_cursor > 0);
+        let registry = schema.schema.expect("installed schema");
+        assert_eq!(
+            registry
+                .tables
+                .get(&canonical("document", "table").unwrap())
+                .unwrap()
+                .model,
+            rrd_contract::DataLogicalModel::Relational
+        );
+        assert_eq!(
+            registry
+                .tables
+                .get(&canonical("links_to", "table").unwrap())
+                .unwrap()
+                .model,
+            rrd_contract::DataLogicalModel::GraphRelation
+        );
+        assert_eq!(
+            registry
+                .tables
+                .get(&canonical("embedding", "table").unwrap())
+                .unwrap()
+                .model,
+            rrd_contract::DataLogicalModel::Vector
+        );
+
         // Records & relations: the graph and its clusters. A fresh estate also
         // holds the engine's own records, so the fixture's kinds are counted.
         let database = client.database().await.expect("database view");
@@ -415,6 +480,21 @@ fn the_lenses_read_a_live_estate() {
             .expect("record query");
         assert_eq!(rows.returned_rows, DOCUMENTS as u64);
 
+        for source in [
+            "record:settings",
+            "event:observed",
+            "series:series_root",
+            "geo:location",
+        ] {
+            let result = client
+                .query(RrdQueryRequest {
+                    query: format!("FROM {source} AT VALID {at} KNOWN HEAD PROJECT * LIMIT 50"),
+                })
+                .await
+                .expect("native family query");
+            assert_eq!(result.returned_rows, 1, "{source}");
+            assert!(result.known_at_cursor > 0);
+        }
         // Storage engine: rrflowKV's live counters.
         let storage = client.storage().await.expect("storage view");
         assert_eq!(storage.physical.profile, "rrflow_kv");
@@ -536,11 +616,12 @@ fn the_bundled_engine_serves_as_the_verified_sidecar() {
     ));
     let observer = Arc::new(RecordingObserver::default());
     let served = serve_estate(
-        EstateServeRequest {
+        accepted(EstateServeRequest {
             project: project.to_string_lossy().into_owned(),
             mode: InstallMode::Fresh,
             executable: String::new(),
-        },
+            accepted_plan_sha256: None,
+        }),
         observer.clone(),
     );
     let _ = std::fs::remove_file(&beside_exe);
@@ -576,4 +657,203 @@ fn the_bundled_engine_serves_as_the_verified_sidecar() {
         "{}",
         lines.join("\n")
     );
+}
+
+#[test]
+#[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
+fn native_preview_requires_exact_acceptance_and_reopens() {
+    let project =
+        std::env::temp_dir().join(format!("connectome-preview-{}", Uuid::new_v4().simple()));
+    let observer = Arc::new(RecordingObserver::default());
+    let mut request = EstateServeRequest {
+        project: project.to_string_lossy().into_owned(),
+        mode: InstallMode::Fresh,
+        executable: rrflow().to_string_lossy().into_owned(),
+        accepted_plan_sha256: None,
+    };
+    assert!(serve_estate(request.clone(), observer.clone()).is_err());
+    assert!(!project.join(".rrflow/config.toml").exists());
+    request.accepted_plan_sha256 = Some("0".repeat(64));
+    assert!(serve_estate(request.clone(), observer.clone()).is_err());
+    assert!(!project.join(".rrflow/config.toml").exists());
+    request = accepted(request);
+    let mut served =
+        serve_estate(request.clone(), observer.clone()).expect("approved installation");
+    let instance = served.view.instance.clone();
+    served.server.kill().unwrap();
+    served.server.wait().unwrap();
+    let reopened_preview = preview_estate(&request).unwrap();
+    assert!(reopened_preview.installation.is_none());
+    request.accepted_plan_sha256 = None;
+    let mut reopened = serve_estate(request, observer).expect("open installed estate");
+    assert!(!reopened.view.installed);
+    assert_eq!(reopened.view.instance, instance);
+    reopened.server.kill().unwrap();
+    reopened.server.wait().unwrap();
+    std::fs::remove_dir_all(&project).unwrap();
+}
+
+/// Distinct native handles and owned children must remain isolated through
+/// disconnect, reconnect and targeted stop, not just simultaneous handshakes.
+#[test]
+#[ignore = "drives real RRD processes: set RRFLOW_BIN and run with --ignored"]
+fn project_registry_keeps_parallel_estates_and_sessions_isolated() {
+    use crate::rrd::{estate::EstateState, RrdClientState};
+    let owner = EstateState::default();
+    let requests: Vec<_> = (0..2)
+        .map(|_| {
+            accepted(EstateServeRequest {
+                project: std::env::temp_dir()
+                    .join(format!("connectome-project-{}", Uuid::new_v4().simple()))
+                    .to_string_lossy()
+                    .into_owned(),
+                mode: InstallMode::Fresh,
+                executable: rrflow().to_string_lossy().into_owned(),
+                accepted_plan_sha256: None,
+            })
+        })
+        .collect();
+    let observer = Arc::new(RecordingObserver::default());
+    let first = owner
+        .start(requests[0].clone(), observer.clone())
+        .expect("first owned project");
+    let second = owner
+        .start(requests[1].clone(), observer.clone())
+        .expect("second owned project");
+    // Identical empty inventories may produce the same deterministic engine ID.
+    // Directory, endpoint and credential ownership must still isolate the projects.
+    assert_ne!(first.project, second.project);
+    assert_ne!(first.credential_path, second.credential_path);
+    assert_ne!(first.endpoint, second.endpoint);
+    assert_eq!(owner.status().unwrap().len(), 2);
+    assert_eq!(
+        owner.start(requests[0].clone(), observer).unwrap().endpoint,
+        first.endpoint,
+        "opening a running project reuses its owned process"
+    );
+    let request = |estate: &crate::rrd::estate::ServedEstateView| RrdConnectRequest {
+        endpoint: estate.endpoint.clone(),
+        instance: estate.instance.clone(),
+        credential_path: estate.credential_path.clone(),
+    };
+    tauri::async_runtime::block_on(async {
+        load_fixture_at(
+            request(&first),
+            first
+                .endpoint
+                .strip_prefix("http://")
+                .unwrap()
+                .parse()
+                .unwrap(),
+        )
+        .await;
+        let sessions = RrdClientState::default();
+        sessions
+            .connect("project-a".into(), request(&first))
+            .await
+            .unwrap();
+        sessions
+            .connect("project-b".into(), request(&second))
+            .await
+            .unwrap();
+        assert!(
+            sessions.client("missing").await.is_err(),
+            "unknown handles never fall back to another project"
+        );
+        assert!(
+            sessions
+                .connect("project-a".into(), request(&second))
+                .await
+                .is_err(),
+            "a connected handle cannot be rebound"
+        );
+        assert!(sessions
+            .connect("invalid/handle".into(), request(&first))
+            .await
+            .is_err());
+        for index in 0..6 {
+            sessions
+                .connect(format!("extra-{index}"), request(&second))
+                .await
+                .unwrap();
+        }
+        let full = sessions
+            .connect("over-capacity".into(), request(&second))
+            .await
+            .unwrap_err();
+        assert!(full.message.contains("eight native sessions"));
+        for index in 0..6 {
+            sessions
+                .disconnect(&format!("extra-{index}"))
+                .await
+                .unwrap();
+        }
+        let a = sessions.client("project-a").await.unwrap();
+        let b = sessions.client("project-b").await.unwrap();
+        assert_eq!(a.connection().instance, first.instance);
+        assert_eq!(b.connection().instance, second.instance);
+        let a_read = tokio::spawn({
+            let a = a.clone();
+            async move { a.database().await }
+        });
+        let b_data = b.database().await;
+        let a_data = a_read.await.expect("parallel read task");
+        let a_data = a_data.expect("first project reads");
+        let b_data = b_data.expect("second project reads");
+        assert_eq!(
+            a_data
+                .graph
+                .nodes
+                .iter()
+                .filter(|n| n.kind == "document")
+                .count(),
+            DOCUMENTS
+        );
+        assert_eq!(
+            a_data
+                .graph
+                .edges
+                .iter()
+                .filter(|e| e.kind == "links_to")
+                .count(),
+            RELATIONS
+        );
+        assert!(
+            !b_data.graph.nodes.iter().any(|n| n.kind == "document"),
+            "A's imported records never appear in B"
+        );
+        assert_eq!(a.vector_collections().await.unwrap().collections.len(), 1);
+        assert!(
+            b.vector_collections().await.unwrap().collections.is_empty(),
+            "A's vectors remain project scoped"
+        );
+        sessions.disconnect("project-a").await.unwrap();
+        assert!(sessions.client("project-a").await.is_err());
+        b.database().await.expect("disconnecting A preserves B");
+        sessions
+            .connect("project-a".into(), request(&first))
+            .await
+            .expect("A reconnects independently");
+        sessions.disconnect("project-a").await.unwrap();
+        assert!(owner.stop(&first.project).unwrap());
+        assert!(
+            !owner.stop(&first.project).unwrap(),
+            "stopping twice is harmless"
+        );
+        assert!(
+            !owner.stop("unowned-project").unwrap(),
+            "never stop an unowned process"
+        );
+        assert_eq!(owner.status().unwrap().len(), 1);
+        b.database()
+            .await
+            .expect("stopping A preserves B's authenticated data flow");
+        b.storage().await.expect("B's storage still answers");
+        sessions.disconnect("project-b").await.unwrap();
+    });
+    assert!(owner.stop(&second.project).unwrap());
+    assert!(owner.status().unwrap().is_empty());
+    for request in requests {
+        std::fs::remove_dir_all(request.project).expect("remove test-owned project");
+    }
 }

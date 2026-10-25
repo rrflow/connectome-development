@@ -234,6 +234,19 @@ export interface EngineBinding {
 	revision?: string;
 }
 
+export interface EstateSelection {
+	project: string;
+	mode: InstallMode;
+	executable: string;
+}
+
+export interface EstatePreview {
+	project: string;
+	mode: InstallMode;
+	engine: EngineBinding;
+	installation: { installation: { plan_sha256: string }; [key: string]: unknown } | null;
+}
+
 /** The estate the native process is serving, as the webview may see it: coordinates only. */
 export interface ServedEstate {
 	project: string;

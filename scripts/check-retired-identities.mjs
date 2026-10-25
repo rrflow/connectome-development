@@ -128,7 +128,7 @@ function manifestResidue(content) {
 const retiredViolations = [];
 const vendorViolations = [];
 for (const file of files) {
-	const path = relative(process.cwd(), file);
+	const path = relative(process.cwd(), file).replaceAll("\\", "/");
 	const content = await readFile(file, "utf8");
 	if (retired.test(path) || retired.test(content)) {
 		retiredViolations.push(path);

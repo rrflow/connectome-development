@@ -31,6 +31,7 @@ import { iconCheck, iconReset, iconSearch, iconTune } from "~/icons";
 import { pictoBrain, pictoHandsOn, pictoUniversity } from "~/pictograms";
 import { Connection } from "~/types";
 import { StartConnection } from "./content/connection";
+import { LocalStart } from "./content/local";
 import { StartResource } from "./content/resource";
 import classes from "./style.module.scss";
 
@@ -62,7 +63,7 @@ export function OverviewPage() {
 		);
 	};
 
-	const { sandbox, userConnections } = useConnectionOverview({
+	const { userConnections } = useConnectionOverview({
 		search,
 		labels: selectedLabels,
 		labelMode,
@@ -73,7 +74,7 @@ export function OverviewPage() {
 		navigateConnection(con.id);
 	});
 
-	const showConnections = !!sandbox || userConnections.length > 0;
+	const showConnections = userConnections.length > 0;
 
 	useSavepoint(OVERVIEW);
 
@@ -131,8 +132,17 @@ export function OverviewPage() {
 						</Text>
 					</Stack>
 
+					<LocalStart />
 					<Group>
 						<PrimaryTitle fz={22}>RRFlow instances</PrimaryTitle>
+						<Link href="/connections/create">
+							<Button
+								size="xs"
+								variant="gradient"
+							>
+								Connect instance
+							</Button>
+						</Link>
 
 						<Spacer />
 
@@ -278,26 +288,12 @@ export function OverviewPage() {
 										flex={1}
 										className={classes.connectionSpacer}
 									/>
-									<Link href="/connections/create">
-										<Button
-											size="xs"
-											variant="gradient"
-										>
-											Connect instance
-										</Button>
-									</Link>
 								</Group>
 
 								<SimpleGrid
 									cols={GRID_COLUMNS}
 									mt="xl"
 								>
-									{sandbox && (
-										<StartConnection
-											connection={sandbox}
-											onConnect={activateConnection}
-										/>
-									)}
 									{userConnections.map((connection) => (
 										<StartConnection
 											key={connection.id}

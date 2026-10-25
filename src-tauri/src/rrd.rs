@@ -1,5 +1,6 @@
 use reqwest::{redirect::Policy, Client};
 use serde_json::Value;
+use std::collections::BTreeMap;
 use std::sync::Arc;
 use std::time::Duration;
 use tauri::{ipc::Channel, State};
@@ -26,107 +27,172 @@ use view::{
 const MAX_RRD_RESPONSE_BYTES: u64 = 1024 * 1024;
 const NOT_CONNECTED: &str = "Connectome is not connected to RRD";
 
-/// The one authenticated native RRD connection. A command takes a handle and
-/// releases this lock before any request, so lenses run concurrently; the
-/// client itself pins its session for each request it sends.
+/// Bounded profile-scoped native clients. A read clones exactly its requested
+/// client before releasing the registry lock; there is no global active client.
 #[derive(Default)]
-pub struct RrdClientState(tokio::sync::Mutex<Option<Arc<NativeRrdClient>>>);
+pub struct RrdClientState(tokio::sync::Mutex<BTreeMap<String, Arc<NativeRrdClient>>>);
 
 impl RrdClientState {
-    async fn client(&self) -> Result<Arc<NativeRrdClient>, RrdError> {
+    async fn client(&self, profile: &str) -> Result<Arc<NativeRrdClient>, RrdError> {
         self.0
             .lock()
             .await
-            .clone()
+            .get(profile)
+            .cloned()
             .ok_or_else(|| NOT_CONNECTED.into())
+    }
+
+    async fn connect(
+        &self,
+        profile: String,
+        request: RrdConnectRequest,
+    ) -> Result<ConnectionView, RrdError> {
+        if profile.is_empty()
+            || profile.len() > 128
+            || !profile
+                .bytes()
+                .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+        {
+            return Err("invalid project connection handle".into());
+        }
+        let mut guard = self.0.lock().await;
+        if guard.contains_key(&profile) {
+            return Err("this project profile is already connected; disconnect it first".into());
+        }
+        if guard.len() >= 8 {
+            return Err(
+                "eight native sessions are already open; disconnect a project first".into(),
+            );
+        }
+        let client = NativeRrdClient::connect(request).await?;
+        let connection = client.connection();
+        guard.insert(profile, Arc::new(client));
+        Ok(connection)
+    }
+
+    async fn disconnect(&self, profile: &str) -> Result<(), RrdError> {
+        let client = self.0.lock().await.remove(profile);
+        match client {
+            Some(client) => client.close().await,
+            None => Ok(()),
+        }
     }
 }
 
 #[tauri::command]
 pub async fn rrd_connect(
+    profile: String,
     request: RrdConnectRequest,
     state: State<'_, RrdClientState>,
 ) -> Result<ConnectionView, RrdError> {
-    // Held across the handshake so two windows cannot open two sessions.
-    let mut guard = state.0.lock().await;
-    if guard.is_some() {
-        return Err("Connectome is already connected to RRD; disconnect first".into());
-    }
-    let client = NativeRrdClient::connect(request).await?;
-    let connection = client.connection();
-    *guard = Some(Arc::new(client));
-    Ok(connection)
+    state.connect(profile, request).await
 }
 
 /// The live native session, if any, so a lens can resume it after navigation.
 #[tauri::command]
 pub async fn rrd_session(
+    profile: String,
     state: State<'_, RrdClientState>,
 ) -> Result<Option<ConnectionView>, RrdError> {
     Ok(state
         .0
         .lock()
         .await
-        .as_ref()
+        .get(&profile)
         .map(|client| client.connection()))
 }
 
 #[tauri::command]
-pub async fn rrd_capabilities(state: State<'_, RrdClientState>) -> Result<ServiceView, RrdError> {
-    Ok(view::service(&state.client().await?.capabilities().await?))
+pub async fn rrd_capabilities(
+    profile: String,
+    state: State<'_, RrdClientState>,
+) -> Result<ServiceView, RrdError> {
+    Ok(view::service(
+        &state.client(&profile).await?.capabilities().await?,
+    ))
 }
 
 #[tauri::command]
-pub async fn rrd_database(state: State<'_, RrdClientState>) -> Result<DatabaseView, RrdError> {
-    state.client().await?.database().await
+pub async fn rrd_schema(
+    profile: String,
+    state: State<'_, RrdClientState>,
+) -> Result<Value, RrdError> {
+    let snapshot = state.client(&profile).await?.schema().await?;
+    // Only catalogue metadata; no credential or application records cross this command.
+    let tables = snapshot.schema.as_ref().map(|schema| schema.tables.iter().take(256).map(|(name, table)| {
+        serde_json::json!({"name": name, "model": table.model, "mode": table.mode,
+            "properties": {"table": table.properties, "record":schema.records.get(name), "relation":schema.relations.get(name), "event":schema.events.get(name)}, "additional_properties": table.allow_additional_properties})
+    }).collect::<Vec<_>>()).unwrap_or_default();
+    Ok(
+        serde_json::json!({"known_at_cursor":snapshot.known_at_cursor,
+        "read_manifest_sha256":snapshot.read_manifest_sha256,
+        "schema_revision":snapshot.schema.as_ref().map(|s| s.revision),
+        "tables":tables, "truncated":snapshot.schema.as_ref().is_some_and(|s| s.tables.len()>256)}),
+    )
 }
 
 #[tauri::command]
-pub async fn rrd_storage(state: State<'_, RrdClientState>) -> Result<StorageView, RrdError> {
-    state.client().await?.storage().await
+pub async fn rrd_database(
+    profile: String,
+    state: State<'_, RrdClientState>,
+) -> Result<DatabaseView, RrdError> {
+    state.client(&profile).await?.database().await
+}
+
+#[tauri::command]
+pub async fn rrd_storage(
+    profile: String,
+    state: State<'_, RrdClientState>,
+) -> Result<StorageView, RrdError> {
+    state.client(&profile).await?.storage().await
 }
 
 #[tauri::command]
 pub async fn rrd_query(
+    profile: String,
     request: RrdQueryRequest,
     state: State<'_, RrdClientState>,
 ) -> Result<QueryView, RrdError> {
-    state.client().await?.query(request).await
+    state.client(&profile).await?.query(request).await
 }
 
 #[tauri::command]
 pub async fn rrd_vector_collections(
+    profile: String,
     state: State<'_, RrdClientState>,
 ) -> Result<VectorCollectionsView, RrdError> {
-    state.client().await?.vector_collections().await
+    state.client(&profile).await?.vector_collections().await
 }
 
 #[tauri::command]
 pub async fn rrd_vector_points(
+    profile: String,
     request: RrdVectorPointsRequest,
     state: State<'_, RrdClientState>,
 ) -> Result<VectorPointsView, RrdError> {
-    state.client().await?.vector_points(request).await
+    state.client(&profile).await?.vector_points(request).await
 }
 
 #[tauri::command]
 pub async fn rrd_vector_search(
+    profile: String,
     request: RrdVectorSearchRequest,
     state: State<'_, RrdClientState>,
 ) -> Result<VectorSearchView, RrdError> {
-    state.client().await?.vector_search(request).await
+    state.client(&profile).await?.vector_search(request).await
 }
 
 /// Nearest neighbours of every point the similarity map draws, one exact
 /// engine search per point. `on_progress` hears each finished search.
 #[tauri::command]
 pub async fn rrd_vector_map(
+    profile: String,
     request: RrdVectorMapRequest,
     on_progress: Channel<VectorMapProgressView>,
     state: State<'_, RrdClientState>,
 ) -> Result<VectorMapView, RrdError> {
     state
-        .client()
+        .client(&profile)
         .await?
         .vector_map(request, |progress| {
             // A closed window stops only the progress display, never the map.
@@ -136,12 +202,11 @@ pub async fn rrd_vector_map(
 }
 
 #[tauri::command]
-pub async fn rrd_disconnect(state: State<'_, RrdClientState>) -> Result<(), RrdError> {
-    let client = state.0.lock().await.take();
-    match client {
-        Some(client) => client.close().await,
-        None => Ok(()),
-    }
+pub async fn rrd_disconnect(
+    profile: String,
+    state: State<'_, RrdClientState>,
+) -> Result<(), RrdError> {
+    state.disconnect(&profile).await
 }
 
 #[tauri::command]

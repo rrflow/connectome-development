@@ -10,7 +10,7 @@
 |----------|-------|
 | **Project** | Connectome |
 | **Owner** | Jesse Hall (Hades) |
-| **Parent** | RRFlow engine repository (`apps/connectome` submodule) |
+| **Parent** | [RRFlow engine repository](https://github.com/rrflow/rrflow-development) (optional `connectome/` submodule; [integration PR](https://github.com/rrflow/rrflow-development/pull/20)) |
 | **AI Product** | Clyffy — local and frontier AI harness managed through this control surface |
 | **Data Architecture** | RRFlow — persistent reasoning runtime, storage, query, and lifecycle kernel |
 | **Fork Source** | rrflow/connectome |
@@ -23,7 +23,7 @@
 |-------|------|
 | **RRFlow** | Engine umbrella — runtime, storage, query execution, lifecycle, and observability |
 | **Vyrm** | Persistent LSM/columnar engine evolved inside RRFlow |
-| **Connectome** | Separate Tauri desktop client, mounted as `apps/connectome` in RRFlow |
+| **Connectome** | Separate Tauri desktop client, pinned at `connectome/` in RRFlow |
 | **Clyffy** | AI harness/operator that consumes RRFlow through Automaton and LFG workflows |
 
 ### What This Tool IS
