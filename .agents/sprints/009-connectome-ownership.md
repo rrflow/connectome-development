@@ -168,6 +168,20 @@ owner's desktop) were recorded on the unmerged `agent/connectome-theme` branch
     with no stand-in client, placeholder or dual path, and is rebuilt when
     its RRFlow operation lands (the rebuild table below). This follows
     decision 4 and RRFlow's Connectome contract (direct-convergence step 4).
+    **Amended by decision 17:** "deleted with no stand-in" no longer applies
+    to anything visual.
+17. No visual regression, only improvements (owner, 2026-10-24: "I better
+    not lose one visual regression but only improvements"). Every inherited
+    screen, graph and visual is captured first (`tests/visual/`, baseline at
+    `main` `38142b7`, both themes) and listed in `tests/visual/PARITY.md`. Its
+    RRFlow lens must reproduce or improve every listed item, shown by a
+    before/after capture, before the inherited screen and its vendor code are
+    deleted. A subject RRFlow does not yet serve keeps its inherited screen
+    until its RRFlow lens exists; that lens may be authored ahead of its
+    RRFlow operation and show the engine's capability state, with no vendor
+    code behind it. A refactor that moves code without changing a screen
+    (such as Slice D0) is compared pixel by pixel against the build before
+    it.
 
 ## Ordered implementation slices
 
@@ -274,11 +288,15 @@ each one lands.
   serving stop loading `connection.tsx`. Add the RRFlow value model; scope
   `useConnectionSwitch` to the inherited routes. Oracle: a module-graph test
   shows no RRFlow page reaches `src/vendor/`.
-- **D1: remove the subjects RRFlow does not serve, and replace the Sandbox.**
-  Remove the mini runner and embed, record-access sign-up, users and access,
-  GraphQL, functions and model upload, the migration view and the
-  documentation topics. The Sandbox becomes a scratch project estate on the
-  sidecar. Removes `@surrealdb/wasm`.
+- **D1: re-scoped by decision 17.** The Sandbox's entry points move to
+  Connectome's default local estate on the sidecar, which already exists;
+  its reset returns with RRFlow's uninstall (D-11). The subjects RRFlow does
+  not serve (record-access sign-up, users and access, GraphQL, functions and
+  model upload, migration, the documentation topics, the mini runner and
+  embed) keep their inherited screens until their RRFlow lenses exist; the
+  API reference is rebuilt first, from RRFlow's public operation catalogue,
+  which RRFlow already serves. `@surrealdb/wasm` leaves with the last screen
+  that needs it.
 - **D2: native surface.** Tauri commands over the existing `rrd-client`
   methods for transactions, query export, changefeed, `/v1/ws` subscriptions,
   backups and audit. The renderer gets opaque handles and never holds a
@@ -626,3 +644,101 @@ decisions 12 to 16: PR #15.
   smoke run lost one test to a timeout while two stray preview servers from
   the visual-baseline captures were still running; with them stopped, all
   four pass. Native and RRD process checks run in CI.
+
+### 2026-10-24 — Slice V0: inherited visual baseline (decision 17)
+
+Branch `agent/slice-v0-visual-baseline` from `main` `83804c3` (#14 and #15
+merged). After the owner's rule, the uncommitted D1a deletion of five
+inherited views was discarded and PR #16 (D0) was revised to keep the mini
+runner and embed generator.
+
+- `tests/visual/` captures every reachable inherited screen and state from a
+  production build of `main` `38142b7` (the UI is unchanged through
+  `83804c3`): 49 states per theme, dark and light, at 1440x900, with the
+  in-browser Sandbox seeded from `seed.surql`. `PARITY.md` lists, per screen
+  and graph, the visual elements and interactions its RRFlow lens must keep
+  or improve.
+- Found while capturing, recorded in `tests/visual/README.md`: the inherited
+  screens are unreachable in the shipped app (the Sandbox defaults to an
+  RRFlow runtime profile) and broken when reached (a renamed version prefix
+  fails every inherited connection; the mini page lost its adapter meta tag;
+  the embed generator builds its URLs without the serving port).
+  `capture-only.mjs` undoes the first three in a working tree for capture
+  and restores the files byte for byte.
+- Determinism: two captures of one build first differed in 18 of 98 images
+  (random relation ids and their row order, query timings, animations still
+  running, random force-layout starts). The seed now uses fixed relation
+  ids, the capture masks timings, turns on the application's "Disable
+  animations" preference with reduced motion, and seeds `Math.random`.
+- After those fixes two captures of one build compare 51 identical, 47
+  negligible (the largest 0.044 percent, the About tab's build time) and 0
+  changed. The result graph and the map are reported as dynamic and reviewed
+  by eye. The committed baseline is the second of those runs: 98 lossless
+  WebP images (5.4 MB) with a manifest of revision, seed digest, capture-only
+  patches and per-image SHA-256.
+- First use: comparing PR #9 with PR #16 caught D0 emptying every RRFlowQL
+  code block (recorded under Slice D0); after its fix the two compare with 0
+  changed screens. PR #9 against this baseline changes all 98 images by
+  design (theme, wordmark, icon); its before/after is for the owner's review.
+
+### 2026-10-25 — Slice V0b: RRFlow-native desktop baseline (decision 17)
+
+Same branch, from `aaa5436f`. The owner restated the rule for graphs: every
+graph is authored and captured as RRFlow, and no visual may regress, only
+improve. The RRFlow-native screens had not been captured, because they need
+the desktop application and a running engine.
+
+- `tests/visual/capture-native.mjs` drives a preview desktop build through
+  WebView2's remote debugging port: it installs a fresh estate through the
+  application's own installation preview, serves it, seeds it, and captures
+  36 states per theme at 1440x1800. These cover the overview, project
+  engines, installation preview and serving; every workbench tab and lens;
+  the records graph selected, around the selection and coloured by kind; the
+  RRFlowQL console query and traversal; the vector map, stored points and a
+  selected point; every storage counter and the history and indexes; a
+  native table's rows; every panel; and all seven settings tabs.
+- `seed_served_estate_for_visual_capture` (an ignored test in
+  `src-tauri/src/rrd/client/process.rs`) seeds the served estate with the
+  existing lens fixture: 12 records, 14 relations, one collection of 8
+  vectors. It reads the operator credential inside the native process, and
+  the capture passes only its path. Without the capture's variables it
+  returns at once, so CI's `--ignored` run of `rrd::client::process::`
+  passes over it.
+- Isolation incident and fix. The first preview launch used the user's real
+  `RRFlow/Connectome` data folder, not `RRFlow/ConnectomePreview`.
+  `src-tauri/build.rs` did not rerun when `VITE_CONNECTOME_PREVIEW` changed,
+  so the rebuilt preview binary kept the release data directory. That launch
+  showed the user's saved profiles, rewrote `config.json` (same 7,763 bytes,
+  new modification time) and appended to `connectome.log`. No content copy
+  existed before it, so whether `config.json`'s bytes changed is unknown. A
+  full copy of the folder was then taken, `build.rs` now declares
+  `rerun-if-env-changed=VITE_CONNECTOME_PREVIEW`, and after every later run
+  the real folder was compared file by file (SHA-256) with that copy. It was
+  identical each time.
+- Determinism. Times render in UTC, and only the characters that change
+  between runs are painted magenta (instance identity, port, dates and
+  times, a query's pinned clock reading, durations, the capture folder), so
+  the surrounding words stay visible. No motion or randomness override was
+  needed. Two captures of one build compared, dark: 2 identical, 25
+  negligible (at most 0.02 percent), 9 dynamic, 0 changed; light: 2
+  identical, 25 negligible (at most 0.051 percent), 9 dynamic, 0 changed.
+  `compare.mjs` now reports the records graph states and the storage
+  engine's live counters as dynamic. One light run read 12 more versions and
+  6 more keys than the other three runs, most likely an automatic session
+  renewal landing earlier in a slower run.
+- Baseline: `tests/visual/baseline/native/83804c3/{dark,light}/`, 72 lossless
+  WebP images (13.3 MB), the second run of each pair, with a manifest of
+  revision, viewport, engine revision `4860a253`, estate, determinism
+  measures and per-image SHA-256. Each image decodes pixel-identical to its
+  PNG capture. `PARITY.md` lists, per native screen and graph, what each
+  later slice must keep or improve.
+- Found while capturing: the desktop Settings dialog still showed the
+  inherited "Surrealist" wordmark at `83804c3`. Slice C2 (PR #9) replaces it;
+  on the owner's approval it landed in `main` as `942b76bf` on 2026-10-25, and
+  that `main` is merged into this branch. The installation preview
+  shows the project path with a raw `\\?\` prefix, recorded in `PARITY.md`
+  as an improvement target.
+- Verified locally: `pnpm check` (Biome, identity, dependency authority,
+  version and TypeScript), `cargo fmt --check`, `cargo clippy --all-targets
+  --locked -- -D warnings`, and four full desktop captures (two per theme)
+  with no failed step. The native and RRD process test suites run in CI.
