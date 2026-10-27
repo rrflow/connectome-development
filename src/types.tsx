@@ -238,6 +238,8 @@ export interface EstateSelection {
 	project: string;
 	mode: InstallMode;
 	executable: string;
+	/** The identity a pending installation preview was planned with. */
+	installationIdentity?: string;
 }
 
 export interface EstatePreview {
@@ -245,6 +247,8 @@ export interface EstatePreview {
 	mode: InstallMode;
 	engine: EngineBinding;
 	installation: { installation: { plan_sha256: string }; [key: string]: unknown } | null;
+	/** Present with `installation`: keep it with the preview to apply the same plan. */
+	installation_identity: string | null;
 }
 
 /** The estate the native process is serving, as the webview may see it: coordinates only. */

@@ -235,6 +235,11 @@ pub struct EstateServeRequest {
     /// Exact installation preview accepted by the operator; absent never installs.
     #[serde(default)]
     pub accepted_plan_sha256: Option<String>,
+    /// The installation identity the preview was planned with. The engine
+    /// binds every plan to one; the UI keeps it with its pending preview so
+    /// the plan it applies is the plan the operator reviewed.
+    #[serde(default)]
+    pub installation_identity: Option<String>,
 }
 
 /// Non-secret engine-owned installation preview, before any installed state exists.
@@ -244,6 +249,8 @@ pub struct EstatePreview {
     pub mode: InstallMode,
     pub engine: EngineBinding,
     pub installation: Option<Value>,
+    /// The identity this preview was planned with; present with `installation`.
+    pub installation_identity: Option<String>,
 }
 
 #[tauri::command]
@@ -256,12 +263,22 @@ pub async fn rrd_estate_preview(request: EstateServeRequest) -> Result<EstatePre
 pub fn preview_estate(request: &EstateServeRequest) -> Result<EstatePreview, RrdError> {
     let project = project_directory(request)?;
     let engine = resolve_engine(&request.executable)?;
-    let installation = if project.join(LOCATOR).is_file() {
-        None
+    let (installation, installation_identity) = if project.join(LOCATOR).is_file() {
+        (None, None)
     } else {
-        Some(
-            serde_json::from_slice(&installation_plan(&engine.path, &project, request.mode)?)
-                .map_err(|error| format!("the installation plan is not JSON: {error}"))?,
+        // A repeated preview of the same pending installation keeps its
+        // identity; a first preview asks the engine for a new one.
+        let identity = match &request.installation_identity {
+            Some(identity) => valid_identity(identity)?,
+            None => installation_identity(&engine.path)?,
+        };
+        let plan = installation_plan(&engine.path, &project, request.mode, &identity)?;
+        (
+            Some(
+                serde_json::from_slice(&plan)
+                    .map_err(|error| format!("the installation plan is not JSON: {error}"))?,
+            ),
+            Some(identity),
         )
     };
     Ok(EstatePreview {
@@ -269,7 +286,32 @@ pub fn preview_estate(request: &EstateServeRequest) -> Result<EstatePreview, Rrd
         mode: request.mode,
         engine,
         installation,
+        installation_identity,
     })
+}
+
+/// A new installation identity from the engine: 256 bits of OS entropy that
+/// bind one installation's plans. It is not a credential and writes nothing.
+fn installation_identity(executable: &Path) -> Result<String, RrdError> {
+    let output = run(
+        executable,
+        &["--json".as_ref(), "install".as_ref(), "identity".as_ref()],
+    )?;
+    let value: Value = serde_json::from_slice(&output)
+        .map_err(|error| format!("the installation identity is not JSON: {error}"))?;
+    valid_identity(
+        value["installation_identity"]
+            .as_str()
+            .ok_or("the engine did not return an installation identity")?,
+    )
+}
+
+fn valid_identity(identity: &str) -> Result<String, RrdError> {
+    if identity.len() == 64 && identity.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        Ok(identity.to_ascii_lowercase())
+    } else {
+        Err("the installation identity must be 64 hexadecimal digits".into())
+    }
 }
 
 fn project_directory(request: &EstateServeRequest) -> Result<PathBuf, RrdError> {
@@ -291,6 +333,7 @@ fn installation_plan(
     executable: &Path,
     project: &Path,
     mode: InstallMode,
+    identity: &str,
 ) -> Result<Vec<u8>, RrdError> {
     run(
         executable,
@@ -301,6 +344,8 @@ fn installation_plan(
             project.as_os_str(),
             "--mode".as_ref(),
             mode.argument().as_ref(),
+            "--identity".as_ref(),
+            identity.as_ref(),
         ],
     )
 }
@@ -445,6 +490,7 @@ pub fn serve_estate(
             &project,
             request.mode,
             request.accepted_plan_sha256.as_deref(),
+            request.installation_identity.as_deref(),
         )?;
         true
     };
@@ -582,6 +628,7 @@ fn install(
     project: &Path,
     mode: InstallMode,
     accepted_digest: Option<&str>,
+    identity: Option<&str>,
 ) -> Result<(), RrdError> {
     stage(
         app,
@@ -591,7 +638,12 @@ fn install(
     );
     let accepted_digest = accepted_digest
         .ok_or("Review and accept the installation preview before starting a new estate")?;
-    let preview = installation_plan(executable, project, mode)?;
+    // The reviewed preview's identity: planning again with it reproduces the
+    // exact plan the operator accepted, or the digests differ below.
+    let identity = valid_identity(
+        identity.ok_or("Review the installation preview again; its identity is missing")?,
+    )?;
+    let preview = installation_plan(executable, project, mode, &identity)?;
     let plan: Value = serde_json::from_slice(&preview)
         .map_err(|error| format!("the installation plan is not JSON: {error}"))?;
     let digest = plan["installation"]["plan_sha256"]
@@ -717,6 +769,7 @@ mod registry_tests {
                 .to_string_lossy()
                 .into_owned(),
             accepted_plan_sha256: None,
+            installation_identity: None,
         };
         let start = || owner.start(request.clone(), Arc::new(Quiet));
         owner.0.lock().unwrap().projects.insert(key.clone(), None);

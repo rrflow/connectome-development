@@ -170,17 +170,26 @@ export class DesktopAdapter implements ConnectomeAdapter {
 	public async previewEstate(selection?: EstateSelection) {
 		const { project, mode, executable } =
 			selection ?? useConfigStore.getState().settings.serving;
+		// Only a pending preview carries an identity; saved settings never do.
+		const installationIdentity = selection?.installationIdentity;
 		return invoke<EstatePreview>("rrd_estate_preview", {
-			request: { project, mode, executable },
+			request: { project, mode, executable, installation_identity: installationIdentity },
 		});
 	}
 
 	public async serveEstate(acceptedPlanSha256?: string, selection?: EstateSelection) {
 		const { project, mode, executable } =
 			selection ?? useConfigStore.getState().settings.serving;
+		const installationIdentity = selection?.installationIdentity;
 
 		return invoke<ServedEstate>("rrd_estate_serve", {
-			request: { project, mode, executable, accepted_plan_sha256: acceptedPlanSha256 },
+			request: {
+				project,
+				mode,
+				executable,
+				accepted_plan_sha256: acceptedPlanSha256,
+				installation_identity: installationIdentity,
+			},
 		});
 	}
 
