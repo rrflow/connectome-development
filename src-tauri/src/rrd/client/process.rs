@@ -78,6 +78,8 @@ fn accepted(mut request: EstateServeRequest) -> EstateServeRequest {
         .as_ref()
         .and_then(|p| p["installation"]["plan_sha256"].as_str())
         .map(str::to_owned);
+    // The desktop keeps the identity with its pending preview the same way.
+    request.installation_identity = preview.installation_identity;
     request
 }
 
@@ -95,6 +97,7 @@ impl Estate {
                 mode: InstallMode::Fresh,
                 executable: rrflow().to_string_lossy().into_owned(),
                 accepted_plan_sha256: None,
+                installation_identity: None,
             }),
             observer.clone(),
         )
@@ -621,6 +624,7 @@ fn the_bundled_engine_serves_as_the_verified_sidecar() {
             mode: InstallMode::Fresh,
             executable: String::new(),
             accepted_plan_sha256: None,
+            installation_identity: None,
         }),
         observer.clone(),
     );
@@ -670,6 +674,7 @@ fn native_preview_requires_exact_acceptance_and_reopens() {
         mode: InstallMode::Fresh,
         executable: rrflow().to_string_lossy().into_owned(),
         accepted_plan_sha256: None,
+        installation_identity: None,
     };
     assert!(serve_estate(request.clone(), observer.clone()).is_err());
     assert!(!project.join(".rrflow/config.toml").exists());
@@ -710,6 +715,7 @@ fn project_registry_keeps_parallel_estates_and_sessions_isolated() {
                 mode: InstallMode::Fresh,
                 executable: rrflow().to_string_lossy().into_owned(),
                 accepted_plan_sha256: None,
+                installation_identity: None,
             })
         })
         .collect();
