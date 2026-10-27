@@ -22,6 +22,7 @@ use std::sync::{Arc, Mutex};
 
 mod effects;
 mod live;
+mod values;
 
 const FIXTURE_COLLECTION: &str = "notes";
 const FIXTURE_VECTOR: &str = "body";
