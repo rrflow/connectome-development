@@ -58,3 +58,34 @@
 			color-mix(in srgb, var(--mantine-color-body) 92%, transparent);
 	}
 }
+
+/* API reference: the topic list stays in view while the articles scroll. */
+.apiTopics {
+	position: sticky;
+	top: var(--mantine-spacing-md);
+	max-height: calc(100vh - 2 * var(--mantine-spacing-xl));
+	overflow-y: auto;
+}
+
+.apiTopic {
+	display: block;
+	width: 100%;
+	padding: 3px 10px;
+	border-radius: var(--mantine-radius-xl);
+	color: var(--mantine-color-text);
+
+	&:hover {
+		background: color-mix(in srgb, var(--mantine-color-violet-6) 10%, transparent);
+	}
+
+	&[data-active] {
+		color: var(--mantine-color-white);
+		background: var(--mantine-color-violet-6);
+	}
+}
+
+.apiOperation {
+	border: 1px solid color-mix(in srgb, var(--mantine-color-violet-6) 14%, transparent);
+	background: color-mix(in srgb, var(--mantine-color-body) 92%, transparent);
+	scroll-margin-top: var(--mantine-spacing-md);
+}

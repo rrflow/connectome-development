@@ -78,6 +78,8 @@ export function ProjectSection({
 	connected: boolean;
 	onOpen: (section: string) => void;
 }) {
+	// The page renders the API reference itself: it reads the engine endpoint.
+	if (section === "api") return null;
 	if (section === "overview")
 		return (
 			<Stack>
