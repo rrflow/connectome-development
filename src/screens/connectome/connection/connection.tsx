@@ -903,3 +903,31 @@ export function hasRRFlowQL() {
 export function getRRFlowQL() {
 	return rrflowql ?? __throw("No RRFlowQL instance available");
 }
+
+/**
+ * Attempt to parse the given string as a valid params object
+ * while silently handling any errors
+ *
+ * It parses through the inherited client's value parser, so it lives with
+ * that client rather than in the shared helpers the RRFlow pages load.
+ *
+ * @param paramString The string to parse
+ * @returns The parsed params object
+ */
+export async function tryParseParams(paramString: string) {
+	let params: any = {};
+
+	try {
+		const parsed = await getRRFlowQL().parseValue(paramString);
+
+		if (typeof parsed !== "object" || Array.isArray(parsed)) {
+			throw new TypeError("Must be object");
+		}
+
+		params = parsed;
+	} catch {
+		adapter.warn("Params", "Invalid JSON in variables");
+	}
+
+	return params;
+}

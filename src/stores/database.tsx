@@ -3,7 +3,7 @@ import { create } from "zustand";
 import type { GraphqlResponse } from "~/screens/connectome/connection/connection";
 import { createConnectionSchema } from "~/shared/util/defaults";
 import type { ConnectionSchema, EstateStage, QueryResponse, ServedEstate } from "~/types";
-import { Diagnostic } from "~/vendor/rrflow-client";
+import type { Diagnostic } from "~/vendor/rrflow-client";
 
 export type State = "disconnected" | "connecting" | "retrying" | "connected";
 export type DiagnosticWithTime = Diagnostic & { timestamp: number };

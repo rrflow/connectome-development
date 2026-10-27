@@ -560,3 +560,69 @@ Branch `agent/connectome-theme` (PR #9), with `main` `38142b7` merged in
   dialog show the mark and the text wordmark with zero page errors. Native
   checks and the RRD process tests run in CI. The desktop check of decision 11
   is the owner's on the built bundle.
+
+### 2026-10-24 — Slice D0: RRFlow pages load no inherited client
+
+Branch `agent/slice-d0-rrflow-isolation` from `main` `38142b7`. Plan and
+decisions 12 to 16: PR #15.
+
+- Oracle first: `scripts/check-rrflow-isolation.mjs` walks the runtime import
+  graph from the nine RRFlow entry modules (`src/rrflow/*`, the Overview,
+  Create Connection, Control Plane, runtime workbench and diagnostics pages)
+  and fails, naming a shortest path, when one reaches `src/vendor/`,
+  `connection/connection.tsx` or an inherited vendor package. Dynamic
+  `import()` and statement-level `import type` edges are not followed; they
+  load nothing with the page. On `main` it failed for every page. It is now
+  part of `pnpm check` (`pnpm check:isolation`) and is proven to fail on an
+  injected value import, re-export and side-effect import, and to pass a
+  type-only and a lazy import. The identity gate exempts it, like itself,
+  because it must name the packages it forbids.
+- The chains it found, and the cut for each:
+  - every page → `shell/stores/config` → `shared/util/helpers` →
+    `connection.tsx` (one value parser): `tryParseParams` moves into
+    `connection.tsx`, which also ends a module cycle;
+  - helpers → `adapter/index` → the mini adapter → the in-browser engine,
+    the client, both WASM parsers and the embed message channel: the mini
+    adapter now loads them on demand inside the methods that run on the mini
+    page, so the selector imports only the class. The mini runner and its
+    embed generator stay, by the owner's 2026-10-24 rule that no visual is
+    removed before its RRFlow replacement exists (decision 17, recorded with
+    the visual baseline). The nginx routes left over from Slice B's deleted
+    cloud pages are removed;
+  - the error dialog → `CodeBlock` → the inherited editor language: the
+    RRFlowQL language is loaded on demand until D3 replaces it;
+  - `CodeEditor` → the `~/editor` barrel → editor extensions on the
+    inherited language: it imports `base`, `folding` and `theme` directly,
+    and the query and GraphQL keymaps move to `editor/query-keymaps.tsx`;
+  - `stores/database` imported a type as a value: now `import type`;
+  - Create Connection → `useConnectionLabels` → the connection hooks →
+    the namespace and database modal: `useRequireDatabase` moves into
+    `modals/require-database.tsx`;
+  - the Overview → the connection editor → `openConnection` and the address
+    probe's client: both load on demand; the probe moves to RRFlow
+    readiness in D2.
+- Dead code removed on the way: the `GraphqlQuery`, `SidekickChat` and
+  `SidekickChatMessage` types.
+- Not in D0: the application shell still loads the inherited client at
+  startup through the Designer and Inspector providers, two application
+  modals, the inherited views and the inherited UI kit (Slice C2, PR #9).
+  They leave with their lenses in D4 to D6 and in D8, where the startup entry
+  joins this gate. Decision 17 re-scopes D1: nothing is deleted before its RRFlow lens exists.
+- Visual proof (decision 17), with the `tests/visual/` harness of Slice V0
+  run on PR #9 (C2) and on this branch: the first capture found every
+  RRFlowQL `CodeBlock` empty (the empty-state examples of the explorer,
+  functions and parameters views and the query-history previews, 3.4 to 9.6
+  percent of each image). `CodeEditor` rebuilds its state without the
+  document when its extensions change, and the on-demand language changed
+  them after mount. `CodeBlock` now remounts the editor once the language
+  arrives and keeps the loaded language for later blocks. The recapture
+  compares 46 identical, 48 negligible and 0 changed against PR #9; the 4
+  dynamic captures show the same 5 records, 6 edges and legend in the result
+  graph and the same map contents.
+- Verification, with Slice C2 and the plan merged in: `pnpm check` green
+  (identity gate across 510 files with 6 vendor dependencies, isolation gate
+  9 entries, dependency authority, version contract, `tsc`); `pnpm build`
+  green with the `mini/run` output kept; `pnpm test:smoke` 4 passed. A first
+  smoke run lost one test to a timeout while two stray preview servers from
+  the visual-baseline captures were still running; with them stopped, all
+  four pass. Native and RRD process checks run in CI.
