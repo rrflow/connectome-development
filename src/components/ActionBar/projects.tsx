@@ -75,8 +75,13 @@ export function DatabaseServing() {
 		run(async () => {
 			const request = { ...selection };
 			const value = await adapter.previewEstate(request);
-			// Freeze the resolved directory, mode and executable with the preview.
-			const resolved = { ...request, project: value.project };
+			// Freeze the resolved directory, mode, executable and the identity the
+			// engine planned with, so the plan applied is the plan reviewed.
+			const resolved = {
+				...request,
+				project: value.project,
+				installationIdentity: value.installation_identity ?? undefined,
+			};
 			if (value.installation) setPreview({ value, selection: resolved });
 			else await start(resolved);
 		});

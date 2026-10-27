@@ -8,8 +8,9 @@
 use super::cluster;
 use rrd_contract::{
     DataReference, DataVectorValue, DiagnosticRrflowKvSnapshot, DiagnosticRuntimeReference,
-    DiagnosticSnapshot, DiagnosticStorageSnapshot, QueryResult, QueryValue, ServiceCapabilities,
-    VectorCollectionCatalogueSnapshot, VectorPointPage, VectorPointSnapshot, VectorSearchResult,
+    DiagnosticSnapshot, DiagnosticStorageAdmission, DiagnosticStorageSnapshot, QueryResult,
+    QueryValue, ServiceCapabilities, VectorCollectionCatalogueSnapshot, VectorPointPage,
+    VectorPointSnapshot, VectorSearchResult,
 };
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
@@ -851,17 +852,123 @@ fn binary_size(bytes: u64) -> String {
 }
 
 fn physical(storage: &DiagnosticStorageSnapshot) -> PhysicalStorageView {
-    let (headline, groups) = storage
+    let (headline, mut groups) = storage
         .rrflow_kv
         .as_ref()
         .map(rrflow_kv_metrics)
         .unwrap_or_default();
+    groups.extend(storage.admission.as_ref().map(admission_metrics));
     PhysicalStorageView {
         observed_at_unix_ms: storage.observed_at_unix_ms,
         profile: label(&storage.profile),
         evidence_level: label(&storage.evidence_level),
         headline,
         groups,
+    }
+}
+
+/// The engine's storage admission state: what it has admitted, pinned and
+/// retained, and what is waiting.
+fn admission_metrics(admission: &DiagnosticStorageAdmission) -> MetricGroupView {
+    use MetricUnit::{Bytes, Count};
+    let mut notes = vec![
+        "Retained mutable and projected bytes are logical owner charges, not allocator or process memory.".to_owned(),
+        "Retained source pages count owned page allocations and exclude borrowed mmap residency.".to_owned(),
+        "Outstanding requests include the transaction being served and the admitted waiters.".to_owned(),
+    ];
+    if admission.active {
+        notes.push("A transaction holds the serialization permit now.".to_owned());
+    }
+    if admission.fenced {
+        notes.push(
+            "Fenced: a transaction failed while holding the permit, so new transactions are refused until the engine restarts.".to_owned(),
+        );
+    }
+    MetricGroupView {
+        id: "admission",
+        label: "Admission",
+        metrics: vec![
+            filled(
+                "checkpoint_entries",
+                "Checkpoint entries",
+                Count,
+                admission.checkpoint_entries,
+                admission.checkpoint_limit,
+            ),
+            gauge(
+                "native_transactions",
+                "Native transactions",
+                Count,
+                admission.native_transactions,
+            ),
+            gauge(
+                "native_transaction_bytes",
+                "Native transaction bytes",
+                Bytes,
+                admission.native_transaction_bytes,
+            ),
+            gauge(
+                "active_read_views",
+                "Active read views",
+                Count,
+                admission.active_read_views,
+            ),
+            gauge(
+                "pinned_read_bytes",
+                "Pinned read bytes",
+                Bytes,
+                admission.pinned_read_bytes,
+            ),
+            gauge(
+                "retained_mutable_bytes",
+                "Retained mutable",
+                Bytes,
+                admission.retained_mutable_bytes,
+            ),
+            gauge(
+                "retained_projected_bytes",
+                "Retained projected",
+                Bytes,
+                admission.retained_projected_bytes,
+            ),
+            gauge(
+                "retained_source_bytes",
+                "Retained source pages",
+                Bytes,
+                admission.retained_source_bytes,
+            ),
+            gauge(
+                "peak_source_bytes",
+                "Peak source pages",
+                Bytes,
+                admission.peak_source_bytes,
+            ),
+            cumulative(
+                "denied_source_allocations",
+                "Denied source allocations",
+                Count,
+                admission.denied_source_allocations,
+            ),
+            gauge(
+                "outstanding_requests",
+                "Outstanding requests",
+                Count,
+                admission.outstanding_requests,
+            ),
+            gauge(
+                "outstanding_logical_bytes",
+                "Outstanding logical bytes",
+                Bytes,
+                admission.outstanding_logical_bytes,
+            ),
+            gauge(
+                "queued_requests",
+                "Queued requests",
+                Count,
+                admission.queued_requests,
+            ),
+        ],
+        notes,
     }
 }
 
@@ -1184,6 +1291,27 @@ fn rrflow_kv_metrics(kv: &DiagnosticRrflowKvSnapshot) -> (Vec<MetricView>, Vec<M
                     io.peak_request_bytes,
                     io.max_request_bytes,
                 ),
+                filled(
+                    "open_files",
+                    "Open files",
+                    Count,
+                    io.open_files,
+                    io.max_open_files,
+                ),
+                gauge(
+                    "peak_open_files",
+                    "Peak open files",
+                    Count,
+                    io.peak_open_files,
+                ),
+                cumulative(
+                    "handle_evictions",
+                    "Handle evictions",
+                    Count,
+                    io.handle_evictions,
+                ),
+                cumulative("handle_reopens", "Handle reopens", Count, io.handle_reopens),
+                cumulative("handle_denials", "Handle denials", Count, io.handle_denials),
             ],
             notes: io_notes,
         },
@@ -1297,8 +1425,86 @@ mod tests {
                 bytes_read: 40_960,
                 max_request_bytes: 1 << 20,
                 peak_request_bytes: 4_096,
+                max_open_files: 256,
+                open_files: 2,
+                peak_open_files: 3,
+                handle_evictions: 1,
+                handle_reopens: 1,
+                handle_denials: 0,
             },
         }
+    }
+
+    fn admission(fenced: bool) -> DiagnosticStorageAdmission {
+        DiagnosticStorageAdmission {
+            checkpoint_entries: 3,
+            checkpoint_limit: 64,
+            native_transactions: 1,
+            native_transaction_bytes: 2_048,
+            active_read_views: 2,
+            pinned_read_bytes: 8_192,
+            retained_mutable_bytes: 4_096,
+            retained_projected_bytes: 1_024,
+            retained_source_bytes: 16_384,
+            peak_source_bytes: 32_768,
+            denied_source_allocations: 0,
+            outstanding_requests: 2,
+            outstanding_logical_bytes: 4_096,
+            queued_requests: 1,
+            active: true,
+            fenced,
+        }
+    }
+
+    #[test]
+    fn segment_handles_and_admission_state_are_every_counter_the_engine_reports() {
+        let view = physical(&DiagnosticStorageSnapshot {
+            observed_at_unix_ms: 7,
+            profile: StorageProfileKind::RrflowKv,
+            evidence_level: DiagnosticStorageEvidenceLevel::RrflowKvCounters,
+            rrflow_kv: Some(rrflow_kv()),
+            admission: Some(admission(false)),
+        });
+        let metric = |group: &str, id: &str| {
+            view.groups
+                .iter()
+                .find(|candidate| candidate.id == group)
+                .and_then(|found| found.metrics.iter().find(|metric| metric.id == id))
+                .unwrap_or_else(|| panic!("{group}/{id} is shown"))
+        };
+        let open = metric("segment_io", "open_files");
+        assert_eq!((open.value, open.limit), (2.0, Some(256.0)));
+        assert_eq!(metric("segment_io", "handle_evictions").value, 1.0);
+        assert_eq!(metric("segment_io", "handle_denials").value, 0.0);
+        let checkpoint = metric("admission", "checkpoint_entries");
+        assert_eq!((checkpoint.value, checkpoint.limit), (3.0, Some(64.0)));
+        assert_eq!(metric("admission", "queued_requests").value, 1.0);
+        let notes = &view
+            .groups
+            .iter()
+            .find(|group| group.id == "admission")
+            .expect("admission group")
+            .notes;
+        assert!(notes
+            .iter()
+            .any(|note| note.contains("serialization permit")));
+        assert!(!notes.iter().any(|note| note.starts_with("Fenced")));
+
+        let fenced = physical(&DiagnosticStorageSnapshot {
+            observed_at_unix_ms: 7,
+            profile: StorageProfileKind::RrflowKv,
+            evidence_level: DiagnosticStorageEvidenceLevel::RrflowKvCounters,
+            rrflow_kv: Some(rrflow_kv()),
+            admission: Some(admission(true)),
+        });
+        assert!(fenced
+            .groups
+            .iter()
+            .find(|group| group.id == "admission")
+            .expect("admission group")
+            .notes
+            .iter()
+            .any(|note| note.starts_with("Fenced")));
     }
 
     #[test]
@@ -1308,6 +1514,7 @@ mod tests {
             profile: StorageProfileKind::RrflowKv,
             evidence_level: DiagnosticStorageEvidenceLevel::RrflowKvCounters,
             rrflow_kv: Some(rrflow_kv()),
+            admission: None,
         });
         assert_eq!(view.profile, "rrflow_kv");
         assert_eq!(view.evidence_level, "rrflow_kv_counters");
@@ -1402,6 +1609,7 @@ mod tests {
             profile: StorageProfileKind::RrflowKv,
             evidence_level: DiagnosticStorageEvidenceLevel::RrflowKvCounters,
             rrflow_kv: Some(fresh),
+            admission: None,
         });
         let cache = view
             .groups
@@ -1428,6 +1636,7 @@ mod tests {
             profile: StorageProfileKind::RrflowKv,
             evidence_level: DiagnosticStorageEvidenceLevel::RrflowKvCounters,
             rrflow_kv: Some(idle),
+            admission: None,
         });
         assert!(view
             .headline
@@ -1438,6 +1647,7 @@ mod tests {
             profile: StorageProfileKind::RrflowMx,
             evidence_level: DiagnosticStorageEvidenceLevel::LogicalOnly,
             rrflow_kv: None,
+            admission: None,
         });
         assert!(logical.headline.is_empty() && logical.groups.is_empty());
         assert_eq!(logical.evidence_level, "logical_only");

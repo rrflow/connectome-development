@@ -31,6 +31,7 @@ import { describeRrdError, RrdRuntimeClient } from "~/rrflow/runtime";
 import { RrdSessionClient } from "~/rrflow/session";
 import { dispatchIntent } from "~/shared/util/intents";
 import { useConfigStore } from "~/shell/stores/config";
+import { ApiReference } from "./api";
 import { formatCount } from "./format";
 import { GlossaryDrawer, Term } from "./glossary";
 import { databaseQuery } from "./queries";
@@ -336,6 +337,7 @@ export function RuntimeConnectionPage({
 							["activity", "Activity"],
 							["learning", "Learning"],
 							["services", "Services"],
+							["api", "API reference"],
 						].map(([value, label]) => (
 							<Button
 								key={value}
@@ -564,6 +566,13 @@ export function RuntimeConnectionPage({
 								)}
 							</Box>
 						</>
+					)}
+
+					{section === "api" && endpoint && (
+						<ApiReference
+							endpoint={endpoint}
+							instance={handshake?.service.instance.id ?? connection?.runtimeInstance}
+						/>
 					)}
 
 					<ProjectSection

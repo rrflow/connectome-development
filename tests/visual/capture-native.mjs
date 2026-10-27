@@ -72,11 +72,12 @@ const stopApp = () => {
 let page;
 const slug = (s) => s.toLowerCase().replace(/\W+/g, "-").replace(/^-|-$/g, "");
 const literal = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-// Text that differs on every run: the estate's instance identity, its loopback
-// port, clock dates and times, the clock reading a query is pinned to,
-// measured durations and the capture's own folder.
+// Text that differs on every run: the estate's instance, project and estate
+// identities (each installation draws a new identity), its loopback port,
+// clock dates and times, the clock reading a query is pinned to, measured
+// durations and the capture's own folder.
 const VARIABLE_TEXT = [
-	/instance-[0-9a-f]{6,}/,
+	/(instance|project|estate)-[0-9a-f]{6,}/,
 	/127\.0\.0\.1:\d+/,
 	/\d{1,2}\/\d{1,2}\/\d{4}/,
 	/\d{1,2}:\d{2}(:\d{2})?\s?[AP]M/,
@@ -358,7 +359,7 @@ try {
 		await page.goto(workbench, { waitUntil: "domcontentloaded" });
 		await wait(4000);
 	};
-	for (const tab of ["Knowledge", "Activity", "Learning", "Services"]) {
+	for (const tab of ["Knowledge", "Activity", "Learning", "Services", "API reference"]) {
 		await step(`tab ${tab}`, async () => {
 			await back();
 			await page
@@ -370,6 +371,64 @@ try {
 			await shot(`workbench-${slug(tab)}`);
 		});
 	}
+	await step("api-reference-states", async () => {
+		await back();
+		await page.getByRole("button", { name: "API reference", exact: true }).first().click();
+		await wait(4000);
+		// The topic list jumps to an operation and follows the article in view.
+		const topics = page.getByRole("navigation", { name: "API topics" });
+		const active = () => topics.locator('[aria-current="true"]').innerText();
+		const expect = async (what, wanted) => {
+			const shown = await active();
+			if (shown !== wanted)
+				throw new Error(`${what}: the topic list shows "${shown}", not "${wanted}"`);
+		};
+		const query = "Run a bounded rrflowQL query at one read stamp";
+		await topics.getByText(query, { exact: true }).click();
+		await wait(2500);
+		await expect("after a jump", query);
+		await shot("api-reference-query");
+		// Opening the language list scrolls back to the top, where the first
+		// operation is the one in view.
+		await page.getByLabel("Example language").first().click();
+		await wait(600);
+		await page.getByRole("option", { name: "Python", exact: true }).first().click();
+		await wait(1500);
+		const first = await topics.getByRole("button").first().innerText();
+		await expect("at the top", first);
+		await shot("api-reference-python");
+		// Leave the saved language as it was for later runs.
+		await page.getByLabel("Example language").first().click();
+		await wait(600);
+		await page.getByRole("option", { name: "CLI", exact: true }).first().click();
+		await wait(800);
+		// Scrolling by hand moves the active topic to an article in view.
+		await page.mouse.move(1000, 1200);
+		await page.mouse.wheel(0, 4000);
+		await wait(1500);
+		// Both the article and its topic are in view.
+		const inView = await topics.locator('[aria-current="true"]').evaluate((topic) => {
+			const article = document.getElementById(`api-${topic.getAttribute("data-topic")}`);
+			const list = topic.closest("nav");
+			if (!article || !list) return false;
+			const page = article.getBoundingClientRect();
+			const bounds = list.getBoundingClientRect();
+			const item = topic.getBoundingClientRect();
+			return (
+				page.bottom > 0 &&
+				page.top < window.innerHeight &&
+				item.top >= bounds.top &&
+				item.bottom <= bounds.bottom
+			);
+		});
+		const scrolledTo = await active();
+		if (scrolledTo === first || !inView) {
+			throw new Error(
+				`after scrolling, the topic list shows "${scrolledTo}", and it or its article is out of view`,
+			);
+		}
+		log.apiReferenceScrolledTo = scrolledTo;
+	});
 	for (const card of ["Data models", "Records & relations", "Vectors", "Storage engine"]) {
 		await step(`lens ${card}`, async () => {
 			await back();
