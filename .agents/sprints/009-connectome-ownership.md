@@ -169,7 +169,8 @@ owner's desktop) were recorded on the unmerged `agent/connectome-theme` branch
     its RRFlow operation lands (the rebuild table below). This follows
     decision 4 and RRFlow's Connectome contract (direct-convergence step 4).
     **Amended by decision 17:** "deleted with no stand-in" no longer applies
-    to anything visual.
+    to anything visual. **Superseded by decision 18:** decision 16 was an
+    engineering decision, and the owner rejected it on 2026-10-27.
 17. No visual regression, only improvements (owner, 2026-10-24: "I better
     not lose one visual regression but only improvements"). Every inherited
     screen, graph and visual is captured first (`tests/visual/`, baseline at
@@ -182,6 +183,37 @@ owner's desktop) were recorded on the unmerged `agent/connectome-theme` branch
     code behind it. A refactor that moves code without changing a screen
     (such as Slice D0) is compared pixel by pixel against the build before
     it.
+18. Re-author in place, organised by RRFlow's own model. The owner's
+    correction came on 2026-10-27, after D1a landed: "you are rushing this
+    and you did not convert the existing view properly to rrflow … a project
+    may have different internal domains, so you can truly have it all
+    organized … make it effortless to interact with rrflowKV rrflowQL and
+    rrflowDB … I do not want you excluding surreal code but getting it
+    authored properly." It means:
+    - **Re-author, don't replace.** Each inherited view (Query, Explorer and
+      inspector, Designer, Documentation, Functions, Parameters, Access,
+      GraphQL, the import/export dialogs) is re-authored in place onto RRFlow's
+      public operations and keeps its layout and components. A thin parallel
+      lens beside an untouched inherited screen is not a conversion.
+    - **The inherited code goes, the screens stay.** The vendor engine, client,
+      query language, editor grammar and value types still leave
+      (decision 12), but the screens do not.
+    - **The labels were a rename, not a conversion.** The views have carried
+      "RRFlowQL" labels since 2026-08-26 while still running SurrealQL. Each
+      label is corrected when its view moves onto rrflowQL.
+    - **Organisation comes from the engine.** Inside a project the scope is
+      Project ▸ Estate ▸ Domain. Domains, categories and tags come from
+      RRFlow's [estate organisation](https://github.com/rrflow/rrflow-development/blob/main/docs/reference/data/estate-organisation.md)
+      (ADR-0003, roadmap H-11). Connectome keeps no grouping of its own.
+      Before the engine serves domains, the breadcrumb shows the estate alone
+      and marks domains unavailable.
+    - **Navigation follows RRFlow's Connectome contract.** The areas are
+      Overview, Knowledge, Activity, Learning and Services. The re-authored
+      inherited views are the Knowledge tools: Query, Records, Graph, Vectors,
+      Schema, Storage and the API reference. One view registry derives
+      navigation from the operations and capabilities each view needs.
+    - **Foundations first.** Each step is reviewed before the next. D1a's API
+      tab moves into the documentation view when that view is re-authored.
 
 ## Ordered implementation slices
 
@@ -260,22 +292,22 @@ administration have no public route yet.
 
 | Inherited subject | What it did | RRFlow destination | Public operation today | Increment |
 |---|---|---|---|---|
-| Connection, namespace and database pickers, node status | connect, sign in, select a namespace and database, server info | project, estate and instance; native session; capabilities, readiness, `estate-read` | yes | D0, D8 |
-| Sandbox | in-browser engine on `mem://` | a scratch project estate served by the bundled sidecar (sprints 011 and 012) | yes | D1 |
-| Mini runner and embed generator | in-browser engine inside an iframe | RRFlow's browser deployment (planned, not built) | no | D1 removes; rebuild later |
-| Record-access sign-up and sign-in | vendor access methods | native API-key session; human login follows RRFlow's identity package | machine keys only | D1 removes |
-| Users and access view | vendor users and access definitions | RRFlow principals, grants and credential revisions | no | D1 removes; rebuild later |
-| GraphQL view (already unreachable) | vendor `/graphql` endpoint | RRFlow's GraphQL lowering (B-05), served by H-04 | no | D1 removes; rebuild later |
-| Functions view and model upload | vendor functions and ML models | RRFlow governed functions and admitted model manifests | no | D1 removes; rebuild later |
-| Parameters view | vendor global parameters | rrflowQL `$name` parameters bound per query; estate configuration owns lasting settings | yes | D4 (query variables) |
-| 2.x to 3.0 migration view | vendor version migration | none needed; RRFlow backup and restore | yes | D1 removes; D7 |
-| Query view | vendor query execution, live results, graph preview, formatting | `query-execute` with `EXPLAIN`, `traverse:` sources, `query-export`, live results through a native `/v1/ws` subscription | yes | D4 |
-| Editor language, highlighting, linting, formatting | vendor CodeMirror and Lezer language and WASM parser | a Connectome rrflowQL language built from RRFlow's lexer (`rrd-query/src/syntax.rs`) and tested against RRFlow's `query-vectors.json`; the engine (`EXPLAIN CONTRACT`) validates, the client only highlights; no formatter | yes | D3 |
-| Explorer, record inspector, data table, relation graph, map | vendor reads, creates, relates, updates and deletes; binary value types | `record:`, `relation:`, `geo:` and `traverse:` queries; transaction preview then commit with `PutRecord`, `PutRelation`, `PutGeo`, `RetireData`; one engine query per graph expansion | yes | D5 |
-| Designer | vendor schema definitions and introspection | `data-schema-read`; next registry revision through `PutSchema` with preview; `query-index-ensure` | yes (instance-level grant) | D6 |
-| Import and export | vendor statement import and export | `query-export` (Parquet), `backup-create`, `backup-list`, `restore-create`; typed record batches for import | yes, import as batches | D7 |
-| Documentation topics | vendor client snippets | RRFlow SDK reference | — | D1 removes |
-| Shared types and stores | vendor record identifiers, durations, decimals, geometry | RRFlow value model from the generated OpenAPI types | yes | D0 |
+| Connection, namespace and database pickers, node status | connect, sign in, select a namespace and database, server info | Project ▸ Estate ▸ Domain from the engine's identity and estate organisation (RRFlow H-11); native session; capabilities, readiness | yes; domains after H-11a | D0, S1, final cut |
+| Sandbox | in-browser engine on `mem://` | a scratch project estate served by the bundled sidecar (sprints 011 and 012) | yes | V8 |
+| Mini runner and embed generator | in-browser engine inside an iframe | RRFlow's browser deployment (planned, not built) | no | kept until RRFlow serves a browser deployment |
+| Record-access sign-up and sign-in | vendor access methods | native API-key session; human login follows RRFlow's identity package | machine keys only | V7 |
+| Users and access view | vendor users and access definitions | RRFlow principals, grants (including domain grants, H-11d) and credential revisions | no | V7, capability state until served |
+| GraphQL view (already unreachable) | vendor `/graphql` endpoint | RRFlow's GraphQL lowering (B-05), served by H-04 | no | V7, capability state until served |
+| Functions view and model upload | vendor functions and ML models | RRFlow governed functions and admitted model manifests | no | V7, capability state until served |
+| Parameters view | vendor global parameters | rrflowQL `$name` parameters bound per query; estate configuration owns lasting settings | yes | V1, V7 |
+| 2.x to 3.0 migration view | vendor version migration | an upgrade-and-restore check on RRFlow backup and restore (design open) | yes | V7 |
+| Query view | vendor query execution, live results, graph preview, formatting | `query-execute` with `EXPLAIN`, `traverse:` sources, `query-export`, live results through a native `/v1/ws` subscription | yes | V1 |
+| Editor language, highlighting, linting, formatting | vendor CodeMirror and Lezer language and WASM parser | a Connectome rrflowQL language built from RRFlow's lexer (`rrd-query/src/syntax.rs`) and tested against RRFlow's `query-vectors.json`; the engine (`EXPLAIN CONTRACT`) validates, the client only highlights; no formatter | yes | F3 |
+| Explorer, record inspector, data table, relation graph, map | vendor reads, creates, relates, updates and deletes; binary value types | `record:`, `relation:`, `geo:` and `traverse:` queries; transaction preview then commit with `PutRecord`, `PutRelation`, `PutGeo`, `RetireData`; one engine query per graph expansion | yes | F2, V2 |
+| Designer | vendor schema definitions and introspection | `data-schema-read` with the estate organisation; next registry revision through `PutSchema` with preview; `query-index-ensure` | yes (instance-level grant) | V3 |
+| Import and export | vendor statement import and export | `query-export` (Parquet), `backup-create`, `backup-list`, `restore-create`; typed record batches for import | yes, import as batches | V5 |
+| Documentation topics | vendor client snippets | the RRFlow API reference generated from the operation catalogue, in the inherited documentation view | yes | D1a (tab), V6 (view) |
+| Shared types and stores | vendor record identifiers, durations, decimals, geometry | RRFlow value model from the generated OpenAPI types | yes | D0, F2 |
 
 #### Ordered increments
 
@@ -302,30 +334,76 @@ each one lands.
   moves the engine pin; **D1b** moves the Sandbox entry points, which in the
   shipped app do nothing visible ("Open the Sandbox" lands back on the
   overview).
-- **D2: native surface.** Tauri commands over the existing `rrd-client`
-  methods for transactions, query export, changefeed, `/v1/ws` subscriptions,
-  backups and audit. The renderer gets opaque handles and never holds a
-  credential. Oracle: the RRD process tests drive each command against a real
-  engine, including restart and denial.
-- **D3: rrflowQL language.** A CodeMirror language from RRFlow's token set
-  (salvaged from PR #10), with golden tests against RRFlow's query vectors.
-  It replaces highlighting everywhere and removes `@surrealdb/codemirror`,
-  `@surrealdb/lezer`, `@surrealdb/ql-wasm-v2` and `@surrealdb/ql-wasm-v3`.
-- **D4: Query lens.** Fold the editor, variables (which replace global
-  parameters), result table and JSON, `EXPLAIN` plan, graph preview,
-  Parquet export and live results into the workbench; delete the inherited
-  query view.
-- **D5: Records and graph lens.** Fold the explorer, inspector, data table,
-  relation graph and map; edits go through preview then commit; delete the
-  inherited explorer.
-- **D6: Schema lens.** Fold the designer onto the schema registry and
-  `PutSchema`; delete the inherited designer.
-- **D7: Storage lens.** Backup, restore and Parquet export; typed import.
-- **D8: final cut.** Delete the inherited `/c/:id/:view` routes,
-  `connection.tsx`, `src/vendor/`, `surrealdb`, the vendor chunks and
-  aliases in `vite.config.ts`, and the vendor fields of the connection model
-  (with a configuration migration). The identity gate reaches zero and loses
-  its `src/vendor/` exemption.
+- **Re-sequenced by decision 18 (2026-10-27).** D0 and D1a landed as
+  described above. D2 to D8 are replaced by the order below. Every step
+  re-authors in place and deletes the vendor code it replaces in the same
+  pull request. Every visible step carries before/after captures
+  (decision 17), real-engine process tests, and a large-estate check:
+  - cursor-paginated tables;
+  - bounded graph neighbourhoods;
+  - virtualised lists;
+  - no lookups per item.
+- **R0: this plan.** Decision 18 and this order. Documentation only.
+- **F1: native surface** (formerly D2). Tauri commands over the existing
+  `rrd-client` methods for transactions, query export, changefeed, `/v1/ws`
+  subscriptions, backups and audit. The renderer gets opaque handles and never
+  holds a credential. Oracle: the RRD process tests drive each command against
+  a real engine, including restart and denial.
+- **F2: RRFlow value model.** Cell, record-reference, value and schema types
+  are generated from the pinned engine's OpenAPI, replacing the inherited
+  record identifiers, durations, decimals and geometry classes. Oracle: type
+  tests over golden engine responses.
+- **F3: rrflowQL language** (formerly D3). A CodeMirror language built from
+  RRFlow's token set (salvaged from PR #10), with golden tests against
+  RRFlow's query vectors. The engine validates queries through
+  `EXPLAIN CONTRACT`; the client only highlights. It replaces the inherited
+  grammar, linter and WASM value parser everywhere.
+- **F4: view registry.** One registry of views. Each view names the
+  operations and capabilities it needs, and navigation is derived from the
+  engine's catalogue and capabilities. A view whose operation is unserved
+  shows that capability state. Oracle: registry tests against the pinned
+  catalogue.
+- **F5: characterisation.** Tests that pin the engine-neutral inherited
+  components before they are re-pointed: the data table, the tables pane, the
+  schema graph, the relation graph, the code editor, the inspector and
+  creator drawers, and the tab and saved-query panes.
+- **S1: navigation model, then shell.** A written navigation model, mocked up
+  from real captures and reviewed by the owner, comes first. Then the shell:
+  - the Project ▸ Estate ▸ Domain breadcrumb, with domains read from the
+    engine (RRFlow H-11a; scoping arrives with H-11c);
+  - the areas Overview, Knowledge, Activity, Learning and Services;
+  - Knowledge tools served by the registry.
+
+  An inherited route becomes reachable only once its view runs on RRFlow.
+- **V1: Query.** The inherited query view runs rrflowQL. That covers tabs,
+  saved queries and history; variables (which replace global parameters);
+  combined, single, table and graph results; `EXPLAIN` plans; live results;
+  and Parquet export.
+- **V2: Records.** The explorer, inspector and creator: records by kind from
+  the schema registry, an rrflowQL filter, typed cells, `traverse:`
+  relations, and edits through transaction preview then commit. The relation
+  graph and the map come too.
+- **V3: Schema.** The designer graph on the schema registry, with kinds
+  grouped by domain. Edits go through `PutSchema` preview then commit.
+- **V4: Graph and Vectors.** The existing records-and-relations graph and the
+  vector map become Knowledge tools, with the selection shared across tools.
+- **V5: Storage.** The rrflowKV pipeline and counters, backup, restore,
+  Parquet export and typed import. These replace the inherited import and
+  export dialogs.
+- **V6: API reference.** The inherited documentation view (topic tree,
+  articles, language switch) is fed from the engine's operation catalogue.
+  D1a's workbench tab moves into it.
+- **V7: capability views.** Functions, Access and GraphQL are re-authored to
+  show RRFlow's capability state until their operations land (table below).
+  Parameters become query variables plus estate configuration. Migration
+  becomes an upgrade-and-restore check on backup and restore; that design is
+  still open and is decided before V7.
+- **V8: Sandbox** (formerly D1b). A scratch project estate on the sidecar.
+- **Final cut** (formerly D8). Delete the inherited `/c/:id/:view` routes,
+  `connection.tsx`, `src/vendor/`, `surrealdb`, the vendor chunks and aliases
+  in `vite.config.ts`, and the vendor fields of the connection model (with a
+  configuration migration). The identity gate reaches zero and loses its
+  `src/vendor/` exemption.
 
 #### Rebuilt when RRFlow serves them
 
@@ -847,3 +925,46 @@ rrflow-development `86adada6` on 2026-10-27.
   --all-targets --locked -- -D warnings`, the native tests (31 passed, 6
   ignored), the six real-engine process tests on the `86adada6` engine, and
   four desktop captures with no failed step.
+
+### 2026-10-27 — Owner correction: re-author in place (decision 18)
+
+After D1a landed, the owner said the conversion was being rushed and was not
+a conversion. Checked on `main` `d706d360` before writing decision 18:
+
+- **The inherited views can't be reached in the desktop app.** Every
+  connection the app creates, the Sandbox included, has
+  `target: "runtime"`, and `/c/:connection/:view` redirects such targets to
+  `/runtime/:id`:
+  - `src/shared/util/defaults.tsx` (`createBaseConnection`,
+    `createSandboxConnection`);
+  - `src/screens/connectome/index.tsx` (lines 194-205);
+  - `src/hooks/routing.ts` (lines 55-62).
+
+  The Query editor, Explorer and inspector, Designer, Documentation,
+  Functions, Parameters and Access views therefore render only in the browser
+  harness.
+- **They still run SurrealDB under new names.**
+  - `src/vendor/rrflow-client.ts` re-exports `Surreal as RRFlow`, and
+    `src/vendor/rrflowql-editor.ts` re-exports the vendor's grammar.
+  - Value parsing runs in `@surrealdb/ql-wasm-v3`.
+  - Every view sends SurrealQL: `INFO FOR DB STRUCTURE`, `DEFINE TABLE`,
+    `RELATE`, `SELECT … FROM … START`.
+  - The "RRFlowQL" labels date from the 2026-08-26 rename "establish RRFlowQL
+    native baseline".
+- **D1a repeated the pattern.** It added an API tab to the workbench and left
+  the documentation view in place.
+- **The engine had no organisation for a project's internal domains.** At
+  development `86adada6` the registry carried only an inert
+  `namespace`/`database` label.
+  - The owner then directed configurable domains: a default setup each
+    project tunes, kind grouping, categories and tags, optional isolation,
+    and per-domain drill-down, all informed by current research.
+  - RRFlow PR #156 records this as ADR-0003, the estate organisation
+    contract, OBJ-15, roadmap item H-11 and POAM-042.
+  - RRFlow PR #159 (H-11a) adds domains, categories, memberships and kind
+    tags to the schema registry.
+
+Decision 18 supersedes decision 16. The ordered increments are re-sequenced
+as R0, F1-F5, S1, V1-V8 and the final cut. Each view is re-authored in place
+and goes live only once it runs on RRFlow, and each Surreal package leaves
+with the last view that uses it.
