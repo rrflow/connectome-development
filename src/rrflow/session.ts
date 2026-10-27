@@ -6,8 +6,11 @@ import { Channel, type InvokeArgs, invoke, isTauri } from "@tauri-apps/api/core"
  * RRFlow's Rust SDK (`rrd-client` + `rrd-contract`) owns every RRD wire type
  * and validates each response inside the Tauri process. These interfaces are
  * Connectome view models: the bounded projections `src-tauri/src/rrd/view.rs`
- * serializes for the Database, Vectors, and Storage lenses. The operator
- * credential and the session bearer never cross into the webview.
+ * serializes for the Database, Vectors, and Storage lenses, and those its
+ * `effect` and `history` modules serialize for changes, backups, exports, the
+ * changefeed and the audit chain. The operator credential and the session
+ * bearer never cross into the webview; a pending change and a held export
+ * cross only as opaque handles.
  */
 
 export interface RrdReference {
@@ -344,6 +347,206 @@ export interface RrdStorageView {
 	physical: RrdPhysicalStorageView;
 }
 
+/**
+ * One contract mutation as the webview proposes it, such as
+ * `{ mutation: "put_record", reference, valid_from, properties }`. The native
+ * process validates it against `rrd-contract` before anything reaches the
+ * engine; the value model that types it is generated in a later step.
+ */
+export interface RrdMutation {
+	mutation: string;
+	[field: string]: unknown;
+}
+
+/** What one mutation writes, as a preview or a change row renders it. */
+export interface RrdMutationView {
+	/** The mutation's wire name, such as `put_record` or `retire_data`. */
+	operation: string;
+	/** `kind:id` for a record or relation; the event kind; `schema`. */
+	target: string;
+	/** A relation's `from → to`, or the subject the mutation attaches to. */
+	subject: string | null;
+	properties: Record<string, string>;
+}
+
+/** The read-your-writes snapshot behind a preview: its read stamp and size. */
+export interface RrdProspectiveView {
+	valid_at_unix_ms: number;
+	known_at_cursor: number;
+	schema_revision: number;
+	read_manifest_sha256: string;
+	selected_versions: number;
+	keys_examined: number;
+	entries: number;
+}
+
+/**
+ * A previewed change waiting for the operator. Commit it with `handle` and the
+ * `operation_sha256` shown; the native process commits exactly the previewed
+ * mutations. A newer preview on the same connection replaces it.
+ */
+export interface RrdChangePreviewView {
+	handle: string;
+	operation_sha256: string;
+	read_cursor: number;
+	mutations: RrdMutationView[];
+	prospective: RrdProspectiveView;
+	timeout_ms: number;
+}
+
+export interface RrdCommitReceiptView {
+	operation_sha256: string;
+	mutation_count: number;
+	first_claim_sequence: number;
+	last_claim_sequence: number;
+	runtime_commit_sha256: string | null;
+	first_runtime_cursor: number | null;
+	last_runtime_cursor: number | null;
+	/** The engine answered with the receipt of a commit it had already made. */
+	idempotent_replay: boolean;
+}
+
+export interface RrdChangeView {
+	cursor: number;
+	commit_sha256: string;
+	commit_ordinal: number;
+	at_unix_ms: number;
+	actor: string;
+	family: "data" | "claim";
+	mutation: RrdMutationView;
+	change_sha256: string;
+	previous_change_sha256: string | null;
+}
+
+export interface RrdChangesView {
+	requested_after_cursor: number;
+	through_cursor: number;
+	head_cursor: number;
+	has_more: boolean;
+	validation_method: string;
+	change_reads: number;
+	proof_nodes: number;
+	changes: RrdChangeView[];
+}
+
+export interface RrdChangesFollowView {
+	/** No change arrived before the wait ended. */
+	timed_out: boolean;
+	waited_ms: number;
+	page: RrdChangesView;
+}
+
+export interface RrdAuditRecordView {
+	sequence: number;
+	at_unix_ms: number;
+	principal: string | null;
+	/** The security action, such as `transaction_commit`. */
+	action: string;
+	/** `kind:id` segments joined by `/`. */
+	resource: string;
+	request_id: string;
+	operation_id: string;
+	phase: "authorized" | "completed";
+	decision: "allowed" | "denied" | "failed";
+	status_code: number;
+	audit_sha256: string;
+	previous_audit_sha256: string | null;
+}
+
+export interface RrdAuditView {
+	requested_after_sequence: number;
+	through_sequence: number;
+	chain_anchor_sha256: string | null;
+	chain_head_sha256: string | null;
+	records: RrdAuditRecordView[];
+}
+
+export interface RrdArchiveView {
+	archive_sha256: string;
+	action_count: number;
+	standalone_claims: number;
+	runtime_commits: number;
+	runtime_mutations: number;
+	payload_bytes: number;
+	claim_sequence: number;
+	runtime_cursor: number;
+}
+
+/** How a backup carries one family of estate state. */
+export interface RrdCoverageView {
+	family: string;
+	coverage: "included" | "referenced_only" | "rebuild_required" | "excluded";
+}
+
+export interface RrdBackupView {
+	backup_sha256: string;
+	label: string;
+	created_at_unix_ms: number;
+	application_complete: boolean;
+	archive: RrdArchiveView;
+	coverage: RrdCoverageView[];
+}
+
+export interface RrdBackupsView {
+	revision: number;
+	catalogue_sha256: string;
+	archives_verified: boolean;
+	backups: RrdBackupView[];
+}
+
+export interface RrdBackupCreatedView {
+	backup: RrdBackupView;
+	catalogue_revision: number;
+	catalogue_sha256: string;
+	idempotent_replay: boolean;
+}
+
+/** A backup restored into its own verified root; the estate is not replaced. */
+export interface RrdRestoreView {
+	backup_sha256: string;
+	restore_id: string;
+	inventory: RrdArchiveView;
+	reopened: boolean;
+	idempotent_replay: boolean;
+}
+
+/** A verified export the native process holds until it is saved. */
+export interface RrdArtifactView {
+	handle: string;
+	media_type: string;
+	file_name: string;
+	bytes: number;
+	sha256: string;
+}
+
+export interface RrdQueryExportView {
+	artifact: RrdArtifactView;
+	profile: string;
+	canonical_query: string;
+	known_at_cursor: number;
+	schema_revision: number;
+	read_manifest_sha256: string;
+	rows: number;
+	columns: number;
+	row_groups: number;
+	elapsed_micros: number;
+}
+
+export interface RrdAuditExportView {
+	artifact: RrdArtifactView;
+	requested_after_sequence: number;
+	through_sequence: number;
+	record_count: number;
+	chain_anchor_sha256: string | null;
+	chain_head_sha256: string | null;
+}
+
+export interface RrdSavedArtifactView {
+	path: string;
+	bytes: number;
+	sha256: string;
+}
+
 export interface RrdConnectRequest {
 	/** Loopback HTTP origin of the RRD service. */
 	endpoint: string;
@@ -488,6 +691,97 @@ export class RrdSessionClient {
 		const progress = new Channel<RrdVectorMapProgressView>();
 		if (onProgress) progress.onmessage = onProgress;
 		return this.call<RrdVectorMapView>("rrd_vector_map", { request, onProgress: progress });
+	}
+
+	/**
+	 * Previews a data change inside a new transaction; nothing is committed. A
+	 * newer preview on this connection replaces it.
+	 */
+	async previewChange(mutations: RrdMutation[], validAt?: number): Promise<RrdChangePreviewView> {
+		this.requireNative();
+		return this.call<RrdChangePreviewView>("rrd_change_preview", {
+			request: { mutations, valid_at: validAt },
+		});
+	}
+
+	/** Commits a previewed change exactly as previewed, under the digest shown. */
+	async commitChange(preview: RrdChangePreviewView): Promise<RrdCommitReceiptView> {
+		this.requireNative();
+		return this.call<RrdCommitReceiptView>("rrd_change_commit", {
+			request: { handle: preview.handle, operation_sha256: preview.operation_sha256 },
+		});
+	}
+
+	async discardChange(handle: string): Promise<void> {
+		this.requireNative();
+		await this.call<void>("rrd_change_discard", { handle });
+	}
+
+	/** Changes after `afterCursor`, at most 256 per page. */
+	async changes(afterCursor: number, limit: number): Promise<RrdChangesView> {
+		this.requireNative();
+		return this.call<RrdChangesView>("rrd_changes", {
+			request: { after_cursor: afterCursor, limit },
+		});
+	}
+
+	/** Waits up to `waitTimeoutMs` (at most 5000) for changes after `afterCursor`. */
+	async followChanges(
+		afterCursor: number,
+		limit: number,
+		waitTimeoutMs: number,
+	): Promise<RrdChangesFollowView> {
+		this.requireNative();
+		return this.call<RrdChangesFollowView>("rrd_changes_follow", {
+			request: { after_cursor: afterCursor, limit, wait_timeout_ms: waitTimeoutMs },
+		});
+	}
+
+	/** Audit records after `afterSequence`, at most 512 per page. */
+	async audit(afterSequence: number, limit: number): Promise<RrdAuditView> {
+		this.requireNative();
+		return this.call<RrdAuditView>("rrd_audit", {
+			request: { after_sequence: afterSequence, limit },
+		});
+	}
+
+	async exportAudit(afterSequence: number, limit: number): Promise<RrdAuditExportView> {
+		this.requireNative();
+		return this.call<RrdAuditExportView>("rrd_audit_export", {
+			request: { after_sequence: afterSequence, limit },
+		});
+	}
+
+	/** Runs `query` as a Parquet export; the file stays native until saved. */
+	async exportQuery(query: string): Promise<RrdQueryExportView> {
+		this.requireNative();
+		return this.call<RrdQueryExportView>("rrd_query_export", { request: { query } });
+	}
+
+	/** Saves a held export where the operator chooses; `null` when cancelled. */
+	async saveArtifact(handle: string): Promise<RrdSavedArtifactView | null> {
+		this.requireNative();
+		return this.call<RrdSavedArtifactView | null>("rrd_artifact_save", { handle });
+	}
+
+	async backups(verifyArchives = false): Promise<RrdBackupsView> {
+		this.requireNative();
+		return this.call<RrdBackupsView>("rrd_backups", {
+			request: { verify_archives: verifyArchives },
+		});
+	}
+
+	async createBackup(label: string): Promise<RrdBackupCreatedView> {
+		this.requireNative();
+		return this.call<RrdBackupCreatedView>("rrd_backup_create", { request: { label } });
+	}
+
+	/** Restores a backup into its own verified root beside the estate. */
+	async restoreBackup(backupSha256: string): Promise<RrdRestoreView> {
+		this.requireNative();
+		return this.call<RrdRestoreView>("rrd_backup_restore", {
+			request: { backup_sha256: backupSha256 },
+		});
 	}
 
 	async disconnect(): Promise<void> {

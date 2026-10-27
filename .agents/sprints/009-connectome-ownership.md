@@ -348,7 +348,17 @@ each one lands.
   `rrd-client` methods for transactions, query export, changefeed, `/v1/ws`
   subscriptions, backups and audit. The renderer gets opaque handles and never
   holds a credential. Oracle: the RRD process tests drive each command against
-  a real engine, including restart and denial.
+  a real engine, including restart and denial. Split on 2026-10-27, as D1
+  was:
+  - **F1a: request and response effects.** A data change is previewed inside
+    a transaction and committed by its handle and the approved digest,
+    exactly as previewed. Parquet query exports and audit exports are held
+    natively until the native save dialog writes them. Also: changefeed read
+    and follow, audit pages, and the backup catalogue, creation and verified
+    restore.
+  - **F1b: live results.** Durable subscriptions over `/v1/ws`, with
+    acknowledgement, resume after reconnect and session renewal, streamed to
+    the renderer through a channel.
 - **F2: RRFlow value model.** Cell, record-reference, value and schema types
   are generated from the pinned engine's OpenAPI, replacing the inherited
   record identifiers, durations, decimals and geometry classes. Oracle: type
@@ -968,3 +978,78 @@ Decision 18 supersedes decision 16. The ordered increments are re-sequenced
 as R0, F1-F5, S1, V1-V8 and the final cut. Each view is re-authored in place
 and goes live only once it runs on RRFlow, and each Surreal package leaves
 with the last view that uses it.
+
+### 2026-10-27 — Step F1a: governed effects through the native client (decision 18)
+
+Branch `agent/f1a-native-effects` from the decision-18 plan branch `076ca26e`
+(PR #19), on engine pin `86adada6`. F1 was split into F1a (request and
+response effects) and F1b (live `/v1/ws` subscriptions), as D1 was; F1b's
+connection, acknowledgement and session-renewal design is its own review.
+
+- **Read first:**
+  - the native client (`rrd.rs`, `client.rs`, `client/process.rs`, `view.rs`,
+    `error.rs`) and `src/rrflow/session.ts`;
+  - at `86adada6`:
+    - `rrd-client` (`operation.rs`, `session.rs`, `subscription.rs`) and its
+      `tests/real_server.rs`;
+    - the contract's transaction, changefeed, audit, backup, export and
+      WebSocket types;
+    - the engine's `transaction.rs`, `backup.rs` and `changefeed.rs`.
+- **Twelve commands** (`src-tauri/src/rrd.rs`), with views in `view/effect.rs`
+  and `view/history.rs` and methods on `RrdSessionClient`:
+  - Changes: `rrd_change_preview`, `rrd_change_commit`, `rrd_change_discard`.
+    - A preview begins a transaction in the `data` scope and returns an opaque
+      handle.
+    - A commit names the handle and the digest the operator approved; the
+      native process commits the previewed mutations it holds.
+    - One change is pending per connection, matching the session's one
+      transaction; a newer preview discards the older.
+    - A replaced session fails the commit closed.
+    - A commit whose outcome is unknown keeps its idempotency key, so a retry
+      replays it.
+    - A refused commit aborts its transaction.
+  - History: `rrd_changes`, `rrd_changes_follow`, `rrd_audit`.
+  - Exports: `rrd_query_export`, `rrd_audit_export` and `rrd_artifact_save`.
+    - The SDK verifies the file, and the native process holds it, four per
+      connection at most.
+    - The native save dialog writes it whole: a sibling file, then a rename.
+  - Backups: `rrd_backups`, `rrd_backup_create`, `rrd_backup_restore`.
+    - A restore stages a verified root beside the estate.
+    - Each backup has one restore id, `restore-<16 digest characters>`.
+- **Engine behaviour the tests found, all at `86adada6`:**
+  - **Commit deadline.** A commit without `deadline_unix_ms` is refused ("commit
+    requires deadline_unix_ms"). Each attempt now carries a fresh deadline.
+  - **Required properties.** A preview does not check a strict kind's required
+    properties; the commit refuses the record. The denial test pins this.
+  - **Audit sequences.** They increase but are not contiguous. The chain links
+    record to record by digest, across an engine restart too.
+  - **The install's own commits.** A fresh estate's audit already holds
+    commits from installation, so the test measures the commits and aborts it
+    adds.
+  - **Prospective snapshot.** A preview reads the whole data scope within its
+    storage-key budget (`rrd-store` `preview_data_snapshot`). An estate with
+    more than the contract's default of 10,000 keys cannot be previewed. This
+    was read in the code, not run; it is to be raised as an RRFlow POA&M item.
+- **First runs:**
+  - A test helper read the audit chain until an empty page. Every read is
+    itself audited, so the chain never ends. It now stops at the first page
+    that is not full. That run was stopped, and its engine and test processes
+    were ended.
+  - The restart helper used the fresh-install helper; it now reopens with the
+    previewed installation identity.
+- **Verified locally:**
+  - `pnpm check`;
+  - `cargo fmt --check`, and `cargo clippy --all-targets --locked -- -D warnings`;
+  - the native tests (37 passed, 10 ignored);
+  - all ten real-engine process tests on the `86adada6` engine: the six earlier
+    tests, the verified sidecar included, and the four new tests in
+    `client/process/effects.rs`.
+  - The owner's real `RRFlow/Connectome` folder had no change in the window of
+    these runs.
+- **Not done:**
+  - No screen uses the new commands yet, so there are no captures; V1–V8 adopt
+    them.
+  - Authorization denial for a limited principal is not testable on an
+    installed estate until RRFlow serves principal administration (POAM-016).
+    The denial test covers the refusals that exist: a forged credential, a
+    refused commit, another connection's handle, and a closed session.

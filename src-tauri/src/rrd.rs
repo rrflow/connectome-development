@@ -14,11 +14,18 @@ mod transport;
 mod view;
 
 use client::{
-    NativeRrdClient, RrdConnectRequest, RrdQueryRequest, RrdVectorMapRequest,
-    RrdVectorPointsRequest, RrdVectorSearchRequest,
+    NativeRrdClient, RrdAuditExportRequest, RrdAuditRequest, RrdBackupCreateRequest,
+    RrdBackupRestoreRequest, RrdBackupsRequest, RrdChangeCommitRequest, RrdChangePreviewRequest,
+    RrdChangesFollowRequest, RrdChangesRequest, RrdConnectRequest, RrdQueryExportRequest,
+    RrdQueryRequest, RrdVectorMapRequest, RrdVectorPointsRequest, RrdVectorSearchRequest,
 };
 use error::RrdError;
 use transport::public_rrd_url;
+use view::effect::{
+    AuditExportView, BackupCreatedView, BackupsView, ChangePreviewView, CommitReceiptView,
+    QueryExportView, RestoreView, SavedArtifactView,
+};
+use view::history::{AuditView, ChangesFollowView, ChangesView};
 use view::{
     ConnectionView, DatabaseView, QueryView, ServiceView, StorageView, VectorCollectionsView,
     VectorMapProgressView, VectorMapView, VectorPointsView, VectorSearchView,
@@ -199,6 +206,123 @@ pub async fn rrd_vector_map(
             let _ = on_progress.send(progress);
         })
         .await
+}
+
+/// Previews a data change inside a new transaction and keeps it pending under
+/// the returned handle; nothing is committed.
+#[tauri::command]
+pub async fn rrd_change_preview(
+    profile: String,
+    request: RrdChangePreviewRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<ChangePreviewView, RrdError> {
+    state.client(&profile).await?.preview_change(request).await
+}
+
+/// Commits the pending change exactly as previewed, once the operator
+/// approved its digest.
+#[tauri::command]
+pub async fn rrd_change_commit(
+    profile: String,
+    request: RrdChangeCommitRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<CommitReceiptView, RrdError> {
+    state.client(&profile).await?.commit_change(request).await
+}
+
+#[tauri::command]
+pub async fn rrd_change_discard(
+    profile: String,
+    handle: String,
+    state: State<'_, RrdClientState>,
+) -> Result<(), RrdError> {
+    state.client(&profile).await?.discard_change(&handle).await
+}
+
+#[tauri::command]
+pub async fn rrd_changes(
+    profile: String,
+    request: RrdChangesRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<ChangesView, RrdError> {
+    state.client(&profile).await?.changes(request).await
+}
+
+#[tauri::command]
+pub async fn rrd_changes_follow(
+    profile: String,
+    request: RrdChangesFollowRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<ChangesFollowView, RrdError> {
+    state.client(&profile).await?.follow_changes(request).await
+}
+
+#[tauri::command]
+pub async fn rrd_audit(
+    profile: String,
+    request: RrdAuditRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<AuditView, RrdError> {
+    state.client(&profile).await?.audit(request).await
+}
+
+#[tauri::command]
+pub async fn rrd_audit_export(
+    profile: String,
+    request: RrdAuditExportRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<AuditExportView, RrdError> {
+    state.client(&profile).await?.export_audit(request).await
+}
+
+#[tauri::command]
+pub async fn rrd_query_export(
+    profile: String,
+    request: RrdQueryExportRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<QueryExportView, RrdError> {
+    state.client(&profile).await?.export_query(request).await
+}
+
+/// Saves a held export where the operator chooses; `null` when cancelled.
+#[tauri::command]
+pub async fn rrd_artifact_save(
+    profile: String,
+    handle: String,
+    app: tauri::AppHandle,
+    state: State<'_, RrdClientState>,
+) -> Result<Option<SavedArtifactView>, RrdError> {
+    let client = state.client(&profile).await?;
+    client::save_artifact(&app, &client, &handle).await
+}
+
+#[tauri::command]
+pub async fn rrd_backups(
+    profile: String,
+    request: RrdBackupsRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<BackupsView, RrdError> {
+    state.client(&profile).await?.backups(request).await
+}
+
+#[tauri::command]
+pub async fn rrd_backup_create(
+    profile: String,
+    request: RrdBackupCreateRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<BackupCreatedView, RrdError> {
+    state.client(&profile).await?.create_backup(request).await
+}
+
+/// Restores a backup into its own verified root beside the estate; the
+/// serving estate is not replaced.
+#[tauri::command]
+pub async fn rrd_backup_restore(
+    profile: String,
+    request: RrdBackupRestoreRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<RestoreView, RrdError> {
+    state.client(&profile).await?.restore_backup(request).await
 }
 
 #[tauri::command]

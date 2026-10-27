@@ -20,6 +20,8 @@ use serde_json::{json, Value};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
+mod effects;
+
 const FIXTURE_COLLECTION: &str = "notes";
 const FIXTURE_VECTOR: &str = "body";
 /// Two groups of four documents, densely linked inside each group.

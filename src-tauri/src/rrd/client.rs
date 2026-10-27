@@ -8,6 +8,10 @@
 //! Lenses call in concurrently. Each request pins the current session lease
 //! until it completes, and the lease is renewed or replaced only while no
 //! request pins it, because a renewal rotates the bearer the engine accepts.
+//!
+//! Governed effects live in submodules: `transaction` (preview, then commit
+//! exactly what was previewed), `backup`, `artifact` (exports held natively
+//! until saved) and `history` (changefeed and audit pages).
 
 use super::error::RrdError;
 use super::transport::{is_loopback_origin, rrd_origin};
@@ -38,6 +42,16 @@ use tokio::net::TcpStream;
 use tokio::sync::{RwLock, RwLockReadGuard};
 use tokio::task::JoinSet;
 use uuid::Uuid;
+
+mod artifact;
+mod backup;
+mod history;
+mod transaction;
+
+pub use artifact::{save_artifact, RrdAuditExportRequest, RrdQueryExportRequest};
+pub use backup::{RrdBackupCreateRequest, RrdBackupRestoreRequest, RrdBackupsRequest};
+pub use history::{RrdAuditRequest, RrdChangesFollowRequest, RrdChangesRequest};
+pub use transaction::{RrdChangeCommitRequest, RrdChangePreviewRequest};
 
 // Connectome's own session policy; the engine enforces its own ceilings.
 const SESSION_IDLE_TIMEOUT_MS: u64 = 900_000;
@@ -256,6 +270,9 @@ pub struct NativeRrdClient {
     ids: RequestIds,
     /// `None` once the operator closed the session.
     lease: RwLock<Option<Lease>>,
+    /// The previewed change waiting for its commit, if any.
+    pending: tokio::sync::Mutex<Option<transaction::PendingChange>>,
+    artifacts: artifact::Artifacts,
 }
 
 fn now_unix_ms() -> Result<u64, String> {
@@ -375,6 +392,27 @@ fn neighbour_links(
         .collect()
 }
 
+/// One rrflowQL request within the estate's budget, refused before it is sent
+/// when the contract could never accept it.
+fn execute_query(
+    query: &str,
+    scope: String,
+    budget: &QueryBudget,
+) -> Result<ExecuteQuery, RrdError> {
+    if query.trim().is_empty() || query.len() > MAX_QUERY_BYTES || query.contains('\0') {
+        return Err(format!(
+            "RRFlowQL query must be non-empty, at most {MAX_QUERY_BYTES} bytes, and free of NUL"
+        )
+        .into());
+    }
+    Ok(ExecuteQuery {
+        scope,
+        query: query.to_owned(),
+        parameters: Default::default(),
+        budget: budget.clone(),
+    })
+}
+
 /// The lowest and highest cursor seen across the reads that built one view.
 fn widen(range: Option<(u64, u64)>, cursor: u64) -> (u64, u64) {
     range.map_or((cursor, cursor), |(low, high)| {
@@ -410,6 +448,8 @@ impl NativeRrdClient {
             service: view::service(&capabilities),
             query_budget: capabilities.configuration.query.clone(),
             ids,
+            pending: Default::default(),
+            artifacts: Default::default(),
         })
     }
 
@@ -585,21 +625,7 @@ impl NativeRrdClient {
     }
 
     pub async fn query(&self, request: RrdQueryRequest) -> Result<QueryView, RrdError> {
-        if request.query.trim().is_empty()
-            || request.query.len() > MAX_QUERY_BYTES
-            || request.query.contains('\0')
-        {
-            return Err(format!(
-                "RRFlowQL query must be non-empty, at most {MAX_QUERY_BYTES} bytes, and free of NUL"
-            )
-            .into());
-        }
-        let request = ExecuteQuery {
-            scope: self.scope(),
-            query: request.query,
-            parameters: Default::default(),
-            budget: self.query_budget.clone(),
-        };
+        let request = execute_query(&request.query, self.scope(), &self.query_budget)?;
         let result = self
             .send(false, |session, options| async move {
                 self.client.execute_query(&session, request, options).await
@@ -839,10 +865,14 @@ impl NativeRrdClient {
     }
 
     /// Closes the session once no request pins it; later requests fail closed.
+    /// The session's open transaction ends with it, so a pending change is
+    /// dropped, and so are held exports.
     pub async fn close(&self) -> Result<(), RrdError> {
         let Some(lease) = self.lease.write().await.take() else {
             return Ok(());
         };
+        *self.pending.lock().await = None;
+        self.artifacts.clear();
         self.client
             .close_session(&lease.session, CloseSession {}, self.ids.next(true)?)
             .await
