@@ -21,6 +21,7 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
 mod effects;
+mod live;
 
 const FIXTURE_COLLECTION: &str = "notes";
 const FIXTURE_VECTOR: &str = "body";

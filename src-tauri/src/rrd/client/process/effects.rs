@@ -86,7 +86,7 @@ fn count(records: &[AuditRecordView], action: &str) -> usize {
 impl Estate {
     /// Stops the engine and serves the same installed estate again. The kernel
     /// picks a new port, so earlier connections lose their endpoint.
-    fn restart(&mut self) {
+    pub(super) fn restart(&mut self) {
         let _ = self.served.server.kill();
         let _ = self.served.server.wait();
         let mut reopen = EstateServeRequest {

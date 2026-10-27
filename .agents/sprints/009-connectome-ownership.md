@@ -1053,3 +1053,70 @@ connection, acknowledgement and session-renewal design is its own review.
     installed estate until RRFlow serves principal administration (POAM-016).
     The denial test covers the refusals that exist: a forged credential, a
     refused commit, another connection's handle, and a closed session.
+
+### 2026-10-27 — Step F1b: live results over `/v1/ws` (decision 18)
+
+Branch `agent/f1b-live-results` from F1a (`b9963eea`, PR #20), on engine pin
+`86adada6`.
+
+- **Read first, at `86adada6`:**
+  - the engine's `subscription.rs`, in full;
+  - the server's `/v1/ws` loop (`rrd-server/src/http/websocket.rs`);
+  - the WebSocket contract, and the subscription half of the SDK's
+    `real_server.rs`.
+- **What the engine requires:**
+  - **Ownership.** A durable subscription belongs to the session that opened
+    it.
+  - **Authorization.** The server authorizes every poll, ACK and heartbeat on
+    a socket with the bearer it connected with. A session renewal rotates that
+    bearer.
+  - **Leases.** A subscription's lease is kept alive by client heartbeats and
+    ACKs.
+  - **Resume.** A resume must match the durable generation and the
+    acknowledged cursor.
+  - **Replaying an open.** It returns the current durable state.
+- **Two commands:** `rrd_live_open` and `rrd_live_close`. Events go to a
+  channel. `RrdSessionClient.openLive` and `closeLive` wrap them.
+  - Each live subscription has its own task and socket, and at most eight are
+    open per connection.
+  - A delivery is handed over before it is acknowledged. After a reconnect,
+    whatever was already handed over is skipped.
+  - When the lease changes, the task reconnects:
+    - after a renewal, it resumes the same subscription;
+    - after a replacement, it opens a new subscription after the last cursor
+      handed over.
+  - The heartbeat also keeps the session fresh.
+  - Three consecutive failed connections end the subscription with a
+    retryable reason. Closing it, or disconnecting, closes the durable
+    subscription on the engine.
+  - The concurrency uses `std::future::poll_fn`. Tokio's `select!` would need
+    the `macros` feature, a new crate in the lockfile.
+- **Engine behaviour the tests found:** the engine parses a live query only
+  when a change arrives. An invalid query therefore opens and sits idle until
+  the next commit.
+  - A live query opened without a cursor now runs once first. Its result is
+    returned with the handle, and the subscription delivers what follows that
+    cursor, so an invalid query is refused at open.
+  - A query opened with a cursor of its own keeps the engine's behaviour, and
+    the bounds test pins it.
+- **First run.** The bounds test waited for that refusal and timed out; this is
+  how the behaviour was found.
+- **Known limit.** Reattaching replays the original open, which the engine
+  checks against the retention window of one million cursors. A subscription
+  that falls further behind than that ends, and is reopened from its last
+  cursor.
+- **Verified locally:**
+  - `pnpm check`, `cargo fmt --check`, and `cargo clippy --all-targets --locked
+    -- -D warnings`;
+  - native tests: 39 passed, 14 ignored;
+  - all fourteen real-engine process tests on the `86adada6` engine, including
+    the four new ones in `client/process/live.rs`:
+    - **Renewal and replacement:** changes arrive in cursor order across both,
+      with no repeat.
+    - **Live query:** it reports added, updated and removed rows.
+    - **Restart:** across an engine restart the subscription ends retryably,
+      and resumes from its cursor on a new connection.
+    - **Bounds and refusals:** they hold, and disconnecting ends every
+      subscription.
+- **Not done:** no screen uses live results yet; V1 (Query) and the Activity
+  area adopt them.
