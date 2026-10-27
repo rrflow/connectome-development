@@ -296,7 +296,12 @@ each one lands.
   embed) keep their inherited screens until their RRFlow lenses exist; the
   API reference is rebuilt first, from RRFlow's public operation catalogue,
   which RRFlow already serves. `@surrealdb/wasm` leaves with the last screen
-  that needs it.
+  that needs it. Split on 2026-10-27: **D1a** builds the API reference on an
+  engine whose catalogue owns each operation's family, summary and
+  description (the owner's decision of 2026-10-26; RRFlow PR #147), which
+  moves the engine pin; **D1b** moves the Sandbox entry points, which in the
+  shipped app do nothing visible ("Open the Sandbox" lands back on the
+  overview).
 - **D2: native surface.** Tauri commands over the existing `rrd-client`
   methods for transactions, query export, changefeed, `/v1/ws` subscriptions,
   backups and audit. The renderer gets opaque handles and never holds a
@@ -742,3 +747,103 @@ the desktop application and a running engine.
   version and TypeScript), `cargo fmt --check`, `cargo clippy --all-targets
   --locked -- -D warnings`, and four full desktop captures (two per theme)
   with no failed step. The native and RRD process test suites run in CI.
+
+### 2026-10-27 — Slice D1a: the API reference from RRFlow's catalogue (decision 17)
+
+Branch `agent/slice-d1a-api-reference` from `main` `62b46094`. On
+2026-10-26 the owner chose the engine's operation catalogue as the owner of
+the API reference's prose. RRFlow PR #147 added it, and merged as
+rrflow-development `86adada6` on 2026-10-27.
+
+- Engine pin. `rrd-client`, `rrd-contract` and `@rrflow/rrd-client` move
+  from `4860a253` to `86adada6` (OpenAPI SHA-256 `b0b7a624…`), and the
+  sidecar is rebuilt from it (SHA-256 `56a512cf…`). The catalogue now gives
+  every operation a family, summary and description, and lists ten families
+  with their titles and descriptions. A first trial pin, `ebdcb33d` (the
+  first commit of #147), differs from `86adada6` only in RRFlow documentation
+  and evaluation fixtures. Three other engine changes in the range needed
+  Connectome changes:
+  - Installation identity. `install plan` now requires `--identity`, a
+    64-digit hexadecimal identity from `rrflow install identity`. The native
+    preview allocates one and returns it with the preview, serve sends the
+    previewed identity back, and an install without one is refused ("Review
+    the installation preview again; its identity is missing").
+  - Executable link count. The engine refuses to start from an executable
+    with more than one hard link (`file link count denied: expected=1
+    observed=2`). Cargo's `target/release/rrflow.exe` is a hard link into
+    `deps/`, so local runs use a copy; the staged sidecar is already one.
+  - Storage counters. Segment I/O gains open files, peak open files and
+    handle evictions, reopens and denials. A new Admission group shows
+    checkpoint entries, native transactions and their bytes, read views,
+    retained bytes and source pages, and outstanding and queued requests,
+    with the engine's caveats and a "Fenced" note when a transaction failed
+    while holding the permit.
+- The API reference (`RuntimeConnection/api/`). A new workbench tab reads
+  the catalogue at `/v1/schema/endpoints` without a session. The native
+  transport allows that one public read-only path, not the OpenAPI document,
+  and a test proves every allowed public path is a public read-only engine
+  operation. Each of the 56 operations (55 over HTTP, 1 WebSocket) shows its
+  summary, method and path, description, authentication, mutation and action
+  badges, its operation, request and response types, and a titled example
+  in the saved language. Examples cover CLI (curl), TypeScript, Python, Go,
+  Java and .NET, generated from the catalogue's method, path,
+  authentication, mutation and request type with each SDK's own naming. The
+  inherited PHP and C settings fall back to CLI.
+- The topic list follows the article in view: the last article whose top
+  has reached the sticky list, or the first. The first capture used an
+  IntersectionObserver, which reports only changed entries, and it
+  highlighted the operation after a jump's target and never updated at the
+  top of the page. A jump now holds its topic until the reader scrolls, and
+  the list scrolls itself, never the page, to keep the active topic in view.
+  The capture asserts the highlight after a jump, at the top, and after a
+  4,000-pixel wheel scroll (all four runs stop on "Apply a previewed endpoint
+  configuration plan").
+- Examples verified. `pnpm check` type-checks all 55 TypeScript examples
+  against the pinned SDK (`scripts/check-api-examples.mjs`). Once, locally,
+  against the SDKs at `86adada6`: the 55 Python examples run against the SDK
+  with `call` replaced by a check of operation, body, credentials and
+  idempotency key; the 55 Go examples pass `go vet` and `go build`; the 55
+  C# examples build with no warning. The Java examples were not compiled:
+  this machine has no JDK.
+- `CodeEditor` fix. `EditorView.scrollIntoView`, on mount and on every value
+  change, scrolled each scrollable ancestor, so the API reference jumped to
+  the last code block rendered. The editor now resets only its own scroll
+  position. The inherited documentation view had the same jump and now opens
+  at its top.
+- Real-folder incident and fix. A test build resolved the release data
+  folder, as it does on `main`, so running the real-engine process tests on
+  this workstation wrote six installation plans into the owner's real
+  `RRFlow/Connectome/plans` (2026-10-27, 00:27:35 to 00:27:40). They were
+  additions only; the owner's own plan was untouched. They were removed, and
+  the folder then matched its SHA-256 snapshot. Test builds now use a
+  per-process temporary folder (`paths.rs`, with a test that it never
+  resolves a user directory). Every later test and capture run left the real
+  folder identical to the snapshot.
+- Desktop capture, final build. The capture adds the API reference tab and
+  its states: 39 per theme. Two captures per theme compared: dark 10
+  identical, 20 negligible (at most 0.051 percent), 9 dynamic, 0 changed;
+  light 10 identical, 20 negligible (at most 0.053 percent), 9 dynamic, 0
+  changed.
+- Before and after, against `main` `62b46094` captured with the same harness
+  (engine `4860a253`): per theme 8 identical, 16 negligible, 9 dynamic and 3
+  changed, plus the 3 new API reference captures. Reviewed by eye, every
+  difference is the new tab or the engine's own report:
+  - advanced details (7.9 percent dark, 11.3 light): the engine reports 20
+    capabilities, not 18 (`knowledge-tree-catalogue`, `rrflow-parquet-1`),
+    and the extra row moves the rest of the panel down;
+  - a native table's rows read 106 storage keys, not 72, and the nearest
+    vectors 43, not 72, with the same rows and scores;
+  - storage counters gain the new rows and the Admission group, so the
+    history section below them sits lower in its capture;
+  - every other screen differs only by the new tab.
+- Inherited screens, with the browser harness of Slice V0, `main`
+  `62b46094` against the final tree, 49 states per theme: 42 identical, 49
+  negligible (at most 0.096 percent, the light About tab), 4 dynamic and 3
+  changed. The documentation view changes in both themes (11 percent):
+  `main` opens it scrolled to "Deleting records", and this branch opens it
+  at its introduction. The dark About tab changes by its build time and the
+  engine revision it names (`4860a25` to `86adada`).
+- Verified locally: `pnpm check`, `cargo fmt --check`, `cargo clippy
+  --all-targets --locked -- -D warnings`, the native tests (31 passed, 6
+  ignored), the six real-engine process tests on the `86adada6` engine, and
+  four desktop captures with no failed step.
