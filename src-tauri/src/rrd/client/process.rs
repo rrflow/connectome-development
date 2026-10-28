@@ -24,6 +24,7 @@ mod effects;
 mod elsewhere;
 mod language;
 mod live;
+mod offer;
 mod values;
 
 const FIXTURE_COLLECTION: &str = "notes";
