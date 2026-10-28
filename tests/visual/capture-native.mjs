@@ -521,6 +521,15 @@ try {
 		await wait(3000);
 		await into(page.getByRole("button", { name: "Run query" }).first());
 		await shot("records-traverse");
+		// A query the engine refuses, typed where the console takes text (a
+		// text area or a code editor) and run: what the engine said, and where.
+		await page.locator("textarea, .cm-content").last().click();
+		await page.keyboard.press("Control+A");
+		await page.keyboard.type("FROM record:document AT VALID 1 KNOWN");
+		await page.getByRole("button", { name: "Run query" }).first().click();
+		await wait(3000);
+		await into(page.getByRole("button", { name: "Run query" }).first());
+		await shot("records-refused");
 	});
 	await step("vectors-points", async () => {
 		await lens("Vectors");
