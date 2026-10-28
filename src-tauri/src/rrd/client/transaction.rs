@@ -258,10 +258,11 @@ impl NativeRrdClient {
         drop(lease);
         match aborted {
             Ok(_) => Ok(()),
-            Err(error) if outcome_unknown(&error) => Err(RrdError {
-                message: error.to_string(),
-                retryable: true,
-            }),
+            Err(error) if outcome_unknown(&error) => {
+                let mut unknown = RrdError::from(error.to_string());
+                unknown.retryable = true;
+                Err(unknown)
+            }
             Err(_) => Ok(()),
         }
     }
