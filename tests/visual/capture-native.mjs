@@ -86,8 +86,9 @@ const VARIABLE_TEXT = [
 	new RegExp(literal(out)),
 ].map((pattern) => pattern.source);
 // Paints magenta, which the compare ignores, over exactly the characters that
-// match, in text and inside text fields, so the words around them stay in
-// the image. A match scrolled out of its container is clipped to what shows.
+// match, in text, in code editor lines and inside text fields, so the words
+// around them stay in the image. A match scrolled out of its container is
+// clipped to what shows.
 const paintMasks = () =>
 	page.evaluate((sources) => {
 		const patterns = sources.map((source) => new RegExp(source, "g"));
@@ -119,11 +120,35 @@ const paintMasks = () =>
 		};
 		const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
 		for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+			if (node.parentElement?.closest(".cm-line")) {
+				continue;
+			}
 			for (const [start, end] of matches(node.nodeValue)) {
 				const range = document.createRange();
 				range.setStart(node, start);
 				range.setEnd(node, end);
 				add(range.getClientRects(), node.parentElement);
+			}
+		}
+		// A code editor splits a line into one text node per token, so a match
+		// is found in the whole line and painted across the nodes it spans.
+		for (const line of document.querySelectorAll(".cm-line")) {
+			const nodes = [];
+			let text = "";
+			const inLine = document.createTreeWalker(line, NodeFilter.SHOW_TEXT);
+			for (let node = inLine.nextNode(); node; node = inLine.nextNode()) {
+				nodes.push({ node, from: text.length });
+				text += node.nodeValue;
+			}
+			const at = (offset, end) => {
+				const found = nodes.findLast(({ from }) => (end ? from < offset : from <= offset));
+				return [found.node, offset - found.from];
+			};
+			for (const [start, end] of matches(text)) {
+				const range = document.createRange();
+				range.setStart(...at(start, false));
+				range.setEnd(...at(end, true));
+				add(range.getClientRects(), line);
 			}
 		}
 		// A field's value has no text node, so a hidden copy laid out like the
@@ -261,6 +286,12 @@ try {
 	// Times render in UTC, so a masked time is the same width on any machine.
 	const cdp = await context.newCDPSession(page);
 	await cdp.send("Emulation.setTimezoneOverride", { timezoneId: "UTC" });
+	// The first launch after a build can paint late, so the overview's own
+	// content, not the fixed wait alone, says the window is ready.
+	await page
+		.getByRole("button", { name: "Start local RRFlow" })
+		.first()
+		.waitFor({ timeout: 60_000 });
 	await wait(4000);
 	if (theme === "light") {
 		await step("set-light-theme", async () => {
