@@ -23,6 +23,8 @@ export type DatabaseStore = {
 	servedEstate: ServedEstate | null;
 	/** Each project's instance, as the native registry last numbered it. */
 	instances: InstanceMap;
+	/** Whether the native registry has been read since the app started. */
+	statusRead: boolean;
 	/** The serve sequence's boundaries, oldest first, cleared on each start. */
 	estateStages: EstateStage[];
 	currentState: State;
@@ -66,6 +68,7 @@ export const useDatabaseStore = create<DatabaseStore>((set) => ({
 	servePending: false,
 	servedEstate: null,
 	instances: {},
+	statusRead: false,
 	estateStages: [],
 	currentState: "disconnected",
 	latestError: "",
@@ -126,7 +129,7 @@ export const useDatabaseStore = create<DatabaseStore>((set) => ({
 		set((state) => {
 			const instances = applyStatus(state.instances, status);
 			const servedEstate = firstServed(instances);
-			return { instances, servedEstate, isServing: servedEstate !== null };
+			return { instances, servedEstate, isServing: servedEstate !== null, statusRead: true };
 		}),
 
 	pushStage: (stage) =>

@@ -1,4 +1,5 @@
-import { Alert, Badge, Button, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { Alert, Button, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { type ProjectViews, ViewStateNotice } from "./views";
 
 const prerequisites = {
 	paths: [
@@ -72,12 +73,21 @@ export function ProjectSection({
 	detail,
 	connected,
 	onOpen,
+	views,
 }: {
 	section: string;
 	detail?: string;
 	connected: boolean;
 	onOpen: (section: string) => void;
+	/** Each view's state, from its instance and what it serves (step F4b). */
+	views: ProjectViews;
 }) {
+	const notice = (id: Parameters<ProjectViews["state"]>[0]) => (
+		<ViewStateNotice
+			state={views.state(id)}
+			offer={views.offer}
+		/>
+	);
 	// The page renders the API reference itself: it reads the engine endpoint.
 	if (section === "api") return null;
 	if (section === "overview")
@@ -135,12 +145,7 @@ export function ProjectSection({
 				{detail === "paths" ? (
 					<>
 						<Title order={3}>Knowledge paths</Title>
-						<Badge
-							color="gray"
-							variant="light"
-						>
-							Connector setup unavailable in this build
-						</Badge>
+						{notice("knowledge/paths")}
 						<Text>
 							A knowledge path is a project-scoped connection to an external database
 							or reasoning system. Qdrant, Pinecone, HydraDB and other sources must
@@ -149,8 +154,8 @@ export function ProjectSection({
 						</Text>
 						<Requirements items={prerequisites.paths} />
 						<Alert title="No source connected">
-							This build does not offer an ingestion or knowledge-path registration
-							contract. No connector is activated by visiting this page.
+							Connectome cannot register a knowledge path yet. No connector is
+							activated by visiting this page.
 						</Alert>
 					</>
 				) : (
@@ -167,12 +172,7 @@ export function ProjectSection({
 		return (
 			<Stack>
 				<Title order={3}>Activity and evaluation</Title>
-				<Badge
-					color="gray"
-					variant="light"
-				>
-					Session replay unavailable in this build
-				</Badge>
+				{notice("activity")}
 				<Text>
 					The next activity contract must link prompt submission, retrieval sources, tool
 					calls, timings, budgets, durable effects and evaluation results under a project
@@ -193,12 +193,7 @@ export function ProjectSection({
 		return (
 			<Stack>
 				<Title order={3}>RROFLOW learning</Title>
-				<Badge
-					color="gray"
-					variant="light"
-				>
-					Learning controls unavailable in this build
-				</Badge>
+				{notice("learning")}
 				<Text>
 					RROFLOW is the planned learning and evaluation layer. Connecting a project does
 					not enroll its data in training.
@@ -215,12 +210,7 @@ export function ProjectSection({
 		return (
 			<Stack>
 				<Title order={3}>Models, subscriptions and cloud</Title>
-				<Badge
-					color="gray"
-					variant="light"
-				>
-					Provider setup and cloud sync unavailable in this build
-				</Badge>
+				{notice("services")}
 				<Requirements items={prerequisites.services} />
 				<Paper
 					withBorder

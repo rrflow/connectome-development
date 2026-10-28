@@ -29,6 +29,7 @@ import {
 } from "~/icons";
 import { describeRrdError, RrdRuntimeClient } from "~/rrflow/runtime";
 import { RrdSessionClient } from "~/rrflow/session";
+import { AREAS, type ViewId } from "~/rrflow/views";
 import { dispatchIntent } from "~/shared/util/intents";
 import { useConfigStore } from "~/shell/stores/config";
 import { ApiReference } from "./api";
@@ -42,6 +43,7 @@ import { RecordsTab } from "./tabs/records";
 import { StorageTab } from "./tabs/storage";
 import { VectorsTab } from "./tabs/vectors";
 import type { RuntimeLens } from "./types";
+import { stateLine, useProjectViews, ViewStateNotice } from "./views";
 import { ProjectSection } from "./workspace";
 
 interface LensCardProps {
@@ -137,6 +139,13 @@ export function RuntimeConnectionPage({
 		queryFn: () => sessionClient.current(),
 		staleTime: Number.POSITIVE_INFINITY,
 	});
+	const views = useProjectViews({
+		connection,
+		endpoint,
+		handshake: query.data,
+		handshakeFailed: query.isError,
+	});
+	const lensState = views.state(`knowledge/${lens}` as ViewId);
 	const [selected, setSelected] = useState<string | null>(null);
 	const [colorBy, setColorBy] = useState("cluster");
 	const [showIdentity, setShowIdentity] = useState(false);
@@ -331,14 +340,7 @@ export function RuntimeConnectionPage({
 						aria-label="Project sections"
 						gap="xs"
 					>
-						{[
-							["overview", "Overview"],
-							["knowledge", "Knowledge"],
-							["activity", "Activity"],
-							["learning", "Learning"],
-							["services", "Services"],
-							["api", "API reference"],
-						].map(([value, label]) => (
+						{AREAS.map(({ id: value, label }) => (
 							<Button
 								key={value}
 								variant={section === value ? "filled" : "subtle"}
@@ -489,7 +491,10 @@ export function RuntimeConnectionPage({
 									icon={iconBook}
 									title="Data models"
 									purpose="Learn the database and browse its native tables."
-									reading="Live schema and guided queries"
+									reading={
+										stateLine(views.state("knowledge/models")) ??
+										"Live schema and guided queries"
+									}
 									onOpen={() => setLens("models")}
 								/>
 								<LensCard
@@ -498,11 +503,12 @@ export function RuntimeConnectionPage({
 									title="Records & relations"
 									purpose="What the estate knows and how it links together."
 									reading={
-										graph
+										stateLine(views.state("knowledge/records")) ??
+										(graph
 											? `${formatCount(graph.nodes.length)} records in view · ${formatCount(graph.edges.length)} relations`
 											: session
 												? "Reading..."
-												: "Open a native session to inspect"
+												: "Open a native session to inspect")
 									}
 									onOpen={() => setLens("records")}
 								/>
@@ -512,11 +518,12 @@ export function RuntimeConnectionPage({
 									title="Vectors"
 									purpose="Find records with similar content by comparing their vectors."
 									reading={
-										collections
+										stateLine(views.state("knowledge/vectors")) ??
+										(collections
 											? `${formatCount(collections.length)} collection${collections.length === 1 ? "" : "s"} · ${formatCount(namedVectors)} named vector${namedVectors === 1 ? "" : "s"}`
 											: session
 												? "Reading..."
-												: "Open a native session to inspect"
+												: "Open a native session to inspect")
 									}
 									onOpen={() => setLens("vectors")}
 								/>
@@ -526,16 +533,26 @@ export function RuntimeConnectionPage({
 									title="Storage engine"
 									purpose="How the data is kept safe on disk and quick in memory."
 									reading={
-										session
+										stateLine(views.state("knowledge/storage")) ??
+										(session
 											? `${storageProfile === "rrflow_kv" ? "rrflowKV" : storageProfile} - live counters`
-											: "Open a native session to inspect"
+											: "Open a native session to inspect")
 									}
 									onOpen={() => setLens("storage")}
 								/>
 							</SimpleGrid>
 
 							<Box mt="md">
+								{section === "knowledge" &&
+									detail !== "paths" &&
+									lensState.kind !== "ready" && (
+										<ViewStateNotice
+											state={lensState}
+											offer={views.offer}
+										/>
+									)}
 								{session &&
+									lensState.kind === "ready" &&
 									section === "knowledge" &&
 									detail !== "paths" &&
 									lens === "models" && (
@@ -545,25 +562,34 @@ export function RuntimeConnectionPage({
 											onOpenLens={setLens}
 										/>
 									)}
-								{session && section === "knowledge" && lens === "records" && (
-									<RecordsTab
-										connection={session}
-										{...lensProps}
-									/>
-								)}
-								{session && section === "knowledge" && lens === "vectors" && (
-									<VectorsTab
-										connection={session}
-										{...lensProps}
-									/>
-								)}
-								{session && section === "knowledge" && lens === "storage" && (
-									<StorageTab
-										connection={session}
-										client={sessionClient}
-										sessionKey={sessionKey}
-									/>
-								)}
+								{session &&
+									lensState.kind === "ready" &&
+									section === "knowledge" &&
+									lens === "records" && (
+										<RecordsTab
+											connection={session}
+											{...lensProps}
+										/>
+									)}
+								{session &&
+									lensState.kind === "ready" &&
+									section === "knowledge" &&
+									lens === "vectors" && (
+										<VectorsTab
+											connection={session}
+											{...lensProps}
+										/>
+									)}
+								{session &&
+									lensState.kind === "ready" &&
+									section === "knowledge" &&
+									lens === "storage" && (
+										<StorageTab
+											connection={session}
+											client={sessionClient}
+											sessionKey={sessionKey}
+										/>
+									)}
 							</Box>
 						</>
 					)}
@@ -580,6 +606,7 @@ export function RuntimeConnectionPage({
 						section={section}
 						connected={Boolean(session)}
 						onOpen={openSection}
+						views={views}
 					/>
 				</Stack>
 			</ScrollArea>
