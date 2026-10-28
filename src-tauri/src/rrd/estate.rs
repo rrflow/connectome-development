@@ -12,20 +12,28 @@
 //! engine, the kernel chooses the loopback port, and the operator credential
 //! stays a file the native session reads; the renderer only ever holds its
 //! path.
+//!
+//! `lifecycle` keeps each project's instance, whichever way it was started:
+//! by this sequence, or elsewhere and then proved and attached.
 
+use rrd_contract::ServiceCapabilities;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::BTreeMap;
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{Duration, Instant};
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter};
 
 use super::engine::{resolve_engine, EngineBinding, EngineSource};
 use super::error::RrdError;
+use super::transport::{is_loopback_origin, rrd_origin};
 use crate::paths::get_data_directory;
+
+pub mod lifecycle;
+
+pub use lifecycle::{stop_on_exit, EstateState, InstanceView, Origin};
 
 /// How long a fresh install and the first open may take before serving is
 /// declared failed. A debug engine on a cold cache stays well inside it.
@@ -35,127 +43,11 @@ const READY_POLL: Duration = Duration::from_millis(500);
 const LOCATOR: &str = ".rrflow/config.toml";
 /// The operator credential the installation wrote, relative to the project.
 const OPERATOR_CREDENTIAL: &str = ".rrflow/credentials/local-operator.json";
+/// The served endpoint record RRFlow writes while an estate is served. Only a
+/// hint of where to look: `rrflow ready --project` proves what it names.
+const SERVING_RECORD: &str = ".rrflow/serving.json";
 const STAGE_EVENT: &str = "estate:stage";
 const OUTPUT_EVENT: &str = "estate:output";
-
-/// Only processes owned by this desktop, keyed by canonical project directory.
-#[derive(Default, Clone)]
-pub struct EstateState(Arc<Mutex<EstateRegistry>>);
-
-#[derive(Default)]
-struct EstateRegistry {
-    closing: bool,
-    projects: BTreeMap<PathBuf, Option<ServedEstate>>,
-}
-
-/// A reservation survives the blocking launch and releases on failure/panic.
-struct StartingProject(EstateState, PathBuf);
-impl Drop for StartingProject {
-    fn drop(&mut self) {
-        let mut registry = self.0 .0.lock().expect("estate state");
-        if registry.projects.get(&self.1).is_some_and(Option::is_none) {
-            registry.projects.remove(&self.1);
-        }
-    }
-}
-
-impl EstateState {
-    pub fn start(
-        &self,
-        mut request: EstateServeRequest,
-        observer: Arc<dyn ServeObserver>,
-    ) -> Result<ServedEstateView, RrdError> {
-        let project = project_directory(&request)?;
-        request.project = project.to_string_lossy().into_owned();
-        {
-            let mut registry = self.0.lock().expect("estate state");
-            if registry.closing {
-                return Err("Connectome is shutting down".into());
-            }
-            if let Some(entry) = registry.projects.get_mut(&project) {
-                let served = entry.as_mut().ok_or("this project is already starting")?;
-                if served
-                    .server
-                    .try_wait()
-                    .map_err(|e| format!("cannot inspect owned process: {e}"))?
-                    .is_none()
-                {
-                    return Ok(served.view.clone());
-                }
-                registry.projects.remove(&project);
-            }
-            if registry.projects.len() >= 4 {
-                return Err(
-                    "four local project engines are already reserved; stop one first".into(),
-                );
-            }
-            registry.projects.insert(project.clone(), None);
-        }
-        let _reservation = StartingProject(self.clone(), project.clone());
-        let served = serve_estate(request, observer)?;
-        let view = served.view.clone();
-        let mut registry = self.0.lock().expect("estate state");
-        if registry.closing {
-            return Err("Connectome stopped during project startup".into());
-        }
-        registry.projects.insert(project, Some(served));
-        Ok(view)
-    }
-
-    pub fn status(&self) -> Result<Vec<ServedEstateView>, RrdError> {
-        let mut registry = self.0.lock().expect("estate state");
-        let mut stopped = Vec::new();
-        let mut views = Vec::new();
-        for (project, entry) in &mut registry.projects {
-            if let Some(served) = entry {
-                if served
-                    .server
-                    .try_wait()
-                    .map_err(|e| format!("cannot inspect owned process: {e}"))?
-                    .is_some()
-                {
-                    stopped.push(project.clone());
-                } else {
-                    views.push(served.view.clone());
-                }
-            }
-        }
-        for project in stopped {
-            registry.projects.remove(&project);
-        }
-        Ok(views)
-    }
-
-    pub fn stop(&self, project: &str) -> Result<bool, RrdError> {
-        let mut registry = self.0.lock().expect("estate state");
-        let key = PathBuf::from(project);
-        if registry.projects.get(&key).is_some_and(Option::is_none) {
-            return Err(
-                "project startup is still running; wait for its result before stopping".into(),
-            );
-        }
-        let Some(Some(served)) = registry.projects.get_mut(&key) else {
-            return Ok(false);
-        };
-        if served
-            .server
-            .try_wait()
-            .map_err(|e| format!("cannot inspect owned process: {e}"))?
-            .is_none()
-        {
-            served
-                .server
-                .kill()
-                .map_err(|e| format!("cannot stop owned engine: {e}"))?;
-        }
-        served
-            .server
-            .wait()
-            .map_err(|e| format!("cannot reap owned engine: {e}"))?;
-        registry.projects.remove(&key);
-        Ok(true)
-    }
-}
 
 /// A served estate: the engine child this process started and its public
 /// coordinates. Killing the child is the only way it is ever stopped.
@@ -185,11 +77,13 @@ impl Drop for OwnedProcess {
     }
 }
 
-/// Where the serve sequence reports its boundaries and the engine's output.
-/// The desktop forwards both to the webview; the process tests discard them.
+/// Where the serve sequence reports its boundaries and the engine's output,
+/// and the lifecycle each project's instance moves through. The desktop
+/// forwards all three to the webview; the process tests record them.
 pub trait ServeObserver: Send + Sync {
     fn stage(&self, stage: EstateStage);
     fn output(&self, line: String);
+    fn lifecycle(&self, _instance: InstanceView) {}
 }
 
 impl ServeObserver for AppHandle {
@@ -199,6 +93,10 @@ impl ServeObserver for AppHandle {
 
     fn output(&self, line: String) {
         let _ = self.emit(OUTPUT_EVENT, line);
+    }
+
+    fn lifecycle(&self, instance: InstanceView) {
+        let _ = self.emit(lifecycle::LIFECYCLE_EVENT, instance);
     }
 }
 
@@ -372,8 +270,13 @@ pub struct ServedEstateView {
     pub credential_path: String,
     /// Whether this serve installed the estate first.
     pub installed: bool,
-    /// The engine that was run: where it is, how it was chosen, its digest.
-    pub engine: EngineBinding,
+    /// Who started the instance: this desktop, or a process elsewhere.
+    pub origin: Origin,
+    /// The engine this desktop ran: where it is, how it was chosen, its
+    /// digest. Absent for an instance started elsewhere, whose executable
+    /// Connectome did not choose.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub engine: Option<EngineBinding>,
 }
 
 /// One boundary of the serve sequence, reported as it is reached.
@@ -397,81 +300,45 @@ fn stage(
     });
 }
 
-#[tauri::command]
-pub async fn rrd_estate_serve(
-    app: AppHandle,
-    request: EstateServeRequest,
-    state: State<'_, EstateState>,
-) -> Result<ServedEstateView, RrdError> {
-    let owner = state.inner().clone();
-    let project = request.project.clone();
-    let observer: Arc<dyn ServeObserver> = Arc::new(ProjectObserver { app, project });
-    tauri::async_runtime::spawn_blocking(move || owner.start(request, observer))
-        .await
-        .map_err(|e| RrdError::from(format!("serving task failed: {e}")))?
-}
-
-struct ProjectObserver {
-    app: AppHandle,
-    project: String,
-}
-impl ServeObserver for ProjectObserver {
-    fn stage(&self, mut value: EstateStage) {
-        value.detail = format!("[{}] {}", self.project, value.detail);
-        let _ = self.app.emit(STAGE_EVENT, value);
-    }
-    fn output(&self, line: String) {
-        let _ = self
-            .app
-            .emit(OUTPUT_EVENT, format!("[{}] {line}", self.project));
-    }
-}
-
-#[tauri::command]
-pub fn rrd_estate_status(state: State<'_, EstateState>) -> Result<Vec<ServedEstateView>, RrdError> {
-    state.status()
-}
-
-#[tauri::command]
-pub fn rrd_estate_stop(project: String, state: State<'_, EstateState>) -> Result<bool, RrdError> {
-    state.stop(&project)
-}
-
-/// Shutdown marks the registry closed before dropping every owned child.
-/// A launch finishing afterwards drops its child instead of publishing it.
-pub fn stop_on_exit(state: &EstateState) {
-    let projects = {
-        let mut registry = state.0.lock().expect("estate state");
-        registry.closing = true;
-        std::mem::take(&mut registry.projects)
-    };
-    drop(projects);
-}
-
 /// Serves the requested estate: installs it when the project has no locator,
 /// starts the engine on a kernel-chosen loopback port, and returns once the
 /// estate answers an authenticated readiness check. This is the product
-/// path; the RRD process tests drive it directly.
+/// path without the lifecycle's attach step; the RRD process tests drive it
+/// directly.
+#[cfg(test)]
 pub fn serve_estate(
     request: EstateServeRequest,
     observer: Arc<dyn ServeObserver>,
 ) -> Result<ServedEstate, RrdError> {
-    let app = observer.as_ref();
-    let project = project_directory(&request)?;
+    let engine = engine_stage(observer.as_ref(), &request.executable)?;
+    serve_with(request, engine, observer)
+}
 
-    // The engine: the configured override, else the bundled sidecar verified
-    // against the digest this build embeds, else PATH. Reported first, so the
-    // operator always sees which rrflow ran and what it hashed to.
+/// The engine: the configured override, else the bundled sidecar verified
+/// against the digest this build embeds, else PATH. Reported first, so the
+/// operator always sees which rrflow ran and what it hashed to.
+fn engine_stage(app: &dyn ServeObserver, executable: &str) -> Result<EngineBinding, RrdError> {
     stage(
         app,
         "engine",
         "running",
         "Resolving the RRFlow engine this build is contracted to.",
     );
-    let engine = resolve_engine(&request.executable).inspect_err(|error| {
+    let engine = resolve_engine(executable).inspect_err(|error| {
         stage(app, "engine", "failed", error.message.clone());
     })?;
     stage(app, "engine", "done", describe_engine(&engine));
+    Ok(engine)
+}
+
+/// The serve sequence after the engine is resolved.
+fn serve_with(
+    request: EstateServeRequest,
+    engine: EngineBinding,
+    observer: Arc<dyn ServeObserver>,
+) -> Result<ServedEstate, RrdError> {
+    let app = observer.as_ref();
+    let project = project_directory(&request)?;
     let executable = engine.path.clone();
 
     // Install when the project has no locator; otherwise open what is there.
@@ -515,12 +382,26 @@ pub fn serve_estate(
     );
     let stderr = server.stderr.take().expect("piped stderr");
     let console = Arc::clone(&observer);
-    std::thread::spawn(move || {
-        for line in BufReader::new(stderr).lines().map_while(Result::ok) {
-            console.output(line);
+    // An engine that stops before it announces says why on its last line.
+    let last_line = Arc::new(Mutex::new(None::<String>));
+    let console_thread = std::thread::spawn({
+        let last_line = Arc::clone(&last_line);
+        move || {
+            for line in BufReader::new(stderr).lines().map_while(Result::ok) {
+                *last_line.lock().expect("engine output") = Some(line.clone());
+                console.output(line);
+            }
         }
     });
-    let announced = announcement(&mut server)?;
+    let announced = announcement(&mut server).map_err(|error| {
+        let _ = console_thread.join();
+        match last_line.lock().expect("engine output").take() {
+            Some(reason) => RrdError::from(format!(
+                "rrflow serve stopped before announcing its address: {reason}"
+            )),
+            None => error,
+        }
+    })?;
     let endpoint = announced["url"]
         .as_str()
         .filter(|url| url.starts_with("http://127.0.0.1:"))
@@ -548,14 +429,16 @@ pub fn serve_estate(
     let deadline = Instant::now() + READY_TIMEOUT;
     loop {
         let ready = engine_command(&executable)
-            .args(["ready", "--address", &address, "--project"])
+            .args(["--json", "ready", "--address", &address, "--project"])
             .arg(&project)
             .stdin(Stdio::null())
-            .stdout(Stdio::null())
             .stderr(Stdio::null())
-            .status()
+            .output()
             .map_err(|error| format!("cannot run rrflow ready: {error}"))?;
-        if ready.success() {
+        if ready.status.success() {
+            proven(&ready.stdout, &instance).inspect_err(|error| {
+                stage(app, "ready", "failed", error.message.clone());
+            })?;
             break;
         }
         if let Some(status) = server.try_wait().map_err(|error| error.to_string())? {
@@ -598,9 +481,109 @@ pub fn serve_estate(
                 .to_string_lossy()
                 .into_owned(),
             installed,
-            engine,
+            origin: Origin::Connectome,
+            engine: Some(engine),
         },
     })
+}
+
+/// What `rrflow --json ready` proved, as far as Connectome uses it.
+#[derive(Deserialize)]
+struct ReadyReport {
+    url: String,
+    capabilities: ServiceCapabilities,
+    openapi: Value,
+}
+
+/// The public contract this build was compiled against, from the pinned
+/// `rrd-contract`.
+fn pinned_contract() -> Result<&'static Value, RrdError> {
+    static DOCUMENT: OnceLock<Result<Value, String>> = OnceLock::new();
+    DOCUMENT
+        .get_or_init(|| rrd_contract::openapi_document().map_err(|error| error.to_string()))
+        .as_ref()
+        .map_err(|error| format!("cannot build the pinned RRFlow contract: {error}").into())
+}
+
+/// Checks a successful `rrflow --json ready` report: the instance it proved,
+/// at a loopback HTTP origin, serving the exact contract this build speaks.
+/// An instance on another RRFlow revision is refused here, before a native
+/// session or the webview's SDK meets a shape they were not built for.
+/// Returns the proved URL and instance; an empty `expected_instance` accepts
+/// the one the project's locator named, which `rrflow ready` already checked.
+pub(in crate::rrd) fn proven(
+    report: &[u8],
+    expected_instance: &str,
+) -> Result<(String, String), RrdError> {
+    let report: ReadyReport = serde_json::from_slice(report)
+        .map_err(|error| format!("rrflow ready did not report what it proved: {error}"))?;
+    report
+        .capabilities
+        .validate()
+        .map_err(|error| format!("rrflow ready reported invalid capabilities: {error}"))?;
+    let origin = rrd_origin(&report.url)?;
+    if origin.scheme() != "http" || !is_loopback_origin(&origin) {
+        return Err(format!(
+            "rrflow ready proved {}, which is not a loopback HTTP address",
+            report.url
+        )
+        .into());
+    }
+    let instance = report.capabilities.instance.id.as_str();
+    if !expected_instance.is_empty() && instance != expected_instance {
+        return Err(format!(
+            "rrflow ready proved instance {instance}, not this project's {expected_instance}"
+        )
+        .into());
+    }
+    if &report.openapi != pinned_contract()? {
+        return Err(format!(
+            "the instance at {} runs {} {} with a different public contract than this Connectome build; open it with a Connectome built for that engine",
+            report.url,
+            report.capabilities.implementation.as_str(),
+            report.capabilities.implementation_version
+        )
+        .into());
+    }
+    Ok((
+        origin.as_str().trim_end_matches('/').to_owned(),
+        instance.to_owned(),
+    ))
+}
+
+/// Proves an instance started elsewhere with `rrflow --json ready --project`,
+/// which reads RRFlow's served endpoint record and runs the same
+/// authenticated challenge against the URL it names. The inner error is
+/// `rrflow ready`'s own reason that nothing proved itself; the outer one
+/// means the proof could not run or proved something Connectome refuses.
+fn prove_elsewhere(
+    executable: &Path,
+    project: &Path,
+) -> Result<Result<ServedEstateView, String>, RrdError> {
+    let output = engine_command(executable)
+        .args(["--json", "ready", "--project"])
+        .arg(project)
+        .stdin(Stdio::null())
+        .output()
+        .map_err(|error| format!("cannot run rrflow ready: {error}"))?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let detail = stderr.lines().last().unwrap_or("no error output").trim();
+        return Ok(Err(detail.to_owned()));
+    }
+    let (endpoint, instance) = proven(&output.stdout, "")?;
+    Ok(Ok(ServedEstateView {
+        project: project.to_string_lossy().into_owned(),
+        endpoint,
+        instance,
+        credential_path: project
+            .join(OPERATOR_CREDENTIAL)
+            .to_string_lossy()
+            .into_owned(),
+        installed: false,
+        origin: Origin::Elsewhere,
+        engine: None,
+    }))
 }
 
 fn describe_engine(engine: &EngineBinding) -> String {
@@ -741,63 +724,4 @@ fn announcement(server: &mut Child) -> Result<Value, RrdError> {
     })?;
     serde_json::from_str(&line)
         .map_err(|error| format!("the engine's announcement is not JSON: {error}").into())
-}
-
-#[cfg(test)]
-mod registry_tests {
-    use super::*;
-    struct Quiet;
-    impl ServeObserver for Quiet {
-        fn stage(&self, _: EstateStage) {}
-        fn output(&self, _: String) {}
-    }
-
-    #[test]
-    fn pending_start_capacity_and_failure_release_are_bounded() {
-        let directory = std::env::temp_dir().join(format!(
-            "connectome-registry-{}",
-            uuid::Uuid::new_v4().simple()
-        ));
-        std::fs::create_dir_all(&directory).unwrap();
-        let key = std::fs::canonicalize(&directory).unwrap();
-        let owner = EstateState::default();
-        let request = EstateServeRequest {
-            project: directory.to_string_lossy().into_owned(),
-            mode: InstallMode::Fresh,
-            executable: directory
-                .join("missing-engine")
-                .to_string_lossy()
-                .into_owned(),
-            accepted_plan_sha256: None,
-            installation_identity: None,
-        };
-        let start = || owner.start(request.clone(), Arc::new(Quiet));
-        owner.0.lock().unwrap().projects.insert(key.clone(), None);
-        assert!(start().unwrap_err().message.contains("already starting"));
-        assert!(owner
-            .stop(key.to_str().unwrap())
-            .unwrap_err()
-            .message
-            .contains("still running"));
-        drop(StartingProject(owner.clone(), key.clone()));
-        assert!(owner.0.lock().unwrap().projects.is_empty());
-        for index in 0..4 {
-            owner
-                .0
-                .lock()
-                .unwrap()
-                .projects
-                .insert(key.join(index.to_string()), None);
-        }
-        assert!(start().unwrap_err().message.contains("four local"));
-        owner.0.lock().unwrap().projects.clear();
-        assert!(start().is_err(), "an absent executable cannot start");
-        assert!(
-            owner.0.lock().unwrap().projects.is_empty(),
-            "failed startup releases capacity"
-        );
-        owner.0.lock().unwrap().closing = true;
-        assert!(start().unwrap_err().message.contains("shutting down"));
-        std::fs::remove_dir_all(directory).unwrap();
-    }
 }
