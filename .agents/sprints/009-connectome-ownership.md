@@ -1368,3 +1368,152 @@ pin `86adada6`.
 
   A follow-up for the harness: those three screens should wait for a settled
   state or be classed as dynamic.
+
+### 2026-10-28 — Step F4a: each project's instance lifecycle (decision 19)
+
+Branch `agent/f4a-instance-lifecycle` from F3 (`2670b09b`, PR #23). The
+engine pin moves from `86adada6` to `89ec21ea` (trial), RRFlow `main` with
+H-07h (#175).
+
+- **Read first:**
+  - the native serve path (`rrd/estate.rs`), its registry, the four estate
+    commands and the process tests that drive them;
+  - the native client's loopback and capability handling (`rrd/client.rs`);
+  - the webview's adapter, serving store, project engines panel, served
+    connection and every reader of `isServing` and `servedEstate`;
+  - the native capture harness;
+  - at RRFlow `main`:
+    - the served endpoint record contract
+      (`installed-lifecycle.md#served-endpoint-record`);
+    - `rrflow serve` and `rrflow ready` in `rrflow-cli/src/installed.rs`;
+    - the SDK's `readiness` and `capabilities`;
+    - the endpoint, capability and product capability types;
+    - the Connectome client contract's capability-truth and multi-instance
+      sections.
+- **Decision 19** records the owner's answer of 2026-10-28 in the authority
+  decisions, and F4 is split into F4a and F4b in the ordered increments.
+- **What the contract allows.** A PID, port, TCP handshake or JSON file is not
+  readiness (`installed-lifecycle.md`). So:
+  - Connectome treats the served endpoint record only as a hint of where to
+    look;
+  - `rrflow --json ready --project` grants readiness with its authenticated
+    challenge;
+  - the liveness check after it can only take readiness away. It reads the
+    public capabilities, whose instance identity the SDK checks, so another
+    process on the same port does not pass;
+  - a status read never authenticates. `rrflow ready` opens and closes a
+    session, and both write to the estate.
+- **The native registry (`rrd/estate/lifecycle.rs`).**
+  - **One lifecycle per project:** starting at the stage it reached, ready,
+    stopping or failed. A project with no entry is stopped. Every transition
+    is numbered and sent as `estate:lifecycle`.
+  - **Opening an installed project** resolves the engine, then looks for a
+    record.
+    - A record that proves itself is attached, instead of the start failing
+      with "already open in another process".
+    - A record that does not prove itself is stale, and `rrflow serve`
+      replaces it.
+    - A refusal the proof itself raises fails the start.
+  - **A status read takes the known projects:**
+    - an owned engine that exited becomes failed, with its exit status;
+    - an attached instance that no longer answers as itself becomes
+      stopped, with the reason;
+    - a known project whose record is new since its last failed proof is
+      proved once and attached.
+  - **Stop applies only to engines this desktop started.** For an attached
+    instance it refuses: "started outside Connectome; stop it where it was
+    started". On a failed entry it dismisses the failure. A failure holds
+    no engine slot.
+  - **Contract check.** Every ready report, owned or attached, must show the
+    exact OpenAPI document of the pinned `rrd-contract`. An instance on
+    another RRFlow revision is refused before a native session or the
+    webview's SDK meets it.
+  - **The engine's own reason.** A serve that stops before announcing now
+    reports the engine's last line, for example "already open in another
+    process; its served endpoint is recorded at …". Before, it reported
+    only "did not announce its address".
+- **The webview.**
+  - `projectInstances(projects)` replaces `servedEstates()`.
+  - The store keeps each project's newest numbered view. A stopped instance
+    stays as a stopped entry, so an older status read cannot bring it back.
+    `isServing` and `servedEstate` are derived from it, for the screens that
+    show one estate.
+  - A connection records its project directory. Older connections derive it
+    from their credential path.
+  - The project engines panel lists every known project with its real state
+    and the actions that state allows:
+    - Start, for a stopped project;
+    - Open, and Stop only if Connectome started it, for a ready one;
+    - Try again and Dismiss, for a failed one.
+
+    A starting instance shows the stage it actually reached. The panel
+    reads the registry every two seconds while open and every five
+    otherwise.
+- **Oracles.**
+  - **Native tests:**
+    - reservation and capacity;
+    - failures kept, replaced, dismissed and holding no engine;
+    - numbered transitions;
+    - an attached instance never stopped;
+    - a lost instance stopped;
+    - a stale record proved once until it changes.
+  - **The real-engine test** `rrd::client::process::elsewhere` serves the
+    project with its own `rrflow serve`:
+    - a killed server's record proves nothing, once;
+    - the outside instance is found, proved, attached and read through a
+      native session, from a fresh registry too;
+    - the ready report is held to the contract, and a tampered one is
+      refused;
+    - a second serve reports the engine's reason;
+    - Connectome refuses to stop it;
+    - its loss is seen;
+    - Connectome serves over the stale record;
+    - dropping that registry stops its engine;
+    - an outside restart on a new port is attached again.
+- **Four deliberate breakages,** each run against the real engine or the
+  native tests, failed where they should:
+  - skipping the attach step failed at the fresh registry's open;
+  - dropping the contract comparison let the tampered report through;
+  - dropping the proved-once rule proved the same record twice;
+  - holding the registry strongly from the start's observer left the engine
+    running after its registry was dropped.
+
+  The first run of the attach breakage hung: an orphaned server kept the
+  test's output pipe open. That exposed a real reference cycle. The engine's
+  console thread holds the start's observer, which held the registry that
+  owns the engine. The observer now holds the registry weakly, and the drop
+  check above is its oracle. The same run showed that a fresh registry is
+  needed to reach the attach step, and that the engine's reason was being
+  lost, so both were added.
+- **Engine pin.** `89ec21ea` is a trial pin. It moves to the RRFlow `main` that
+  carries #173, #174 and #159 (H-11a) once they land, before this step merges.
+  Both goldens were rewritten from the engine; after formatting, only their
+  engine revision changed.
+- **Verified locally** (Windows, engine `89ec21ea`, sidecar SHA-256
+  `b0d46362…`):
+  - `pnpm check` (57 API reference operations; 12 engine values, 18 checks;
+    45 engine queries and 3 RRFlow vectors, 100 checks);
+  - `cargo fmt --check` and `cargo clippy --all-targets --locked -- -D
+    warnings`;
+  - 46 native unit tests;
+  - all 17 real-engine process tests.
+- **Captures (decision 17), trial pin.** F3's head (`2670b09b`, engine
+  `86adada6`) was compared against F4a (engine `89ec21ea`), in both themes,
+  with the same harness. Each theme has 40 pairs: 8 identical, 18 negligible,
+  10 dynamic and 4 changed.
+  - **The project engines panel** changed as intended. The row now shows the
+    project's name, a state badge, its path and what the state means, above
+    the same actions.
+  - **Three API reference screens** changed because the catalogue at
+    `89ec21ea` has two more operations, `attunement-read` and
+    `attunement-cancel`, which move every later topic down. Their layout is
+    unchanged.
+  - **The dynamic screens** were reviewed by eye. Only counter values and the
+    widths of masked text differ.
+  - **The serving progress screen** is taken three seconds into installation.
+    It now always shows the opened workbench, because the start has finished
+    by then. So the harness gains a step that stops the project from its row
+    and starts it again, and the stopped and restarted rows are captured.
+
+  The final captures are taken after the engine pin moves to the stack's
+  `main`.
