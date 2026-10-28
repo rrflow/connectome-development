@@ -1120,3 +1120,65 @@ Branch `agent/f1b-live-results` from F1a (`b9963eea`, PR #20), on engine pin
       subscription.
 - **Not done:** no screen uses live results yet; V1 (Query) and the Activity
   area adopt them.
+
+### 2026-10-27 — Step F2: the RRFlow value model (decision 18)
+
+Branch `agent/f2-value-model` from F1b (`fd8f2daf`, PR #21), on engine pin
+`86adada6`.
+
+- **Read first:**
+  - the pinned `@rrflow/rrd-client`: `operation.ts`, `index.ts` and the
+    generated `rrd-openapi.ts`;
+  - the contract's `QueryValue`, `CanonicalId` and mutation types;
+  - the kernel's value rules (`rrd-core/src/data.rs`);
+  - Connectome's own value renderer (`view.rs` `plain_value` and `bounded`);
+  - every importer of `src/vendor/rrflow-client`. There are 40 files, all
+    inherited views or their stores and modals, which V1–V3 re-author.
+- **Decisions:**
+  - **Types are derived, not generated again.** The SDK's generated OpenAPI
+    types name only three schemas. Everything else is inline per operation.
+    `src/rrflow/model.ts` therefore derives each named type from the SDK's
+    `RequestPayload` and `SuccessPayload`: values, references, every mutation,
+    geo, series and vector values, targets, logical models, and the schema
+    registry. A pin move moves them, and `tsc` reports any use that no longer
+    fits.
+  - **Reads stay native.** The native process decodes every value at full
+    64-bit precision and sends display text. The value model is for values the
+    webview builds itself. JavaScript cannot carry an integer past 2^53 − 1
+    through `invoke`, so the builders refuse one instead of rounding it.
+  - **Typed read cells come with V1 and V2,** which change those screens with
+    before and after captures. F2 changes no screen.
+- **The model:**
+  - builders for every value type: decimals and digests follow the kernel's
+    rules, and integers must be exact;
+  - typed text parsing for forms;
+  - canonical identifiers and `kind:id` references;
+  - an exactness check;
+  - display that matches the native views: a UTF-8 byte bound, whole
+    characters, and map keys in byte order rather than JavaScript's
+    integer-first order.
+- **Inherited value classes** map to RRFlow types as listed in the model's
+  header. The contract has no duration value, and `escapeIdent` has no
+  counterpart.
+- **Golden engine values.** The new RRD process test `rrd::client::process::values`
+  writes one record holding every value type to a real engine, including:
+  - integers past what JavaScript holds exactly;
+  - text past the display bound;
+  - map keys whose byte order differs from JavaScript's key order.
+
+  It reads the record back and requires `src/rrflow/fixtures/engine-values.json`
+  to equal what the engine returned, with the native display of each value.
+  `CONNECTOME_WRITE_GOLDEN=1` rewrites the file after a pin move. Two kernel
+  rules turned up while writing it:
+  - a relational kind is queryable as `record:` only with a record schema;
+  - a schemaless kind may not declare one.
+- **The check.** `scripts/check-value-model.mjs`, run by `pnpm check`, holds the
+  model to the golden file. Every exact value displays as the native views
+  display it; the two rounded integers are reported as inexact. It also checks
+  the builders' refusals. Two deliberate breakages each failed at the expected
+  value: removing the byte-order key sort, and a 2,047-byte bound.
+- **Verified locally:**
+  - `pnpm check`, which now includes the value-model check (12 engine values,
+    18 checks);
+  - `cargo fmt --check` and `cargo clippy --all-targets --locked -- -D warnings`;
+  - the golden test, in write mode and in compare mode after formatting.
