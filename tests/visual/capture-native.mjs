@@ -523,7 +523,8 @@ try {
 		await shot("records-traverse");
 		// A query the engine refuses, typed where the console takes text (a
 		// text area or a code editor) and run: what the engine said, and where.
-		await page.locator("textarea, .cm-content").last().click();
+		// An autosizing text area keeps a hidden copy, so only shown fields count.
+		await page.locator("textarea:visible, .cm-content:visible").last().click();
 		await page.keyboard.press("Control+A");
 		await page.keyboard.type("FROM record:document AT VALID 1 KNOWN");
 		await page.getByRole("button", { name: "Run query" }).first().click();
