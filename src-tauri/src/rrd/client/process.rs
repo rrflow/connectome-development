@@ -21,6 +21,7 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
 mod effects;
+mod language;
 mod live;
 mod values;
 
@@ -70,6 +71,17 @@ fn rrflow() -> PathBuf {
     PathBuf::from(
         std::env::var_os("RRFLOW_BIN").expect("RRFLOW_BIN must name the rrflow binary to drive"),
     )
+}
+
+/// The RRFlow revision `Cargo.lock` pins, which is the engine under test.
+fn pinned_revision() -> String {
+    let lock =
+        std::fs::read_to_string(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("Cargo.lock"))
+            .expect("read Cargo.lock");
+    lock.split("rrflow-development?rev=")
+        .nth(1)
+        .map(|rest| rest[..40].to_owned())
+        .expect("Cargo.lock pins an RRFlow revision")
 }
 
 fn accepted(mut request: EstateServeRequest) -> EstateServeRequest {

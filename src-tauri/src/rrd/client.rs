@@ -659,12 +659,15 @@ impl NativeRrdClient {
     }
 
     pub async fn query(&self, request: RrdQueryRequest) -> Result<QueryView, RrdError> {
-        let request = execute_query(&request.query, self.scope(), &self.query_budget)?;
+        let execution = execute_query(&request.query, self.scope(), &self.query_budget)?;
         let result = self
             .send(false, |session, options| async move {
-                self.client.execute_query(&session, request, options).await
+                self.client
+                    .execute_query(&session, execution, options)
+                    .await
             })
-            .await?;
+            .await
+            .map_err(|error| error.in_query(&request.query))?;
         Ok(view::query(&result))
     }
 

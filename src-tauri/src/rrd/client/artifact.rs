@@ -153,7 +153,8 @@ impl NativeRrdClient {
             .send(false, |session, options| async move {
                 self.client.export_query(&session, export, options).await
             })
-            .await?;
+            .await
+            .map_err(|error| error.in_query(&request.query))?;
         let bytes = exported
             .decode_artifact()
             .map_err(|error| error.to_string())?;

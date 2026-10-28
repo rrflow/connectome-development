@@ -302,7 +302,7 @@ administration have no public route yet.
 | Parameters view | vendor global parameters | rrflowQL `$name` parameters bound per query; estate configuration owns lasting settings | yes | V1, V7 |
 | 2.x to 3.0 migration view | vendor version migration | an upgrade-and-restore check on RRFlow backup and restore (design open) | yes | V7 |
 | Query view | vendor query execution, live results, graph preview, formatting | `query-execute` with `EXPLAIN`, `traverse:` sources, `query-export`, live results through a native `/v1/ws` subscription | yes | V1 |
-| Editor language, highlighting, linting, formatting | vendor CodeMirror and Lezer language and WASM parser | a Connectome rrflowQL language built from RRFlow's lexer (`rrd-query/src/syntax.rs`) and tested against RRFlow's `query-vectors.json`; the engine (`EXPLAIN CONTRACT`) validates, the client only highlights; no formatter | yes | F3 |
+| Editor language, highlighting, linting, formatting | vendor CodeMirror and Lezer language and WASM parser | a Connectome rrflowQL language: RRFlow's tokenizer (`rrd-query/src/syntax.rs`) ported exactly, held to golden engine responses for RRFlow's `query-vectors.json` and a corpus; the engine validates when a query runs, and the native layer locates its parse refusal; the client only highlights; no formatter | yes | F3, then each V step |
 | Explorer, record inspector, data table, relation graph, map | vendor reads, creates, relates, updates and deletes; binary value types | `record:`, `relation:`, `geo:` and `traverse:` queries; transaction preview then commit with `PutRecord`, `PutRelation`, `PutGeo`, `RetireData`; one engine query per graph expansion | yes | F2, V2 |
 | Designer | vendor schema definitions and introspection | `data-schema-read` with the estate organisation; next registry revision through `PutSchema` with preview; `query-index-ensure` | yes (instance-level grant) | V3 |
 | Import and export | vendor statement import and export | `query-export` (Parquet), `backup-create`, `backup-list`, `restore-create`; typed record batches for import | yes, import as batches | V5 |
@@ -363,11 +363,22 @@ each one lands.
   are generated from the pinned engine's OpenAPI, replacing the inherited
   record identifiers, durations, decimals and geometry classes. Oracle: type
   tests over golden engine responses.
-- **F3: rrflowQL language** (formerly D3). A CodeMirror language built from
-  RRFlow's token set (salvaged from PR #10), with golden tests against
-  RRFlow's query vectors. The engine validates queries through
-  `EXPLAIN CONTRACT`; the client only highlights. It replaces the inherited
-  grammar, linter and WASM value parser everywhere.
+- **F3: rrflowQL language** (formerly D3). The engine's tokenizer, ported
+  exactly; a classifier that names each token by its place in the engine's
+  grammar; and a CodeMirror language built on them. Oracle: golden engine
+  responses for RRFlow's own query vectors and for a corpus of accepted and
+  refused queries. The engine validates: its parse refusal comes back with the
+  command that ran the query, and the native layer locates it in the editor.
+  The client only highlights. Amended on 2026-10-27 from reading the engine:
+  - At the pin, `EXPLAIN CONTRACT` does not stop a query from executing, and
+    no operation parses without executing. Validation therefore happens when
+    a query runs, not as the operator types.
+  - PR #10's scanner is not salvaged. It accepted comments, single quotes,
+    backticks and decimals that the engine refuses.
+  - The inherited views still run the inherited language. So the runtime
+    console adopts rrflowQL in F3, with captures, and each inherited view
+    adopts it in its own V step. The inherited grammar, linter and WASM value
+    parser leave with the last of those views.
 - **F4: view registry.** One registry of views. Each view names the
   operations and capabilities it needs, and navigation is derived from the
   engine's catalogue and capabilities. A view whose operation is unserved
@@ -385,10 +396,10 @@ each one lands.
   - Knowledge tools served by the registry.
 
   An inherited route becomes reachable only once its view runs on RRFlow.
-- **V1: Query.** The inherited query view runs rrflowQL. That covers tabs,
-  saved queries and history; variables (which replace global parameters);
-  combined, single, table and graph results; `EXPLAIN` plans; live results;
-  and Parquet export.
+- **V1: Query.** The inherited query view runs rrflowQL, in F3's language.
+  That covers tabs, saved queries and history; variables (which replace
+  global parameters); combined, single, table and graph results; `EXPLAIN`
+  plans; live results; and Parquet export.
 - **V2: Records.** The explorer, inspector and creator: records by kind from
   the schema registry, an rrflowQL filter, typed cells, `traverse:`
   relations, and edits through transaction preview then commit. The relation

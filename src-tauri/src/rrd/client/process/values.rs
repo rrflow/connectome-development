@@ -61,17 +61,6 @@ fn samples() -> BTreeMap<String, QueryValue> {
     ])
 }
 
-/// The RRFlow revision `Cargo.lock` pins, which is the engine under test.
-fn pinned_revision() -> String {
-    let lock =
-        std::fs::read_to_string(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("Cargo.lock"))
-            .expect("read Cargo.lock");
-    lock.split("rrflow-development?rev=")
-        .nth(1)
-        .map(|rest| rest[..40].to_owned())
-        .expect("Cargo.lock pins an RRFlow revision")
-}
-
 #[test]
 #[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
 fn the_value_model_golden_matches_the_engine() {
