@@ -123,6 +123,8 @@ export interface Connection {
 	runtimeInstance?: string;
 	/** Path to the installed RRD operator credential file. A reference only: the native process reads it. */
 	runtimeCredential?: string;
+	/** The canonical project directory whose instance this connection opens. */
+	runtimeProject?: string;
 	icon: number;
 	labels?: string[];
 	instance?: boolean;
@@ -258,10 +260,37 @@ export interface ServedEstate {
 	instance: string;
 	credential_path: string;
 	installed: boolean;
-	engine: EngineBinding;
+	/** Who started the instance: this desktop, or a process elsewhere. */
+	origin: InstanceOrigin;
+	/** The engine this desktop ran; absent for an instance started elsewhere. */
+	engine?: EngineBinding;
 }
 
-export type EstateStageName = "engine" | "install" | "serve" | "ready";
+export type EstateStageName = "engine" | "attach" | "install" | "serve" | "ready";
+
+export type InstanceState = "starting" | "ready" | "stopping" | "stopped" | "failed";
+export type InstanceOrigin = "connectome" | "elsewhere";
+
+/** One project's RRFlow instance as the native registry tracks it. */
+export interface ProjectInstance {
+	project: string;
+	state: InstanceState;
+	origin: InstanceOrigin;
+	/** The boundary a start or an attach last reached, or where it failed. */
+	stage?: EstateStageName | "stop";
+	/** What this state means for this instance. */
+	detail: string;
+	/** The instance's coordinates once it is ready. */
+	estate?: ServedEstate;
+	/** The native registry's transition number when this was observed. */
+	revision: number;
+}
+
+/** Every tracked instance, as of one native transition number. */
+export interface InstanceStatus {
+	revision: number;
+	instances: ProjectInstance[];
+}
 export type EstateStageState = "running" | "done" | "skipped" | "failed" | "stopped";
 
 /** One boundary of the serve sequence, reported by the native process as it is reached. */
