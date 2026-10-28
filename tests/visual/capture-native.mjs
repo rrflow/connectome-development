@@ -620,6 +620,30 @@ try {
 		}
 		await page.keyboard.press("Escape");
 	});
+	// The project's instance through a stop and a start (step F4a): the panel
+	// shows the stopped project, then the instance it started again. A build
+	// without per-project rows has no Start, and that step is logged as failed.
+	const openEngines = async () => {
+		await page.getByRole("button", { name: "Manage project engines" }).first().click();
+		await wait(2000);
+	};
+	await step("project-engines-stopped", async () => {
+		await back();
+		await openEngines();
+		await page.getByRole("button", { name: "Stop this engine" }).first().click();
+		await wait(5000);
+		await shot("project-engines-stopped");
+	});
+	await step("project-engines-restarted", async () => {
+		await page.getByRole("button", { name: "Start", exact: true }).first().click();
+		for (let i = 0; i < 90 && (await servedEstates()).length === 0; i++) {
+			await wait(1000);
+		}
+		await wait(4000);
+		await openEngines();
+		await shot("project-engines-restarted");
+		await page.keyboard.press("Escape");
+	});
 } finally {
 	writeFileSync(join(out, "native-capture-log.json"), JSON.stringify(log, null, 1));
 	console.log(
