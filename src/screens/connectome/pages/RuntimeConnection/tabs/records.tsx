@@ -79,13 +79,17 @@ function defaultQuery(tables: string[], fallbackKind: string | undefined): strin
 		: "";
 }
 
-/** Why the engine rejected a query: its parser's words and place, when it gave them. */
+/**
+ * Why the engine rejected a query: its parser's words when it gave them. The
+ * editor marks the place, on the word the engine names; the engine's offset
+ * itself can fall inside that word (it puts "end of query" one byte into the
+ * last token), so no character number is quoted.
+ */
 function refusalText(error: unknown): string {
-	const refusal = queryRefusal(error);
-	if (refusal) {
-		return `${refusal.reason} (at character ${refusal.offset + 1})`;
-	}
-	return error instanceof Error ? error.message : "Unknown RRD error";
+	return (
+		queryRefusal(error)?.reason ??
+		(error instanceof Error ? error.message : "Unknown RRD error")
+	);
 }
 
 interface QueryEditorProps {
