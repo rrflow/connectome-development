@@ -6,7 +6,7 @@
 
 ## Scope
 
-Governs the 2 screen directories and the 9 views + 7 pages within the main connectome screen. On 2026-10-18 (sprint 009, Slice B) the inherited vendor's hosted-cloud surface was deleted: the auth-callback screen, the dashboard, monitor and sidekick views, the eight cloud/organization pages, and the metrics charts; Slice C2 deleted the unmounted new-domain screen (the vendor's domain-move notice). Every remaining view still runs on the inherited query client and moves onto the RRD SDK or is deleted in Slice D. On 2026-10-24 (Slice D0) the mini runner and its embed generator were kept, by the owner's no-visual-regression rule: the mini adapter now loads the inherited engine, client and message channel on demand, so the shared adapter selector no longer loads them into every RRFlow page.
+Governs the 2 screen directories and the 9 views + 7 pages within the main connectome screen. On 2026-10-18 (sprint 009, Slice B) the inherited vendor's hosted-cloud surface was deleted: the auth-callback screen, the dashboard, monitor and sidekick views, the eight cloud/organization pages, and the metrics charts; Slice C2 deleted the unmounted new-domain screen (the vendor's domain-move notice). Every remaining view still runs on the inherited query client. Sprint 009 decision 18 (2026-10-27) re-authors each view in place onto the RRD SDK, keeping its layout and components; a view becomes reachable in the desktop app only once it runs on RRFlow. On 2026-10-24 (Slice D0) the mini runner and its embed generator were kept, by the owner's no-visual-regression rule: the mini adapter now loads the inherited engine, client and message channel on demand, so the shared adapter selector no longer loads them into every RRFlow page.
 
 ## Current Screen Structure
 
