@@ -3,7 +3,11 @@
 //! `rrd-contract` owns the wire schema. These structs carry only what the
 //! Database, Vectors, and Storage lenses render, so the webview never decodes a
 //! wire type and never receives a credential, token, or raw vector payload
-//! larger than its preview.
+//! larger than its preview. `effect` and `history` hold the views of governed
+//! effects and of the estate's history.
+
+pub mod effect;
+pub mod history;
 
 use super::cluster;
 use rrd_contract::{

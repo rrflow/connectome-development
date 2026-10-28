@@ -29,15 +29,35 @@ Currently registered plugins:
 - `tauri-plugin-localhost` (local server)
 - `tauri-plugin-single-instance` (prevent multiple instances)
 
-## Future Tauri Commands (Phase 1+)
+## RRD commands
 
-Per the roadmap (`docs/roadmap/clyffy/architecture.md`):
-- `rrflow_query` — RRFlow spoke
-- `qdrant_search` — Qdrant spoke
-- `rro_inspect` — RRO spoke
-- `pipeline_config` — Pipeline spoke
-- `pipeline_step` — Pipeline spoke
-- `minion_status` — Minions spoke
+Every authenticated RRD command goes through `src/rrd.rs`. It names a project
+connection handle (`profile`), and RRFlow's Rust SDK (`rrd-client`) validates
+each request and response. The webview receives view projections
+(`src/rrd/view.rs`, `view/effect.rs`, `view/history.rs`). It never receives the
+operator credential, a session bearer, or an engine-clock expiry instant.
+
+- **Estates:** `rrd_estate_preview`, `rrd_estate_serve`, `rrd_estate_status`,
+  `rrd_estate_stop`; and `rrd_public_request` for public read-only paths.
+- **Sessions:** `rrd_connect`, `rrd_session`, `rrd_disconnect`.
+- **Reads:**
+  - `rrd_capabilities`, `rrd_schema`, `rrd_database`, `rrd_storage`,
+    `rrd_query`;
+  - `rrd_vector_collections`, `rrd_vector_points`, `rrd_vector_search`,
+    `rrd_vector_map`.
+- **Changes:** `rrd_change_preview`, `rrd_change_commit`,
+  `rrd_change_discard`.
+  - A preview returns an opaque handle.
+  - A commit names only that handle and the digest the operator approved.
+  - The previewed mutations stay native, and they are what is committed.
+- **History:** `rrd_changes`, `rrd_changes_follow`, `rrd_audit`.
+- **Exports:** `rrd_query_export`, `rrd_audit_export`, `rrd_artifact_save`.
+  The verified file stays native under an opaque handle until the native
+  save dialog writes it; the webview never names a path.
+- **Backups:** `rrd_backups`, `rrd_backup_create`, `rrd_backup_restore`.
+  A restore stages a verified root beside the estate and never replaces it.
+
+Live subscriptions over `/v1/ws` follow in Sprint 009 step F1b.
 
 ## Rust Lint Exceptions
 
