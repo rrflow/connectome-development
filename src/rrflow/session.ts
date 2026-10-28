@@ -547,6 +547,55 @@ export interface RrdSavedArtifactView {
 	sha256: string;
 }
 
+/** What a live subscription follows. */
+export type RrdLiveStream = { kind: "changes" } | { kind: "query"; query: string };
+
+export interface RrdLiveView {
+	handle: string;
+	stream: "changes" | "query";
+	/** The cursor the subscription delivers after. */
+	after_cursor: number;
+	/** A live query's first result, read at `after_cursor`, when opened without a cursor. */
+	first: RrdQueryView | null;
+}
+
+export interface RrdRowChangeView {
+	before: RrdQueryRowView;
+	after: RrdQueryRowView;
+}
+
+/**
+ * Why a subscription was attached to a connection: first opened, resumed after
+ * a lost connection or a session renewal, or continued by a new subscription
+ * after the session was replaced.
+ */
+export type RrdLiveAttachment = "opened" | "reconnected" | "renewed" | "replaced";
+
+/**
+ * One live event, in cursor order. A change never repeats; after a reconnect a
+ * live-query delta can overlap the one before it, so rows apply by identity.
+ */
+export type RrdLiveEventView =
+	| {
+			event: "subscribed";
+			reason: RrdLiveAttachment;
+			generation: number;
+			acknowledged_cursor: number;
+			head_cursor: number;
+	  }
+	| { event: "changes"; from_cursor: number; through_cursor: number; page: RrdChangesView }
+	| {
+			event: "rows";
+			from_cursor: number;
+			through_cursor: number;
+			head_cursor: number;
+			added: RrdQueryRowView[];
+			updated: RrdRowChangeView[];
+			removed: RrdQueryRowView[];
+	  }
+	/** Closed by the operator (`message` is null) or stopped by a failure. */
+	| { event: "ended"; message: string | null; retryable: boolean };
+
 export interface RrdConnectRequest {
 	/** Loopback HTTP origin of the RRD service. */
 	endpoint: string;
@@ -782,6 +831,30 @@ export class RrdSessionClient {
 		return this.call<RrdRestoreView>("rrd_backup_restore", {
 			request: { backup_sha256: backupSha256 },
 		});
+	}
+
+	/**
+	 * Opens a live subscription; `onEvent` hears its events until it is closed
+	 * or ends. Without `afterCursor`, changes start at the estate's head and a
+	 * live query runs once first, its result returned as `first`.
+	 */
+	async openLive(
+		stream: RrdLiveStream,
+		onEvent: (event: RrdLiveEventView) => void,
+		afterCursor?: number,
+	): Promise<RrdLiveView> {
+		this.requireNative();
+		const events = new Channel<RrdLiveEventView>();
+		events.onmessage = onEvent;
+		return this.call<RrdLiveView>("rrd_live_open", {
+			request: { stream, after_cursor: afterCursor },
+			onEvent: events,
+		});
+	}
+
+	async closeLive(handle: string): Promise<void> {
+		this.requireNative();
+		await this.call<void>("rrd_live_close", { handle });
 	}
 
 	async disconnect(): Promise<void> {

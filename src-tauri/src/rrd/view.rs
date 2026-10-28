@@ -3,18 +3,19 @@
 //! `rrd-contract` owns the wire schema. These structs carry only what the
 //! Database, Vectors, and Storage lenses render, so the webview never decodes a
 //! wire type and never receives a credential, token, or raw vector payload
-//! larger than its preview. `effect` and `history` hold the views of governed
-//! effects and of the estate's history.
+//! larger than its preview. `effect`, `history` and `live` hold the views of
+//! governed effects, of the estate's history, and of live results.
 
 pub mod effect;
 pub mod history;
+pub mod live;
 
 use super::cluster;
 use rrd_contract::{
     DataReference, DataVectorValue, DiagnosticRrflowKvSnapshot, DiagnosticRuntimeReference,
     DiagnosticSnapshot, DiagnosticStorageAdmission, DiagnosticStorageSnapshot, QueryResult,
-    QueryValue, ServiceCapabilities, VectorCollectionCatalogueSnapshot, VectorPointPage,
-    VectorPointSnapshot, VectorSearchResult,
+    QueryRowSnapshot, QueryValue, ServiceCapabilities, VectorCollectionCatalogueSnapshot,
+    VectorPointPage, VectorPointSnapshot, VectorSearchResult,
 };
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
@@ -618,6 +619,13 @@ pub fn database(snapshot: &DiagnosticSnapshot) -> DatabaseView {
     }
 }
 
+pub fn query_row(row: &QueryRowSnapshot) -> RowView {
+    RowView {
+        identity: row.identity.clone(),
+        values: display_properties(&row.values),
+    }
+}
+
 pub fn query(result: &QueryResult) -> QueryView {
     let mut columns = BTreeSet::new();
     let rows = result
@@ -625,10 +633,7 @@ pub fn query(result: &QueryResult) -> QueryView {
         .iter()
         .map(|row| {
             columns.extend(row.values.keys().cloned());
-            RowView {
-                identity: row.identity.clone(),
-                values: display_properties(&row.values),
-            }
+            query_row(row)
         })
         .collect();
     QueryView {

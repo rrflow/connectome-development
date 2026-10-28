@@ -57,7 +57,14 @@ operator credential, a session bearer, or an engine-clock expiry instant.
 - **Backups:** `rrd_backups`, `rrd_backup_create`, `rrd_backup_restore`.
   A restore stages a verified root beside the estate and never replaces it.
 
-Live subscriptions over `/v1/ws` follow in Sprint 009 step F1b.
+- **Live results:** `rrd_live_open`, `rrd_live_close`.
+  - Each live subscription is a durable engine subscription, delivered over
+    its own `/v1/ws` socket. Its events go to a channel.
+  - A delivery is acknowledged only after it has been handed over.
+  - The socket reconnects when the session renews, which rotates its bearer.
+    When the session is replaced, a new subscription continues after the last
+    cursor handed over.
+  - At most eight are open per connection.
 
 ## Rust Lint Exceptions
 

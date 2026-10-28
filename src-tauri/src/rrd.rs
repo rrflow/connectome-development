@@ -16,8 +16,9 @@ mod view;
 use client::{
     NativeRrdClient, RrdAuditExportRequest, RrdAuditRequest, RrdBackupCreateRequest,
     RrdBackupRestoreRequest, RrdBackupsRequest, RrdChangeCommitRequest, RrdChangePreviewRequest,
-    RrdChangesFollowRequest, RrdChangesRequest, RrdConnectRequest, RrdQueryExportRequest,
-    RrdQueryRequest, RrdVectorMapRequest, RrdVectorPointsRequest, RrdVectorSearchRequest,
+    RrdChangesFollowRequest, RrdChangesRequest, RrdConnectRequest, RrdLiveOpenRequest,
+    RrdQueryExportRequest, RrdQueryRequest, RrdVectorMapRequest, RrdVectorPointsRequest,
+    RrdVectorSearchRequest,
 };
 use error::RrdError;
 use transport::public_rrd_url;
@@ -26,6 +27,7 @@ use view::effect::{
     QueryExportView, RestoreView, SavedArtifactView,
 };
 use view::history::{AuditView, ChangesFollowView, ChangesView};
+use view::live::{LiveEventView, LiveView};
 use view::{
     ConnectionView, DatabaseView, QueryView, ServiceView, StorageView, VectorCollectionsView,
     VectorMapProgressView, VectorMapView, VectorPointsView, VectorSearchView,
@@ -323,6 +325,28 @@ pub async fn rrd_backup_restore(
     state: State<'_, RrdClientState>,
 ) -> Result<RestoreView, RrdError> {
     state.client(&profile).await?.restore_backup(request).await
+}
+
+/// Opens a live subscription; its events arrive on `on_event` until it is
+/// closed or ends.
+#[tauri::command]
+pub async fn rrd_live_open(
+    profile: String,
+    request: RrdLiveOpenRequest,
+    on_event: Channel<LiveEventView>,
+    state: State<'_, RrdClientState>,
+) -> Result<LiveView, RrdError> {
+    let sink: client::LiveSink = Arc::new(move |event| on_event.send(event).is_ok());
+    state.client(&profile).await?.open_live(request, sink).await
+}
+
+#[tauri::command]
+pub async fn rrd_live_close(
+    profile: String,
+    handle: String,
+    state: State<'_, RrdClientState>,
+) -> Result<(), RrdError> {
+    state.client(&profile).await?.close_live(&handle).await
 }
 
 #[tauri::command]

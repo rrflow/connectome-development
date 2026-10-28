@@ -11,7 +11,8 @@
 //!
 //! Governed effects live in submodules: `transaction` (preview, then commit
 //! exactly what was previewed), `backup`, `artifact` (exports held natively
-//! until saved) and `history` (changefeed and audit pages).
+//! until saved), `history` (changefeed and audit pages) and `live` (durable
+//! subscriptions delivered over `/v1/ws`).
 
 use super::error::RrdError;
 use super::transport::{is_loopback_origin, rrd_origin};
@@ -46,11 +47,13 @@ use uuid::Uuid;
 mod artifact;
 mod backup;
 mod history;
+mod live;
 mod transaction;
 
 pub use artifact::{save_artifact, RrdAuditExportRequest, RrdQueryExportRequest};
 pub use backup::{RrdBackupCreateRequest, RrdBackupRestoreRequest, RrdBackupsRequest};
 pub use history::{RrdAuditRequest, RrdChangesFollowRequest, RrdChangesRequest};
+pub use live::{LiveSink, RrdLiveOpenRequest};
 pub use transaction::{RrdChangeCommitRequest, RrdChangePreviewRequest};
 
 // Connectome's own session policy; the engine enforces its own ceilings.
@@ -273,6 +276,10 @@ pub struct NativeRrdClient {
     /// The previewed change waiting for its commit, if any.
     pending: tokio::sync::Mutex<Option<transaction::PendingChange>>,
     artifacts: artifact::Artifacts,
+    /// Counts lease refreshes. A live subscription's socket keeps the bearer
+    /// it connected with, so it reconnects whenever this changes.
+    bearer_generation: tokio::sync::watch::Sender<u64>,
+    live: live::LiveSubscriptions,
 }
 
 fn now_unix_ms() -> Result<u64, String> {
@@ -450,6 +457,8 @@ impl NativeRrdClient {
             ids,
             pending: Default::default(),
             artifacts: Default::default(),
+            bearer_generation: tokio::sync::watch::Sender::new(0),
+            live: Default::default(),
         })
     }
 
@@ -502,9 +511,34 @@ impl NativeRrdClient {
                 .refresh(current.as_ref().ok_or(SESSION_CLOSED)?)
                 .await?;
             *current = Some(refreshed);
+            self.bearer_generation
+                .send_modify(|generation| *generation += 1);
         }
         RwLockReadGuard::try_map(current.downgrade(), Option::as_ref)
             .map_err(|_| SESSION_CLOSED.into())
+    }
+
+    /// Refreshes the session now, as `lease` does once it nears a deadline:
+    /// renewed in place, or replaced by a new session when `replace` is set.
+    #[cfg(test)]
+    async fn refresh_now(&self, replace: bool) -> Result<(), RrdError> {
+        let mut current = self.lease.write().await;
+        let lease = current.as_ref().ok_or(SESSION_CLOSED)?;
+        let refreshed = if replace {
+            let replacement =
+                Lease::open(&self.client, &self.principal, &self.api_key, &self.ids).await?;
+            let _ = self
+                .client
+                .close_session(&lease.session, CloseSession {}, self.ids.next(true)?)
+                .await;
+            replacement
+        } else {
+            self.refresh(lease).await?
+        };
+        *current = Some(refreshed);
+        self.bearer_generation
+            .send_modify(|generation| *generation += 1);
+        Ok(())
     }
 
     /// Renews `current`, or opens a new session when renewal cannot outlast a
@@ -868,6 +902,9 @@ impl NativeRrdClient {
     /// The session's open transaction ends with it, so a pending change is
     /// dropped, and so are held exports.
     pub async fn close(&self) -> Result<(), RrdError> {
+        // Live subscriptions close their durable subscriptions first, while
+        // the session that owns them is still open.
+        self.live.close_all().await;
         let Some(lease) = self.lease.write().await.take() else {
             return Ok(());
         };

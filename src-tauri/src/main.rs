@@ -134,6 +134,8 @@ fn main() {
             rrd::rrd_backups,
             rrd::rrd_backup_create,
             rrd::rrd_backup_restore,
+            rrd::rrd_live_open,
+            rrd::rrd_live_close,
             rrd::rrd_disconnect,
             window::toggle_devtools,
             window::new_window,
