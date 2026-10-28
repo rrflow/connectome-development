@@ -214,6 +214,29 @@ owner's desktop) were recorded on the unmerged `agent/connectome-theme` branch
       navigation from the operations and capabilities each view needs.
     - **Foundations first.** Each step is reviewed before the next. D1a's API
       tab moves into the documentation view when that view is re-authored.
+19. A view is available when its project's instance runs. This is the
+    owner's answer of 2026-10-28 to F4's question of what makes a view
+    available. An instance gets running in one of two ways:
+    - the user starts `rrflow` in the project folder, and its hooks lead the
+      AI to ask about indexing;
+    - the user starts that instance from Connectome, one or several in turn.
+
+    Connectome shows each instance's real startup status. Startup is fast,
+    so the status is never padded. It means:
+    - **Availability starts from the instance lifecycle.** Each project's
+      instance is stopped, starting (at the stage it has actually reached),
+      ready, stopping or failed, whichever way it was started.
+    - **An instance started elsewhere is found and proved.** RRFlow's served
+      endpoint record (`.rrflow/serving.json`, RRFlow H-07h) says where an
+      instance listens, and `rrflow ready --project` proves it. The record
+      is only a hint. The authenticated challenge grants readiness, and a
+      failed liveness check can only take it away.
+    - **Connectome stops only what it started.** It never stops an instance
+      started elsewhere, and closing Connectome leaves that instance running.
+    - **Inside a ready instance,** a view whose operation the instance does
+      not serve shows the engine's stated reason. The product capability
+      catalogue's static Connectome binding ("planned") does not gate a view.
+      This was recommended with the question and not contradicted.
 
 ## Ordered implementation slices
 
@@ -383,7 +406,23 @@ each one lands.
   operations and capabilities it needs, and navigation is derived from the
   engine's catalogue and capabilities. A view whose operation is unserved
   shows that capability state. Oracle: registry tests against the pinned
-  catalogue.
+  catalogue. Amended by decision 19 on 2026-10-28 and split, as F1 was:
+  - **F4a: instance lifecycle.** The native process keeps one lifecycle per
+    project, whichever way the instance was started.
+    - Opening a project whose instance already runs attaches to it, instead
+      of failing with "already open in another process".
+    - A known project started from its folder appears once it is proved.
+    - The project engines panel shows each instance's lifecycle, with
+      before/after captures.
+    - The engine pin moves to an RRFlow revision with H-07h.
+
+    Oracle: native tests over every lifecycle transition, and RRD process
+    tests that start an instance outside Connectome with `rrflow serve`.
+    Connectome attaches to it, refuses to stop it, sees it stop, and attaches
+    again after a restart on a new port.
+  - **F4b: view registry.** The registry described above. A view's
+    availability comes first from its instance's lifecycle, then from that
+    instance's endpoint catalogue and capability states.
 - **F5: characterisation.** Tests that pin the engine-neutral inherited
   components before they are re-pointed: the data table, the tables pane, the
   schema graph, the relation graph, the code editor, the inspector and
