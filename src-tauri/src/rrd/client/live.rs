@@ -197,8 +197,8 @@ impl NativeRrdClient {
                     after_cursor,
                 )
             }
-            RrdLiveStream::Query { query } => {
-                let query = execute_query(&query, scope, &self.query_budget)?;
+            RrdLiveStream::Query { query: text } => {
+                let query = execute_query(&text, scope, &self.query_budget)?;
                 let after_cursor = match request.after_cursor {
                     Some(cursor) => cursor,
                     None => {
@@ -207,7 +207,8 @@ impl NativeRrdClient {
                             .send(false, |session, options| async move {
                                 self.client.execute_query(&session, run, options).await
                             })
-                            .await?;
+                            .await
+                            .map_err(|error| error.in_query(&text))?;
                         let cursor = result.known_at_cursor;
                         first = Some(view::query(&result));
                         cursor

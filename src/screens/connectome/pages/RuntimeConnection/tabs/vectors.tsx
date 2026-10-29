@@ -40,9 +40,10 @@ import { formatCount, formatTime } from "../format";
 import { Term } from "../glossary";
 import { type CanvasEdge, type CanvasNode, GraphCanvas } from "../graph";
 import { type ColorGroup, colorOptions, grouping } from "../groups";
-import { databaseQuery } from "../queries";
+import { databaseQuery, quantizationsQuery } from "../queries";
 import classes from "../style.module.scss";
 import type { RecordFocusProps, RuntimeLensProps } from "../types";
+import { activeGenerations, methodLabel, SearchGenerations } from "./quantization";
 
 /** Points requested per page while browsing; the contract bounds the maximum natively. */
 const POINT_PAGE_SIZE = 50;
@@ -343,6 +344,9 @@ export function VectorsTab({
 			}),
 		getNextPageParam: (page) => page.next_after ?? undefined,
 	});
+	const generations = useQuery(
+		quantizationsQuery(client, sessionKey, collection?.collection_id, vector?.name),
+	);
 
 	if (catalogue.isPending) {
 		return (
@@ -381,6 +385,7 @@ export function VectorsTab({
 	const topScore = similar[0]?.score ?? 1;
 	const data = map.data;
 	const selectedRecord = selected ? records.get(selected) : undefined;
+	const [served] = activeGenerations(generations.data?.generations);
 
 	return (
 		<Stack gap="xl">
@@ -463,6 +468,22 @@ export function VectorsTab({
 						>
 							{vector.embedding_model ?? "caller-supplied vectors"}
 						</Badge>
+						{generations.data && (
+							<Badge
+								variant="light"
+								color={served ? "green" : "gray"}
+								tt="none"
+								title={
+									served
+										? "Approximate search reads this active generation, then reranks exactly"
+										: "No generation is active, so every search is exact"
+								}
+							>
+								{served
+									? `${methodLabel(served.method)} · generation ${formatCount(served.generation)}`
+									: "exact search only"}
+							</Badge>
+						)}
 					</Group>
 				</Group>
 
@@ -847,6 +868,17 @@ export function VectorsTab({
 					</Grid.Col>
 				</Grid>
 			</Section>
+
+			<SearchGenerations
+				client={client}
+				sessionKey={sessionKey}
+				collection={collection}
+				vector={vector}
+				selectedPoint={selectedPoint}
+				labelOf={(subject) => records.get(subject)?.label ?? subject}
+				colorOf={colorOfPoint}
+				onSelect={onSelect}
+			/>
 
 			<Section
 				title={

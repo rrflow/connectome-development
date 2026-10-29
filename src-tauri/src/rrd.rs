@@ -17,8 +17,9 @@ use client::{
     NativeRrdClient, RrdAuditExportRequest, RrdAuditRequest, RrdBackupCreateRequest,
     RrdBackupRestoreRequest, RrdBackupsRequest, RrdChangeCommitRequest, RrdChangePreviewRequest,
     RrdChangesFollowRequest, RrdChangesRequest, RrdConnectRequest, RrdLiveOpenRequest,
-    RrdQueryExportRequest, RrdQueryRequest, RrdVectorMapRequest, RrdVectorPointsRequest,
-    RrdVectorSearchRequest,
+    RrdQuantizationApplyRequest, RrdQuantizationProposeRequest, RrdQuantizationsRequest,
+    RrdQueryExportRequest, RrdQueryRequest, RrdVectorCompareRequest, RrdVectorMapRequest,
+    RrdVectorPointsRequest, RrdVectorSearchRequest,
 };
 use error::RrdError;
 use transport::public_rrd_url;
@@ -28,6 +29,9 @@ use view::effect::{
 };
 use view::history::{AuditView, ChangesFollowView, ChangesView};
 use view::live::{LiveEventView, LiveView};
+use view::quantization::{
+    QuantizationAppliedView, QuantizationProposalView, QuantizationsView, VectorCompareView,
+};
 use view::{
     ConnectionView, DatabaseView, QueryView, ServiceView, StorageView, VectorCollectionsView,
     VectorMapProgressView, VectorMapView, VectorPointsView, VectorSearchView,
@@ -208,6 +212,69 @@ pub async fn rrd_vector_map(
             let _ = on_progress.send(progress);
         })
         .await
+}
+
+/// The quantized search generations of one named vector.
+#[tauri::command]
+pub async fn rrd_vector_quantizations(
+    profile: String,
+    request: RrdQuantizationsRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<QuantizationsView, RrdError> {
+    state.client(&profile).await?.quantizations(request).await
+}
+
+/// Holds one quantization lifecycle step under the returned handle, with the
+/// exact request that applying it sends; nothing is sent to the engine.
+#[tauri::command]
+pub async fn rrd_vector_quantization_propose(
+    profile: String,
+    request: RrdQuantizationProposeRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<QuantizationProposalView, RrdError> {
+    state
+        .client(&profile)
+        .await?
+        .propose_quantization(request)
+        .await
+}
+
+/// Applies the proposed step exactly as proposed, once the operator confirmed
+/// it.
+#[tauri::command]
+pub async fn rrd_vector_quantization_apply(
+    profile: String,
+    request: RrdQuantizationApplyRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<QuantizationAppliedView, RrdError> {
+    state
+        .client(&profile)
+        .await?
+        .apply_quantization(request)
+        .await
+}
+
+#[tauri::command]
+pub async fn rrd_vector_quantization_discard(
+    profile: String,
+    handle: String,
+    state: State<'_, RrdClientState>,
+) -> Result<(), RrdError> {
+    state
+        .client(&profile)
+        .await?
+        .discard_quantization(&handle)
+        .await
+}
+
+/// Exact and approximate search for one stored example, side by side.
+#[tauri::command]
+pub async fn rrd_vector_compare(
+    profile: String,
+    request: RrdVectorCompareRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<VectorCompareView, RrdError> {
+    state.client(&profile).await?.vector_compare(request).await
 }
 
 /// Previews a data change inside a new transaction and keeps it pending under

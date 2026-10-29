@@ -27,3 +27,18 @@ export function databaseQuery(client: RrdSessionClient, sessionKey: string) {
 		...busyRetry,
 	});
 }
+
+/** The quantized search generations of one named vector, shared by the lens header and its section. */
+export function quantizationsQuery(
+	client: RrdSessionClient,
+	sessionKey: string,
+	collectionId: string | undefined,
+	vectorName: string | undefined,
+) {
+	return queryOptions({
+		queryKey: ["rrd-vector-quantizations", sessionKey, collectionId, vectorName],
+		queryFn: () => client.vectorQuantizations(collectionId ?? "", vectorName ?? ""),
+		enabled: Boolean(collectionId && vectorName),
+		...busyRetry,
+	});
+}

@@ -25,7 +25,9 @@ import type {
 	EstatePreview,
 	EstateSelection,
 	EstateStage,
+	InstanceStatus,
 	Platform,
+	ProjectInstance,
 	QueryTab,
 	ServedEstate,
 	ViewPage,
@@ -193,8 +195,11 @@ export class DesktopAdapter implements ConnectomeAdapter {
 		});
 	}
 
-	public async servedEstates() {
-		return invoke<ServedEstate[]>("rrd_estate_status");
+	public async projectInstances(projects: string[]) {
+		const { executable } = useConfigStore.getState().settings.serving;
+		return invoke<InstanceStatus>("rrd_estate_status", {
+			request: { projects, executable },
+		});
 	}
 
 	public async stopEstate(project: string) {
@@ -359,6 +364,12 @@ export class DesktopAdapter implements ConnectomeAdapter {
 			useDatabaseStore
 				.getState()
 				.pushConsoleLine(`[${stage.stage}] ${stage.detail}`, historySize);
+		});
+
+		// Each transition of a project's instance, numbered by the native
+		// registry, whichever way the instance was started.
+		listen<ProjectInstance>("estate:lifecycle", (event) => {
+			useDatabaseStore.getState().applyInstance(event.payload);
 		});
 
 		// The engine's own diagnostic output.
