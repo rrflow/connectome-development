@@ -86,8 +86,9 @@ const VARIABLE_TEXT = [
 	new RegExp(literal(out)),
 ].map((pattern) => pattern.source);
 // Paints magenta, which the compare ignores, over exactly the characters that
-// match, in text and inside text fields, so the words around them stay in
-// the image. A match scrolled out of its container is clipped to what shows.
+// match, in text, in code editor lines and inside text fields, so the words
+// around them stay in the image. A match scrolled out of its container is
+// clipped to what shows.
 const paintMasks = () =>
 	page.evaluate((sources) => {
 		const patterns = sources.map((source) => new RegExp(source, "g"));
@@ -119,11 +120,35 @@ const paintMasks = () =>
 		};
 		const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
 		for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+			if (node.parentElement?.closest(".cm-line")) {
+				continue;
+			}
 			for (const [start, end] of matches(node.nodeValue)) {
 				const range = document.createRange();
 				range.setStart(node, start);
 				range.setEnd(node, end);
 				add(range.getClientRects(), node.parentElement);
+			}
+		}
+		// A code editor splits a line into one text node per token, so a match
+		// is found in the whole line and painted across the nodes it spans.
+		for (const line of document.querySelectorAll(".cm-line")) {
+			const nodes = [];
+			let text = "";
+			const inLine = document.createTreeWalker(line, NodeFilter.SHOW_TEXT);
+			for (let node = inLine.nextNode(); node; node = inLine.nextNode()) {
+				nodes.push({ node, from: text.length });
+				text += node.nodeValue;
+			}
+			const at = (offset, end) => {
+				const found = nodes.findLast(({ from }) => (end ? from < offset : from <= offset));
+				return [found.node, offset - found.from];
+			};
+			for (const [start, end] of matches(text)) {
+				const range = document.createRange();
+				range.setStart(...at(start, false));
+				range.setEnd(...at(end, true));
+				add(range.getClientRects(), line);
 			}
 		}
 		// A field's value has no text node, so a hidden copy laid out like the
@@ -238,6 +263,16 @@ const step = async (name, fn) => {
 };
 const invoke = (command, payload) =>
 	page.evaluate(([c, p]) => window.__TAURI_INTERNALS__.invoke(c, p), [command, payload ?? {}]);
+// The served estates, from either status shape: a list of served estates
+// before step F4a, then every tracked instance with its lifecycle.
+const servedEstates = async () => {
+	const status = await invoke("rrd_estate_status", { request: { projects: [], executable: "" } });
+	return Array.isArray(status)
+		? status
+		: (status?.instances ?? [])
+				.filter((instance) => instance.state === "ready")
+				.map((instance) => instance.estate);
+};
 
 try {
 	let ready = false;
@@ -261,6 +296,12 @@ try {
 	// Times render in UTC, so a masked time is the same width on any machine.
 	const cdp = await context.newCDPSession(page);
 	await cdp.send("Emulation.setTimezoneOverride", { timezoneId: "UTC" });
+	// The first launch after a build can paint late, so the overview's own
+	// content, not the fixed wait alone, says the window is ready.
+	await page
+		.getByRole("button", { name: "Start local RRFlow" })
+		.first()
+		.waitFor({ timeout: 60_000 });
 	await wait(4000);
 	if (theme === "light") {
 		await step("set-light-theme", async () => {
@@ -304,7 +345,7 @@ try {
 		await wait(3000);
 		await shot("serving-stages");
 		for (let i = 0; i < 90; i++) {
-			const served = await invoke("rrd_estate_status");
+			const served = await servedEstates();
 			if (Array.isArray(served) && served.length > 0) {
 				log.served = served.map((s) => ({
 					endpoint: s.endpoint,
@@ -319,7 +360,7 @@ try {
 		await shot("served");
 	});
 	await step("seed", async () => {
-		const [served] = await invoke("rrd_estate_status");
+		const [served] = await servedEstates();
 		const seed = spawnSync(
 			"cargo",
 			[
@@ -490,6 +531,16 @@ try {
 		await wait(3000);
 		await into(page.getByRole("button", { name: "Run query" }).first());
 		await shot("records-traverse");
+		// A query the engine refuses, typed where the console takes text (a
+		// text area or a code editor) and run: what the engine said, and where.
+		// An autosizing text area keeps a hidden copy, so only shown fields count.
+		await page.locator("textarea:visible, .cm-content:visible").last().click();
+		await page.keyboard.press("Control+A");
+		await page.keyboard.type("FROM record:document AT VALID 1 KNOWN");
+		await page.getByRole("button", { name: "Run query" }).first().click();
+		await wait(3000);
+		await into(page.getByRole("button", { name: "Run query" }).first());
+		await shot("records-refused");
 	});
 	await step("vectors-points", async () => {
 		await lens("Vectors");
@@ -567,6 +618,30 @@ try {
 			await wait(1000);
 			await shot(`settings-${slug(t)}`);
 		}
+		await page.keyboard.press("Escape");
+	});
+	// The project's instance through a stop and a start (step F4a): the panel
+	// shows the stopped project, then the instance it started again. A build
+	// without per-project rows has no Start, and that step is logged as failed.
+	const openEngines = async () => {
+		await page.getByRole("button", { name: "Manage project engines" }).first().click();
+		await wait(2000);
+	};
+	await step("project-engines-stopped", async () => {
+		await back();
+		await openEngines();
+		await page.getByRole("button", { name: "Stop this engine" }).first().click();
+		await wait(5000);
+		await shot("project-engines-stopped");
+	});
+	await step("project-engines-restarted", async () => {
+		await page.getByRole("button", { name: "Start", exact: true }).first().click();
+		for (let i = 0; i < 90 && (await servedEstates()).length === 0; i++) {
+			await wait(1000);
+		}
+		await wait(4000);
+		await openEngines();
+		await shot("project-engines-restarted");
 		await page.keyboard.press("Escape");
 	});
 } finally {

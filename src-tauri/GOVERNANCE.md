@@ -65,6 +65,11 @@ operator credential, a session bearer, or an engine-clock expiry instant.
     When the session is replaced, a new subscription continues after the last
     cursor handed over.
   - At most eight are open per connection.
+- **Query refusals:** when the engine's parser refuses the query that
+  `rrd_query`, `rrd_query_export` or `rrd_live_open` sent, the error carries
+  `query`: the parser's reason, and its place in UTF-16 code units, as an
+  editor counts. The native layer reads both from the engine's own error body
+  (`src/rrd/error.rs`).
 
 ## Rust Lint Exceptions
 

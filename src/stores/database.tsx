@@ -1,8 +1,16 @@
 import { omit } from "radash";
 import { create } from "zustand";
+import { applyInstance, applyStatus, firstServed, type InstanceMap } from "~/rrflow/instances";
 import type { GraphqlResponse } from "~/screens/connectome/connection/connection";
 import { createConnectionSchema } from "~/shared/util/defaults";
-import type { ConnectionSchema, EstateStage, QueryResponse, ServedEstate } from "~/types";
+import type {
+	ConnectionSchema,
+	EstateStage,
+	InstanceStatus,
+	ProjectInstance,
+	QueryResponse,
+	ServedEstate,
+} from "~/types";
 import type { Diagnostic } from "~/vendor/rrflow-client";
 
 export type State = "disconnected" | "connecting" | "retrying" | "connected";
@@ -13,6 +21,8 @@ export type DatabaseStore = {
 	servePending: boolean;
 	/** The estate the native process is serving; null while nothing is served. */
 	servedEstate: ServedEstate | null;
+	/** Each project's instance, as the native registry last numbered it. */
+	instances: InstanceMap;
 	/** The serve sequence's boundaries, oldest first, cleared on each start. */
 	estateStages: EstateStage[];
 	currentState: State;
@@ -33,6 +43,8 @@ export type DatabaseStore = {
 	prepareServe: () => void;
 	confirmServing: (estate: ServedEstate) => void;
 	stopServing: () => void;
+	applyInstance: (instance: ProjectInstance) => void;
+	applyStatus: (status: InstanceStatus) => void;
 	cancelServe: () => void;
 	pushStage: (stage: EstateStage) => void;
 	pushConsoleLine: (line: string, max: number) => void;
@@ -53,6 +65,7 @@ export const useDatabaseStore = create<DatabaseStore>((set) => ({
 	isServing: false,
 	servePending: false,
 	servedEstate: null,
+	instances: {},
 	estateStages: [],
 	currentState: "disconnected",
 	latestError: "",
@@ -101,6 +114,20 @@ export const useDatabaseStore = create<DatabaseStore>((set) => ({
 			servePending: false,
 			servedEstate: null,
 		})),
+
+	applyInstance: (instance) =>
+		set((state) => {
+			const instances = applyInstance(state.instances, instance);
+			const servedEstate = firstServed(instances);
+			return { instances, servedEstate, isServing: servedEstate !== null };
+		}),
+
+	applyStatus: (status) =>
+		set((state) => {
+			const instances = applyStatus(state.instances, status);
+			const servedEstate = firstServed(instances);
+			return { instances, servedEstate, isServing: servedEstate !== null };
+		}),
 
 	pushStage: (stage) =>
 		set((state) => ({

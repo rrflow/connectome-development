@@ -1,0 +1,397 @@
+{
+	"engine": "c1557fe58a2f8c422168d29519b6119fefee6acc",
+	"queries": [
+		{
+			"canonical": "FROM record:document AT VALID 100 KNOWN HEAD WHERE status = \"open\" AND title != \"x\" PROJECT id, status, title LIMIT 5 EXPLAIN CONTRACT",
+			"name": "every_clause",
+			"outcome": "accepted",
+			"query": "FROM record:document AT VALID 100 KNOWN HEAD WHERE status = \"open\" AND title != \"x\" PROJECT id, status, title LIMIT 5 EXPLAIN CONTRACT"
+		},
+		{
+			"canonical": "FROM record:document AT VALID 100 KNOWN HEAD WHERE status = \"open\" PROJECT *",
+			"name": "lowercase_words",
+			"outcome": "accepted",
+			"query": "from RECORD:document at valid 100 known head where status = \"open\" project *"
+		},
+		{
+			"canonical": "FROM record:document AT VALID 100 KNOWN HEAD PROJECT *",
+			"name": "ascii_whitespace",
+			"outcome": "accepted",
+			"query": "FROM\trecord:document\nAT VALID 100\r\nKNOWN HEAD\fPROJECT *"
+		},
+		{
+			"canonical": "FROM record:document AT VALID 100 KNOWN HEAD WHERE title = \"a\\\"b\\\\c\\n\\r\\t\" PROJECT *",
+			"name": "string_escapes",
+			"outcome": "accepted",
+			"query": "FROM record:document AT VALID 100 KNOWN HEAD WHERE title = \"a\\\"b\\\\c\\n\\r\\t\" PROJECT *"
+		},
+		{
+			"canonical": "FROM record:document AT VALID 100 KNOWN HEAD WHERE title = \"Open — ünïcødé 𝄞\" PROJECT title",
+			"name": "unicode_string",
+			"outcome": "accepted",
+			"query": "FROM record:document AT VALID 100 KNOWN HEAD WHERE title = \"Open — ünïcødé 𝄞\" PROJECT title"
+		},
+		{
+			"canonical": "FROM record:document AT VALID 100 KNOWN HEAD WHERE title < \"z\" AND title <= \"z\" AND title > \"\" AND title >= \"\" PROJECT id",
+			"name": "orderings",
+			"outcome": "accepted",
+			"query": "FROM record:document AT VALID 100 KNOWN HEAD WHERE title < \"z\" AND title <= \"z\" AND title > \"\" AND title >= \"\" PROJECT id"
+		},
+		{
+			"message": "RRD API 400 Bad Request: InvalidArgument: Query(\"RRD query engine binding error: filter value for \\\"status\\\" does not match accepted types [String]\")",
+			"name": "scalar_literals",
+			"outcome": "unlocated",
+			"query": "FROM record:document AT VALID 100 KNOWN HEAD WHERE status != null AND status != true AND status != 7 PROJECT id"
+		},
+		{
+			"canonical": "FROM record:document AT VALID 100 KNOWN HEAD WHERE title MATCH \"open\" PROJECT id",
+			"name": "text_match",
+			"outcome": "accepted",
+			"query": "FROM record:document AT VALID 100 KNOWN HEAD WHERE title MATCH \"open\" PROJECT id"
+		},
+		{
+			"canonical": "FROM traverse:depends_on START document:a DIRECTION OUTGOING DEPTH 2 AT VALID 100 KNOWN HEAD PROJECT *",
+			"name": "traversal",
+			"outcome": "accepted",
+			"query": "FROM traverse:depends_on START document:a DIRECTION OUTGOING DEPTH 2 AT VALID 100 KNOWN HEAD PROJECT *"
+		},
+		{
+			"canonical": "FROM record:document JOIN record:document ON id = id AT VALID 100 KNOWN HEAD PROJECT *",
+			"name": "join",
+			"outcome": "accepted",
+			"query": "FROM record:document JOIN record:document ON id = id AT VALID 100 KNOWN HEAD PROJECT *"
+		},
+		{
+			"message": "RRD API 400 Bad Request: InvalidArgument: Query(\"RRD query engine binding error: record type document is not registered at this cursor\")",
+			"name": "known_cursor",
+			"outcome": "unlocated",
+			"query": "FROM record:document AT VALID 100 KNOWN 1 PROJECT *"
+		},
+		{
+			"canonical": "FROM record:document AT VALID 100 KNOWN HEAD PROJECT * EXPLAIN ANALYZE",
+			"name": "explain_analyze",
+			"outcome": "accepted",
+			"query": "FROM record:document AT VALID 100 KNOWN HEAD PROJECT * EXPLAIN ANALYZE"
+		},
+		{
+			"message": "RRD API 400 Bad Request: InvalidArgument: Query(\"RRD query engine binding error: field \\\"properties.title\\\" is not present in the selected source\")",
+			"name": "dotted_field",
+			"outcome": "unlocated",
+			"query": "FROM record:document AT VALID 100 KNOWN HEAD PROJECT properties.title"
+		},
+		{
+			"message": "RRD API 400 Bad Request: InvalidArgument: Query(\"RRD query engine binding error: record type missing is not registered at this cursor\")",
+			"name": "unknown_kind",
+			"outcome": "unlocated",
+			"query": "FROM record:missing AT VALID 100 KNOWN HEAD PROJECT *"
+		},
+		{
+			"message": "RRD API 400 Bad Request: InvalidArgument: Query(\"RRD query engine binding error: field \\\"nope\\\" is not present in the selected source\")",
+			"name": "unknown_field",
+			"outcome": "unlocated",
+			"query": "FROM record:document AT VALID 100 KNOWN HEAD PROJECT nope"
+		},
+		{
+			"name": "unterminated_string",
+			"offset": 59,
+			"outcome": "refused",
+			"query": "FROM record:document AT VALID 100 KNOWN HEAD WHERE title = \"open PROJECT *",
+			"reason": "unterminated string literal"
+		},
+		{
+			"name": "unterminated_escape",
+			"offset": 59,
+			"outcome": "refused",
+			"query": "FROM record:document AT VALID 100 KNOWN HEAD WHERE title = \"open\\",
+			"reason": "unterminated string escape"
+		},
+		{
+			"name": "unsupported_escape",
+			"offset": 62,
+			"outcome": "refused",
+			"query": "FROM record:document AT VALID 100 KNOWN HEAD WHERE title = \"a\\x\" PROJECT *",
+			"reason": "unsupported string escape"
+		},
+		{
+			"name": "unsupported_escape_after_unicode",
+			"offset": 64,
+			"outcome": "refused",
+			"query": "FROM record:document AT VALID 100 KNOWN HEAD WHERE title = \"é𝄞\\é\" PROJECT *",
+			"reason": "unsupported string escape"
+		},
+		{
+			"canonical": "FROM record:document AT VALID 18446744073709551615 KNOWN HEAD PROJECT *",
+			"name": "integer_at_u64_max",
+			"outcome": "accepted",
+			"query": "FROM record:document AT VALID 18446744073709551615 KNOWN HEAD PROJECT *"
+		},
+		{
+			"name": "integer_beyond_u64",
+			"offset": 30,
+			"outcome": "refused",
+			"query": "FROM record:document AT VALID 18446744073709551616 KNOWN HEAD PROJECT *",
+			"reason": "integer is outside u64 range"
+		},
+		{
+			"name": "lone_bang",
+			"offset": 57,
+			"outcome": "refused",
+			"query": "FROM record:document AT VALID 100 KNOWN HEAD WHERE title ! \"a\" PROJECT *",
+			"reason": "unsupported query character"
+		},
+		{
+			"name": "lone_bang_after_unicode",
+			"offset": 76,
+			"outcome": "refused",
+			"query": "FROM record:document AT VALID 100 KNOWN HEAD WHERE title = \"é𝄞\" AND status ! \"a\" PROJECT *",
+			"reason": "unsupported query character"
+		},
+		{
+			"name": "misspelled_from",
+			"offset": 0,
+			"outcome": "refused",
+			"query": "FORM record:document AT VALID 100 KNOWN HEAD PROJECT *",
+			"reason": "expected FROM, found \"FORM\""
+		},
+		{
+			"name": "unknown_family",
+			"offset": 5,
+			"outcome": "refused",
+			"query": "FROM table:document AT VALID 100 KNOWN HEAD PROJECT *",
+			"reason": "unknown source family \"table\""
+		},
+		{
+			"name": "missing_colon",
+			"offset": 12,
+			"outcome": "refused",
+			"query": "FROM record document AT VALID 100 KNOWN HEAD PROJECT *",
+			"reason": "expected ':' after source family, found \"document\""
+		},
+		{
+			"name": "missing_at",
+			"offset": 21,
+			"outcome": "refused",
+			"query": "FROM record:document PROJECT *",
+			"reason": "expected AT, found \"PROJECT\""
+		},
+		{
+			"name": "ends_early",
+			"offset": 35,
+			"outcome": "refused",
+			"query": "FROM record:document AT VALID 100 KNOWN",
+			"reason": "expected known cursor, found end of query"
+		},
+		{
+			"name": "ends_inside_a_wide_word",
+			"offset": 6,
+			"outcome": "refused",
+			"query": "FROM é𝄞",
+			"reason": "expected ':' after source family, found end of query"
+		},
+		{
+			"name": "parameter_without_dollar",
+			"offset": 30,
+			"outcome": "refused",
+			"query": "FROM record:document AT VALID when KNOWN HEAD PROJECT *",
+			"reason": "parameter must begin with '$'"
+		},
+		{
+			"name": "invalid_field",
+			"offset": 51,
+			"outcome": "refused",
+			"query": "FROM record:document AT VALID 100 KNOWN HEAD WHERE ti-tle = \"a\" PROJECT *",
+			"reason": "invalid field or parameter name \"ti-tle\""
+		},
+		{
+			"name": "bare_word_value",
+			"offset": 59,
+			"outcome": "refused",
+			"query": "FROM record:document AT VALID 100 KNOWN HEAD WHERE title = open PROJECT *",
+			"reason": "expected string, unsigned integer, boolean, null, or $parameter"
+		},
+		{
+			"name": "unknown_comparison",
+			"offset": 57,
+			"outcome": "refused",
+			"query": "FROM record:document AT VALID 100 KNOWN HEAD WHERE title LIKE \"a\" PROJECT *",
+			"reason": "expected comparison operator, found \"LIKE\""
+		},
+		{
+			"name": "duplicate_where",
+			"offset": 63,
+			"outcome": "refused",
+			"query": "FROM record:document AT VALID 100 KNOWN HEAD WHERE title = \"a\" WHERE title = \"b\" PROJECT *",
+			"reason": "duplicate WHERE clause"
+		},
+		{
+			"name": "explain_alone",
+			"offset": 56,
+			"outcome": "refused",
+			"query": "FROM record:document AT VALID 100 KNOWN HEAD PROJECT * EXPLAIN",
+			"reason": "EXPLAIN requires CONTRACT or ANALYZE"
+		},
+		{
+			"name": "explain_twice",
+			"offset": 72,
+			"outcome": "refused",
+			"query": "FROM record:document AT VALID 100 KNOWN HEAD PROJECT * EXPLAIN CONTRACT EXPLAIN ANALYZE",
+			"reason": "duplicate EXPLAIN clause"
+		},
+		{
+			"name": "limit_zero",
+			"offset": 0,
+			"outcome": "refused",
+			"query": "FROM record:document AT VALID 100 KNOWN HEAD PROJECT * LIMIT 0",
+			"reason": "LIMIT must be greater than zero"
+		},
+		{
+			"name": "number_then_word",
+			"offset": 63,
+			"outcome": "refused",
+			"query": "FROM record:document AT VALID 100 KNOWN HEAD PROJECT * LIMIT 10abc",
+			"reason": "unexpected token \"abc\""
+		},
+		{
+			"name": "project_nothing",
+			"offset": 46,
+			"outcome": "refused",
+			"query": "FROM record:document AT VALID 100 KNOWN HEAD PROJECT",
+			"reason": "expected projection field, found end of query"
+		},
+		{
+			"name": "trailing_word",
+			"offset": 55,
+			"outcome": "refused",
+			"query": "FROM record:document AT VALID 100 KNOWN HEAD PROJECT * extra",
+			"reason": "unexpected token \"extra\""
+		},
+		{
+			"name": "depth_zero",
+			"offset": 67,
+			"outcome": "refused",
+			"query": "FROM traverse:depends_on START document:a DIRECTION OUTGOING DEPTH 0 AT VALID 100 KNOWN HEAD PROJECT *",
+			"reason": "traversal depth must be in 1..=32"
+		},
+		{
+			"name": "depth_too_deep",
+			"offset": 67,
+			"outcome": "refused",
+			"query": "FROM traverse:depends_on START document:a DIRECTION OUTGOING DEPTH 33 AT VALID 100 KNOWN HEAD PROJECT *",
+			"reason": "traversal depth must be in 1..=32"
+		},
+		{
+			"name": "depth_beyond_u16",
+			"offset": 67,
+			"outcome": "refused",
+			"query": "FROM traverse:depends_on START document:a DIRECTION OUTGOING DEPTH 70000 AT VALID 100 KNOWN HEAD PROJECT *",
+			"reason": "traversal depth must be in 1..=32"
+		},
+		{
+			"name": "unknown_direction",
+			"offset": 52,
+			"outcome": "refused",
+			"query": "FROM traverse:depends_on START document:a DIRECTION SIDEWAYS DEPTH 2 AT VALID 100 KNOWN HEAD PROJECT *",
+			"reason": "expected OUTGOING, INCOMING, or BOTH"
+		},
+		{
+			"name": "vertical_tab_is_not_space",
+			"offset": 0,
+			"outcome": "refused",
+			"query": "FROM\u000brecord:document AT VALID 100 KNOWN HEAD PROJECT *",
+			"reason": "expected FROM, found \"FROM\\u{b}record\""
+		}
+	],
+	"vectors": [
+		{
+			"ast": {
+				"contract_version": 1,
+				"explain_contract": true,
+				"filters": [
+					{
+						"field": "status",
+						"value": {
+							"kind": "literal",
+							"value": {
+								"type": "string",
+								"value": "open"
+							}
+						}
+					}
+				],
+				"limit": 10,
+				"projection": {
+					"fields": ["id", "status"],
+					"kind": "fields"
+				},
+				"source": {
+					"family": "record",
+					"kind": "document"
+				},
+				"temporal": {
+					"known_at": {
+						"kind": "head"
+					},
+					"valid_at": {
+						"kind": "literal",
+						"value": 100
+					}
+				}
+			},
+			"canonical": "FROM record:document AT VALID 100 KNOWN HEAD WHERE status = \"open\" PROJECT id, status LIMIT 10 EXPLAIN CONTRACT",
+			"source": "FROM record:document AT VALID 100 KNOWN HEAD WHERE status = \"open\" PROJECT id, status LIMIT 10 EXPLAIN CONTRACT"
+		},
+		{
+			"ast": {
+				"contract_version": 1,
+				"explain_contract": false,
+				"filters": [],
+				"projection": {
+					"kind": "all"
+				},
+				"source": {
+					"family": "relation",
+					"kind": "depends_on"
+				},
+				"temporal": {
+					"known_at": {
+						"kind": "parameter",
+						"value": "cursor"
+					},
+					"valid_at": {
+						"kind": "parameter",
+						"value": "when"
+					}
+				}
+			},
+			"canonical": "FROM relation:depends_on AT VALID $when KNOWN $cursor PROJECT *",
+			"source": "FROM relation:depends_on AT VALID $when KNOWN $cursor PROJECT *"
+		},
+		{
+			"ast": {
+				"contract_version": 1,
+				"explain_contract": false,
+				"filters": [],
+				"projection": {
+					"fields": ["subject", "object"],
+					"kind": "fields"
+				},
+				"source": {
+					"family": "claim",
+					"predicate": "status"
+				},
+				"temporal": {
+					"known_at": {
+						"kind": "literal",
+						"value": 7
+					},
+					"valid_at": {
+						"kind": "literal",
+						"value": 50
+					}
+				}
+			},
+			"canonical": "FROM claim:status AT VALID 50 KNOWN 7 PROJECT subject, object",
+			"source": "FROM claim:status AT VALID 50 KNOWN 7 PROJECT subject, object"
+		}
+	]
+}

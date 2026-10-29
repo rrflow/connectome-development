@@ -214,6 +214,29 @@ owner's desktop) were recorded on the unmerged `agent/connectome-theme` branch
       navigation from the operations and capabilities each view needs.
     - **Foundations first.** Each step is reviewed before the next. D1a's API
       tab moves into the documentation view when that view is re-authored.
+19. A view is available when its project's instance runs. This is the
+    owner's answer of 2026-10-28 to F4's question of what makes a view
+    available. An instance gets running in one of two ways:
+    - the user starts `rrflow` in the project folder, and its hooks lead the
+      AI to ask about indexing;
+    - the user starts that instance from Connectome, one or several in turn.
+
+    Connectome shows each instance's real startup status. Startup is fast,
+    so the status is never padded. It means:
+    - **Availability starts from the instance lifecycle.** Each project's
+      instance is stopped, starting (at the stage it has actually reached),
+      ready, stopping or failed, whichever way it was started.
+    - **An instance started elsewhere is found and proved.** RRFlow's served
+      endpoint record (`.rrflow/serving.json`, RRFlow H-07h) says where an
+      instance listens, and `rrflow ready --project` proves it. The record
+      is only a hint. The authenticated challenge grants readiness, and a
+      failed liveness check can only take it away.
+    - **Connectome stops only what it started.** It never stops an instance
+      started elsewhere, and closing Connectome leaves that instance running.
+    - **Inside a ready instance,** a view whose operation the instance does
+      not serve shows the engine's stated reason. The product capability
+      catalogue's static Connectome binding ("planned") does not gate a view.
+      This was recommended with the question and not contradicted.
 
 ## Ordered implementation slices
 
@@ -302,7 +325,7 @@ administration have no public route yet.
 | Parameters view | vendor global parameters | rrflowQL `$name` parameters bound per query; estate configuration owns lasting settings | yes | V1, V7 |
 | 2.x to 3.0 migration view | vendor version migration | an upgrade-and-restore check on RRFlow backup and restore (design open) | yes | V7 |
 | Query view | vendor query execution, live results, graph preview, formatting | `query-execute` with `EXPLAIN`, `traverse:` sources, `query-export`, live results through a native `/v1/ws` subscription | yes | V1 |
-| Editor language, highlighting, linting, formatting | vendor CodeMirror and Lezer language and WASM parser | a Connectome rrflowQL language built from RRFlow's lexer (`rrd-query/src/syntax.rs`) and tested against RRFlow's `query-vectors.json`; the engine (`EXPLAIN CONTRACT`) validates, the client only highlights; no formatter | yes | F3 |
+| Editor language, highlighting, linting, formatting | vendor CodeMirror and Lezer language and WASM parser | a Connectome rrflowQL language: RRFlow's tokenizer (`rrd-query/src/syntax.rs`) ported exactly, held to golden engine responses for RRFlow's `query-vectors.json` and a corpus; the engine validates when a query runs, and the native layer locates its parse refusal; the client only highlights; no formatter | yes | F3, then each V step |
 | Explorer, record inspector, data table, relation graph, map | vendor reads, creates, relates, updates and deletes; binary value types | `record:`, `relation:`, `geo:` and `traverse:` queries; transaction preview then commit with `PutRecord`, `PutRelation`, `PutGeo`, `RetireData`; one engine query per graph expansion | yes | F2, V2 |
 | Designer | vendor schema definitions and introspection | `data-schema-read` with the estate organisation; next registry revision through `PutSchema` with preview; `query-index-ensure` | yes (instance-level grant) | V3 |
 | Import and export | vendor statement import and export | `query-export` (Parquet), `backup-create`, `backup-list`, `restore-create`; typed record batches for import | yes, import as batches | V5 |
@@ -363,16 +386,43 @@ each one lands.
   are generated from the pinned engine's OpenAPI, replacing the inherited
   record identifiers, durations, decimals and geometry classes. Oracle: type
   tests over golden engine responses.
-- **F3: rrflowQL language** (formerly D3). A CodeMirror language built from
-  RRFlow's token set (salvaged from PR #10), with golden tests against
-  RRFlow's query vectors. The engine validates queries through
-  `EXPLAIN CONTRACT`; the client only highlights. It replaces the inherited
-  grammar, linter and WASM value parser everywhere.
+- **F3: rrflowQL language** (formerly D3). The engine's tokenizer, ported
+  exactly; a classifier that names each token by its place in the engine's
+  grammar; and a CodeMirror language built on them. Oracle: golden engine
+  responses for RRFlow's own query vectors and for a corpus of accepted and
+  refused queries. The engine validates: its parse refusal comes back with the
+  command that ran the query, and the native layer locates it in the editor.
+  The client only highlights. Amended on 2026-10-27 from reading the engine:
+  - At the pin, `EXPLAIN CONTRACT` does not stop a query from executing, and
+    no operation parses without executing. Validation therefore happens when
+    a query runs, not as the operator types.
+  - PR #10's scanner is not salvaged. It accepted comments, single quotes,
+    backticks and decimals that the engine refuses.
+  - The inherited views still run the inherited language. So the runtime
+    console adopts rrflowQL in F3, with captures, and each inherited view
+    adopts it in its own V step. The inherited grammar, linter and WASM value
+    parser leave with the last of those views.
 - **F4: view registry.** One registry of views. Each view names the
   operations and capabilities it needs, and navigation is derived from the
   engine's catalogue and capabilities. A view whose operation is unserved
   shows that capability state. Oracle: registry tests against the pinned
-  catalogue.
+  catalogue. Amended by decision 19 on 2026-10-28 and split, as F1 was:
+  - **F4a: instance lifecycle.** The native process keeps one lifecycle per
+    project, whichever way the instance was started.
+    - Opening a project whose instance already runs attaches to it, instead
+      of failing with "already open in another process".
+    - A known project started from its folder appears once it is proved.
+    - The project engines panel shows each instance's lifecycle, with
+      before/after captures.
+    - The engine pin moves to an RRFlow revision with H-07h.
+
+    Oracle: native tests over every lifecycle transition, and RRD process
+    tests that start an instance outside Connectome with `rrflow serve`.
+    Connectome attaches to it, refuses to stop it, sees it stop, and attaches
+    again after a restart on a new port.
+  - **F4b: view registry.** The registry described above. A view's
+    availability comes first from its instance's lifecycle, then from that
+    instance's endpoint catalogue and capability states.
 - **F5: characterisation.** Tests that pin the engine-neutral inherited
   components before they are re-pointed: the data table, the tables pane, the
   schema graph, the relation graph, the code editor, the inspector and
@@ -385,10 +435,10 @@ each one lands.
   - Knowledge tools served by the registry.
 
   An inherited route becomes reachable only once its view runs on RRFlow.
-- **V1: Query.** The inherited query view runs rrflowQL. That covers tabs,
-  saved queries and history; variables (which replace global parameters);
-  combined, single, table and graph results; `EXPLAIN` plans; live results;
-  and Parquet export.
+- **V1: Query.** The inherited query view runs rrflowQL, in F3's language.
+  That covers tabs, saved queries and history; variables (which replace
+  global parameters); combined, single, table and graph results; `EXPLAIN`
+  plans; live results; and Parquet export.
 - **V2: Records.** The explorer, inspector and creator: records by kind from
   the schema registry, an rrflowQL filter, typed cells, `traverse:`
   relations, and edits through transaction preview then commit. The relation
@@ -1182,3 +1232,309 @@ Branch `agent/f2-value-model` from F1b (`fd8f2daf`, PR #21), on engine pin
     18 checks);
   - `cargo fmt --check` and `cargo clippy --all-targets --locked -- -D warnings`;
   - the golden test, in write mode and in compare mode after formatting.
+
+### 2026-10-27 — Step F3: the rrflowQL editor language (decision 18)
+
+Branch `agent/f3-rrflowql-language` from F2 (`179d32e5`, PR #22), on engine
+pin `86adada6`.
+
+- **Read first:**
+  - the engine's `rrd-query/src/syntax.rs` (the grammar, the tokenizer and
+    the parser) and `fixtures/query-vectors.json`, at the pin;
+  - how a refusal reaches a client: `engine/error.rs` (a service error's
+    display is its debug form), `http/response.rs` (the error body carries
+    that display), the SDK's `error.rs`, and Connectome's `rrd/error.rs`;
+  - every use of `EXPLAIN CONTRACT` in the engine, and the operation
+    catalogue's query operations;
+  - PR #10's scanner (`src/rrflow/editor/lexical.ts`);
+  - every importer of `src/vendor/rrflowql-editor.ts` and `@surrealdb/lezer`,
+    and the inherited `CodeEditor`, editor base, theme and highlight tags.
+- **Findings that changed the plan:**
+  - **`EXPLAIN CONTRACT` does not stop execution.** At the pin it is carried
+    into the bound query and its canonical text, and nothing reads it after
+    that. No operation parses or binds without executing. The plan's "the
+    engine validates through `EXPLAIN CONTRACT`" would have run the whole query
+    on every keystroke. The engine validates when the query runs instead.
+  - **The parse location arrives only as debug text.** A refusal's error body
+    reads `Query("query parse error at byte N: …")`, with no structured details.
+    The parser reports its validation refusals (`LIMIT 0`, `PROJECT` with no
+    fields) at byte 0. It reports "end of query" one byte past the start of
+    the last token, which can fall inside a character.
+  - **PR #10's scanner is not salvaged.** It accepted comments, single quotes,
+    backticks and decimals that the engine refuses.
+  - **The inherited views still run the inherited language** over the
+    inherited client. Switching their editor now would mis-highlight and
+    mis-lint every query they run. F3 therefore supplies the language, and the
+    runtime console, which already runs rrflowQL against the engine, adopts it.
+    Each inherited view adopts it in its own V step.
+  - **Linking `rrd-query` natively is out.** It would bring DataFusion, Parquet
+    and `rrd-store` into Connectome, and it is a new dependency.
+- **The language:**
+  - **`src/rrflow/rrflowql.ts`:**
+    - `scan`, the engine's tokenizer ported exactly. It records the engine's
+      first lexical refusal and keeps going, so the rest of the query is still
+      drawn.
+    - `classify`, which names each token by its place in the engine's grammar.
+      It never refuses anything.
+    - `refusalRange`, which places an engine refusal on the token it names.
+  - **`src/rrflow/editor.ts`.** A CodeMirror language whose syntax tree comes
+    from `classify`. It uses the inherited grammar's highlight tags for the
+    same things.
+- **The refusal location.** `RrdError` gains `query: { offset, reason }` for
+  `rrd_query`, `rrd_query_export` and `rrd_live_open`.
+  - The native layer reads it from the engine's own error body: an
+    `invalid_argument` refusal in the pinned debug form, with the escapes
+    reversed.
+  - It converts the byte offset to UTF-16 units against the query it sent. An
+    offset inside a character counts that character.
+  - The webview's `RrdCommandError.query` carries it.
+- **The console.** The Records tab's RRFlowQL console moves from a text area
+  to the inherited `CodeEditor` with the new language.
+  - It is framed like the filled inputs around it, keeps at least the text
+    area's two lines, and starts its text where the text area did.
+  - Ctrl/⌘ + Enter still runs the query, above the base keymap's blank line.
+  - A refusal shows on the word the engine names, for as long as the editor
+    holds that query.
+  - The alert gives the parser's reason instead of the SDK's whole error
+    string. It quotes no character number: the engine puts "end of query" one
+    byte into the last token, so a number would point into a word.
+- **The golden.** The new RRD process test `rrd::client::process::language`:
+  - reads RRFlow's query vectors from the engine source Cargo checked out at
+    the pin, through `cargo metadata`, and requires each one to run and return
+    its canonical form;
+  - writes until the head reaches every cursor a vector names;
+  - runs 45 queries through the console's command, and requires
+    `src/rrflow/fixtures/engine-queries.json` to equal what the engine said.
+
+  The corpus covers every lexical refusal, the parser's refusals, binding
+  refusals that stay unlocated, offsets after characters wider than one UTF-16
+  unit, and `u64::MAX`.
+- **The check.** `scripts/check-rrflowql.mjs`, run by `pnpm check`, holds the
+  tokenizer and the classifier to the golden:
+  - every lexical refusal, at the engine's offset;
+  - no refusal where the engine tokenized;
+  - the token each quoted parse refusal names;
+  - each vector's family, kind, fields and parameters read where the engine's
+    parse put them.
+
+  Eight deliberate breakages each fail it. Two of them first passed, which
+  added the token-boundary check and `u64::MAX` to the corpus.
+- **Engine findings for RRFlow's POA&M,** raised after RRFlow PR #156 lands:
+  - transaction previews read the whole data scope and do not check objects;
+  - rrflowQL refusals carry no structure, and queries cannot be checked
+    without running.
+- **Verified locally:**
+  - `pnpm check`, which now includes the rrflowQL check (45 engine queries, 3
+    RRFlow vectors, 100 checks);
+  - `cargo fmt --check` and `cargo clippy --all-targets --locked -- -D warnings`;
+  - 43 native unit tests, and all 16 real-engine process tests;
+  - the editor language in a real CodeMirror state: every token tagged as
+    intended, refusals tagged invalid, and a reparse after an edit.
+- **Captures (decision 17).** The native desktop captures compare F2's head
+  (`179d32e5`) with F3 in both themes, with the same harness for both sides.
+  The first run found two real problems, both now fixed:
+  - the console's box was one line tall where the text area showed two, and
+    its text started 9 px further in;
+  - the clock reading in `AT VALID` was unmasked, because the harness matched
+    its patterns within single text nodes and the editor splits a line into
+    one node per token.
+
+  The harness changed with F3:
+  - it matches the masks over each editor line;
+  - it waits for the overview's own content, after a first launch painted a
+    blank window;
+  - it adds the step the console changes most: a query the engine refuses,
+    typed where the console takes text and run (`records-refused`).
+
+  Runs three and four found two more, both fixed:
+  - the new step clicked the autosizing text area's hidden copy;
+  - the alert quoted a character number that pointed into a word.
+
+  The final compare covers 40 pairs per theme. In dark: 9 identical, 21
+  negligible, none changed and 10 dynamic. In light: 9 identical, 21
+  negligible, none changed and 10 dynamic. The dynamic screens were reviewed
+  by eye:
+  - the console's query and traversal show the same query and rows,
+    highlighted;
+  - the refused query shows the engine's reason with `KNOWN` underlined, where
+    F2 showed the SDK's whole error string.
+
+  Across the runs, three screens F3 does not touch each changed once, every
+  time from capture timing:
+  - the serving progress, taken three seconds into an installation, which
+    flipped direction between runs;
+  - the vector map's node labels, drawn late;
+  - the vector map's scroll and zoom.
+
+  A follow-up for the harness: those three screens should wait for a settled
+  state or be classed as dynamic.
+
+### 2026-10-28 — Step F4a: each project's instance lifecycle (decision 19)
+
+Branch `agent/f4a-instance-lifecycle` from F3 (`2670b09b`, PR #23). The
+engine pin moves from `86adada6` to `89ec21ea` (trial), RRFlow `main` with
+H-07h (#175), and then to `c1557fe5`, RRFlow `main` with #173, #174 and
+#159.
+
+- **Read first:**
+  - the native serve path (`rrd/estate.rs`), its registry, the four estate
+    commands and the process tests that drive them;
+  - the native client's loopback and capability handling (`rrd/client.rs`);
+  - the webview's adapter, serving store, project engines panel, served
+    connection and every reader of `isServing` and `servedEstate`;
+  - the native capture harness;
+  - at RRFlow `main`:
+    - the served endpoint record contract
+      (`installed-lifecycle.md#served-endpoint-record`);
+    - `rrflow serve` and `rrflow ready` in `rrflow-cli/src/installed.rs`;
+    - the SDK's `readiness` and `capabilities`;
+    - the endpoint, capability and product capability types;
+    - the Connectome client contract's capability-truth and multi-instance
+      sections.
+- **Decision 19** records the owner's answer of 2026-10-28 in the authority
+  decisions, and F4 is split into F4a and F4b in the ordered increments.
+- **What the contract allows.** A PID, port, TCP handshake or JSON file is not
+  readiness (`installed-lifecycle.md`). So:
+  - Connectome treats the served endpoint record only as a hint of where to
+    look;
+  - `rrflow --json ready --project` grants readiness with its authenticated
+    challenge;
+  - the liveness check after it can only take readiness away. It reads the
+    public capabilities, whose instance identity the SDK checks, so another
+    process on the same port does not pass;
+  - a status read never authenticates. `rrflow ready` opens and closes a
+    session, and both write to the estate.
+- **The native registry (`rrd/estate/lifecycle.rs`).**
+  - **One lifecycle per project:** starting at the stage it reached, ready,
+    stopping or failed. A project with no entry is stopped. Every transition
+    is numbered and sent as `estate:lifecycle`.
+  - **Opening an installed project** resolves the engine, then looks for a
+    record.
+    - A record that proves itself is attached, instead of the start failing
+      with "already open in another process".
+    - A record that does not prove itself is stale, and `rrflow serve`
+      replaces it.
+    - A refusal the proof itself raises fails the start.
+  - **A status read takes the known projects:**
+    - an owned engine that exited becomes failed, with its exit status;
+    - an attached instance that no longer answers as itself becomes
+      stopped, with the reason;
+    - a known project whose record is new since its last failed proof is
+      proved once and attached.
+  - **Stop applies only to engines this desktop started.** For an attached
+    instance it refuses: "started outside Connectome; stop it where it was
+    started". On a failed entry it dismisses the failure. A failure holds
+    no engine slot.
+  - **Contract check.** Every ready report, owned or attached, must show the
+    exact OpenAPI document of the pinned `rrd-contract`. An instance on
+    another RRFlow revision is refused before a native session or the
+    webview's SDK meets it.
+  - **The engine's own reason.** A serve that stops before announcing now
+    reports the engine's last line, for example "already open in another
+    process; its served endpoint is recorded at …". Before, it reported
+    only "did not announce its address".
+- **The webview.**
+  - `projectInstances(projects)` replaces `servedEstates()`.
+  - The store keeps each project's newest numbered view. A stopped instance
+    stays as a stopped entry, so an older status read cannot bring it back.
+    `isServing` and `servedEstate` are derived from it, for the screens that
+    show one estate.
+  - A connection records its project directory. Older connections derive it
+    from their credential path.
+  - The project engines panel lists every known project with its real state
+    and the actions that state allows:
+    - Start, for a stopped project;
+    - Open, and Stop only if Connectome started it, for a ready one;
+    - Try again and Dismiss, for a failed one.
+
+    A starting instance shows the stage it actually reached. The panel
+    reads the registry every two seconds while open and every five
+    otherwise.
+- **Oracles.**
+  - **Native tests:**
+    - reservation and capacity;
+    - failures kept, replaced, dismissed and holding no engine;
+    - numbered transitions;
+    - an attached instance never stopped;
+    - a lost instance stopped;
+    - a stale record proved once until it changes.
+  - **The real-engine test** `rrd::client::process::elsewhere` serves the
+    project with its own `rrflow serve`:
+    - a killed server's record proves nothing, once;
+    - the outside instance is found, proved, attached and read through a
+      native session, from a fresh registry too;
+    - the ready report is held to the contract, and a tampered one is
+      refused;
+    - a second serve reports the engine's reason;
+    - Connectome refuses to stop it;
+    - its loss is seen;
+    - Connectome serves over the stale record;
+    - dropping that registry stops its engine;
+    - an outside restart on a new port is attached again.
+- **Four deliberate breakages,** each run against the real engine or the
+  native tests, failed where they should:
+  - skipping the attach step failed at the fresh registry's open;
+  - dropping the contract comparison let the tampered report through;
+  - dropping the proved-once rule proved the same record twice;
+  - holding the registry strongly from the start's observer left the engine
+    running after its registry was dropped.
+
+  The first run of the attach breakage hung: an orphaned server kept the
+  test's output pipe open. That exposed a real reference cycle. The engine's
+  console thread holds the start's observer, which held the registry that
+  owns the engine. The observer now holds the registry weakly, and the drop
+  check above is its oracle. The same run showed that a fresh registry is
+  needed to reach the attach step, and that the engine's reason was being
+  lost, so both were added.
+- **Engine pin.** `89ec21ea` is a trial pin. It moves to the RRFlow `main` that
+  carries #173, #174 and #159 (H-11a) once they land, before this step merges.
+  Both goldens were rewritten from the engine; after formatting, only their
+  engine revision changed.
+- **Verified locally** (Windows, engine `89ec21ea`, sidecar SHA-256
+  `b0d46362…`):
+  - `pnpm check` (57 API reference operations; 12 engine values, 18 checks;
+    45 engine queries and 3 RRFlow vectors, 100 checks);
+  - `cargo fmt --check` and `cargo clippy --all-targets --locked -- -D
+    warnings`;
+  - 46 native unit tests;
+  - all 17 real-engine process tests.
+- **Captures (decision 17), trial pin.** F3's head (`2670b09b`, engine
+  `86adada6`) was compared against F4a (engine `89ec21ea`), in both themes,
+  with the same harness. Each theme has 40 pairs: 8 identical, 18 negligible,
+  10 dynamic and 4 changed.
+  - **The project engines panel** changed as intended. The row now shows the
+    project's name, a state badge, its path and what the state means, above
+    the same actions.
+  - **Three API reference screens** changed because the catalogue at
+    `89ec21ea` has two more operations, `attunement-read` and
+    `attunement-cancel`, which move every later topic down. Their layout is
+    unchanged.
+  - **The dynamic screens** were reviewed by eye. Only counter values and the
+    widths of masked text differ.
+  - **The serving progress screen** is taken three seconds into installation.
+    It now always shows the opened workbench, because the start has finished
+    by then. So the harness gains a step that stops the project from its row
+    and starts it again, and the stopped and restarted rows are captured.
+
+  The final captures are taken after the engine pin moves to the stack's
+  `main`.
+- **Final pin** (2026-10-29). RRFlow #174 landed, then #159 as `main`
+  `c1557fe5`, and the pin moved there. Both goldens were rewritten from that
+  engine; only their revision changed. Verified locally (Windows, engine
+  `c1557fe5`, sidecar SHA-256 `b413e378…`):
+  - `pnpm check`: 58 API reference operations; 12 engine values, 18 checks;
+    45 engine queries and 3 RRFlow vectors, 100 checks;
+  - `cargo fmt --check` and `cargo clippy --all-targets --locked -- -D
+    warnings`;
+  - 46 native unit tests;
+  - all 17 real-engine process tests.
+- **Final captures (decision 17).** F3's head (`2670b09b`, engine
+  `86adada6`) against F4a at `c1557fe5`, both themes, the same harness: 40
+  pairs per theme, 8 identical, 18 negligible, 10 dynamic and 4 changed, as
+  at the trial pin.
+  - **The project engines panel** changed as intended.
+  - **The three API reference screens** list the catalogue at `c1557fe5`. It
+    has three more operations than F3's pin (`attunement-read`,
+    `attunement-cancel` and `attunement-receipt-read`), and some of its
+    descriptions are newer engine text. Topics move down and a few lines
+    rewrap; the layout is unchanged.

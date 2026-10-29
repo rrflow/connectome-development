@@ -625,23 +625,40 @@ export interface RrdVectorSearchRequest {
 }
 
 /**
+ * Where the engine's parser refused a query a command sent: `offset` counts
+ * UTF-16 code units into the query, and `reason` is the parser's own words.
+ */
+export interface RrdQueryError {
+	offset: number;
+	reason: string;
+}
+
+/**
  * A failed native RRD command. `retryable` is the engine's own classification:
  * it marks a transient storage conflict retryable, such as a diagnostic read
- * that requests landing meanwhile kept changing.
+ * that requests landing meanwhile kept changing. `query` locates a parse
+ * refusal of the query the command sent.
  */
 export class RrdCommandError extends Error {
 	readonly retryable: boolean;
+	readonly query: RrdQueryError | null;
 
-	constructor(message: string, retryable: boolean) {
+	constructor(message: string, retryable: boolean, query: RrdQueryError | null = null) {
 		super(message);
 		this.name = "RrdCommandError";
 		this.retryable = retryable;
+		this.query = query;
 	}
 }
 
 /** Whether a failure is the engine asking to be asked again later. */
 export function isRetryable(error: unknown): boolean {
 	return error instanceof RrdCommandError && error.retryable;
+}
+
+/** Where the engine refused a query, when a failure is that refusal. */
+export function queryRefusal(error: unknown): RrdQueryError | null {
+	return error instanceof RrdCommandError ? error.query : null;
 }
 
 /** Invokes a native RRD command, turning its error into an `Error`. */
@@ -651,7 +668,11 @@ async function call<T>(command: string, args?: InvokeArgs): Promise<T> {
 	} catch (error) {
 		if (typeof error === "object" && error !== null && "message" in error) {
 			const retryable = "retryable" in error && error.retryable === true;
-			throw new RrdCommandError(String(error.message), retryable);
+			const query =
+				"query" in error && typeof error.query === "object" && error.query !== null
+					? (error.query as RrdQueryError)
+					: null;
+			throw new RrdCommandError(String(error.message), retryable, query);
 		}
 		throw error instanceof Error ? error : new Error(String(error));
 	}
