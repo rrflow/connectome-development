@@ -1,4 +1,5 @@
 import { Channel, type InvokeArgs, invoke, isTauri } from "@tauri-apps/api/core";
+import type { VectorQuantizationMethod } from "./model";
 
 /*
  * Authenticated RRD session views.
@@ -7,10 +8,11 @@ import { Channel, type InvokeArgs, invoke, isTauri } from "@tauri-apps/api/core"
  * and validates each response inside the Tauri process. These interfaces are
  * Connectome view models: the bounded projections `src-tauri/src/rrd/view.rs`
  * serializes for the Database, Vectors, and Storage lenses, and those its
- * `effect` and `history` modules serialize for changes, backups, exports, the
- * changefeed and the audit chain. The operator credential and the session
- * bearer never cross into the webview; a pending change and a held export
- * cross only as opaque handles.
+ * `effect`, `history` and `quantization` modules serialize for changes,
+ * backups, exports, the changefeed, the audit chain and quantized search
+ * generations. The operator credential and the session bearer never cross
+ * into the webview; a pending change, a proposed lifecycle step and a held
+ * export cross only as opaque handles.
  */
 
 export interface RrdReference {
@@ -225,10 +227,103 @@ export interface RrdVectorSearchView {
 	exact: boolean;
 	known_at_cursor: number;
 	keys_examined: number;
+	/** Vectors the search read at full precision. */
 	canonical_candidates: number;
+	/** Candidates the engine's plan expected to score. */
 	selected_candidates: number;
+	/** Candidates the exact scorer reranked; 0 for an exact search. */
+	exact_rerank: number;
+	/** Points written after the generation, searched exactly beside it. */
+	overlay_candidates: number;
+	/** The quantized generation an approximate search read. */
+	selected_generation: number | null;
 	loaded_artifact_bytes: number;
 	hits: RrdHitView[];
+}
+
+/** One quantized search generation of a named vector. */
+export interface RrdGenerationView {
+	artifact_id: string;
+	collection_id: string;
+	vector_name: string;
+	method: VectorQuantizationMethod;
+	state: "ready" | "active" | "retired";
+	generation: number;
+	source_cursor: number;
+	indexed_vectors: number;
+	packed_vector_bytes: number;
+	full_precision_vector_bytes: number;
+	auxiliary_bytes: number;
+	maximum_compression_ratio: number;
+	configuration_sha256: string;
+	artifact_sha256: string;
+	object_sha256: string;
+	object_length: number;
+	built_at_unix_ms: number;
+	lifecycle_revision: number;
+}
+
+/** The generations of one named vector, by artifact and then newest first. */
+export interface RrdQuantizationsView {
+	collection_id: string;
+	vector_name: string;
+	lifecycle_revision: number;
+	generations: RrdGenerationView[];
+	/** The engine returned as many as were asked for; there may be more. */
+	truncated: boolean;
+}
+
+/** One lifecycle step as the webview proposes it. */
+export type RrdQuantizationStep =
+	| {
+			step: "build";
+			collection_id: string;
+			vector_name: string;
+			method: VectorQuantizationMethod;
+	  }
+	| { step: "activate" | "retire"; artifact_id: string; generation: number };
+
+/**
+ * A lifecycle step held natively under `handle`. `request` is exactly what
+ * applying it sends, scope and key budget included.
+ */
+export interface RrdQuantizationProposalView {
+	handle: string;
+	step: RrdQuantizationStep["step"];
+	operation: string;
+	request: Record<string, unknown>;
+}
+
+export interface RrdQuantizationAppliedView {
+	step: RrdQuantizationStep["step"];
+	generation: RrdGenerationView;
+	/** The engine had already applied this step and returned its recorded result. */
+	idempotent_replay: boolean;
+	/** For a build: the vector versions it encoded and the keys it read. */
+	selected_versions: number | null;
+	keys_examined: number | null;
+}
+
+/** One side of a comparison, without the query point, timed natively. */
+export interface RrdComparedSearchView {
+	search: RrdVectorSearchView;
+	round_trip_ms: number;
+}
+
+/** Exact and approximate search for one example, side by side. */
+export interface RrdVectorCompareView {
+	query: RrdReference;
+	top_k: number;
+	exact: RrdComparedSearchView;
+	/** Absent when the engine refused to search approximately. */
+	approximate: RrdComparedSearchView | null;
+	/** The engine's reason, when it refused. */
+	approximate_refusal: string | null;
+	/** Approximate hits that are exact neighbours, counting ties at the cut. */
+	matched: number;
+	recall: number | null;
+	/** Both searches read the estate at the same cursor. */
+	same_cursor: boolean;
 }
 
 export interface RrdMapPointView {
@@ -624,6 +719,16 @@ export interface RrdVectorSearchRequest {
 	top_k: number;
 }
 
+export interface RrdVectorCompareRequest {
+	collection_id: string;
+	vector_name: string;
+	example: RrdReference;
+	/** Neighbours to compare, not counting the query point. */
+	top_k: number;
+	/** Candidates the approximate search reranks exactly: more than `top_k`. */
+	exact_rerank: number;
+}
+
 /**
  * Where the engine's parser refused a query a command sent: `offset` counts
  * UTF-16 code units into the query, and `reason` is the parser's own words.
@@ -761,6 +866,52 @@ export class RrdSessionClient {
 		const progress = new Channel<RrdVectorMapProgressView>();
 		if (onProgress) progress.onmessage = onProgress;
 		return this.call<RrdVectorMapView>("rrd_vector_map", { request, onProgress: progress });
+	}
+
+	/** The quantized search generations of one named vector. */
+	async vectorQuantizations(
+		collectionId: string,
+		vectorName: string,
+	): Promise<RrdQuantizationsView> {
+		this.requireNative();
+		return this.call<RrdQuantizationsView>("rrd_vector_quantizations", {
+			request: { collection_id: collectionId, vector_name: vectorName },
+		});
+	}
+
+	/**
+	 * Holds a lifecycle step natively and returns the exact request applying it
+	 * sends; nothing reaches the engine. A newer proposal replaces it.
+	 */
+	async proposeQuantization(step: RrdQuantizationStep): Promise<RrdQuantizationProposalView> {
+		this.requireNative();
+		return this.call<RrdQuantizationProposalView>("rrd_vector_quantization_propose", {
+			request: step,
+		});
+	}
+
+	/**
+	 * Applies a proposed step exactly as proposed. Applying it again after a
+	 * failure whose outcome is unknown returns the engine's recorded result.
+	 */
+	async applyQuantization(
+		proposal: RrdQuantizationProposalView,
+	): Promise<RrdQuantizationAppliedView> {
+		this.requireNative();
+		return this.call<RrdQuantizationAppliedView>("rrd_vector_quantization_apply", {
+			request: { handle: proposal.handle },
+		});
+	}
+
+	async discardQuantization(handle: string): Promise<void> {
+		this.requireNative();
+		await this.call<void>("rrd_vector_quantization_discard", { handle });
+	}
+
+	/** Exact and approximate search for one stored example, side by side. */
+	async vectorCompare(request: RrdVectorCompareRequest): Promise<RrdVectorCompareView> {
+		this.requireNative();
+		return this.call<RrdVectorCompareView>("rrd_vector_compare", { request });
 	}
 
 	/**
