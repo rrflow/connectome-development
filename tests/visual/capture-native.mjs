@@ -626,7 +626,13 @@ try {
 			.first()
 			.click();
 		await wait(4000);
-		await into(page.getByText("Exact and approximate, side by side", { exact: true }).first());
+		// The comparison is taller than the space below the map, so it is
+		// brought to the top of the window to show its lists and evidence.
+		await page
+			.getByText("Exact and approximate, side by side", { exact: true })
+			.first()
+			.evaluate((element) => element.scrollIntoView({ block: "start" }));
+		await wait(1200);
 		await shot("vectors-compare");
 		await page.getByTitle("Show its digests").first().click();
 		await wait(1000);
