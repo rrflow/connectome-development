@@ -1586,3 +1586,143 @@ RRFlow #184 to #187), which serves the quantization lifecycle.
     resource evidence), the four `rrd-client` methods, and the lifecycle
     reference (`docs/reference/vector/quantization-lifecycle.md`), including
     its replay rules.
+- **Decision 20** records the owner's direction of 2026-10-28, quoted, and T1
+  joins the ordered increments. The rebuild table's vector index row now names
+  only the HNSW build, which no public operation serves.
+- **Engine pin:** `89ec21ea` → `50349d75` (trial). That revision is the head of
+  RRFlow's E-04 stack: #187 after the owner merged `main` `57b9a355` into it.
+  Both goldens were rewritten from the engine; after formatting, only their
+  engine revision changed. Sidecar SHA-256 `42631220…`.
+- **Native lifecycle** (`rrd/client/quantization.rs`, a governed-effect module
+  beside `transaction` and `backup`):
+  - `rrd_vector_quantizations` lists one named vector's generations, by
+    artifact and then newest first.
+  - `rrd_vector_quantization_propose` builds the exact request for a build, an
+    activation or a retirement and holds it under a handle. This process sets
+    the scope and the key budget, and the contract's own validation runs
+    before anything is held. The webview chooses only the vector, the method
+    and the generation, and cannot add a field.
+  - `rrd_vector_quantization_apply` names only the handle. Every attempt sends
+    the options the proposal drew, so one idempotency key, and only an attempt
+    whose outcome is unknown keeps the step pending. A newer proposal replaces
+    it, and `rrd_vector_quantization_discard` ends it.
+- **Native comparison** (`rrd_vector_compare`):
+  - It retrieves the example's vector once, then runs an exact search and a
+    `require_approximate` search with the session already pinned. Each SDK call
+    is timed alone.
+  - Both lists drop the query point and keep `top_k` hits.
+  - Recall@k counts an approximate hit above the cut when it is an exact
+    neighbour, and hits that tie the cut up to the number of exact neighbours
+    that tie it. Approximate hits are exact-reranked, so their scores are
+    exact.
+  - A non-retryable engine refusal becomes the comparison's
+    `approximate_refusal`. Any other failure fails the command.
+  - The search view keeps the exact-rerank width, the overlay candidates and
+    the selected generation, which the projection used to drop.
+- **The Vectors lens, in place:**
+  - **A badge** after the embedding model names the active generation ("TurboQuant
+    4 bits · generation 1"), or says the lens has exact search only.
+  - **"Search generations"** sits between the map and the stored points:
+    - one row per generation with its method (bits and seed), state, source
+      cursor, vectors encoded, packed size against full precision, and build
+      time;
+    - a row opens its artifact, digests, object size, auxiliary bytes, the
+      method's largest ratio and the lifecycle revision;
+    - Build opens a method form (TurboQuant bits and seed, scalar, product
+      compression, binary). It then shows the held request as JSON before
+      Build sends it. Activate and Retire open the held request directly.
+    - An unsettled attempt says the step may have been applied and offers
+      "Apply again", which the engine answers with its recorded result.
+  - **Exact and approximate, side by side,** for the record selected on the
+    map. Neighbours (5, 10 or 20) and the exact-rerank width (the hits, twice
+    or four times them) are chosen beside it:
+    - recall@k, round trips, keys examined and vectors read at full precision
+      as stats;
+    - both ranked lists, with an exact neighbour the approximate search missed
+      and an approximate hit outside the exact list marked, and a tie at the
+      cut marked as a tie;
+    - an evidence table: access path, round trip, keys examined, vectors read
+      at full precision, candidates the plan expected to score, reranked
+      exactly, written since the generation, generation bytes loaded, and
+      cursor;
+    - without an active generation, the exact list beside "No generation is
+      active" and the engine's own words.
+  - The glossary gains search generation, TurboQuant, exact rerank and
+    recall@k.
+  - Unchanged: the map, its build, the selected-record panel (still exact,
+    with its footer) and the stored points.
+- **Found while implementing:**
+  - The exact access path is named `exact_scan`.
+  - `canonical_candidates` counts the vectors a search read at full precision
+    and `selected_candidates` the candidates its plan expected to score. On the
+    fixture at the narrowest rerank, TurboQuant planned 8 and read 4 at full
+    precision. The comparison labels them so. The panel's footer ("8 of 8
+    candidates compared") is only ever exact, where its words hold.
+  - The engine refuses an approximate search with
+    `Vector("invalid runtime object: no vector access path satisfies the
+    request contract")`. That is `ServiceError`'s debug form, the root cause
+    RRFlow's POAM-044 records for query refusals. The lens shows the engine's
+    words beneath its own explanation and parses nothing.
+  - The engine's diagnostic graph, which the Records card counts, holds
+    engine-owned records. Before T1 its 12 records were the 8 documents and 4
+    runtime traces. A build and an activation add 4 traces, one
+    `vector_quantization_artifact` and two `vector_quantization_lifecycle`
+    revisions, so the card reads 19. T1 does not change that graph; V2
+    re-authors Records onto the schema registry's kinds.
+  - On the 8-vector fixture TurboQuant reads more keys than an exact scan (70
+    against 55 at a rerank of 22). Reading the catalogue, the generation and
+    its delta costs more than scanning 8 vectors. The comparison reports what
+    it measured; RRFlow J-04 owns claims at scale.
+  - The harness's point selection clicked the first button in any table. It
+    is scoped to the stored points table, since the lens now has two.
+- **Deliberate breakages,** each restored, each failing where it should:
+  - a retry that draws a fresh idempotency key fails the process test's lost
+    reply (`ready.idempotent_replay`);
+  - a comparison that fails on an engine refusal fails it before activation;
+  - lists that keep the query point fail its exact-neighbour check;
+  - ties filling more slots than the cut has fail the recall unit test (3, not
+    2).
+- **Verified locally** (Windows, engine `50349d75`):
+  - `pnpm check` (61 API reference operations; 12 engine values, 18 checks;
+    45 engine queries and 3 RRFlow vectors, 100 checks);
+  - `cargo fmt --check` and `cargo clippy --all-targets --locked -- -D
+    warnings`;
+  - 50 native unit tests, 4 of them new;
+  - all 18 real-engine process tests, including the new
+    `rrd::client::process::quantization`: refused before activation, a lost
+    build reply settled as the engine's replay, a spent and a replaced handle
+    applying nothing, TurboQuant beside exact at the narrowest rerank with
+    recall 1, and refused again after retirement.
+- **Captures (decision 17), trial pin.** F4a's head (`88c13a84`, engine
+  `89ec21ea`) was compared against T1 (engine `50349d75`), in both themes, with
+  T1's harness on both sides. Each theme has 42 pairs and 7 new screens. Dark:
+  8 identical, 14 negligible, 10 dynamic and 10 changed. Light: 8 identical,
+  15 negligible, 10 dynamic and 9 changed.
+  - **The Vectors lens** changed as intended: the "exact search only" badge,
+    and the Search generations section below the map, which moves the stored
+    points down. The map and its facts are unchanged.
+  - **`vectors-points` and `vectors-nearest`** show the same content lower on
+    the page. The harness scrolls to the same elements, which now sit further
+    down. The map, the selected record's panel with its scores and footer, and
+    the points table are unchanged.
+  - **The glossary panel** lists the four new terms.
+  - **Three API reference screens** list the trial pin's four quantization
+    operations. Their layout is unchanged.
+  - **Advanced details, Explore project knowledge and the stopped project's
+    row** differ only in run-dependent text. The new steps build and activate
+    a generation before the panels are taken, so the records in view
+    (12 → 19), the read cursor and the table count move. A masked port of
+    another width rewraps one line, and the session message behind the stopped
+    row depends on how far the stop had got.
+  - **New screens:** the empty section, the build form, the held build
+    request, the built generation, the held activation, the comparison, and a
+    generation's details. The comparison shows recall@10 of 1.00, both lists
+    and the evidence table, in both themes.
+  - **The harness** scrolls the comparison to the top of the window, because
+    it is taller than the space below the map. The new screens show
+    run-dependent digests, so the compare reviews them by eye.
+
+  The final captures are taken after the engine pin moves to RRFlow `main`
+  with the E-04 stack.
+- **Not run here:** macOS and Linux. Connectome's candidate CI runs the checks,
+  the native suites and the RRD process tests there.
