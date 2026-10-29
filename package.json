@@ -76,7 +76,7 @@
 		"@mantine/notifications": "8.3.14",
 		"@mdi/js": "^7.4.47",
 		"@replit/codemirror-indentation-markers": "^6.5.0",
-		"@rrflow/rrd-client": "github:rrflow/rrflow-development#89ec21eaa7fc129e6c532a3bb9f0ce1b57a9f3f9&path:sdks/typescript",
+		"@rrflow/rrd-client": "github:rrflow/rrflow-development#c1557fe58a2f8c422168d29519b6119fefee6acc&path:sdks/typescript",
 		"@sigma/edge-curve": "^3.1.0",
 		"@sigma/node-border": "^3.0.0",
 		"@surrealdb/codemirror": "1.0.3",
