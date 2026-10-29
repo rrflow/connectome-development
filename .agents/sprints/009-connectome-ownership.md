@@ -1373,7 +1373,8 @@ pin `86adada6`.
 
 Branch `agent/f4a-instance-lifecycle` from F3 (`2670b09b`, PR #23). The
 engine pin moves from `86adada6` to `89ec21ea` (trial), RRFlow `main` with
-H-07h (#175).
+H-07h (#175), and then to `c1557fe5`, RRFlow `main` with #173, #174 and
+#159.
 
 - **Read first:**
   - the native serve path (`rrd/estate.rs`), its registry, the four estate
@@ -1517,3 +1518,23 @@ H-07h (#175).
 
   The final captures are taken after the engine pin moves to the stack's
   `main`.
+- **Final pin** (2026-10-29). RRFlow #174 landed, then #159 as `main`
+  `c1557fe5`, and the pin moved there. Both goldens were rewritten from that
+  engine; only their revision changed. Verified locally (Windows, engine
+  `c1557fe5`, sidecar SHA-256 `b413e378…`):
+  - `pnpm check`: 58 API reference operations; 12 engine values, 18 checks;
+    45 engine queries and 3 RRFlow vectors, 100 checks;
+  - `cargo fmt --check` and `cargo clippy --all-targets --locked -- -D
+    warnings`;
+  - 46 native unit tests;
+  - all 17 real-engine process tests.
+- **Final captures (decision 17).** F3's head (`2670b09b`, engine
+  `86adada6`) against F4a at `c1557fe5`, both themes, the same harness: 40
+  pairs per theme, 8 identical, 18 negligible, 10 dynamic and 4 changed, as
+  at the trial pin.
+  - **The project engines panel** changed as intended.
+  - **The three API reference screens** list the catalogue at `c1557fe5`. It
+    has three more operations than F3's pin (`attunement-read`,
+    `attunement-cancel` and `attunement-receipt-read`), and some of its
+    descriptions are newer engine text. Topics move down and a few lines
+    rewrap; the layout is unchanged.
