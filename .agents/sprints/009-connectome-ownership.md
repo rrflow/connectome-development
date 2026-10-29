@@ -237,6 +237,28 @@ owner's desktop) were recorded on the unmerged `agent/connectome-theme` branch
       not serve shows the engine's stated reason. The product capability
       catalogue's static Connectome binding ("planned") does not gate a view.
       This was recommended with the question and not contradicted.
+20. Real views over what the engine serves, TurboQuant first. This is the
+    owner's correction of 2026-10-28. It came after an F4b draft, never
+    pushed, had replaced the fixed "unavailable" badges with notices that a
+    view is not in Connectome yet: "I should see that projects knowledge
+    paths, I should be able to edit and see the QL graphs, the schemas being
+    generated once the planning is done and ready for hand off, turboquant,
+    and properly taking the time to expand the UI properly and not just
+    blindly rush this and get all old code written connectome from surreal".
+    Asked what comes first, the owner answered "we build out systems that
+    leverage turboquants". "The schemas" means both the plan and handoff
+    records and the data schemas the plan produces. It means:
+    - **A served operation gets its real view.** The view shows what the
+      engine serves, edits it through the engine's governed path, and graphs
+      it. A notice that a view is missing is not a view, so F4b is reworked
+      to this.
+    - **TurboQuant first.** RRFlow's [E-04 TurboQuant plan](https://github.com/rrflow/rrflow-development/blob/main/docs/roadmap/e04-turboquant-persistent-serving-engineering-plan.md)
+      orders the engine work. Its package 4 is this sprint's first consumer:
+      per named vector, build, activate and retire generations, and compare
+      exact with TurboQuant search. That is step T1 below.
+    - **The other named views follow,** each over the engine operation that
+      serves it: project knowledge paths, editable rrflowQL graph results,
+      and plan and handoff records with the schemas they produce.
 
 ## Ordered implementation slices
 
@@ -423,6 +445,29 @@ each one lands.
   - **F4b: view registry.** The registry described above. A view's
     availability comes first from its instance's lifecycle, then from that
     instance's endpoint catalogue and capability states.
+- **T1: TurboQuant in the Vectors lens** (decision 20). The runtime
+  workbench's Vectors lens is RRFlow-native, so it grows in place ahead of F5
+  and S1, which concern the inherited views. It needs RRFlow's public
+  quantization lifecycle (H-04q2, RRFlow #187), so the engine pin moves to an
+  RRFlow revision that serves it.
+  - **Generations.** Per named vector, the lens lists every quantization
+    generation the engine holds, with its state, method (bits and seed for
+    TurboQuant), generation, source cursor, vectors encoded, sizes and
+    digests.
+  - **Build, activate and retire are governed effects.** The native process
+    holds the exact request under a handle and the operator confirms it. A
+    retry repeats that request's idempotency key, so the engine answers a
+    lost reply with its recorded result instead of applying it twice.
+  - **Exact and TurboQuant side by side.** For the selected record, both
+    searches run and both hit lists are shown, with recall@k against exact,
+    each search's round trip, keys examined, candidates compared and artifact
+    bytes loaded. Exact search stays the lens's default, and the map stays
+    exact.
+
+  Oracle: native tests of the request and recall rules; an RRD process test
+  that is refused before activation, then builds, activates, compares,
+  replays and retires against a real engine; and before/after captures
+  (decision 17).
 - **F5: characterisation.** Tests that pin the engine-neutral inherited
   components before they are re-pointed: the data table, the tables pane, the
   schema graph, the relation graph, the code editor, the inspector and
@@ -473,7 +518,7 @@ each one lands.
 | Functions lens | governed function catalogue, install and execute | H-04, I-06 |
 | AI models lens (the workbench's existing Models tab covers data models) | model manifest admission | Gate G |
 | Principals and access lens | principal, grant and credential administration | POAM-016 |
-| Vector index lens (TurboQuant build, activate and retire) | quantization lifecycle and HNSW build | OBJ-13, E-04 |
+| Vector index lens: HNSW build (TurboQuant's build, activate and retire is T1) | HNSW build | E-04, C-05 |
 | Live operations beyond subscriptions | WebSocket request execution | H-04 |
 | Browser runner and embed | browser deployment | RRFlow deployment profiles |
 
@@ -1517,3 +1562,27 @@ H-07h (#175).
 
   The final captures are taken after the engine pin moves to the stack's
   `main`.
+
+### 2026-10-29 — Step T1: TurboQuant in the Vectors lens (decision 20)
+
+Branch `agent/t1-turboquant-vectors` from F4a (`88c13a84`, PR #24). The
+engine pin moves from `89ec21ea` to the head of RRFlow's E-04 stack (trial;
+RRFlow #184 to #187), which serves the quantization lifecycle.
+
+- **Read first:**
+  - the Vectors lens (`tabs/vectors.tsx`), its lens card, and the Storage
+    lens's vector artifacts table;
+  - the native client's vector reads, its request identities and lease, and
+    the transaction and backup effect modules (`rrd/client.rs`,
+    `client/transaction.rs`, `client/backup.rs`);
+  - the vector and effect views (`rrd/view.rs`, `view/effect.rs`), the
+    command layer and its registration (`rrd.rs`, `main.rs`);
+  - the webview's session client and view types (`src/rrflow/session.ts`);
+  - the process tests' estate and fixture (`client/process.rs`) and the
+    native capture harness and its vector parity items;
+  - at RRFlow's E-04 stack: the quantization lifecycle contract
+    (`BuildVectorQuantizationArtifact` and its siblings, the artifact
+    snapshot, `VectorSearchMode` and its bounds, `VectorSearchResult` and its
+    resource evidence), the four `rrd-client` methods, and the lifecycle
+    reference (`docs/reference/vector/quantization-lifecycle.md`), including
+    its replay rules.
