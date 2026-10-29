@@ -548,7 +548,12 @@ try {
 		await wait(2500);
 		await into(page.getByRole("button", { name: "Hide points" }).first());
 		await shot("vectors-points");
-		await page.locator("table button").first().click();
+		await page
+			.locator("table")
+			.filter({ hasText: "First numbers" })
+			.locator("button")
+			.first()
+			.click();
 		await wait(4000);
 		await into(page.getByText("Selected record", { exact: true }).first());
 		await shot("vectors-nearest");
@@ -579,6 +584,54 @@ try {
 		await wait(3000);
 		await into(page.getByRole("button", { name: "Browse up to 50 rows" }).first());
 		await shot(`models-${slug(pick.split(" - ")[0])}-rows`);
+	});
+	// TurboQuant in the Vectors lens (step T1): the empty search generations
+	// section, the build form and the request it holds, the built generation,
+	// its activation, then exact beside TurboQuant for a selected record and the
+	// generation's details. These steps write to the estate, so they follow
+	// every lens capture that reads it. A build without the section logs them
+	// as failed.
+	const dialog = () => page.getByRole("dialog");
+	await step("vectors-generations", async () => {
+		await lens("Vectors");
+		await into(page.getByRole("button", { name: "Build a generation" }).first());
+		await shot("vectors-generations-empty");
+		await page.getByRole("button", { name: "Build a generation" }).first().click();
+		await wait(1200);
+		await shot("vectors-build-form");
+		await dialog().getByRole("button", { name: "Review the request" }).click();
+		await wait(2000);
+		await shot("vectors-build-request");
+		await dialog().getByRole("button", { name: "Build", exact: true }).click();
+		await wait(3000);
+		await shot("vectors-build-applied");
+		await dialog().getByRole("button", { name: "Done" }).click();
+		await wait(1500);
+		await page.getByRole("button", { name: "Activate", exact: true }).first().click();
+		await wait(2000);
+		await shot("vectors-activate-request");
+		await dialog().getByRole("button", { name: "Activate", exact: true }).click();
+		await wait(3000);
+		await dialog().getByRole("button", { name: "Done" }).click();
+		await wait(1500);
+	});
+	await step("vectors-compare", async () => {
+		await lens("Vectors");
+		await page.getByRole("button", { name: "Browse points" }).first().click();
+		await wait(2500);
+		await page
+			.locator("table")
+			.filter({ hasText: "First numbers" })
+			.locator("button")
+			.first()
+			.click();
+		await wait(4000);
+		await into(page.getByText("Exact and approximate, side by side", { exact: true }).first());
+		await shot("vectors-compare");
+		await page.getByTitle("Show its digests").first().click();
+		await wait(1000);
+		await into(page.getByTitle("Show its digests").first());
+		await shot("vectors-generation-details");
 	});
 	for (const panel of [
 		"What do these words mean?",
