@@ -50,10 +50,41 @@ The frontend authority check correctly failed while the golden still named the
 old engine. It passed after actual regeneration. Formatter/whitespace checks
 caught Windows newline conversion; modified text was restored to repository LF.
 
+## Native desktop trial
+
+The subsequent Windows desktop trial used actual Connectome implementation
+`d7eb6ea3027b76e1afd515715ab4958e66083060` and the staged engine above. The
+preview executable is 47,428,608 bytes, SHA256
+`a0169dfe698d2112eb6c7deae2fb77ff37b303b556da3712a9f3ca84902bb937`.
+The production frontend and debug native app built with
+`pnpm tauri build --debug --no-bundle --config src-tauri/tauri.bundle.conf.json`
+and `VITE_CONNECTOME_PREVIEW=true`. No installer was built.
+
+The desktop installed a fresh local estate, opened its native session, and
+recorded the actual maintenance task "Verify Connectome controller proposal
+workflow". Task identity:
+`task-81f62f99b2459f3c9e438e528b516a2bbeac586058f149969f3b10b04980880e`.
+Explicit limits were two steps, 60,000 ms per step and 900,000 ms total. Review
+showed the missing endpoint profile and disabled proposal dispatch. After an
+actual webview reload, manual reads returned the same task and budget. Stop
+returned cancelled with zero reserved steps and zero charged time.
+
+![Actual native task and cancelled budget](images/controller-task-stop.jpg)
+
+The first attempted click on Record task was outside the window and did not
+submit. Scrolling and observing the visible control preceded the successful
+submission. Closing the app ended its owned app/engine processes. Subsequent
+`rrflow --json verify --project <trial-estate> --level quick` returned exit 0,
+13 passing checks, runtime cursor 7, control journal sequence 95 and current
+attunement source. This is not proof of graceful shutdown protocol. The estate,
+build receipt and observed UI text remain in the local trial directory
+`D:/projects/swag/.swag/controller-ui/d7eb6ea3/`. Final strict all-target Clippy
+also passed after the post-renewal lease guard.
+
 ## Remaining evidence
 
-Native desktop visual journey and live BF16 UI dispatch are still pending at this
-checkpoint. The latest-attempt bookmark is local recovery metadata only; older
+The native desktop control journey above passed; live BF16 UI dispatch remains
+pending. The latest-attempt bookmark is local recovery metadata only; older
 attempts require their recorded IDs. No training labels, dataset admission or
 review consent were produced. This slice provides no worker execution, ordinary
 source-edit successor plan, RROFLOW delivery, automated learning, quantization,
