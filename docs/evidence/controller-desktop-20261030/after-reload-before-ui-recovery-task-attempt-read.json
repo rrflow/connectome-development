@@ -1,0 +1,71 @@
+{
+	"request": {
+		"protocol": "rrd",
+		"protocol_version": 1,
+		"context": {
+			"request_id": "desktop-readback-3dde3b8505334bffbc53a47b5f651fc4",
+			"operation_id": "desktop-readback-3dde3b8505334bffbc53a47b5f651fc4",
+			"idempotency_key": null,
+			"deadline_unix_ms": null
+		},
+		"resource": {
+			"segments": [
+				{
+					"kind": "instance",
+					"id": "instance-43b81dfba47798c4270f8b08"
+				}
+			]
+		},
+		"payload": {
+			"scope": "instance:instance-43b81dfba47798c4270f8b08",
+			"task_id": "task-f757b6735f385ae4b285c4cbdfbe474a8c19dd8ef5560f70ed040fb8abdf4aaa",
+			"attempt_id": "d1d26ef0-2051-469d-ba8d-15792102ec46"
+		}
+	},
+	"response": {
+		"protocol": "rrd",
+		"protocol_version": 1,
+		"request_id": "desktop-readback-3dde3b8505334bffbc53a47b5f651fc4",
+		"operation_id": "desktop-readback-3dde3b8505334bffbc53a47b5f651fc4",
+		"outcome": {
+			"status": "ok",
+			"payload": {
+				"attempt": {
+					"attempt_id": "d1d26ef0-2051-469d-ba8d-15792102ec46",
+					"ordinal": 1,
+					"status": "accepted",
+					"outcome_sha256": "5f56f75452087f55912af936622dd9297f9e067485c9a65308a2d3fb74846852",
+					"result": null,
+					"endpoint_proposal": {
+						"contract_version": 1,
+						"purpose": "experimental_proposal",
+						"scope": "instance:instance-43b81dfba47798c4270f8b08",
+						"task_id": "task-f757b6735f385ae4b285c4cbdfbe474a8c19dd8ef5560f70ed040fb8abdf4aaa",
+						"attempt_id": "d1d26ef0-2051-469d-ba8d-15792102ec46",
+						"task_sha256": "94645dbd902b9bb40ea822ed7c598c02a949eefee296807a7d3eaed44092383a",
+						"packet_sha256": "48b97c7118172b45672a3db19e06f8a4d1839985d865251c5d2f48968eba7cf7",
+						"configuration_sha256": "602984ce907fd534280c0b8787966d8a49516e5c1670bd5dcab2ded6f24a7968",
+						"allowance_sha256": "7b184b6c9d75a402d8f8a16fc63a414002e2f538b06c5a96dfe411df5d0628bb",
+						"controller_binding_id": "swag-custom-bf16",
+						"service_id": "swag-qwen3-coder-intent-20261028",
+						"request_sha256": "d3654c71dd1ccd821707e8b1af948a4bc0a8122e0c4d9cd62b98dd058b9a5fb9",
+						"response_sha256": "013d4244ad89cf44d06c999f6651bfaf5a07aef759aca22ae41450982c1b5b68",
+						"content_sha256": "f00ec144e84b0093c575418c45be469717d1725ba11736e3f0070c2fa666e6a2",
+						"choice": {
+							"kind": "select",
+							"binding_id": "swag-custom-bf16",
+							"effort": null
+						},
+						"usage": {
+							"prompt_tokens": 1017,
+							"completion_tokens": 20,
+							"total_tokens": 1037
+						},
+						"elapsed_ms": 1890,
+						"http_status": 200
+					}
+				}
+			}
+		}
+	}
+}

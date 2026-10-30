@@ -83,8 +83,10 @@ also passed after the post-renewal lease guard.
 
 ## Remaining evidence
 
-The native desktop control journey above passed; live BF16 UI dispatch remains
-pending. The latest-attempt bookmark is local recovery metadata only; older
+The native desktop control journey above passed. A subsequent
+[live desktop trial](controller-desktop-live-trial.md) also passed one configured
+BF16 proposal and reload/readback, with its explicit limits and failures retained.
+The latest-attempt bookmark is local recovery metadata only; older
 attempts require their recorded IDs. No training labels, dataset admission or
 review consent were produced. This slice provides no worker execution, ordinary
 source-edit successor plan, RROFLOW delivery, automated learning, quantization,
