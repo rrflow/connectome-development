@@ -8,7 +8,7 @@
 //! as a stage event so the serving panel can explain what is happening.
 //!
 //! The webview configures a project directory, an installation mode, and an
-//! optional executable override — nothing else. RRFlow has one storage
+//! optional executable override and endpoint credential mapping path. RRFlow has one storage
 //! engine, the kernel chooses the loopback port, and the operator credential
 //! stays a file the native session reads; the renderer only ever holds its
 //! path.
@@ -65,6 +65,9 @@ impl EstateState {
         mut request: EstateServeRequest,
         observer: Arc<dyn ServeObserver>,
     ) -> Result<ServedEstateView, RrdError> {
+        request.endpoint_credentials =
+            endpoint_credentials_path(request.endpoint_credentials.as_deref())?
+                .map(|path| path.to_string_lossy().into_owned());
         let project = project_directory(&request)?;
         request.project = project.to_string_lossy().into_owned();
         {
@@ -80,6 +83,11 @@ impl EstateState {
                     .map_err(|e| format!("cannot inspect owned process: {e}"))?
                     .is_none()
                 {
+                    if request.endpoint_credentials.is_some()
+                        || served.view.endpoint_credentials.is_some()
+                    {
+                        return Err("this project is already running; open it or stop it before applying endpoint startup configuration".into());
+                    }
                     return Ok(served.view.clone());
                 }
                 registry.projects.remove(&project);
@@ -240,6 +248,9 @@ pub struct EstateServeRequest {
     /// the plan it applies is the plan the operator reviewed.
     #[serde(default)]
     pub installation_identity: Option<String>,
+    /// Optional engine-owned mapping file; only the engine reads its contents.
+    #[serde(default)]
+    pub endpoint_credentials: Option<String>,
 }
 
 /// Non-secret engine-owned installation preview, before any installed state exists.
@@ -261,6 +272,7 @@ pub async fn rrd_estate_preview(request: EstateServeRequest) -> Result<EstatePre
 }
 
 pub fn preview_estate(request: &EstateServeRequest) -> Result<EstatePreview, RrdError> {
+    endpoint_credentials_path(request.endpoint_credentials.as_deref())?;
     let project = project_directory(request)?;
     let engine = resolve_engine(&request.executable)?;
     let (installation, installation_identity) = if project.join(LOCATOR).is_file() {
@@ -312,6 +324,22 @@ fn valid_identity(identity: &str) -> Result<String, RrdError> {
     } else {
         Err("the installation identity must be 64 hexadecimal digits".into())
     }
+}
+
+fn endpoint_credentials_path(configured: Option<&str>) -> Result<Option<PathBuf>, RrdError> {
+    let Some(configured) = configured.map(str::trim).filter(|value| !value.is_empty()) else {
+        return Ok(None);
+    };
+    let path = Path::new(configured);
+    if !path.is_absolute() {
+        return Err("the endpoint credential mapping must be an absolute file path".into());
+    }
+    let path = std::fs::canonicalize(path)
+        .map_err(|_| "cannot resolve the endpoint credential mapping file")?;
+    if !path.is_file() {
+        return Err("the endpoint credential mapping must be a regular file".into());
+    }
+    Ok(Some(path))
 }
 
 fn project_directory(request: &EstateServeRequest) -> Result<PathBuf, RrdError> {
@@ -374,6 +402,9 @@ pub struct ServedEstateView {
     pub installed: bool,
     /// The engine that was run: where it is, how it was chosen, its digest.
     pub engine: EngineBinding,
+    /// Path supplied at startup; file contents and credential values stay native.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub endpoint_credentials: Option<String>,
 }
 
 /// One boundary of the serve sequence, reported as it is reached.
@@ -457,6 +488,7 @@ pub fn serve_estate(
     observer: Arc<dyn ServeObserver>,
 ) -> Result<ServedEstate, RrdError> {
     let app = observer.as_ref();
+    let endpoint_credentials = endpoint_credentials_path(request.endpoint_credentials.as_deref())?;
     let project = project_directory(&request)?;
 
     // The engine: the configured override, else the bundled sidecar verified
@@ -503,10 +535,15 @@ pub fn serve_estate(
         "running",
         "Starting the engine on a loopback port the kernel chooses.",
     );
+    let mut command = engine_command(&executable);
+    command
+        .args(["--json", "serve", "--bind", "127.0.0.1:0", "--project"])
+        .arg(&project);
+    if let Some(path) = &endpoint_credentials {
+        command.arg("--endpoint-credentials").arg(path);
+    }
     let mut server = OwnedProcess(
-        engine_command(&executable)
-            .args(["--json", "serve", "--bind", "127.0.0.1:0", "--project"])
-            .arg(&project)
+        command
             .stdin(Stdio::null())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
@@ -599,6 +636,8 @@ pub fn serve_estate(
                 .into_owned(),
             installed,
             engine,
+            endpoint_credentials: endpoint_credentials
+                .map(|path| path.to_string_lossy().into_owned()),
         },
     })
 }
@@ -753,6 +792,25 @@ mod registry_tests {
     }
 
     #[test]
+    fn mapping_selection_requires_an_absolute_regular_file() {
+        assert!(endpoint_credentials_path(None).unwrap().is_none());
+        assert!(endpoint_credentials_path(Some("  ")).unwrap().is_none());
+        assert!(endpoint_credentials_path(Some("mapping.json")).is_err());
+        let root =
+            std::env::temp_dir().join(format!("connectome-mapping-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir(&root).unwrap();
+        assert!(endpoint_credentials_path(root.to_str()).is_err());
+        assert!(endpoint_credentials_path(root.join("missing.json").to_str()).is_err());
+        let file = root.join("mapping with spaces.json");
+        std::fs::write(&file, "{\"format_version\":1,\"entries\":[]}").unwrap();
+        assert_eq!(
+            endpoint_credentials_path(file.to_str()).unwrap(),
+            Some(file.canonicalize().unwrap())
+        );
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
     fn pending_start_capacity_and_failure_release_are_bounded() {
         let directory = std::env::temp_dir().join(format!(
             "connectome-registry-{}",
@@ -770,6 +828,7 @@ mod registry_tests {
                 .into_owned(),
             accepted_plan_sha256: None,
             installation_identity: None,
+            endpoint_credentials: None,
         };
         let start = || owner.start(request.clone(), Arc::new(Quiet));
         owner.0.lock().unwrap().projects.insert(key.clone(), None);

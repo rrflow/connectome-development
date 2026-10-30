@@ -240,6 +240,8 @@ export interface EstateSelection {
 	executable: string;
 	/** The identity a pending installation preview was planned with. */
 	installationIdentity?: string;
+	/** Explicit per-project mapping path; never contains credential values. */
+	endpointCredentialMapping?: string;
 }
 
 export interface EstatePreview {
@@ -259,6 +261,7 @@ export interface ServedEstate {
 	credential_path: string;
 	installed: boolean;
 	engine: EngineBinding;
+	endpoint_credentials?: string | null;
 }
 
 export type EstateStageName = "engine" | "install" | "serve" | "ready";

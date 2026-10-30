@@ -158,6 +158,15 @@ export function DatabaseServing() {
 								{estate.project}
 							</Text>
 							<Text size="sm">Running · {estate.endpoint}</Text>
+							{estate.endpoint_credentials && (
+								<Text
+									size="sm"
+									style={{ overflowWrap: "anywhere" }}
+								>
+									Endpoint mapping used at startup: {estate.endpoint_credentials}.
+									Stop and restart to apply changes.
+								</Text>
+							)}
 							<Group mt="sm">
 								<Button
 									variant="light"
@@ -189,6 +198,15 @@ export function DatabaseServing() {
 							<Text style={{ overflowWrap: "anywhere" }}>
 								{preview.value.project}
 							</Text>
+							{preview.selection.endpointCredentialMapping && (
+								<Text
+									size="sm"
+									style={{ overflowWrap: "anywhere" }}
+								>
+									Endpoint mapping for startup:{" "}
+									{preview.selection.endpointCredentialMapping}
+								</Text>
+							)}
 							<Alert title="Exact installation preview">
 								Review the paths, permissions and configuration. Installing creates
 								project-local data and credentials. It enables no cloud upload or
@@ -243,6 +261,7 @@ export function DatabaseServing() {
 										setSelection({
 											...selection,
 											project: e.currentTarget.value,
+											endpointCredentialMapping: undefined,
 										})
 									}
 								/>
@@ -256,7 +275,11 @@ export function DatabaseServing() {
 												multiple: false,
 											});
 											if (typeof path === "string")
-												setSelection({ ...selection, project: path });
+												setSelection({
+													...selection,
+													project: path,
+													endpointCredentialMapping: undefined,
+												});
 										})
 									}
 								>
@@ -276,6 +299,40 @@ export function DatabaseServing() {
 										setSelection({ ...selection, mode });
 								}}
 							/>
+							<TextInput
+								label="Endpoint credential mapping (optional)"
+								description="Choose an engine mapping file. Set its referenced environment variables before launching Connectome. Leave empty for no mapping."
+								value={selection.endpointCredentialMapping ?? ""}
+								disabled={pending}
+								spellCheck={false}
+								onChange={(event) =>
+									setSelection({
+										...selection,
+										endpointCredentialMapping: event.currentTarget.value,
+									})
+								}
+							/>
+							<Button
+								variant="light"
+								disabled={pending || !adapter.isServeSupported}
+								onClick={() =>
+									run(async () => {
+										const path = await open({
+											multiple: false,
+											filters: [
+												{ name: "Engine mapping", extensions: ["json"] },
+											],
+										});
+										if (typeof path === "string")
+											setSelection({
+												...selection,
+												endpointCredentialMapping: path,
+											});
+									})
+								}
+							>
+								Choose mapping file
+							</Button>
 							<Button
 								loading={pending}
 								disabled={

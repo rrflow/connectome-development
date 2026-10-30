@@ -39,6 +39,10 @@ operator credential, a session bearer, or an engine-clock expiry instant.
 
 - **Estates:** `rrd_estate_preview`, `rrd_estate_serve`, `rrd_estate_status`,
   `rrd_estate_stop`; and `rrd_public_request` for public read-only paths.
+  Startup may explicitly name an endpoint credential mapping file for that
+  project. The launcher passes only its path; RRFlow validates the mapping and
+  resolves environment values. The webview never reads the file or credentials.
+  A configured owned engine requires stop/start to apply startup changes.
 - **Sessions:** `rrd_connect`, `rrd_session`, `rrd_disconnect`.
 - **Tasks:** `rrd_task` accepts a closed, typed action enum for task listing,
   opening/readback, budget configuration/readback/Stop, proposal preparation,
