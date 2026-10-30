@@ -1,4 +1,5 @@
 import { Channel, type InvokeArgs, invoke, isTauri } from "@tauri-apps/api/core";
+import type { TaskCommand, TaskReply } from "~/rrflow/tasks";
 
 /*
  * Authenticated RRD session views.
@@ -686,6 +687,11 @@ export class RrdSessionClient {
 	async current(): Promise<RrdConnectionView | null> {
 		this.requireNative();
 		return this.call<RrdConnectionView | null>("rrd_session");
+	}
+
+	async task(request: TaskCommand): Promise<TaskReply> {
+		this.requireNative();
+		return this.call<TaskReply>("rrd_task", { request });
 	}
 
 	async capabilities(): Promise<RrdServiceView> {

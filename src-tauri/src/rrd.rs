@@ -445,3 +445,12 @@ mod tests {
         server.join().expect("join test server");
     }
 }
+
+#[tauri::command]
+pub async fn rrd_task(
+    profile: String,
+    request: client::tasks::TaskCommand,
+    state: State<'_, RrdClientState>,
+) -> Result<client::tasks::TaskReply, RrdError> {
+    state.client(&profile).await?.task_command(request).await
+}

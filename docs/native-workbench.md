@@ -64,6 +64,39 @@ limits. Browser smoke proves navigation and rendering; the native process corpus
 proves two owned engines, project-scoped records/relations/vectors, session
 reconnect and targeted stop while the other engine continues to answer.
 
+## Tasks and experimental controller proposals
+
+Open **Tasks** in an authenticated project workspace. **Read tasks** lists up to
+32 records per page; **Next task page** follows the returned cursor. Supply your
+own title, goal, acceptance criteria and limits to **Record task in RRFlow**.
+Opening a task does not invoke a model.
+
+Select a task, read its budget, and explicitly supply step/run limits if none is
+configured. **Review controller inputs** reads the engine's endpoint policy and
+task identity. It displays configured candidate IDs and exact digests. Missing
+policy is unavailable, never replaced by a default model. Endpoint/profile and
+provider-credential setup remain engine/operator responsibilities in this slice.
+
+**Request one experimental proposal** sends once through the native SDK. It does
+not execute the proposed worker. Budget reads and **Stop task budget** remain
+available while that call holds a shared session lease. Stop uses the budget
+digest you last read; if it changed, refresh and review again. Stop does not prove
+remote GPU termination. Durations beyond the granted native session window are
+refused before dispatch, rather than silently truncated.
+
+The last attempted task/attempt coordinates are saved per project profile and
+instance before dispatch. **Recover last attempt** reopens that task; **Read budget
+and attempt** only reads engine state. Keep older attempt IDs if you need their
+readback: this view currently bookmarks only the latest attempt per project.
+A lost reply must not trigger another inference. A local **Not dispatched** result
+allows renewed input review; unresolved remote state remains visibly uncertain.
+No credentials, authoritative result cache or training consent enter local storage.
+
+This experimental integration depends on engine PR222 (`61ddb264`) and its
+unmerged prerequisites. It does not implement worker execution, source-edit
+successor planning, RROFLOW delivery or model qualification. The recorded native
+process checks are distinct from a live BF16 desktop journey and release evidence.
+
 ## Learn and navigate
 
 - **How RRFlow fits together** explains the native data engine without setup.

@@ -48,6 +48,7 @@ mod artifact;
 mod backup;
 mod history;
 mod live;
+pub mod tasks;
 mod transaction;
 
 pub use artifact::{save_artifact, RrdAuditExportRequest, RrdQueryExportRequest};
@@ -212,14 +213,14 @@ impl Deadlines {
     }
 
     /// Whether a request sent at `now` completes before the session can lapse.
-    fn outlive_request(self, now: Instant) -> bool {
-        self.idle.min(self.absolute).saturating_duration_since(now) > SESSION_RENEWAL_MARGIN
+    fn outlive_request(self, now: Instant, margin: Duration) -> bool {
+        self.idle.min(self.absolute).saturating_duration_since(now) > margin
     }
 
     /// Whether renewing at `now` still buys a request's worth of time; past
     /// this point only a new session can.
-    fn renewable(self, now: Instant) -> bool {
-        self.absolute.saturating_duration_since(now) > SESSION_RENEWAL_MARGIN
+    fn renewable(self, now: Instant, margin: Duration) -> bool {
+        self.absolute.saturating_duration_since(now) > margin
     }
 }
 
@@ -260,6 +261,7 @@ impl Lease {
 
 pub struct NativeRrdClient {
     client: RrdClient,
+    address: SocketAddr,
     endpoint: String,
     instance: CanonicalId,
     principal: CanonicalId,
@@ -435,6 +437,7 @@ impl NativeRrdClient {
         let (principal, api_key) = read_credential(&request.credential_path)?;
         let config = ClientConfig {
             request_timeout: REQUEST_TIMEOUT,
+            max_attempts: 1,
             ..ClientConfig::default()
         };
         let client =
@@ -447,6 +450,7 @@ impl NativeRrdClient {
             limits: lease.session.limits().clone(),
             lease: RwLock::new(Some(lease)),
             client,
+            address,
             endpoint,
             instance,
             principal,
@@ -487,13 +491,26 @@ impl NativeRrdClient {
     /// help, under the write lock, so no in-flight request holds the bearer
     /// that the renewal rotates or the replacement closes.
     async fn lease(&self) -> Result<RwLockReadGuard<'_, Lease>, RrdError> {
+        self.lease_for(SESSION_RENEWAL_MARGIN).await
+    }
+
+    async fn lease_for(&self, margin: Duration) -> Result<RwLockReadGuard<'_, Lease>, RrdError> {
+        if margin
+            >= Duration::from_millis(
+                self.limits
+                    .idle_timeout_ms
+                    .min(self.limits.absolute_timeout_ms),
+            )
+        {
+            return Err("configured controller duration exceeds the native session window".into());
+        }
         {
             let current = self.lease.read().await;
             let fresh = current
                 .as_ref()
                 .ok_or(SESSION_CLOSED)?
                 .deadlines
-                .outlive_request(Instant::now());
+                .outlive_request(Instant::now(), margin);
             if fresh {
                 return RwLockReadGuard::try_map(current, Option::as_ref)
                     .map_err(|_| SESSION_CLOSED.into());
@@ -504,15 +521,23 @@ impl NativeRrdClient {
             .as_ref()
             .ok_or(SESSION_CLOSED)?
             .deadlines
-            .outlive_request(Instant::now());
+            .outlive_request(Instant::now(), margin);
         // Another request may have refreshed the session while this one waited.
         if stale {
             let refreshed = self
-                .refresh(current.as_ref().ok_or(SESSION_CLOSED)?)
+                .refresh(current.as_ref().ok_or(SESSION_CLOSED)?, margin)
                 .await?;
             *current = Some(refreshed);
             self.bearer_generation
                 .send_modify(|generation| *generation += 1);
+        }
+        if !current
+            .as_ref()
+            .ok_or(SESSION_CLOSED)?
+            .deadlines
+            .outlive_request(Instant::now(), margin)
+        {
+            return Err("the granted session cannot outlive this request".into());
         }
         RwLockReadGuard::try_map(current.downgrade(), Option::as_ref)
             .map_err(|_| SESSION_CLOSED.into())
@@ -533,7 +558,7 @@ impl NativeRrdClient {
                 .await;
             replacement
         } else {
-            self.refresh(lease).await?
+            self.refresh(lease, SESSION_RENEWAL_MARGIN).await?
         };
         *current = Some(refreshed);
         self.bearer_generation
@@ -544,8 +569,8 @@ impl NativeRrdClient {
     /// Renews `current`, or opens a new session when renewal cannot outlast a
     /// request or the engine refuses it (the session lapsed while Connectome
     /// sat idle, or used up its renewals).
-    async fn refresh(&self, current: &Lease) -> Result<Lease, RrdError> {
-        if current.deadlines.renewable(Instant::now()) {
+    async fn refresh(&self, current: &Lease, margin: Duration) -> Result<Lease, RrdError> {
+        if current.deadlines.renewable(Instant::now(), margin) {
             let requested_at = Instant::now();
             match self
                 .client
@@ -988,10 +1013,13 @@ mod tests {
         let deadlines = Deadlines::granted(start, &limits(900_000, 3_600_000)).expect("deadlines");
         let margin = SESSION_RENEWAL_MARGIN;
         let idle = Duration::from_millis(900_000);
-        assert!(deadlines.outlive_request(start));
-        assert!(deadlines.outlive_request(start + idle - margin - Duration::from_millis(1)));
-        assert!(!deadlines.outlive_request(start + idle - margin));
-        assert!(!deadlines.outlive_request(start + idle + idle));
+        assert!(deadlines.outlive_request(start, SESSION_RENEWAL_MARGIN));
+        assert!(deadlines.outlive_request(
+            start + idle - margin - Duration::from_millis(1),
+            SESSION_RENEWAL_MARGIN
+        ));
+        assert!(!deadlines.outlive_request(start + idle - margin, SESSION_RENEWAL_MARGIN));
+        assert!(!deadlines.outlive_request(start + idle + idle, SESSION_RENEWAL_MARGIN));
     }
 
     #[test]
@@ -1000,15 +1028,15 @@ mod tests {
         let session = limits(900_000, 3_600_000);
         let deadlines = Deadlines::granted(start, &session).expect("deadlines");
         let later = start + Duration::from_millis(850_000);
-        assert!(!deadlines.outlive_request(later));
-        assert!(deadlines.renewable(later));
+        assert!(!deadlines.outlive_request(later, SESSION_RENEWAL_MARGIN));
+        assert!(deadlines.renewable(later, SESSION_RENEWAL_MARGIN));
         let renewed = deadlines.renewed(later, &session).expect("renewed");
-        assert!(renewed.outlive_request(later));
+        assert!(renewed.outlive_request(later, SESSION_RENEWAL_MARGIN));
         assert_eq!(renewed.absolute, deadlines.absolute);
         // Near the absolute deadline only a new session can help.
         let late = deadlines.absolute - SESSION_RENEWAL_MARGIN;
-        assert!(!deadlines.renewable(late));
-        assert!(!renewed.outlive_request(late));
+        assert!(!deadlines.renewable(late, SESSION_RENEWAL_MARGIN));
+        assert!(!renewed.outlive_request(late, SESSION_RENEWAL_MARGIN));
     }
 
     fn hit(id: &str, score: f64) -> VectorSearchHit {
