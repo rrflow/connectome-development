@@ -173,7 +173,13 @@ export class DesktopAdapter implements ConnectomeAdapter {
 		// Only a pending preview carries an identity; saved settings never do.
 		const installationIdentity = selection?.installationIdentity;
 		return invoke<EstatePreview>("rrd_estate_preview", {
-			request: { project, mode, executable, installation_identity: installationIdentity },
+			request: {
+				project,
+				mode,
+				executable,
+				installation_identity: installationIdentity,
+				endpoint_credentials: selection?.endpointCredentialMapping,
+			},
 		});
 	}
 
@@ -189,6 +195,7 @@ export class DesktopAdapter implements ConnectomeAdapter {
 				executable,
 				accepted_plan_sha256: acceptedPlanSha256,
 				installation_identity: installationIdentity,
+				endpoint_credentials: selection?.endpointCredentialMapping,
 			},
 		});
 	}
