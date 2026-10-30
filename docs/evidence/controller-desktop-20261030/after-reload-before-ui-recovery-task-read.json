@@ -1,0 +1,96 @@
+{
+	"request": {
+		"protocol": "rrd",
+		"protocol_version": 1,
+		"context": {
+			"request_id": "desktop-readback-ebe431a8fe134a90ada80572224ebda9",
+			"operation_id": "desktop-readback-ebe431a8fe134a90ada80572224ebda9",
+			"idempotency_key": null,
+			"deadline_unix_ms": null
+		},
+		"resource": {
+			"segments": [
+				{
+					"kind": "instance",
+					"id": "instance-43b81dfba47798c4270f8b08"
+				}
+			]
+		},
+		"payload": {
+			"scope": "instance:instance-43b81dfba47798c4270f8b08",
+			"task_id": "task-f757b6735f385ae4b285c4cbdfbe474a8c19dd8ef5560f70ed040fb8abdf4aaa",
+			"max_storage_keys": 10000
+		}
+	},
+	"response": {
+		"protocol": "rrd",
+		"protocol_version": 1,
+		"request_id": "desktop-readback-ebe431a8fe134a90ada80572224ebda9",
+		"operation_id": "desktop-readback-ebe431a8fe134a90ada80572224ebda9",
+		"outcome": {
+			"status": "ok",
+			"payload": {
+				"task": {
+					"format_version": 1,
+					"task_id": "task-f757b6735f385ae4b285c4cbdfbe474a8c19dd8ef5560f70ed040fb8abdf4aaa",
+					"scope": "instance:instance-43b81dfba47798c4270f8b08",
+					"title": "Verify Connectome PR26 live BF16 proposal and recovery",
+					"goal": "Verify the actual Connectome PR26 desktop against the configured SWAG BF16 endpoint. Accept one explicit controller proposal or preserve its failure, then verify identical attempt and budget readback after reload without another model call. Scope: this fresh local verification estate and PR26 evidence only. Do not execute workers, change model weights, invent routing labels, or authorize training. This is transport and recovery evidence, not routing-quality qualification.",
+					"status": "open",
+					"opened_at_unix_ms": 1793391432784,
+					"idempotency_key": "connectome-9a7a89c8812244b68c95c5d363e4c235-key-4",
+					"operation_sha256": "675dcaa11bd958effe48a366f99af58d4cd17c3c079b272fd786c4d885f83d37",
+					"task_cursor": 4,
+					"known_at_cursor": 4
+				},
+				"read": {
+					"runtime_manifest_sha256": "a663cb012a2a6a7f550ac4efe3fc4931b7569f1bd8926f506d79773ff9edbbbb",
+					"runtime_cursor": 8,
+					"schema_revision": 3,
+					"catalogue_revision": 0
+				},
+				"selected_versions": 1,
+				"read_evidence": {
+					"contract_version": 1,
+					"key_budget": 10000,
+					"point_reads": 9,
+					"range_scans": 1,
+					"keys_examined": 10,
+					"values_decoded": 10,
+					"decoded_bytes": 4319,
+					"stamp_validation": {
+						"method": "authenticated_current_head",
+						"change_reads": 0,
+						"proof_nodes": 0
+					},
+					"paths": [
+						{
+							"path": "read_stamp",
+							"point_reads": 5,
+							"range_scans": 0,
+							"keys_examined": 5,
+							"values_decoded": 5,
+							"decoded_bytes": 2483
+						},
+						{
+							"path": "record_versions",
+							"point_reads": 0,
+							"range_scans": 1,
+							"keys_examined": 1,
+							"values_decoded": 1,
+							"decoded_bytes": 1580
+						},
+						{
+							"path": "accumulator_proof",
+							"point_reads": 4,
+							"range_scans": 0,
+							"keys_examined": 4,
+							"values_decoded": 4,
+							"decoded_bytes": 256
+						}
+					]
+				}
+			}
+		}
+	}
+}

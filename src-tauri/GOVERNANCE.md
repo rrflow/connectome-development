@@ -40,6 +40,14 @@ operator credential, a session bearer, or an engine-clock expiry instant.
 - **Estates:** `rrd_estate_preview`, `rrd_estate_serve`, `rrd_estate_status`,
   `rrd_estate_stop`; and `rrd_public_request` for public read-only paths.
 - **Sessions:** `rrd_connect`, `rrd_session`, `rrd_disconnect`.
+- **Tasks:** `rrd_task` accepts a closed, typed action enum for task listing,
+  opening/readback, budget configuration/readback/Stop, proposal preparation,
+  explicit proposal dispatch and attempt readback. Task scope comes from the
+  native instance. `client/tasks.rs` projects bounded views and excludes endpoint
+  credentials/profile contents. Controller requests use the configured timeout
+  plus bounded transport margin and a shared session lease. No mutation is
+  automatically retried. A local preflight refusal is explicitly not dispatched;
+  a transport failure requires engine readback. Preparation grants no worker effect.
 - **Reads:**
   - `rrd_capabilities`, `rrd_schema`, `rrd_database`, `rrd_storage`,
     `rrd_query`;
