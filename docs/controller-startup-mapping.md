@@ -108,3 +108,17 @@ passed for implementation revision `6de73eec`: frontend/render, native Windows,
 macOS and Linux, real-engine SDK/process integration and ci-gate. Later evidence
 commits must be checked at their own heads. PR27 remains stacked on draft PR26;
 neither this run nor the desktop trial supplies the unmerged engine prerequisites.
+
+## Evidence packaging correction
+
+[CI run 41135105707](https://github.com/rrflow/connectome-development/actions/runs/41135105707)
+failed at evidence revision `7a37a6a7`: Biome reported formatting differences in
+seven newly committed raw JSON reports and their manifest. Native builds on all
+three platforms and actual-engine process integration passed. Frontend build and
+smoke tests did not run because the source check failed first; the subsequent
+missing Playwright artifact is a consequence of that failure.
+
+The raw reports now use the same lossless gzip representation as the larger
+reports. The manifest records both compressed and original byte hashes and is
+formatted by Biome. No source check is disabled and no observation bytes change.
+This packaging correction requires its own full CI result before landing.

@@ -52,3 +52,11 @@ requires stop/start; the renderer receives paths only. Existing mapping-free
 startup remains compatible. Pass local tests and retain the PR behind engine/UI
 dependency landing. This is one setup prerequisite, not full task execution,
 model qualification, OS secret management, a clean-machine or public release.
+
+## Evidence follow-up
+
+Evidence-head CI 41135105707 exposed eight JSON formatting errors after the
+implementation-head checks passed. Preserve the seven raw reports as gzip with
+original and compressed checksums; format the authored manifest; run full
+`pnpm check` and verify every manifest hash. Keep the failed run linked in the
+verification document and require the correction head's CI before landing.
