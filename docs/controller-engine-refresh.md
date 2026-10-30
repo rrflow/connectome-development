@@ -41,8 +41,22 @@ or new provider response was created.
   type-checked, 18 value checks passed, dependency/version/identity/isolation
   checks and TypeScript passed. No imports were removed.
 
-The desktop build and its exact source/artifact receipt follow below. A successful
-build cannot inherit the earlier live BF16 proposal as a new observation.
+## Built Windows preview
+
+Clean Connectome build source: `a3d179dc4d2efa812f925ca23eeb74cb7b20de5a`.
+`VITE_CONNECTOME_PREVIEW=true pnpm tauri build --debug --no-bundle --config
+src-tauri/tauri.bundle.conf.json` passed, including the production frontend build.
+The resulting `connectome.exe` is 47,432,192 bytes, SHA256
+`08057184b7aaafbb22d5a53ce022739d07d9235924a137add32fdf2ac1af0a90`.
+The engine above is copied beside it as `rrflow.exe`; copy hashes match their
+build outputs. The pair and `build-receipt.json` are retained locally under
+`D:/projects/swag/.swag/controller-ui/a3d179dc/`.
+
+The existing browser smoke suite passed all four rendering/navigation tests
+against the production bundle with retries and existing-server reuse disabled.
+Its mocked transport is not native dispatch or model evidence. No new desktop
+interaction or BF16 request was performed with this pair. A successful build
+cannot inherit the earlier live BF16 proposal as a new observation.
 
 ## Retained dependency warnings and limits
 
@@ -56,6 +70,11 @@ requires older exact versions of five CodeMirror packages than those already
 installed. Those package resolutions are unchanged by this refresh. These remain
 unresolved compatibility warnings, not false positives or proof of GraphQL editor
 compatibility. No broad editor dependency upgrade was folded into this package.
+The production build also retains vendor WASM runtime-resolution/browser
+externalization, mixed static/dynamic import and large-chunk warnings. The build
+succeeded; those warnings do not establish optimized size or complete inherited
+vendor-feature compatibility. Existing native and rendering tests cover their
+named cases only.
 
 Engine PR206/222 remain draft dependencies with protected native CI unresolved.
 No new desktop interaction, accepted model call, complete project worker execution,
