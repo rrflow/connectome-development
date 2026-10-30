@@ -1,0 +1,58 @@
+[
+  {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--manifest-path",
+      "src-tauri/Cargo.toml"
+    ],
+    "exit_code": 0,
+    "seconds": 7.66,
+    "log": "final-native-0.log"
+  },
+  {
+    "command": [
+      "cargo",
+      "test",
+      "--locked",
+      "--manifest-path",
+      "src-tauri/Cargo.toml",
+      "endpoint_mapping_is_engine_validated",
+      "--",
+      "--ignored"
+    ],
+    "exit_code": 0,
+    "seconds": 14.86,
+    "log": "final-native-1.log"
+  },
+  {
+    "command": [
+      "cargo",
+      "clippy",
+      "--locked",
+      "--manifest-path",
+      "src-tauri/Cargo.toml",
+      "--all-targets",
+      "--",
+      "-D",
+      "warnings"
+    ],
+    "exit_code": 0,
+    "seconds": 1.66,
+    "log": "final-native-2.log"
+  },
+  {
+    "command": [
+      "cargo",
+      "fmt",
+      "--manifest-path",
+      "src-tauri/Cargo.toml",
+      "--",
+      "--check"
+    ],
+    "exit_code": 0,
+    "seconds": 0.22,
+    "log": "final-native-3.log"
+  }
+]

@@ -60,5 +60,51 @@ Build warnings remain: vendor WASM runtime resolution/browser externalization,
 mixed imports and large chunks. The previously recorded CodeMirror peer mismatch
 remains unresolved; no dependency update or false-positive claim is made here.
 The browser resource failure remains retained and requires attention if it recurs.
-No new native GUI interaction, clean-machine, model quality, secret-store
-onboarding, container or release qualification is claimed by these component tests.
+No clean-machine, model quality, secret-store onboarding, container or release
+qualification is claimed by these component tests.
+
+## Actual desktop verification
+
+Clean build source: `6de73eec58be5cea4cdae42fea6001772006ee3a`.
+`VITE_CONNECTOME_PREVIEW=true CARGO_PROFILE_DEV_DEBUG=0 CARGO_BUILD_JOBS=2`
+with `pnpm tauri build --debug --no-bundle --config src-tauri/tauri.bundle.conf.json`
+completed successfully in 50.98 seconds. The independently copied preview is
+47,439,360 bytes, SHA256
+`10561b6925931bee96148c92aa94c9b1ce35d1470c733967269c632bf0aba694`;
+its adjacent engine is the exact c376e271 executable above.
+
+The actual Windows app rendered the new controls. Entering a mapping and then
+changing the project cleared the selection. The native file picker opened with
+the JSON filter; its automation accessibility index was unavailable, so the
+picker was cancelled and the visible path input was used. A first installation
+button click was outside the viewport; scrolling exposed it and the subsequent
+click installed the reviewed plan. Neither failed UI input is counted as an
+accepted action. The selected file contained only a valid empty mapping; no
+provider secret, endpoint profile, model request or training record was involved.
+
+Through the UI, the trial installed a dedicated estate, started its own engine,
+opened an authenticated session, displayed the selected startup mapping, stopped,
+and reopened the same instance. OS process evidence binds the exact child
+executable and `--endpoint-credentials` argument to the observed project. Both
+authenticated `ready` checks passed; after each UI stop, all 13 quick verification
+checks passed. Instance, plan, project inventory and runtime manifest identities
+matched across reopen. The app and its owned trial processes were then closed;
+an OS process query confirmed none remained at the trial artifact path. Existing
+project data/profiles were preserved. The generated trial estate and credentials
+remain private local evidence.
+
+[Evidence manifest](evidence/controller-startup-mapping/manifest.json) binds the
+build receipt, actual CLI outputs, process command line, test logs and unedited
+desktop screenshots. Large/raw CRLF reports are losslessly compressed and bind
+both byte hashes. Exported reports were checked against the generated operator
+credential before publication. These are setup observations, not routing quality.
+
+![Actual connected desktop](evidence/controller-startup-mapping/desktop-connected.jpg)
+
+![Mapping displayed for the owned engine](evidence/controller-startup-mapping/desktop-running-mapping.jpg)
+
+[CI run 41134260205](https://github.com/rrflow/connectome-development/actions/runs/41134260205)
+passed for implementation revision `6de73eec`: frontend/render, native Windows,
+macOS and Linux, real-engine SDK/process integration and ci-gate. Later evidence
+commits must be checked at their own heads. PR27 remains stacked on draft PR26;
+neither this run nor the desktop trial supplies the unmerged engine prerequisites.
