@@ -64,13 +64,13 @@ Window: "Connectome", App: connectome.exe.
 											257 text SESSION
 											258 text OPEN
 											259 text Signed in as
-											260 text 
+											260 text
 											261 text local-operator
-											262 text 
+											262 text
 											263 text since
 											264 text 3:21 PM
 											265 text ·
-											266 text 
+											266 text
 											267 text renews automatically
 											268 button Disconnect
 											269 heading Tasks and model handoffs
@@ -93,10 +93,10 @@ Window: "Connectome", App: connectome.exe.
 											297 text /
 											298 text 2
 											299 text steps reserved ·
-											300 text 
+											300 text
 											301 text 1861
 											302 text ms charged ·
-											303 text 
+											303 text
 											304 text No persisted stop
 											293 button Review controller inputs
 											294 text Attempt ID for readback
@@ -109,7 +109,7 @@ Window: "Connectome", App: connectome.exe.
 											325 text Observed service alias:
 											326 text swag-qwen3-coder-intent-20261028
 											327 text · Elapsed:
-											328 text 
+											328 text
 											329 text 1831
 											330 text ms
 											331 text Attempt: 75146600-dda3-4526-ad91-429b0615616a Task: 3b6e15f21f4b388481de67b3f73decb0b8de1e756a55b7c4a98a0a28cccbe14d Configuration: 63c52703056f60c293065e6c62bbaa6ab5500b26ac14d58bab20c0de47c103d5 Response: 3356a71ea9dfe9be869ae70e49de5a63af64dbe8ab437117ffea7559a89dff19

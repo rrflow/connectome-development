@@ -64,13 +64,13 @@ Window: "Connectome", App: connectome.exe.
 											257 text SESSION
 											258 text OPEN
 											259 text Signed in as
-											260 text 
+											260 text
 											261 text local-operator
-											262 text 
+											262 text
 											263 text since
 											264 text 3:21 PM
 											265 text ·
-											266 text 
+											266 text
 											267 text renews automatically
 											268 button Disconnect
 											269 heading Tasks and model handoffs
@@ -93,10 +93,10 @@ Window: "Connectome", App: connectome.exe.
 											297 text /
 											298 text 2
 											299 text steps reserved ·
-											300 text 
+											300 text
 											301 text 0
 											302 text ms charged ·
-											303 text 
+											303 text
 											304 text No persisted stop
 											293 button Review controller inputs
 											305 text Controller:

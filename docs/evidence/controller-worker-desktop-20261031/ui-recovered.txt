@@ -64,13 +64,13 @@ Window: "Connectome", App: connectome.exe.
 											404 text SESSION
 											405 text OPEN
 											406 text Signed in as
-											407 text 
+											407 text
 											408 text local-operator
-											409 text 
+											409 text
 											410 text since
 											411 text 3:21 PM
 											412 text ·
-											413 text 
+											413 text
 											414 text renews automatically
 											415 button Disconnect
 											416 heading Tasks and model handoffs

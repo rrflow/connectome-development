@@ -25,72 +25,123 @@
   "chargedElapsedMs": 17258,
   "files": {
     "before-reload-task.json": {
-      "bytes": 3139,
-      "sha256": "914462188a3820408494845a0da90d7504558755bae5f47ca2d93d9e1283f671"
+      "bytes": 3061,
+      "sha256": "6b680d11dc235d3d7828cdc61ee560b20a10319dd0b1c14b284ba3f720d65f3b",
+      "originalCaptureSha256": "914462188a3820408494845a0da90d7504558755bae5f47ca2d93d9e1283f671",
+      "originalCaptureBytes": 3139,
+      "publicationTransform": "CRLF to LF only; original bytes retained in local evidence"
     },
     "before-reload-budget.json": {
-      "bytes": 1500,
-      "sha256": "49a136fecf7646f78178c1003b2e29d677d0edd7ef189c4edcfd7e23d88ce8fb"
+      "bytes": 1461,
+      "sha256": "64bf5239cb93327c25cc6746578425ef01f7a415181fa4990bd1081112b0fe0a",
+      "originalCaptureSha256": "49a136fecf7646f78178c1003b2e29d677d0edd7ef189c4edcfd7e23d88ce8fb",
+      "originalCaptureBytes": 1500,
+      "publicationTransform": "CRLF to LF only; original bytes retained in local evidence"
     },
     "before-reload-selection.json": {
-      "bytes": 2392,
-      "sha256": "de1c13406538e04dab1714c9351bf4d6f3b57c163635cad5fccd7d5c2f9d5e4d"
+      "bytes": 2339,
+      "sha256": "9f0f1801f1f03b3e1fe2217b46f02654de982872406d8acc4adf0d4c973a2b72",
+      "originalCaptureSha256": "de1c13406538e04dab1714c9351bf4d6f3b57c163635cad5fccd7d5c2f9d5e4d",
+      "originalCaptureBytes": 2392,
+      "publicationTransform": "CRLF to LF only; original bytes retained in local evidence"
     },
     "before-reload-worker.json": {
-      "bytes": 3629,
-      "sha256": "4ac54b06957ba2467d726bb06c46f129dc21ae9487d0fb151b372453f6801e6a"
+      "bytes": 3573,
+      "sha256": "e3d3694896ca146029f2a81574d874ce64bc1f9f659f1f69351faf2d23980d18",
+      "originalCaptureSha256": "4ac54b06957ba2467d726bb06c46f129dc21ae9487d0fb151b372453f6801e6a",
+      "originalCaptureBytes": 3629,
+      "publicationTransform": "CRLF to LF only; original bytes retained in local evidence"
     },
     "after-reload-task.json": {
-      "bytes": 3139,
-      "sha256": "78c73792e00a761feb441dfc85c98748c26189e9c2a5b6f2283e1e2ac8880e43"
+      "bytes": 3061,
+      "sha256": "950a5c165affa828cd507127792648e8a5e067a90ca06363987edb19e6f72ba5",
+      "originalCaptureSha256": "78c73792e00a761feb441dfc85c98748c26189e9c2a5b6f2283e1e2ac8880e43",
+      "originalCaptureBytes": 3139,
+      "publicationTransform": "CRLF to LF only; original bytes retained in local evidence"
     },
     "after-reload-budget.json": {
-      "bytes": 1500,
-      "sha256": "0fc49959944e5de931d08225444e08adc6cf5e597b736451b2466a297d12cb02"
+      "bytes": 1461,
+      "sha256": "cfc1ce0d8bcf6defb44c40e6b419d5a8bfcaf45df3d9bfe71d63fd6b383f7207",
+      "originalCaptureSha256": "0fc49959944e5de931d08225444e08adc6cf5e597b736451b2466a297d12cb02",
+      "originalCaptureBytes": 1500,
+      "publicationTransform": "CRLF to LF only; original bytes retained in local evidence"
     },
     "after-reload-selection.json": {
-      "bytes": 2392,
-      "sha256": "cd2bcccf1a53b23b701cc1901d556506786bae0eaf2b43b92e1f8b7d5b97d994"
+      "bytes": 2339,
+      "sha256": "1211dd33feae5a0ce15a89d67e8cbb11dbd4924bc1bdea2c3a35932be5b00850",
+      "originalCaptureSha256": "cd2bcccf1a53b23b701cc1901d556506786bae0eaf2b43b92e1f8b7d5b97d994",
+      "originalCaptureBytes": 2392,
+      "publicationTransform": "CRLF to LF only; original bytes retained in local evidence"
     },
     "after-reload-worker.json": {
-      "bytes": 3629,
-      "sha256": "96be04c801c6bdcecdf73b85add23d4940714d97e25cc586c97fe57e689e5437"
+      "bytes": 3573,
+      "sha256": "d70df5382c0c3a000f040140c03518319a309726dc02fd942fd1feff95ff59d8",
+      "originalCaptureSha256": "96be04c801c6bdcecdf73b85add23d4940714d97e25cc586c97fe57e689e5437",
+      "originalCaptureBytes": 3629,
+      "publicationTransform": "CRLF to LF only; original bytes retained in local evidence"
     },
     "reload-equality.json": {
-      "bytes": 245,
-      "sha256": "4b080be3155e60da101f5fe417eb9ade28b4a1e00c1d0cf00c98313f63f7bd9d"
+      "bytes": 235,
+      "sha256": "1ba64a870e39d1c92e9167c3aa529ced2c13229b4c64fee4ac7f900573a4bca9",
+      "originalCaptureSha256": "4b080be3155e60da101f5fe417eb9ade28b4a1e00c1d0cf00c98313f63f7bd9d",
+      "originalCaptureBytes": 245,
+      "publicationTransform": "CRLF to LF only; original bytes retained in local evidence"
     },
     "ui-proposal-review.txt": {
-      "bytes": 6023,
-      "sha256": "09d3388c081289ea6d9377467aebf9107275d55c47d4486915fe8ad1cb1085ce"
+      "bytes": 6018,
+      "sha256": "5c91bfb36a8eacf7a20b5303695bd7fc1a3cf734a91b4a34cabb85fc90cf1c65",
+      "originalCaptureSha256": "09d3388c081289ea6d9377467aebf9107275d55c47d4486915fe8ad1cb1085ce",
+      "originalCaptureBytes": 6023,
+      "publicationTransform": "CRLF to LF and trailing accessibility whitespace removed; original bytes retained locally"
     },
     "ui-proposal-accepted.txt": {
-      "bytes": 5934,
-      "sha256": "9103d3ec41dbe369c61bf4bb074ba8fc7b3a00f44ab16270bd115d80dea04bb3"
+      "bytes": 5928,
+      "sha256": "1d88de33aa56442d1bc05e298b6633d43212ef4acfa5c0960095f0b5798bd0ed",
+      "originalCaptureSha256": "9103d3ec41dbe369c61bf4bb074ba8fc7b3a00f44ab16270bd115d80dea04bb3",
+      "originalCaptureBytes": 5934,
+      "publicationTransform": "CRLF to LF and trailing accessibility whitespace removed; original bytes retained locally"
     },
     "ui-worker-review.txt": {
-      "bytes": 6323,
-      "sha256": "91c3877cab329f45144f15187a819583a529967de34996226b2627be30be81c7"
+      "bytes": 6317,
+      "sha256": "3054c898509b886c3570d2c3a6fcb7014f6fc2175a614ea3e7d5b05adda23972",
+      "originalCaptureSha256": "91c3877cab329f45144f15187a819583a529967de34996226b2627be30be81c7",
+      "originalCaptureBytes": 6323,
+      "publicationTransform": "CRLF to LF and trailing accessibility whitespace removed; original bytes retained locally"
     },
     "ui-worker-returned.txt": {
-      "bytes": 7503,
-      "sha256": "32b3e064df599d824444fe70b6cd4a30ddadbccd6d272527e3222ba8d3437195"
+      "bytes": 7497,
+      "sha256": "cb8c83e3c95d96b25655b6f8e4889bcc2fe27e53d762fd680920924459abef62",
+      "originalCaptureSha256": "32b3e064df599d824444fe70b6cd4a30ddadbccd6d272527e3222ba8d3437195",
+      "originalCaptureBytes": 7503,
+      "publicationTransform": "CRLF to LF and trailing accessibility whitespace removed; original bytes retained locally"
     },
     "ui-before-reload.txt": {
-      "bytes": 6524,
-      "sha256": "a755c9cddc147997c5bc43fc6389654b683183cbd5ac2d78827d8ff702473c59"
+      "bytes": 6519,
+      "sha256": "68f79a108898eb78a3be0061e936dfd629c3d7306180068f6c723c2fd7c69c0a",
+      "originalCaptureSha256": "a755c9cddc147997c5bc43fc6389654b683183cbd5ac2d78827d8ff702473c59",
+      "originalCaptureBytes": 6524,
+      "publicationTransform": "CRLF to LF and trailing accessibility whitespace removed; original bytes retained locally"
     },
     "ui-after-reload-before-recovery.txt": {
-      "bytes": 4623,
-      "sha256": "033e3b83784bbf4fe21cbe0572ab3528a2237c6e300ca278377fda2e6ffac130"
+      "bytes": 4620,
+      "sha256": "87eba39756ecab96956531be37c79fd55f43f000907b3dc051621f3bc174cf39",
+      "originalCaptureSha256": "033e3b83784bbf4fe21cbe0572ab3528a2237c6e300ca278377fda2e6ffac130",
+      "originalCaptureBytes": 4623,
+      "publicationTransform": "CRLF to LF and trailing accessibility whitespace removed; original bytes retained locally"
     },
     "ui-recovered.txt": {
-      "bytes": 7276,
-      "sha256": "e3796288521ffd88a84c08633722aaa9dde55bb5f1d4b74fc9ddb20432309d1f"
+      "bytes": 7273,
+      "sha256": "d8ceafa335ee3087a83346c57ea7d65dc472c014a0b0f540ad4319ff34809095",
+      "originalCaptureSha256": "e3796288521ffd88a84c08633722aaa9dde55bb5f1d4b74fc9ddb20432309d1f",
+      "originalCaptureBytes": 7276,
+      "publicationTransform": "CRLF to LF and trailing accessibility whitespace removed; original bytes retained locally"
     },
     "ui-after-reload-readback.txt": {
-      "bytes": 9786,
-      "sha256": "5c66d9af5318ec8b284cac5ff720751a86f1665353c3dcf0998163814d90abf2"
+      "bytes": 9781,
+      "sha256": "0ad620d0906fef6bf0d96d7cdf3fcec5a7ba197f6d2ebd8c8afa4260fe1b3726",
+      "originalCaptureSha256": "5c66d9af5318ec8b284cac5ff720751a86f1665353c3dcf0998163814d90abf2",
+      "originalCaptureBytes": 9786,
+      "publicationTransform": "CRLF to LF and trailing accessibility whitespace removed; original bytes retained locally"
     },
     "ui-worker-review.png": {
       "bytes": 105347,
@@ -105,12 +156,18 @@
       "sha256": "ac966a8169a20c5e7c818439c402decf9b6a8fbb7f05b22c8c402bca12a41200"
     },
     "ui-candidate-observation.json": {
-      "bytes": 20856,
-      "sha256": "94ed0f1cb1f887ff8313af08569f7583f7447ffeb6698488c345377d5b3e486c"
+      "bytes": 20208,
+      "sha256": "509effccd308b1e0b3845dd979cf010df61094f4dfb3b58fe482d20644098d02",
+      "originalCaptureSha256": "94ed0f1cb1f887ff8313af08569f7583f7447ffeb6698488c345377d5b3e486c",
+      "originalCaptureBytes": 20856,
+      "publicationTransform": "CRLF to LF only; original bytes retained in local evidence"
     },
     "owned-engine-stop.json": {
-      "bytes": 271,
-      "sha256": "64eecdfda2b6f29d833bd025659226ce783aea7dd0af63cd50465c2118f4fac6"
+      "bytes": 265,
+      "sha256": "e790a8b2197d21aee517c2a1e6d775b6d97a9394f194abfb0747219bf222748c",
+      "originalCaptureSha256": "64eecdfda2b6f29d833bd025659226ce783aea7dd0af63cd50465c2118f4fac6",
+      "originalCaptureBytes": 271,
+      "publicationTransform": "CRLF to LF only; original bytes retained in local evidence"
     }
   },
   "limitations": [
