@@ -254,6 +254,10 @@ function TaskDetail({
 							result.budget?.execution_may_continue || result.budget?.active_attempt,
 						),
 				);
+			} else {
+				setNeedsReadback(
+					Boolean(result.budget?.execution_may_continue || result.budget?.active_attempt),
+				);
 			}
 		} catch (e) {
 			setError(message(e));
@@ -361,6 +365,35 @@ function TaskDetail({
 			setBusy(false);
 		}
 	}
+	async function resume() {
+		if (!budget || !budgetRead || busy || reading || sending.current || needsReadback) return;
+		sending.current = true;
+		setBusy(true);
+		setError("");
+		setPrepared(null);
+		setWorkerReview(null);
+		setNeedsReadback(true);
+		try {
+			const result = await client.task({
+				action: "resume",
+				task_id: task.id,
+				expected_budget_sha256: budget.sha256,
+			});
+			if (result.kind !== "budget" || !result.budget) {
+				throw new Error("Unexpected resume response");
+			}
+			setBudget(result.budget);
+			setNeedsReadback(false);
+		} catch (e) {
+			setBudgetRead(false);
+			setError(
+				`${message(e)}. Resume may have completed. Read the budget before another change.`,
+			);
+		} finally {
+			sending.current = false;
+			setBusy(false);
+		}
+	}
 	async function reviewWorker() {
 		if (!proposal || needsReadback || sending.current) return;
 		setBusy(true);
@@ -437,6 +470,7 @@ function TaskDetail({
 				<Group>
 					<Button
 						loading={reading}
+						disabled={busy}
 						onClick={() => void refresh()}
 					>
 						Read budget and attempt
@@ -448,7 +482,31 @@ function TaskDetail({
 					>
 						Stop task budget
 					</Button>
+					<Button
+						disabled={
+							!budgetRead ||
+							!budget ||
+							busy ||
+							reading ||
+							proposing ||
+							needsReadback ||
+							task.status !== "open" ||
+							Boolean(budget.active_attempt) ||
+							budget.execution_may_continue ||
+							(budget.stopped !== "cancelled" && budget.stopped !== "attempt_failed")
+						}
+						onClick={() => void resume()}
+					>
+						Resume task budget
+					</Button>
 				</Group>
+				<Text
+					size="sm"
+					c="dimmed"
+				>
+					Resume keeps the original deadline and spent effort. It does not run a model.
+					Review current inputs before requesting new work.
+				</Text>
 				{error && (
 					<Alert
 						color="red"
@@ -467,6 +525,10 @@ function TaskDetail({
 						{budget.active_attempt && (
 							<Text>Active attempt: {budget.active_attempt}</Text>
 						)}
+						<Text size="sm">
+							Original deadline:{" "}
+							{new Date(Number(budget.deadline_unix_ms)).toLocaleString()}
+						</Text>
 						{budget.execution_may_continue && (
 							<Alert color="orange">
 								Remote execution may continue. Stop prevents acceptance; it does not

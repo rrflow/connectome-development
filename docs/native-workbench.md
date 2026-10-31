@@ -92,12 +92,23 @@ A lost reply must not trigger another inference. A local **Not dispatched** resu
 allows renewed input review; unresolved remote state remains visibly uncertain.
 No credentials, authoritative result cache or training consent enter local storage.
 
-The current [selected-worker handoff](controller-worker-handoff.md) extends this
-workspace with explicit review and one engine-admitted draft request, using the
-SDK pinned to engine PR229 `e3528330`. Its exact-build live desktop acceptance
-and dependency landing remain pending. Source-edit successor planning, project
-effects, RROFLOW delivery and model qualification remain open. Recorded native
-process checks are distinct from a live BF16 desktop journey and release evidence.
+The [selected-worker handoff](controller-worker-handoff.md) extends this workspace
+with explicit review and one engine-admitted draft request. The earlier
+[desktop trial](controller-worker-desktop-live.md) retains its original engine pin.
+
+The current [task recovery increment](controller-task-recovery.md) pins the SDK
+and bundled-engine source to PR230 `6a4cbb04`. After **Read budget and attempt**,
+**Resume task budget** is available for known-completed cancelled or failed work.
+It keeps the original deadline, limits and spent effort and does not invoke a
+model. Review current inputs before requesting new work. The engine denies
+expired/exhausted budgets and stale authority; unknown execution cannot resume.
+If the reply is lost, read the budget again before another change. Existing
+attempt records remain available through public engine readback.
+
+This revision's desktop acceptance and dependency landing remain pending.
+Source-edit successor planning, project effects, RROFLOW delivery and model
+qualification remain open. Native process checks are distinct from a live BF16
+desktop journey and release evidence.
 
 ## Learn and navigate
 

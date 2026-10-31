@@ -1,12 +1,12 @@
 //! Project-scoped task controls. Reads never dispatch a provider or reset a budget.
 use super::*;
-use rrd_client::operations::{TaskEndpointPropose, TaskWorkerExecute};
+use rrd_client::operations::{TaskBudgetResume, TaskEndpointPropose, TaskWorkerExecute};
 use rrd_contract::{
     ConfigureTaskBudget, CorrelationId, EndpointConfiguration, EndpointSelectionChoice,
     EndpointSelectionProposal, EndpointSelectionRequest, EndpointSelectionTask, ListTasks,
     OpenTask, ReadEndpointConfiguration, ReadTask, ReadTaskAttempt, ReadTaskBudget,
-    ReasoningBudgetStop, ReasoningLimits, StopTaskBudget, TaskAttemptStatus, TaskBudgetView,
-    TaskRecord, TaskWorkerOutput, TaskWorkerRequest,
+    ReasoningBudgetStop, ReasoningLimits, ResumeTaskBudget, StopTaskBudget, TaskAttemptStatus,
+    TaskBudgetView, TaskRecord, TaskWorkerOutput, TaskWorkerRequest,
 };
 use serde::Serialize;
 
@@ -35,6 +35,10 @@ pub enum TaskCommand {
         limits: ReasoningLimits,
     },
     Stop {
+        task_id: String,
+        expected_budget_sha256: String,
+    },
+    Resume {
         task_id: String,
         expected_budget_sha256: String,
     },
@@ -85,7 +89,7 @@ impl From<TaskRecord> for TaskSummary {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, PartialEq, Eq)]
 pub struct BudgetSummary {
     pub sha256: String,
     pub max_steps: String,
@@ -93,6 +97,8 @@ pub struct BudgetSummary {
     pub max_run_elapsed_ms: String,
     pub reserved_steps: String,
     pub charged_elapsed_ms: String,
+    pub started_at_unix_ms: String,
+    pub deadline_unix_ms: String,
     pub active_attempt: Option<String>,
     pub execution_may_continue: bool,
     pub stopped: Option<ReasoningBudgetStop>,
@@ -107,6 +113,8 @@ fn budget_view(view: TaskBudgetView) -> Option<BudgetSummary> {
             max_run_elapsed_ms: budget.limits.max_run_elapsed_ms.to_string(),
             reserved_steps: budget.reserved_steps.to_string(),
             charged_elapsed_ms: budget.charged_elapsed_ms.to_string(),
+            started_at_unix_ms: budget.started_at_unix_ms.to_string(),
+            deadline_unix_ms: budget.deadline_unix_ms.to_string(),
             active_attempt: budget.active_attempt.map(|id| id.as_str().to_owned()),
             execution_may_continue: budget.execution_may_continue,
             stopped: budget.stopped,
@@ -449,6 +457,25 @@ impl NativeRrdClient {
                 let result = self
                     .send(true, |s, o| async move {
                         self.client.stop_task_budget(&s, request, o).await
+                    })
+                    .await?;
+                self.checked_budget(result, &task_id)
+            }
+            TaskCommand::Resume {
+                task_id,
+                expected_budget_sha256,
+            } => {
+                let request = ResumeTaskBudget {
+                    scope: self.scope(),
+                    task_id: canonical(&task_id, "task")?,
+                    expected_budget_sha256,
+                };
+                request.validate().map_err(contract_error)?;
+                let result = self
+                    .send(true, |s, o| async move {
+                        self.client
+                            .call_operation::<TaskBudgetResume>(&s, request, o)
+                            .await
                     })
                     .await?;
                 self.checked_budget(result, &task_id)

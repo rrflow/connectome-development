@@ -13,6 +13,8 @@ export interface TaskBudget {
 	max_run_elapsed_ms: string;
 	reserved_steps: string;
 	charged_elapsed_ms: string;
+	started_at_unix_ms: string;
+	deadline_unix_ms: string;
 	active_attempt: string | null;
 	execution_may_continue: boolean;
 	stopped: string | null;
@@ -59,7 +61,7 @@ export type TaskCommand =
 			task_id: string;
 			limits: { max_steps: number; max_step_elapsed_ms: number; max_run_elapsed_ms: number };
 	  }
-	| { action: "stop"; task_id: string; expected_budget_sha256: string }
+	| { action: "stop" | "resume"; task_id: string; expected_budget_sha256: string }
 	| {
 			action: "propose";
 			task_id: string;
