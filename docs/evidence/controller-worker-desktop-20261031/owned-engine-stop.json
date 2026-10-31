@@ -1,6 +1,6 @@
 ﻿{
-    "pid":  96092,
-    "stopped":  true,
-    "observedAt":  "2026-10-31T19:25:58.6057463Z",
-    "note":  "Path-verified Stop-Process succeeded; initial receipt write used wrong working directory and failed. This is a subsequent process-absence observation."
+	"pid": 96092,
+	"stopped": true,
+	"observedAt": "2026-10-31T19:25:58.6057463Z",
+	"note": "Path-verified Stop-Process succeeded; initial receipt write used wrong working directory and failed. This is a subsequent process-absence observation."
 }

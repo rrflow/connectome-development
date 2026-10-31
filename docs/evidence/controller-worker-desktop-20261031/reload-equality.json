@@ -1,11 +1,11 @@
 {
-  "observedAt": "2026-10-31T19:25:33.828932+00:00",
-  "exactPayloadEquality": {
-    "task": true,
-    "budget": true,
-    "selection": true,
-    "worker": true
-  },
-  "readOperationsOnly": true,
-  "providerCredentialsLoaded": false
+	"observedAt": "2026-10-31T19:25:33.828932+00:00",
+	"exactPayloadEquality": {
+		"task": true,
+		"budget": true,
+		"selection": true,
+		"worker": true
+	},
+	"readOperationsOnly": true,
+	"providerCredentialsLoaded": false
 }

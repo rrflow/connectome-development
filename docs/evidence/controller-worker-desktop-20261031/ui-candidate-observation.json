@@ -1,649 +1,649 @@
 {
-  "conclusion": "success",
-  "headSha": "95a81077d89efb5cd14e14bcbdecbc9bfa76d872",
-  "jobs": [
-    {
-      "completedAt": "2026-10-31T19:23:47Z",
-      "conclusion": "success",
-      "databaseId": 124630577240,
-      "name": "RRFlow SDK and RRD process integration",
-      "startedAt": "2026-10-31T19:09:49Z",
-      "status": "completed",
-      "steps": [
-        {
-          "completedAt": "2026-10-31T19:09:52Z",
-          "conclusion": "success",
-          "name": "Set up job",
-          "number": 1,
-          "startedAt": "2026-10-31T19:09:50Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:09:53Z",
-          "conclusion": "success",
-          "name": "Checkout code",
-          "number": 2,
-          "startedAt": "2026-10-31T19:09:52Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:09:53Z",
-          "conclusion": "success",
-          "name": "Resolve the pinned RRFlow revision",
-          "number": 3,
-          "startedAt": "2026-10-31T19:09:53Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:10:41Z",
-          "conclusion": "success",
-          "name": "Install Tauri system dependencies",
-          "number": 4,
-          "startedAt": "2026-10-31T19:09:53Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:10:43Z",
-          "conclusion": "success",
-          "name": "Setup Rust stable",
-          "number": 5,
-          "startedAt": "2026-10-31T19:10:41Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:11:10Z",
-          "conclusion": "success",
-          "name": "Rust cache",
-          "number": 6,
-          "startedAt": "2026-10-31T19:10:43Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:11:10Z",
-          "conclusion": "success",
-          "name": "Restore the verified rrflow engine",
-          "number": 7,
-          "startedAt": "2026-10-31T19:11:10Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:11:12Z",
-          "conclusion": "success",
-          "name": "Checkout the pinned RRFlow engine",
-          "number": 8,
-          "startedAt": "2026-10-31T19:11:10Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:11:59Z",
-          "conclusion": "success",
-          "name": "Check the pinned SDK's generated surfaces",
-          "number": 9,
-          "startedAt": "2026-10-31T19:11:12Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:20:54Z",
-          "conclusion": "success",
-          "name": "Build rrflow at the pinned revision",
-          "number": 10,
-          "startedAt": "2026-10-31T19:11:59Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:20:56Z",
-          "conclusion": "success",
-          "name": "Save the verified rrflow engine",
-          "number": 11,
-          "startedAt": "2026-10-31T19:20:54Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:21:01Z",
-          "conclusion": "success",
-          "name": "Setup Node.js",
-          "number": 12,
-          "startedAt": "2026-10-31T19:20:56Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:21:02Z",
-          "conclusion": "success",
-          "name": "Stage the engine as the sidecar and verify its manifest",
-          "number": 13,
-          "startedAt": "2026-10-31T19:21:01Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:23:19Z",
-          "conclusion": "success",
-          "name": "Run the RRD process tests",
-          "number": 14,
-          "startedAt": "2026-10-31T19:21:02Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:23:19Z",
-          "conclusion": "success",
-          "name": "Post Setup Node.js",
-          "number": 25,
-          "startedAt": "2026-10-31T19:23:19Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:23:20Z",
-          "conclusion": "success",
-          "name": "Post Checkout the pinned RRFlow engine",
-          "number": 26,
-          "startedAt": "2026-10-31T19:23:19Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:23:45Z",
-          "conclusion": "success",
-          "name": "Post Rust cache",
-          "number": 27,
-          "startedAt": "2026-10-31T19:23:20Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:23:46Z",
-          "conclusion": "success",
-          "name": "Post Checkout code",
-          "number": 28,
-          "startedAt": "2026-10-31T19:23:45Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:23:46Z",
-          "conclusion": "success",
-          "name": "Complete job",
-          "number": 29,
-          "startedAt": "2026-10-31T19:23:46Z",
-          "status": "completed"
-        }
-      ],
-      "url": "https://github.com/rrflow/connectome-development/actions/runs/41232894117/job/124630577240"
-    },
-    {
-      "completedAt": "2026-10-31T19:11:38Z",
-      "conclusion": "success",
-      "databaseId": 124630577353,
-      "name": "Frontend build and render smoke",
-      "startedAt": "2026-10-31T19:09:49Z",
-      "status": "completed",
-      "steps": [
-        {
-          "completedAt": "2026-10-31T19:09:52Z",
-          "conclusion": "success",
-          "name": "Set up job",
-          "number": 1,
-          "startedAt": "2026-10-31T19:09:50Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:09:53Z",
-          "conclusion": "success",
-          "name": "Checkout code",
-          "number": 2,
-          "startedAt": "2026-10-31T19:09:52Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:09:54Z",
-          "conclusion": "success",
-          "name": "Setup pnpm",
-          "number": 3,
-          "startedAt": "2026-10-31T19:09:53Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:10:01Z",
-          "conclusion": "success",
-          "name": "Setup Node.js",
-          "number": 4,
-          "startedAt": "2026-10-31T19:09:54Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:10:07Z",
-          "conclusion": "success",
-          "name": "Install dependencies",
-          "number": 5,
-          "startedAt": "2026-10-31T19:10:01Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:10:19Z",
-          "conclusion": "success",
-          "name": "Check frontend source",
-          "number": 6,
-          "startedAt": "2026-10-31T19:10:07Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:10:50Z",
-          "conclusion": "success",
-          "name": "Build frontend",
-          "number": 7,
-          "startedAt": "2026-10-31T19:10:19Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:11:16Z",
-          "conclusion": "success",
-          "name": "Install browser runtime",
-          "number": 8,
-          "startedAt": "2026-10-31T19:10:50Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:11:28Z",
-          "conclusion": "success",
-          "name": "Smoke test production build",
-          "number": 9,
-          "startedAt": "2026-10-31T19:11:16Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:11:30Z",
-          "conclusion": "success",
-          "name": "Upload smoke-test evidence",
-          "number": 10,
-          "startedAt": "2026-10-31T19:11:28Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:11:35Z",
-          "conclusion": "success",
-          "name": "Post Setup Node.js",
-          "number": 18,
-          "startedAt": "2026-10-31T19:11:30Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:11:35Z",
-          "conclusion": "success",
-          "name": "Post Setup pnpm",
-          "number": 19,
-          "startedAt": "2026-10-31T19:11:35Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:11:35Z",
-          "conclusion": "success",
-          "name": "Post Checkout code",
-          "number": 20,
-          "startedAt": "2026-10-31T19:11:35Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:11:35Z",
-          "conclusion": "success",
-          "name": "Complete job",
-          "number": 21,
-          "startedAt": "2026-10-31T19:11:35Z",
-          "status": "completed"
-        }
-      ],
-      "url": "https://github.com/rrflow/connectome-development/actions/runs/41232894117/job/124630577353"
-    },
-    {
-      "completedAt": "2026-10-31T19:12:49Z",
-      "conclusion": "success",
-      "databaseId": 124630577380,
-      "name": "Native ubuntu-22.04",
-      "startedAt": "2026-10-31T19:09:49Z",
-      "status": "completed",
-      "steps": [
-        {
-          "completedAt": "2026-10-31T19:09:51Z",
-          "conclusion": "success",
-          "name": "Set up job",
-          "number": 1,
-          "startedAt": "2026-10-31T19:09:50Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:09:53Z",
-          "conclusion": "success",
-          "name": "Checkout code",
-          "number": 2,
-          "startedAt": "2026-10-31T19:09:51Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:10:31Z",
-          "conclusion": "success",
-          "name": "Install Tauri system dependencies",
-          "number": 3,
-          "startedAt": "2026-10-31T19:09:53Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:10:36Z",
-          "conclusion": "success",
-          "name": "Setup Rust stable",
-          "number": 4,
-          "startedAt": "2026-10-31T19:10:31Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:11:19Z",
-          "conclusion": "success",
-          "name": "Rust cache",
-          "number": 5,
-          "startedAt": "2026-10-31T19:10:36Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:11:19Z",
-          "conclusion": "success",
-          "name": "Check native formatting",
-          "number": 6,
-          "startedAt": "2026-10-31T19:11:19Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:11:49Z",
-          "conclusion": "success",
-          "name": "Check native crate",
-          "number": 7,
-          "startedAt": "2026-10-31T19:11:19Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:12:23Z",
-          "conclusion": "success",
-          "name": "Test native crate",
-          "number": 8,
-          "startedAt": "2026-10-31T19:11:49Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:12:27Z",
-          "conclusion": "success",
-          "name": "Lint native crate",
-          "number": 9,
-          "startedAt": "2026-10-31T19:12:23Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:12:47Z",
-          "conclusion": "success",
-          "name": "Post Rust cache",
-          "number": 17,
-          "startedAt": "2026-10-31T19:12:27Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:12:47Z",
-          "conclusion": "success",
-          "name": "Post Checkout code",
-          "number": 18,
-          "startedAt": "2026-10-31T19:12:47Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:12:47Z",
-          "conclusion": "success",
-          "name": "Complete job",
-          "number": 19,
-          "startedAt": "2026-10-31T19:12:47Z",
-          "status": "completed"
-        }
-      ],
-      "url": "https://github.com/rrflow/connectome-development/actions/runs/41232894117/job/124630577380"
-    },
-    {
-      "completedAt": "2026-10-31T19:14:52Z",
-      "conclusion": "success",
-      "databaseId": 124630577471,
-      "name": "Native windows-2025",
-      "startedAt": "2026-10-31T19:09:49Z",
-      "status": "completed",
-      "steps": [
-        {
-          "completedAt": "2026-10-31T19:09:50Z",
-          "conclusion": "success",
-          "name": "Set up job",
-          "number": 1,
-          "startedAt": "2026-10-31T19:09:49Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:09:56Z",
-          "conclusion": "success",
-          "name": "Checkout code",
-          "number": 2,
-          "startedAt": "2026-10-31T19:09:50Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:09:56Z",
-          "conclusion": "skipped",
-          "name": "Install Tauri system dependencies",
-          "number": 3,
-          "startedAt": "2026-10-31T19:09:56Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:10:03Z",
-          "conclusion": "success",
-          "name": "Setup Rust stable",
-          "number": 4,
-          "startedAt": "2026-10-31T19:09:56Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:10:47Z",
-          "conclusion": "success",
-          "name": "Rust cache",
-          "number": 5,
-          "startedAt": "2026-10-31T19:10:03Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:10:49Z",
-          "conclusion": "success",
-          "name": "Check native formatting",
-          "number": 6,
-          "startedAt": "2026-10-31T19:10:47Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:12:11Z",
-          "conclusion": "success",
-          "name": "Check native crate",
-          "number": 7,
-          "startedAt": "2026-10-31T19:10:49Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:13:45Z",
-          "conclusion": "success",
-          "name": "Test native crate",
-          "number": 8,
-          "startedAt": "2026-10-31T19:12:11Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:13:54Z",
-          "conclusion": "success",
-          "name": "Lint native crate",
-          "number": 9,
-          "startedAt": "2026-10-31T19:13:45Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:14:49Z",
-          "conclusion": "success",
-          "name": "Post Rust cache",
-          "number": 17,
-          "startedAt": "2026-10-31T19:13:54Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:14:51Z",
-          "conclusion": "success",
-          "name": "Post Checkout code",
-          "number": 18,
-          "startedAt": "2026-10-31T19:14:49Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:14:51Z",
-          "conclusion": "success",
-          "name": "Complete job",
-          "number": 19,
-          "startedAt": "2026-10-31T19:14:51Z",
-          "status": "completed"
-        }
-      ],
-      "url": "https://github.com/rrflow/connectome-development/actions/runs/41232894117/job/124630577471"
-    },
-    {
-      "completedAt": "2026-10-31T19:12:24Z",
-      "conclusion": "success",
-      "databaseId": 124630577525,
-      "name": "Native macos-15",
-      "startedAt": "2026-10-31T19:09:49Z",
-      "status": "completed",
-      "steps": [
-        {
-          "completedAt": "2026-10-31T19:09:51Z",
-          "conclusion": "success",
-          "name": "Set up job",
-          "number": 1,
-          "startedAt": "2026-10-31T19:09:49Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:09:53Z",
-          "conclusion": "success",
-          "name": "Checkout code",
-          "number": 2,
-          "startedAt": "2026-10-31T19:09:51Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:09:53Z",
-          "conclusion": "skipped",
-          "name": "Install Tauri system dependencies",
-          "number": 3,
-          "startedAt": "2026-10-31T19:09:53Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:09:55Z",
-          "conclusion": "success",
-          "name": "Setup Rust stable",
-          "number": 4,
-          "startedAt": "2026-10-31T19:09:53Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:10:23Z",
-          "conclusion": "success",
-          "name": "Rust cache",
-          "number": 5,
-          "startedAt": "2026-10-31T19:09:55Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:10:24Z",
-          "conclusion": "success",
-          "name": "Check native formatting",
-          "number": 6,
-          "startedAt": "2026-10-31T19:10:23Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:11:01Z",
-          "conclusion": "success",
-          "name": "Check native crate",
-          "number": 7,
-          "startedAt": "2026-10-31T19:10:24Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:11:40Z",
-          "conclusion": "success",
-          "name": "Test native crate",
-          "number": 8,
-          "startedAt": "2026-10-31T19:11:01Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:11:47Z",
-          "conclusion": "success",
-          "name": "Lint native crate",
-          "number": 9,
-          "startedAt": "2026-10-31T19:11:40Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:12:20Z",
-          "conclusion": "success",
-          "name": "Post Rust cache",
-          "number": 17,
-          "startedAt": "2026-10-31T19:11:47Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:12:21Z",
-          "conclusion": "success",
-          "name": "Post Checkout code",
-          "number": 18,
-          "startedAt": "2026-10-31T19:12:20Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:12:22Z",
-          "conclusion": "success",
-          "name": "Complete job",
-          "number": 19,
-          "startedAt": "2026-10-31T19:12:21Z",
-          "status": "completed"
-        }
-      ],
-      "url": "https://github.com/rrflow/connectome-development/actions/runs/41232894117/job/124630577525"
-    },
-    {
-      "completedAt": "2026-10-31T19:23:58Z",
-      "conclusion": "success",
-      "databaseId": 124633882611,
-      "name": "ci-gate",
-      "startedAt": "2026-10-31T19:23:50Z",
-      "status": "completed",
-      "steps": [
-        {
-          "completedAt": "2026-10-31T19:23:51Z",
-          "conclusion": "success",
-          "name": "Set up job",
-          "number": 1,
-          "startedAt": "2026-10-31T19:23:50Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:23:51Z",
-          "conclusion": "success",
-          "name": "Require every CI job",
-          "number": 2,
-          "startedAt": "2026-10-31T19:23:51Z",
-          "status": "completed"
-        },
-        {
-          "completedAt": "2026-10-31T19:23:51Z",
-          "conclusion": "success",
-          "name": "Complete job",
-          "number": 3,
-          "startedAt": "2026-10-31T19:23:51Z",
-          "status": "completed"
-        }
-      ],
-      "url": "https://github.com/rrflow/connectome-development/actions/runs/41232894117/job/124633882611"
-    }
-  ],
-  "status": "completed"
+	"conclusion": "success",
+	"headSha": "95a81077d89efb5cd14e14bcbdecbc9bfa76d872",
+	"jobs": [
+		{
+			"completedAt": "2026-10-31T19:23:47Z",
+			"conclusion": "success",
+			"databaseId": 124630577240,
+			"name": "RRFlow SDK and RRD process integration",
+			"startedAt": "2026-10-31T19:09:49Z",
+			"status": "completed",
+			"steps": [
+				{
+					"completedAt": "2026-10-31T19:09:52Z",
+					"conclusion": "success",
+					"name": "Set up job",
+					"number": 1,
+					"startedAt": "2026-10-31T19:09:50Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:09:53Z",
+					"conclusion": "success",
+					"name": "Checkout code",
+					"number": 2,
+					"startedAt": "2026-10-31T19:09:52Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:09:53Z",
+					"conclusion": "success",
+					"name": "Resolve the pinned RRFlow revision",
+					"number": 3,
+					"startedAt": "2026-10-31T19:09:53Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:10:41Z",
+					"conclusion": "success",
+					"name": "Install Tauri system dependencies",
+					"number": 4,
+					"startedAt": "2026-10-31T19:09:53Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:10:43Z",
+					"conclusion": "success",
+					"name": "Setup Rust stable",
+					"number": 5,
+					"startedAt": "2026-10-31T19:10:41Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:11:10Z",
+					"conclusion": "success",
+					"name": "Rust cache",
+					"number": 6,
+					"startedAt": "2026-10-31T19:10:43Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:11:10Z",
+					"conclusion": "success",
+					"name": "Restore the verified rrflow engine",
+					"number": 7,
+					"startedAt": "2026-10-31T19:11:10Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:11:12Z",
+					"conclusion": "success",
+					"name": "Checkout the pinned RRFlow engine",
+					"number": 8,
+					"startedAt": "2026-10-31T19:11:10Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:11:59Z",
+					"conclusion": "success",
+					"name": "Check the pinned SDK's generated surfaces",
+					"number": 9,
+					"startedAt": "2026-10-31T19:11:12Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:20:54Z",
+					"conclusion": "success",
+					"name": "Build rrflow at the pinned revision",
+					"number": 10,
+					"startedAt": "2026-10-31T19:11:59Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:20:56Z",
+					"conclusion": "success",
+					"name": "Save the verified rrflow engine",
+					"number": 11,
+					"startedAt": "2026-10-31T19:20:54Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:21:01Z",
+					"conclusion": "success",
+					"name": "Setup Node.js",
+					"number": 12,
+					"startedAt": "2026-10-31T19:20:56Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:21:02Z",
+					"conclusion": "success",
+					"name": "Stage the engine as the sidecar and verify its manifest",
+					"number": 13,
+					"startedAt": "2026-10-31T19:21:01Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:23:19Z",
+					"conclusion": "success",
+					"name": "Run the RRD process tests",
+					"number": 14,
+					"startedAt": "2026-10-31T19:21:02Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:23:19Z",
+					"conclusion": "success",
+					"name": "Post Setup Node.js",
+					"number": 25,
+					"startedAt": "2026-10-31T19:23:19Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:23:20Z",
+					"conclusion": "success",
+					"name": "Post Checkout the pinned RRFlow engine",
+					"number": 26,
+					"startedAt": "2026-10-31T19:23:19Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:23:45Z",
+					"conclusion": "success",
+					"name": "Post Rust cache",
+					"number": 27,
+					"startedAt": "2026-10-31T19:23:20Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:23:46Z",
+					"conclusion": "success",
+					"name": "Post Checkout code",
+					"number": 28,
+					"startedAt": "2026-10-31T19:23:45Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:23:46Z",
+					"conclusion": "success",
+					"name": "Complete job",
+					"number": 29,
+					"startedAt": "2026-10-31T19:23:46Z",
+					"status": "completed"
+				}
+			],
+			"url": "https://github.com/rrflow/connectome-development/actions/runs/41232894117/job/124630577240"
+		},
+		{
+			"completedAt": "2026-10-31T19:11:38Z",
+			"conclusion": "success",
+			"databaseId": 124630577353,
+			"name": "Frontend build and render smoke",
+			"startedAt": "2026-10-31T19:09:49Z",
+			"status": "completed",
+			"steps": [
+				{
+					"completedAt": "2026-10-31T19:09:52Z",
+					"conclusion": "success",
+					"name": "Set up job",
+					"number": 1,
+					"startedAt": "2026-10-31T19:09:50Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:09:53Z",
+					"conclusion": "success",
+					"name": "Checkout code",
+					"number": 2,
+					"startedAt": "2026-10-31T19:09:52Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:09:54Z",
+					"conclusion": "success",
+					"name": "Setup pnpm",
+					"number": 3,
+					"startedAt": "2026-10-31T19:09:53Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:10:01Z",
+					"conclusion": "success",
+					"name": "Setup Node.js",
+					"number": 4,
+					"startedAt": "2026-10-31T19:09:54Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:10:07Z",
+					"conclusion": "success",
+					"name": "Install dependencies",
+					"number": 5,
+					"startedAt": "2026-10-31T19:10:01Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:10:19Z",
+					"conclusion": "success",
+					"name": "Check frontend source",
+					"number": 6,
+					"startedAt": "2026-10-31T19:10:07Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:10:50Z",
+					"conclusion": "success",
+					"name": "Build frontend",
+					"number": 7,
+					"startedAt": "2026-10-31T19:10:19Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:11:16Z",
+					"conclusion": "success",
+					"name": "Install browser runtime",
+					"number": 8,
+					"startedAt": "2026-10-31T19:10:50Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:11:28Z",
+					"conclusion": "success",
+					"name": "Smoke test production build",
+					"number": 9,
+					"startedAt": "2026-10-31T19:11:16Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:11:30Z",
+					"conclusion": "success",
+					"name": "Upload smoke-test evidence",
+					"number": 10,
+					"startedAt": "2026-10-31T19:11:28Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:11:35Z",
+					"conclusion": "success",
+					"name": "Post Setup Node.js",
+					"number": 18,
+					"startedAt": "2026-10-31T19:11:30Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:11:35Z",
+					"conclusion": "success",
+					"name": "Post Setup pnpm",
+					"number": 19,
+					"startedAt": "2026-10-31T19:11:35Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:11:35Z",
+					"conclusion": "success",
+					"name": "Post Checkout code",
+					"number": 20,
+					"startedAt": "2026-10-31T19:11:35Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:11:35Z",
+					"conclusion": "success",
+					"name": "Complete job",
+					"number": 21,
+					"startedAt": "2026-10-31T19:11:35Z",
+					"status": "completed"
+				}
+			],
+			"url": "https://github.com/rrflow/connectome-development/actions/runs/41232894117/job/124630577353"
+		},
+		{
+			"completedAt": "2026-10-31T19:12:49Z",
+			"conclusion": "success",
+			"databaseId": 124630577380,
+			"name": "Native ubuntu-22.04",
+			"startedAt": "2026-10-31T19:09:49Z",
+			"status": "completed",
+			"steps": [
+				{
+					"completedAt": "2026-10-31T19:09:51Z",
+					"conclusion": "success",
+					"name": "Set up job",
+					"number": 1,
+					"startedAt": "2026-10-31T19:09:50Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:09:53Z",
+					"conclusion": "success",
+					"name": "Checkout code",
+					"number": 2,
+					"startedAt": "2026-10-31T19:09:51Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:10:31Z",
+					"conclusion": "success",
+					"name": "Install Tauri system dependencies",
+					"number": 3,
+					"startedAt": "2026-10-31T19:09:53Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:10:36Z",
+					"conclusion": "success",
+					"name": "Setup Rust stable",
+					"number": 4,
+					"startedAt": "2026-10-31T19:10:31Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:11:19Z",
+					"conclusion": "success",
+					"name": "Rust cache",
+					"number": 5,
+					"startedAt": "2026-10-31T19:10:36Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:11:19Z",
+					"conclusion": "success",
+					"name": "Check native formatting",
+					"number": 6,
+					"startedAt": "2026-10-31T19:11:19Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:11:49Z",
+					"conclusion": "success",
+					"name": "Check native crate",
+					"number": 7,
+					"startedAt": "2026-10-31T19:11:19Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:12:23Z",
+					"conclusion": "success",
+					"name": "Test native crate",
+					"number": 8,
+					"startedAt": "2026-10-31T19:11:49Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:12:27Z",
+					"conclusion": "success",
+					"name": "Lint native crate",
+					"number": 9,
+					"startedAt": "2026-10-31T19:12:23Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:12:47Z",
+					"conclusion": "success",
+					"name": "Post Rust cache",
+					"number": 17,
+					"startedAt": "2026-10-31T19:12:27Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:12:47Z",
+					"conclusion": "success",
+					"name": "Post Checkout code",
+					"number": 18,
+					"startedAt": "2026-10-31T19:12:47Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:12:47Z",
+					"conclusion": "success",
+					"name": "Complete job",
+					"number": 19,
+					"startedAt": "2026-10-31T19:12:47Z",
+					"status": "completed"
+				}
+			],
+			"url": "https://github.com/rrflow/connectome-development/actions/runs/41232894117/job/124630577380"
+		},
+		{
+			"completedAt": "2026-10-31T19:14:52Z",
+			"conclusion": "success",
+			"databaseId": 124630577471,
+			"name": "Native windows-2025",
+			"startedAt": "2026-10-31T19:09:49Z",
+			"status": "completed",
+			"steps": [
+				{
+					"completedAt": "2026-10-31T19:09:50Z",
+					"conclusion": "success",
+					"name": "Set up job",
+					"number": 1,
+					"startedAt": "2026-10-31T19:09:49Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:09:56Z",
+					"conclusion": "success",
+					"name": "Checkout code",
+					"number": 2,
+					"startedAt": "2026-10-31T19:09:50Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:09:56Z",
+					"conclusion": "skipped",
+					"name": "Install Tauri system dependencies",
+					"number": 3,
+					"startedAt": "2026-10-31T19:09:56Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:10:03Z",
+					"conclusion": "success",
+					"name": "Setup Rust stable",
+					"number": 4,
+					"startedAt": "2026-10-31T19:09:56Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:10:47Z",
+					"conclusion": "success",
+					"name": "Rust cache",
+					"number": 5,
+					"startedAt": "2026-10-31T19:10:03Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:10:49Z",
+					"conclusion": "success",
+					"name": "Check native formatting",
+					"number": 6,
+					"startedAt": "2026-10-31T19:10:47Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:12:11Z",
+					"conclusion": "success",
+					"name": "Check native crate",
+					"number": 7,
+					"startedAt": "2026-10-31T19:10:49Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:13:45Z",
+					"conclusion": "success",
+					"name": "Test native crate",
+					"number": 8,
+					"startedAt": "2026-10-31T19:12:11Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:13:54Z",
+					"conclusion": "success",
+					"name": "Lint native crate",
+					"number": 9,
+					"startedAt": "2026-10-31T19:13:45Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:14:49Z",
+					"conclusion": "success",
+					"name": "Post Rust cache",
+					"number": 17,
+					"startedAt": "2026-10-31T19:13:54Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:14:51Z",
+					"conclusion": "success",
+					"name": "Post Checkout code",
+					"number": 18,
+					"startedAt": "2026-10-31T19:14:49Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:14:51Z",
+					"conclusion": "success",
+					"name": "Complete job",
+					"number": 19,
+					"startedAt": "2026-10-31T19:14:51Z",
+					"status": "completed"
+				}
+			],
+			"url": "https://github.com/rrflow/connectome-development/actions/runs/41232894117/job/124630577471"
+		},
+		{
+			"completedAt": "2026-10-31T19:12:24Z",
+			"conclusion": "success",
+			"databaseId": 124630577525,
+			"name": "Native macos-15",
+			"startedAt": "2026-10-31T19:09:49Z",
+			"status": "completed",
+			"steps": [
+				{
+					"completedAt": "2026-10-31T19:09:51Z",
+					"conclusion": "success",
+					"name": "Set up job",
+					"number": 1,
+					"startedAt": "2026-10-31T19:09:49Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:09:53Z",
+					"conclusion": "success",
+					"name": "Checkout code",
+					"number": 2,
+					"startedAt": "2026-10-31T19:09:51Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:09:53Z",
+					"conclusion": "skipped",
+					"name": "Install Tauri system dependencies",
+					"number": 3,
+					"startedAt": "2026-10-31T19:09:53Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:09:55Z",
+					"conclusion": "success",
+					"name": "Setup Rust stable",
+					"number": 4,
+					"startedAt": "2026-10-31T19:09:53Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:10:23Z",
+					"conclusion": "success",
+					"name": "Rust cache",
+					"number": 5,
+					"startedAt": "2026-10-31T19:09:55Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:10:24Z",
+					"conclusion": "success",
+					"name": "Check native formatting",
+					"number": 6,
+					"startedAt": "2026-10-31T19:10:23Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:11:01Z",
+					"conclusion": "success",
+					"name": "Check native crate",
+					"number": 7,
+					"startedAt": "2026-10-31T19:10:24Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:11:40Z",
+					"conclusion": "success",
+					"name": "Test native crate",
+					"number": 8,
+					"startedAt": "2026-10-31T19:11:01Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:11:47Z",
+					"conclusion": "success",
+					"name": "Lint native crate",
+					"number": 9,
+					"startedAt": "2026-10-31T19:11:40Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:12:20Z",
+					"conclusion": "success",
+					"name": "Post Rust cache",
+					"number": 17,
+					"startedAt": "2026-10-31T19:11:47Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:12:21Z",
+					"conclusion": "success",
+					"name": "Post Checkout code",
+					"number": 18,
+					"startedAt": "2026-10-31T19:12:20Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:12:22Z",
+					"conclusion": "success",
+					"name": "Complete job",
+					"number": 19,
+					"startedAt": "2026-10-31T19:12:21Z",
+					"status": "completed"
+				}
+			],
+			"url": "https://github.com/rrflow/connectome-development/actions/runs/41232894117/job/124630577525"
+		},
+		{
+			"completedAt": "2026-10-31T19:23:58Z",
+			"conclusion": "success",
+			"databaseId": 124633882611,
+			"name": "ci-gate",
+			"startedAt": "2026-10-31T19:23:50Z",
+			"status": "completed",
+			"steps": [
+				{
+					"completedAt": "2026-10-31T19:23:51Z",
+					"conclusion": "success",
+					"name": "Set up job",
+					"number": 1,
+					"startedAt": "2026-10-31T19:23:50Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:23:51Z",
+					"conclusion": "success",
+					"name": "Require every CI job",
+					"number": 2,
+					"startedAt": "2026-10-31T19:23:51Z",
+					"status": "completed"
+				},
+				{
+					"completedAt": "2026-10-31T19:23:51Z",
+					"conclusion": "success",
+					"name": "Complete job",
+					"number": 3,
+					"startedAt": "2026-10-31T19:23:51Z",
+					"status": "completed"
+				}
+			],
+			"url": "https://github.com/rrflow/connectome-development/actions/runs/41232894117/job/124633882611"
+		}
+	],
+	"status": "completed"
 }

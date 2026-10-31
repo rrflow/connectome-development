@@ -151,6 +151,8 @@ preview intentionally cannot launch a native engine or hold its credentials.
 The [actual desktop worker trial](controller-worker-desktop-live.md) records
 source-bound BF16 selection, explicit worker draft and reload/readback evidence,
 including the remaining integration and release limits.
+The [evidence formatting correction](controller-worker-evidence-formatting.md)
+records the subsequent failed publication CI and unchanged observation values.
 
 Run `corepack pnpm check`, `corepack pnpm build` and `corepack pnpm test:smoke`.
 Native checks are `cargo test --manifest-path src-tauri/Cargo.toml --all-targets
