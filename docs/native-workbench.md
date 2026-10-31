@@ -92,9 +92,11 @@ A lost reply must not trigger another inference. A local **Not dispatched** resu
 allows renewed input review; unresolved remote state remains visibly uncertain.
 No credentials, authoritative result cache or training consent enter local storage.
 
-This experimental integration depends on engine PR222 (`61ddb264`) and its
-unmerged prerequisites. It does not implement worker execution, source-edit
-successor planning, RROFLOW delivery or model qualification. The recorded native
+The current [selected-worker handoff](controller-worker-handoff.md) extends this
+workspace with explicit review and one engine-admitted draft request, using the
+SDK pinned to engine PR229 `e3528330`. Its exact-build live desktop acceptance
+and dependency landing remain pending. Source-edit successor planning, project
+effects, RROFLOW delivery and model qualification remain open. Recorded native
 process checks are distinct from a live BF16 desktop journey and release evidence.
 
 ## Learn and navigate

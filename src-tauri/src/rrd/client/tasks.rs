@@ -1,12 +1,12 @@
 //! Project-scoped task controls. Reads never dispatch a provider or reset a budget.
 use super::*;
-use rrd_client::operations::TaskEndpointPropose;
+use rrd_client::operations::{TaskEndpointPropose, TaskWorkerExecute};
 use rrd_contract::{
     ConfigureTaskBudget, CorrelationId, EndpointConfiguration, EndpointSelectionChoice,
     EndpointSelectionProposal, EndpointSelectionRequest, EndpointSelectionTask, ListTasks,
     OpenTask, ReadEndpointConfiguration, ReadTask, ReadTaskAttempt, ReadTaskBudget,
     ReasoningBudgetStop, ReasoningLimits, StopTaskBudget, TaskAttemptStatus, TaskBudgetView,
-    TaskRecord,
+    TaskRecord, TaskWorkerOutput, TaskWorkerRequest,
 };
 use serde::Serialize;
 
@@ -44,6 +44,18 @@ pub enum TaskCommand {
     Propose {
         task_id: String,
         attempt_id: String,
+        expected_task_sha256: String,
+        expected_configuration_sha256: String,
+    },
+    PrepareWorker {
+        task_id: String,
+        selection_attempt_id: String,
+    },
+    Work {
+        task_id: String,
+        attempt_id: String,
+        selection_attempt_id: String,
+        expected_selection_sha256: String,
         expected_task_sha256: String,
         expected_configuration_sha256: String,
     },
@@ -128,6 +140,47 @@ impl From<EndpointSelectionProposal> for ProposalSummary {
 }
 
 #[derive(Debug, Serialize)]
+pub struct WorkerReview {
+    pub selection_attempt_id: String,
+    pub selection_sha256: String,
+    pub task_sha256: String,
+    pub configuration_sha256: String,
+    pub binding_id: String,
+    pub effort: Option<String>,
+    pub wait_timeout_ms: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct WorkerSummary {
+    pub attempt_id: String,
+    pub selection_attempt_id: String,
+    pub binding_id: String,
+    pub service_id: String,
+    pub content: String,
+    pub content_sha256: String,
+    pub response_sha256: String,
+    pub task_sha256: String,
+    pub configuration_sha256: String,
+    pub elapsed_ms: Option<String>,
+}
+impl From<TaskWorkerOutput> for WorkerSummary {
+    fn from(output: TaskWorkerOutput) -> Self {
+        Self {
+            attempt_id: output.attempt_id.as_str().to_owned(),
+            selection_attempt_id: output.selection_attempt_id.as_str().to_owned(),
+            binding_id: output.binding_id.to_string(),
+            service_id: output.service_id.to_string(),
+            content: output.content,
+            content_sha256: output.content_sha256,
+            response_sha256: output.response_sha256,
+            task_sha256: output.task_sha256,
+            configuration_sha256: output.configuration_sha256,
+            elapsed_ms: output.elapsed_ms.map(|n| n.to_string()),
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum TaskReply {
     NotDispatched {
@@ -156,9 +209,16 @@ pub enum TaskReply {
     Proposal {
         proposal: ProposalSummary,
     },
+    WorkerPrepared {
+        review: WorkerReview,
+    },
+    Worker {
+        worker: WorkerSummary,
+    },
     Attempt {
         status: Option<TaskAttemptStatus>,
         proposal: Option<ProposalSummary>,
+        worker: Option<WorkerSummary>,
     },
 }
 
@@ -212,6 +272,84 @@ impl NativeRrdClient {
                 .await
         })
         .await
+    }
+
+    /// Read-only review, not execution authority. RRFlow rechecks admission at dispatch.
+    async fn worker_review(
+        &self,
+        task_id: &str,
+        selection_attempt_id: &str,
+    ) -> Result<(WorkerReview, Duration), RrdError> {
+        let task = self.task_record(task_id).await?;
+        let task_sha256 = EndpointSelectionTask::from_task(&task)
+            .map_err(contract_error)?
+            .task_sha256;
+        let request = ReadTaskAttempt {
+            scope: self.scope(),
+            task_id: canonical(task_id, "task")?,
+            attempt_id: CorrelationId::new(selection_attempt_id).map_err(contract_error)?,
+        };
+        let result = self
+            .send(false, |s, o| async move {
+                self.client.read_task_attempt(&s, request, o).await
+            })
+            .await?;
+        result.validate().map_err(contract_error)?;
+        let attempt = result.attempt.ok_or("No selection attempt is recorded")?;
+        if attempt.status != TaskAttemptStatus::Accepted
+            || attempt.attempt_id.as_str() != selection_attempt_id
+        {
+            return Err("Worker review requires the accepted selection attempt".into());
+        }
+        let selection_sha256 = attempt.outcome_sha256.ok_or("Selection digest is absent")?;
+        let proposal = attempt
+            .endpoint_proposal
+            .ok_or("Attempt has no controller proposal")?;
+        let config = self.task_configuration().await?;
+        let configuration_sha256 = config.sha256().map_err(contract_error)?;
+        if proposal.scope != self.scope()
+            || proposal.task_id.as_str() != task_id
+            || proposal.task_sha256 != task_sha256
+            || proposal.configuration_sha256 != configuration_sha256
+        {
+            return Err("Selection inputs changed; review a fresh controller proposal".into());
+        }
+        let EndpointSelectionChoice::Select { binding_id, effort } = proposal.choice else {
+            return Err("The controller abstained; no worker was selected".into());
+        };
+        let profile = config
+            .profile
+            .as_ref()
+            .ok_or("No endpoint profile is configured")?;
+        let worker = profile
+            .worker_policy
+            .as_ref()
+            .and_then(|p| p.bindings.iter().find(|b| b.binding_id == binding_id))
+            .ok_or("No worker policy is configured for the selected binding")?;
+        worker
+            .wire_effort(effort.as_deref())
+            .map_err(contract_error)?;
+        let binding = profile
+            .bindings
+            .iter()
+            .find(|b| b.id == binding_id)
+            .ok_or("Selected worker binding is absent")?;
+        let timeout = Duration::from_millis(binding.limits.timeout_ms)
+            .checked_add(REQUEST_TIMEOUT)
+            .ok_or("Worker timeout exceeds the native clock")?;
+        self.check_controller_window(timeout)?;
+        Ok((
+            WorkerReview {
+                selection_attempt_id: selection_attempt_id.into(),
+                selection_sha256,
+                task_sha256,
+                configuration_sha256,
+                binding_id: binding_id.to_string(),
+                effort,
+                wait_timeout_ms: timeout.as_millis().to_string(),
+            },
+            timeout,
+        ))
     }
 
     pub async fn task_command(&self, command: TaskCommand) -> Result<TaskReply, RrdError> {
@@ -405,6 +543,76 @@ impl NativeRrdClient {
                     proposal: proposal.into(),
                 })
             }
+            TaskCommand::PrepareWorker {
+                task_id,
+                selection_attempt_id,
+            } => {
+                let (review, _) = self.worker_review(&task_id, &selection_attempt_id).await?;
+                Ok(TaskReply::WorkerPrepared { review })
+            }
+            TaskCommand::Work {
+                task_id,
+                attempt_id,
+                selection_attempt_id,
+                expected_selection_sha256,
+                expected_task_sha256,
+                expected_configuration_sha256,
+            } => {
+                let preflight: Result<_, RrdError> = async {
+                    let request = TaskWorkerRequest {
+                        scope: self.scope(),
+                        task_id: canonical(&task_id, "task")?,
+                        attempt_id: CorrelationId::new(&attempt_id).map_err(contract_error)?,
+                        selection_attempt_id: CorrelationId::new(&selection_attempt_id)
+                            .map_err(contract_error)?,
+                        expected_selection_sha256,
+                        expected_task_sha256,
+                        expected_configuration_sha256,
+                        max_storage_keys: TASK_READ_KEYS,
+                        context: None,
+                    };
+                    request.validate().map_err(contract_error)?;
+                    let (review, timeout) =
+                        self.worker_review(&task_id, &selection_attempt_id).await?;
+                    if review.selection_sha256 != request.expected_selection_sha256
+                        || review.task_sha256 != request.expected_task_sha256
+                        || review.configuration_sha256 != request.expected_configuration_sha256
+                    {
+                        return Err("Worker inputs changed; review the handoff again".into());
+                    }
+                    let margin = self.check_controller_window(timeout)?;
+                    let client = RrdClient::connect_local(
+                        self.address,
+                        self.instance.clone(),
+                        ClientConfig {
+                            request_timeout: timeout,
+                            max_attempts: 1,
+                            ..ClientConfig::default()
+                        },
+                    )
+                    .map_err(RrdError::sdk)?;
+                    let lease = self.lease_for(margin).await?;
+                    let options = self.ids.next(true)?;
+                    Ok((client, lease, request, options))
+                }
+                .await;
+                let (client, lease, request, options) = match preflight {
+                    Ok(prepared) => prepared,
+                    Err(error) => {
+                        return Ok(TaskReply::NotDispatched {
+                            reason: error.message,
+                        })
+                    }
+                };
+                // Contract-owned validation and a single SDK send; errors require readback.
+                let output = client
+                    .call_operation::<TaskWorkerExecute>(&lease.session, request, options)
+                    .await
+                    .map_err(RrdError::sdk)?;
+                Ok(TaskReply::Worker {
+                    worker: output.into(),
+                })
+            }
             TaskCommand::Attempt {
                 task_id,
                 attempt_id,
@@ -419,10 +627,14 @@ impl NativeRrdClient {
                         self.client.read_task_attempt(&s, request, o).await
                     })
                     .await?;
+                result.validate().map_err(contract_error)?;
                 if let Some(attempt) = &result.attempt {
                     if attempt.attempt_id.as_str() != attempt_id
                         || attempt.endpoint_proposal.as_ref().is_some_and(|p| {
                             p.task_id.as_str() != task_id || p.scope != self.scope()
+                        })
+                        || attempt.worker_output.as_ref().is_some_and(|w| {
+                            w.task_id.as_str() != task_id || w.scope != self.scope()
                         })
                     {
                         return Err("Attempt readback changed the requested identity".into());
@@ -430,6 +642,11 @@ impl NativeRrdClient {
                 }
                 Ok(TaskReply::Attempt {
                     status: result.attempt.as_ref().map(|a| a.status),
+                    worker: result
+                        .attempt
+                        .as_ref()
+                        .and_then(|a| a.worker_output.clone())
+                        .map(Into::into),
                     proposal: result
                         .attempt
                         .and_then(|a| a.endpoint_proposal)
@@ -466,5 +683,38 @@ impl NativeRrdClient {
         Ok(TaskReply::Budget {
             budget: budget_view(view),
         })
+    }
+}
+
+#[cfg(test)]
+mod worker_projection_tests {
+    use super::*;
+
+    #[test]
+    fn actual_retained_draft_projects_content_and_attempt_identity() {
+        let captured: serde_json::Value = serde_json::from_str(include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/fixtures/task-worker-output.json"
+        )))
+        .expect("captured actual receipt");
+        let output: TaskWorkerOutput =
+            serde_json::from_value(captured["output"].clone()).expect("contract output");
+        output.validate().expect("unaltered captured draft");
+        let summary = WorkerSummary::from(output.clone());
+        assert_eq!(summary.content, output.content);
+        assert_eq!(summary.attempt_id, output.attempt_id.as_str());
+        assert_eq!(
+            summary.selection_attempt_id,
+            output.selection_attempt_id.as_str()
+        );
+        assert_eq!(summary.content_sha256, output.content_sha256);
+        assert_eq!(summary.elapsed_ms, output.elapsed_ms.map(|n| n.to_string()));
+        let reply = serde_json::to_value(TaskReply::Worker { worker: summary }).unwrap();
+        assert_eq!(reply["kind"], "worker");
+        assert_eq!(reply["worker"]["content"], captured["output"]["content"]);
+        // Explicit corruption probe, never a substitute provider response.
+        let mut corrupted = output;
+        corrupted.content.push('!');
+        assert!(corrupted.validate().is_err());
     }
 }

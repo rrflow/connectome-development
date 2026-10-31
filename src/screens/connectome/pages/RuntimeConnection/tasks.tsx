@@ -19,6 +19,8 @@ import {
 	type TaskProposal,
 	type TaskReply,
 	type TaskSummary,
+	type WorkerDraft,
+	type WorkerReview,
 } from "~/rrflow/tasks";
 
 const message = (error: unknown) => (error instanceof Error ? error.message : String(error));
@@ -103,10 +105,10 @@ export function TasksPanel({
 		);
 	return (
 		<Stack>
-			<Title order={3}>Tasks and controller proposals</Title>
+			<Title order={3}>Tasks and model handoffs</Title>
 			<Text>
-				Record real work and inspect a configured controller's proposed handoff. Proposals
-				do not execute a worker or authorize training.
+				Record real work, review a controller's proposed handoff, then explicitly request a
+				draft from the selected worker. Each call uses the engine's task budget.
 			</Text>
 			{error && (
 				<Alert
@@ -200,6 +202,8 @@ function TaskDetail({
 	const [budgetRead, setBudgetRead] = useState(false);
 	const [prepared, setPrepared] = useState<Extract<TaskReply, { kind: "prepared" }> | null>(null);
 	const [proposal, setProposal] = useState<TaskProposal | null>(null);
+	const [workerReview, setWorkerReview] = useState<WorkerReview | null>(null);
+	const [worker, setWorker] = useState<WorkerDraft | null>(null);
 	const [attempt, setAttempt] = useState("");
 	const [attemptStatus, setAttemptStatus] = useState("");
 	const [needsReadback, setNeedsReadback] = useState(false);
@@ -241,6 +245,8 @@ function TaskDetail({
 					read.status ?? "No attempt is recorded; acceptance remains unconfirmed",
 				);
 				setProposal(read.proposal);
+				setWorker(read.worker);
+				setWorkerReview(null);
 				setNeedsReadback(
 					!read.status ||
 						read.status === "reserved" ||
@@ -293,11 +299,13 @@ function TaskDetail({
 		}
 	}
 	async function propose() {
-		if (!prepared || sending.current || needsReadback) return;
+		if (!prepared || sending.current || needsReadback || reading) return;
 		sending.current = true;
 		setProposing(true);
 		setError("");
 		setProposal(null);
+		setWorker(null);
+		setWorkerReview(null);
 		try {
 			const id = crypto.randomUUID();
 			// Persist coordinates before IPC. A storage failure prevents dispatch.
@@ -346,10 +354,74 @@ function TaskDetail({
 			if (result.kind !== "budget") throw new Error("Unexpected Stop response");
 			setBudget(result.budget);
 			setPrepared(null);
+			setWorkerReview(null);
 		} catch (e) {
 			setError(`${message(e)}. Refresh the budget; Stop may need its latest digest.`);
 		} finally {
 			setBusy(false);
+		}
+	}
+	async function reviewWorker() {
+		if (!proposal || needsReadback || sending.current) return;
+		setBusy(true);
+		setError("");
+		setWorkerReview(null);
+		try {
+			const result = await client.task({
+				action: "prepare_worker",
+				task_id: task.id,
+				selection_attempt_id: proposal.attempt_id,
+			});
+			if (result.kind !== "worker_prepared")
+				throw new Error("Unexpected worker review response");
+			setWorkerReview(result.review);
+		} catch (e) {
+			setError(message(e));
+		} finally {
+			setBusy(false);
+		}
+	}
+	async function requestWorker() {
+		if (!workerReview || sending.current || needsReadback || reading) return;
+		sending.current = true;
+		setProposing(true);
+		setError("");
+		setWorker(null);
+		try {
+			const id = crypto.randomUUID();
+			localStorage.setItem(recoveryKey, JSON.stringify({ task_id: task.id, attempt_id: id }));
+			setAttempt(id);
+			setNeedsReadback(true);
+			setAttemptStatus("Worker request pending; read back this attempt if the reply is lost");
+			const result = await client.task({
+				action: "work",
+				task_id: task.id,
+				attempt_id: id,
+				selection_attempt_id: workerReview.selection_attempt_id,
+				expected_selection_sha256: workerReview.selection_sha256,
+				expected_task_sha256: workerReview.task_sha256,
+				expected_configuration_sha256: workerReview.configuration_sha256,
+			});
+			if (result.kind === "not_dispatched") {
+				setAttemptStatus(`Not dispatched: ${result.reason}`);
+				setNeedsReadback(false);
+				const saved = readTaskRecovery(recoveryKey);
+				if (saved?.attempt_id === id) localStorage.removeItem(recoveryKey);
+				setAttempt("");
+				return;
+			}
+			if (result.kind !== "worker") throw new Error("Unexpected worker response");
+			setWorker(result.worker);
+			setAttemptStatus("Worker draft retained; read the budget and attempt to confirm state");
+		} catch (e) {
+			setError(
+				`${message(e)}. Read back this worker attempt and budget before any further call.`,
+			);
+		} finally {
+			sending.current = false;
+			setProposing(false);
+			setWorkerReview(null);
+			setPrepared(null);
 		}
 	}
 	return (
@@ -474,6 +546,7 @@ function TaskDetail({
 								) ||
 								busy ||
 								proposing ||
+								reading ||
 								needsReadback
 							}
 							onClick={() => void propose()}
@@ -494,6 +567,8 @@ function TaskDetail({
 					onChange={(e) => {
 						setAttempt(e.currentTarget.value);
 						setProposal(null);
+						setWorker(null);
+						setWorkerReview(null);
 						setAttemptStatus("");
 						setNeedsReadback(true);
 					}}
@@ -501,7 +576,7 @@ function TaskDetail({
 				{attemptStatus && <Text role="status">{attemptStatus}</Text>}
 				{needsReadback && (
 					<Text>
-						Readback is required before another proposal. Missing output is not
+						Readback is required before another model call. Missing output is not
 						permission to repeat inference.
 					</Text>
 				)}
@@ -530,6 +605,78 @@ function TaskDetail({
 								This receipt records a proposal. It does not prove worker execution,
 								model quality or reviewed training consent.
 							</Text>
+							{proposal.choice.kind === "select" && (
+								<Button
+									disabled={busy || proposing || reading || needsReadback}
+									onClick={() => void reviewWorker()}
+								>
+									Review selected worker
+								</Button>
+							)}
+						</Stack>
+					</Paper>
+				)}
+				{workerReview && (
+					<Paper
+						withBorder
+						p="sm"
+					>
+						<Stack gap="xs">
+							<Text fw={650}>Selected worker: {workerReview.binding_id}</Text>
+							<Text>
+								Effort: {workerReview.effort ?? "Configured provider default"}
+							</Text>
+							<Text>
+								This sends the task text for one draft under the current worker
+								policy. No additional repository context is selected. Files are not
+								changed.
+							</Text>
+							<Code
+								block
+							>{`Selection: ${workerReview.selection_attempt_id}\nTask: ${workerReview.task_sha256}\nConfiguration: ${workerReview.configuration_sha256}`}</Code>
+							<Button
+								disabled={
+									busy ||
+									proposing ||
+									reading ||
+									needsReadback ||
+									!budget ||
+									Boolean(
+										budget.stopped ||
+											budget.active_attempt ||
+											budget.execution_may_continue,
+									)
+								}
+								onClick={() => void requestWorker()}
+							>
+								Request worker draft
+							</Button>
+						</Stack>
+					</Paper>
+				)}
+				{worker && (
+					<Paper
+						withBorder
+						p="sm"
+					>
+						<Stack gap="xs">
+							<Title order={5}>Worker draft</Title>
+							<Text>
+								Retained by RRFlow for review. This does not mark the task complete
+								or authorize training.
+							</Text>
+							<Text>
+								Binding: {worker.binding_id} · Observed service: {worker.service_id}
+							</Text>
+							<Code
+								block
+								style={{ maxHeight: 420, overflow: "auto", whiteSpace: "pre-wrap" }}
+							>
+								{worker.content}
+							</Code>
+							<Code
+								block
+							>{`Attempt: ${worker.attempt_id}\nSelection: ${worker.selection_attempt_id}\nContent: ${worker.content_sha256}\nResponse: ${worker.response_sha256}`}</Code>
 						</Stack>
 					</Paper>
 				)}
