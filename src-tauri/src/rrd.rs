@@ -454,3 +454,16 @@ pub async fn rrd_task(
 ) -> Result<client::tasks::TaskReply, RrdError> {
     state.client(&profile).await?.task_command(request).await
 }
+
+#[tauri::command]
+pub async fn rrd_attunement(
+    profile: String,
+    request: client::attunement::AttunementCommand,
+    state: State<'_, RrdClientState>,
+) -> Result<client::attunement::AttunementReply, RrdError> {
+    state
+        .client(&profile)
+        .await?
+        .attunement_command(request)
+        .await
+}

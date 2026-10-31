@@ -34,6 +34,7 @@ import { useConfigStore } from "~/shell/stores/config";
 import { ApiReference } from "./api";
 import { formatCount } from "./format";
 import { GlossaryDrawer, Term } from "./glossary";
+import { ProjectPlanPanel } from "./plan";
 import { databaseQuery } from "./queries";
 import { SessionPanel, sessionQueryKey } from "./session";
 import classes from "./style.module.scss";
@@ -336,6 +337,7 @@ export function RuntimeConnectionPage({
 							["overview", "Overview"],
 							["knowledge", "Knowledge"],
 							["tasks", "Tasks"],
+							["plan", "Project plan"],
 							["activity", "Activity"],
 							["learning", "Learning"],
 							["services", "Services"],
@@ -585,7 +587,15 @@ export function RuntimeConnectionPage({
 							connected={Boolean(session)}
 						/>
 					)}
-					{section !== "tasks" && (
+					{section === "plan" && (
+						<ProjectPlanPanel
+							key={sessionKey}
+							client={sessionClient}
+							instance={session?.instance ?? ""}
+							connected={Boolean(session)}
+						/>
+					)}
+					{section !== "tasks" && section !== "plan" && (
 						<ProjectSection
 							detail={detail}
 							section={section}
