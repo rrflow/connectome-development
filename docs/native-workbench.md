@@ -105,7 +105,9 @@ expired/exhausted budgets and stale authority; unknown execution cannot resume.
 If the reply is lost, read the budget again before another change. Existing
 attempt records remain available through public engine readback.
 
-This revision's desktop acceptance and dependency landing remain pending.
+The [actual desktop recovery trial](controller-task-recovery-desktop.md) verifies
+this revision's proposal, Stop/resume with retained effort, worker draft and
+reload/readback. Dependency landing and release qualification remain pending.
 Source-edit successor planning, project effects, RROFLOW delivery and model
 qualification remain open. Native process checks are distinct from a live BF16
 desktop journey and release evidence.

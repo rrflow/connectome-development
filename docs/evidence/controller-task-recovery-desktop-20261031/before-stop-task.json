@@ -1,0 +1,71 @@
+{
+	"protocol": "rrd",
+	"protocol_version": 1,
+	"request_id": "desktop-observation-45038a180fb24e8d92942e4ecb6d4eae",
+	"operation_id": "desktop-observation-45038a180fb24e8d92942e4ecb6d4eae",
+	"outcome": {
+		"status": "ok",
+		"payload": {
+			"task": {
+				"format_version": 1,
+				"task_id": "task-507644d1def1a5d1f86657fca362fd227eb7afee35336971e52f1bb4e126bca7",
+				"scope": "instance:instance-eeac456970b0e85859ec6989",
+				"title": "Add explicit task budget recovery to Connectome",
+				"goal": "Implementation is published at `0f75c015c0687a554cdf2b1a48c36488f8113aee`. The task workspace now offers explicit resume through the pinned `6a4cbb04` SDK/engine, preserving original allowance and attempt history. Lost replies require readback; resume does not dispatch a model.\n\nValidation: the actual installed native Stop/reconnect/resume test passes, including retained deadline/effort, stale-resume and old-Stop denial, and exact readback after reconnect. Native suite: 41 passed, 17 process cases ignored in the ordinary run. The explicit process run passed 16 and failed its missing staged-sidecar prerequisite; after staging the verified executable, the affected sidecar case passed. Failure and correction are retained. Strict Clippy/fmt, pnpm check/build and four browser smoke cases pass. The value fixture was regenerated through the actual pinned engine; all 12 values remained equal. Browser smoke is not native UI acceptance.\n\n[Implementation and validation journal](https://github.com/rrflow/connectome-development/blob/0f75c015c0687a554cdf2b1a48c36488f8113aee/docs/controller-task-recovery.md). Exact-source desktop build/observation and dependency landing remain pending. Keep draft; no release, model-quality or training claim.\n\n## Pre-implementation brief\n\n## Problem and target behavior\n\nConnectome can stop a task and recover its attempt records, but cannot explicitly resume safely completed stopped work. Compose RRFlow PR230's public `task-budget-resume` operation into the existing task workspace. Resume preserves the original deadline, spent effort and prior attempts; it never dispatches a model or retries prior work. Users review current inputs before a separate new attempt.\n\n## Scope and ownership\n\nStart from main `5ba5a9d5db07a94b4beb430cf2665fd72f057279`, ordinarily incorporating Connectome PR28 at `91b89ae46ac23af70c852c79559bc59ecd62eed5`. Keep draft behind Connectome PR26/27/28 and engine PR206/222/229/230. Owns Gate H-04/G-01b/G-02a and POAM-009/011 UI composition, not release closure. Preserve version 0.0.5 alpha.\n\nPin existing Rust and TypeScript SDKs together to published engine implementation `6a4cbb042a13f5a7c41b53d11d62b54a85df3bed`. Use its matching frozen executable for actual process checks. Regenerate the value fixture only through the existing installed-engine writer. Change native `client/tasks.rs`, process task tests, `src/rrflow/tasks.ts` and `RuntimeConnection/tasks.tsx`; update existing workbench guidance and a dedicated evidence journal. Add deadline/start projections as strings so UI recovery explains retained limits. No provider identities, credentials, ranking, fixed runtime policy or second lifecycle owner.\n\nThe native bridge sends the displayed budget digest once through the catalogue-derived SDK operation and contract validation. The renderer offers resume only after reading a stopped, inactive, known-completed task and disables concurrent changes. It clears stale request preparations, handles lost replies by requiring budget/attempt readback, and never automatically retries. RRFlow alone authorizes the transition and rejects stale/expired/exhausted/uncertain work.\n\n## Failure oracle and acceptance\n\nExtend the actual installed task test: Stop, reconnect, resume through the native bridge, verify original allowance/deadline/effort, reject stale resume and old Stop, and reconnect/read the resulting budget. Keep unconfigured worker/proposal denial and absent-attempt checks. Compile, native focused/full/process tests, Clippy/fmt, pnpm check/build and browser smoke exercise the changed owners. The browser smoke suite is not native recovery evidence. A source-bound real desktop observation remains required before claiming UI acceptance; the prior four-call BF16 engine proof is separately attributed.\n\nReviewed README/CONTRIBUTING, native task/control/projection machinery, current renderer/recovery, existing process tests, dependency checks and previous worker evidence; inspect exact SDK resume contract before editing. No external algorithm or new research is needed for thi",
+				"status": "open",
+				"opened_at_unix_ms": 1793482170333,
+				"idempotency_key": "connectome-94335be7eeff405aa4206ecf6885f1ed-key-5",
+				"operation_sha256": "e39ec55801fa36aba18d1811fc392bf66f5bc0ff835fdddd0838fc3b0ab35c10",
+				"task_cursor": 5,
+				"known_at_cursor": 5
+			},
+			"read": {
+				"runtime_manifest_sha256": "a3334c849c40b44b0158f3210e7430d345826ef278e70be1feb202c420470536",
+				"runtime_cursor": 9,
+				"schema_revision": 3,
+				"catalogue_revision": 0
+			},
+			"selected_versions": 1,
+			"read_evidence": {
+				"contract_version": 1,
+				"key_budget": 10000,
+				"point_reads": 10,
+				"range_scans": 1,
+				"keys_examined": 11,
+				"values_decoded": 11,
+				"decoded_bytes": 8058,
+				"stamp_validation": {
+					"method": "authenticated_current_head",
+					"change_reads": 0,
+					"proof_nodes": 0
+				},
+				"paths": [
+					{
+						"path": "read_stamp",
+						"point_reads": 5,
+						"range_scans": 0,
+						"keys_examined": 5,
+						"values_decoded": 5,
+						"decoded_bytes": 2545
+					},
+					{
+						"path": "record_versions",
+						"point_reads": 0,
+						"range_scans": 1,
+						"keys_examined": 1,
+						"values_decoded": 1,
+						"decoded_bytes": 5193
+					},
+					{
+						"path": "accumulator_proof",
+						"point_reads": 5,
+						"range_scans": 0,
+						"keys_examined": 5,
+						"values_decoded": 5,
+						"decoded_bytes": 320
+					}
+				]
+			}
+		}
+	}
+}
