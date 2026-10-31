@@ -148,6 +148,10 @@ preview intentionally cannot launch a native engine or hold its credentials.
 
 ## Validation
 
+The [actual desktop worker trial](controller-worker-desktop-live.md) records
+source-bound BF16 selection, explicit worker draft and reload/readback evidence,
+including the remaining integration and release limits.
+
 Run `corepack pnpm check`, `corepack pnpm build` and `corepack pnpm test:smoke`.
 Native checks are `cargo test --manifest-path src-tauri/Cargo.toml --all-targets
 --locked` and strict clippy. With the staged engine's absolute path in

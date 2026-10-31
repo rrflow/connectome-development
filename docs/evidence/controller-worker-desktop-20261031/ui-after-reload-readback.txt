@@ -1,0 +1,229 @@
+Window: "Connectome", App: connectome.exe.
+	0 window Connectome Secondary Actions: Raise
+		8 pane TAURI_DRAG_RESIZE_WINDOW
+		1 pane
+			9 pane Connectome · RRFlow
+				16 pane (disabled)
+				10 region Connectome · RRFlow - Web content
+					11 region
+						12 region
+						13 region
+							14 region
+								352 document Connectome · RRFlow Value: http://tauri.localhost/runtime/gO5W38S0W/tasks ID: RootWebArea
+									353 group
+										354 group ID: root
+											355 Unlabeled graphic
+											356 group ID: mantine-b7gvp0vvv-target
+												357 text File
+											358 group ID: mantine-6ycji4fc3-target
+												359 text View
+											360 group ID: mantine-sg2cultdw-target
+												361 text Help
+											362 text Connectome
+											363 button Minimize
+											364 button Maximize
+											365 button Close
+											366 complementary
+												367 button CONNECTOME RRFLOW CONTROL SURFACE
+													368 Unlabeled graphic
+												369 navigation
+													370 button Overview
+													371 separator
+													372 button Embed Connectome
+													373 button Search K
+													374 button Settings
+											375 button Manage project engines
+											376 link Connectome Value: http://tauri.localhost/overview
+											377 text /
+											378 text Projects
+											379 text /
+											380 text Worker handoff verification 95a81077
+											381 text /
+											382 text tasks
+											383 text RRD CONNECTED
+											384 text Worker handoff verification 95a81077
+											385 text instance-2cfd4423f8f3fa42bd264f2b
+											386 text ·
+											387 text http://127.0.0.1:53808
+											388 button What do these words mean?
+											389 button Advanced details
+											390 button Reconnect
+											391 text Selected project
+											392 text A saved connection; engine identity is verified independently.
+											393 edit (settable, string) Selected project Value: Worker handoff verification 95a81077 ID: mantine-sxfowta4f
+											394 graphic
+											395 button Manage project engines
+											396 navigation Project sections
+												397 button Overview
+												398 button Knowledge
+												399 button Tasks
+												400 button Activity
+												401 button Learning
+												402 button Services
+												403 button API reference
+											404 text SESSION
+											405 text OPEN
+											406 text Signed in as
+											407 text 
+											408 text local-operator
+											409 text 
+											410 text since
+											411 text 3:21 PM
+											412 text ·
+											413 text 
+											414 text renews automatically
+											415 button Disconnect
+											416 heading Tasks and model handoffs
+											417 text Record real work, review a controller's proposed handoff, then explicitly request a draft from the selected worker. Each call uses the engine's task budget.
+											418 button Read tasks
+											419 button Recover last attempt
+											420 heading Open a task
+											421 text Task title
+											422 edit (settable, string) Task title ID: mantine-parh5nltc
+											423 text Goal, acceptance criteria and limits
+											424 edit (settable, string) Goal, acceptance criteria and limits ID: mantine-2ihv0k7wl
+											425 button (disabled) Record task in RRFlow
+											427 heading Verify Connectome PR28 selected-worker handoff and recovery
+											428 text OPEN
+											429 text Review the actual Connectome PR28 desktop worker handoff currently under verification. Propose concise verification steps for one configured BF16 route proposal, one explicit worker draft, and reload/readback preserving the same task, attempts and spent budget. Limit this response to a draft; do not claim tests passed, edit files, execute commands, or label this as reviewed training data. Source: https://github.com/rrflow/connectome-development/pull/28 at 95a81077d89efb5cd14e14bcbdecbc9bfa76d872.
+											430 text task-31e2c411d8ebf766c358a2af861bce43301e730771ab0af2e550bccb745c6051
+											431 button Read budget and attempt
+											432 button Stop task budget
+											445 text 2
+											446 text /
+											447 text 2
+											448 text steps reserved ·
+											449 text 
+											450 text 17258
+											451 text ms charged ·
+											452 text 
+											453 text No persisted stop
+											441 button Review controller inputs
+											442 text Attempt ID for readback
+											443 edit (settable, string) Attempt ID for readback Value: 7a2adb17-ef0c-46d6-bf8e-36f0bb3d1c38 ID: mantine-zcf62wz18
+											454 status
+												455 text accepted
+											456 heading Worker draft
+											457 text Retained by RRFlow for review. This does not mark the task complete or authorize training.
+											458 text Binding:
+											459 text swag-custom-bf16
+											460 text · Observed service:
+											461 text swag-qwen3-coder-intent-20261028
+											462 text { "implementation_steps": [ "Configure a BF16 route proposal with explicit worker draft settings matching the PR28 handoff criteria.", "Initiate task execution and monitor worker handoff behavior from source to target instance.", "Perform reload/readback operation to confirm task state, attempts, and budget persistence." ], "verification_steps": [ "Confirm that the selected worker correctly receives and processes the task after handoff.", "Validate that all task metadata including attempts and spent budget remain consistent post-reload.", "Ensure no data loss or corruption occurs during the worker transition and readback process." ], "unresolved_questions": [ "How does the system handle worker handoff when the target instance is temporarily unavailable?", "What specific metrics should be monitored to validate successful task continuation after reload?", "Are there any known edge cases in PR28 that could affect the reliability of the handoff mechanism?" ] }
+											463 text Attempt: 7a2adb17-ef0c-46d6-bf8e-36f0bb3d1c38 Selection: 75146600-dda3-4526-ad91-429b0615616a Content: df9abfa102ddd11788c7c269796beb291affe9f6d1dbe3e04b8248717668ee37 Response: c3589a21cf7d6d3408f40f5a97ee1e7ecfb5bc2c71899f75dc591167b6ad9f82
+										426 group
+								15 region
+		2 title bar (settable, string) Value: Connectome
+			3 menu bar System ID: MenuBar
+				4 menu item System
+			5 button Minimize
+			6 button Maximize
+			7 button Close
+
+Document text: ```
+￼
+File
+View
+Help
+Connectome
+Minimize
+Maximize
+Close
+￼
+CONNECTOME
+RRFLOW CONTROL SURFACE
+￼
+Overview
+￼
+￼
+Embed Connectome
+￼
+Search
+K
+￼
+Settings
+￼
+Manage project engines
+Connectome
+/
+Projects
+/
+Worker handoff verification 95a81077
+/
+tasks
+￼
+RRD CONNECTED
+Worker handoff verification 95a81077
+instance-2cfd4423f8f3fa42bd264f2b
+· http://127.0.0.1:53808
+What do these words mean?
+Advanced details
+Reconnect
+Selected project
+A saved connection; engine identity is verified independently.
+Worker handoff verification 95a81077
+￼
+Manage project engines
+Overview
+Knowledge
+Tasks
+Activity
+Learning
+Services
+API reference
+SESSION OPEN
+Signed in as local-operator since 3:21 PM · renews automatically
+Disconnect
+Tasks and model handoffs
+Record real work, review a controller's proposed handoff, then explicitly request a draft from the selected worker. Each call uses the engine's task budget.
+Read tasks
+Recover last attempt
+Open a task
+Task title
+￼
+Goal, acceptance criteria and limits
+￼
+Record task in RRFlow
+Verify Connectome PR28 selected-worker handoff and recovery
+OPEN
+Review the actual Connectome PR28 desktop worker handoff currently under verification. Propose concise verification steps for one configured BF16 route proposal, one explicit worker draft, and reload/readback preserving the same task, attempts and spent budget. Limit this response to a draft; do not claim tests passed, edit files, execute commands, or label this as reviewed training data. Source: https://github.com/rrflow/connectome-development/pull/28 at 95a81077d89efb5cd14e14bcbdecbc9bfa76d872.
+task-31e2c411d8ebf766c358a2af861bce43301e730771ab0af2e550bccb745c6051
+Read budget and attempt
+Stop task budget
+2 / 2 steps reserved · 17258 ms charged · No persisted stop
+Review controller inputs
+Attempt ID for readback
+7a2adb17-ef0c-46d6-bf8e-36f0bb3d1c38
+accepted
+Worker draft
+Retained by RRFlow for review. This does not mark the task complete or authorize training.
+Binding: swag-custom-bf16 · Observed service: swag-qwen3-coder-intent-20261028
+{
+  "implementation_steps": [
+    "Configure a BF16 route proposal with explicit worker draft settings matching the PR28 handoff criteria.",
+    "Initiate task execution and monitor worker handoff behavior from source to target instance.",
+    "Perform reload/readback operation to confirm task state, attempts, and budget persistence."
+  ],
+  "verification_steps": [
+    "Confirm that the selected worker correctly receives and processes the task after handoff.",
+    "Validate that all task metadata including attempts and spent budget remain consistent post-reload.",
+    "Ensure no data loss or corruption occurs during the worker transition and readback process."
+  ],
+  "unresolved_questions": [
+    "How does the system handle worker handoff when the target instance is temporarily unavailable?",
+    "What specific metrics should be monitored to validate successful task continuation after reload?",
+    "Are there any known edge cases in PR28 that could affect the reliability of the handoff mechanism?"
+  ]
+}
+Attempt: 7a2adb17-ef0c-46d6-bf8e-36f0bb3d1c38
+Selection: 75146600-dda3-4526-ad91-429b0615616a
+Content: df9abfa102ddd11788c7c269796beb291affe9f6d1dbe3e04b8248717668ee37
+Response: c3589a21cf7d6d3408f40f5a97ee1e7ecfb5bc2c71899f75dc591167b6ad9f82
+￼
+￼
+￼
+￼
+￼
+￼
+￼
+```
