@@ -1747,3 +1747,54 @@ RRFlow #184 to #187), which serves the quantization lifecycle.
   with the E-04 stack.
 - **Not run here:** macOS and Linux. Connectome's candidate CI runs the checks,
   the native suites and the RRD process tests there.
+- **Integration onto `main`** (2026-11-01). F4a landed as `main` `999c144a`
+  (#24), and this branch merged it. The journal keeps F4a's final-pin notes
+  and this section. The conflicting pins resolved to neither trial revision.
+  - **Engine pin:** `50349d75` (trial) → `15f36a87`, RRFlow `main` with the
+    E-04 stack (E-04c #190, E-04d #191) and POAM-045 (#211). `pnpm install`
+    and Cargo regenerated the locks; each changes only the `rrd-client` and
+    `rrd-contract` resolutions. Both goldens were rewritten from the engine;
+    after formatting, only their revision changed. Sidecar SHA-256
+    `f4a8d0b8…`.
+  - **Contract change.** E-04d gives the TurboQuant method an `estimator`;
+    absent means `mse`, and it is not serialized when it is `mse`. The lens
+    builds only `mse` generations, and the proposal unit test now names the
+    estimator it expects. A generation built elsewhere with the inner-product
+    estimator would show as "TurboQuant N bits" without naming its estimator.
+    That label is a follow-up, not part of this integration.
+  - **Verified locally** (Windows, engine `15f36a87`):
+    - `pnpm check`: 71 API reference operations; 12 engine values, 18
+      checks; 45 engine queries and 3 RRFlow vectors, 100 checks;
+    - `cargo fmt --check` and `cargo clippy --all-targets --locked -- -D
+      warnings`;
+    - 50 native unit tests;
+    - all 18 real-engine process tests, the sidecar's included.
+  - **Final native captures (decision 17).** `main` `999c144a` (engine
+    `c1557fe5`) against this head, both themes, T1's harness on both sides.
+    Each theme has 42 pairs and 7 new screens. Dark: 8 identical, 14
+    negligible, 10 dynamic and 10 changed. Light: 8 identical, 15
+    negligible, 10 dynamic and 9 changed. The same screens changed as at the
+    trial pin, reviewed by eye:
+    - **The Vectors lens,** its nearest and points screens and the glossary
+      changed as described above. The map, its facts (8 vectors, 8 exact
+      searches, 387 keys, cursor 37), the selected record's scores and
+      footer, and the stored points are unchanged.
+    - **Three API reference screens** list the catalogue at `15f36a87`: 71
+      operations against `main`'s 58, with the attunement, endpoint
+      configuration, prompt flight and task families. The layout is
+      unchanged.
+    - **Advanced details** (dark) and **Explore project knowledge** differ
+      only in run-dependent text: records in view (12 → 19), the read
+      cursor, the table count, and the width of masked text.
+    - **The stopped project's row.** In dark, a masked port of another width
+      rewraps one line. In light, the capture caught F4a's proof of the
+      stale endpoint record still running ("Proving a running instance"),
+      where `main`'s capture showed its refusal. F4a's lifecycle code is the
+      same on both sides.
+    - **The comparison** at `15f36a87` shows recall@10 of 1.00, 55 → 70 keys
+      examined and 8 → 8 vectors read at full precision at a rerank of 22.
+  - **Inherited screens,** with the browser harness of Slice V0, `main`
+    `999c144a` against this head, 49 per theme. Dark: 20 identical, 26
+    negligible, 2 dynamic and 1 changed. Light: 23 identical, 23 negligible,
+    2 dynamic and 1 changed. The change is the About tab's build time and the
+    engine revision it names (`c1557fe` to `15f36a8`).
