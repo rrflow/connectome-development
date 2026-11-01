@@ -25,6 +25,7 @@ mod elsewhere;
 mod language;
 mod live;
 mod quantization;
+mod tasks;
 mod values;
 
 const FIXTURE_COLLECTION: &str = "notes";

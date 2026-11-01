@@ -41,6 +41,7 @@ import { ModelsTab } from "./tabs/models";
 import { RecordsTab } from "./tabs/records";
 import { StorageTab } from "./tabs/storage";
 import { VectorsTab } from "./tabs/vectors";
+import { TasksPanel } from "./tasks";
 import type { RuntimeLens } from "./types";
 import { ProjectSection } from "./workspace";
 
@@ -334,6 +335,7 @@ export function RuntimeConnectionPage({
 						{[
 							["overview", "Overview"],
 							["knowledge", "Knowledge"],
+							["tasks", "Tasks"],
 							["activity", "Activity"],
 							["learning", "Learning"],
 							["services", "Services"],
@@ -575,12 +577,22 @@ export function RuntimeConnectionPage({
 						/>
 					)}
 
-					<ProjectSection
-						detail={detail}
-						section={section}
-						connected={Boolean(session)}
-						onOpen={openSection}
-					/>
+					{section === "tasks" && (
+						<TasksPanel
+							key={sessionKey}
+							client={sessionClient}
+							instance={session?.instance ?? ""}
+							connected={Boolean(session)}
+						/>
+					)}
+					{section !== "tasks" && (
+						<ProjectSection
+							detail={detail}
+							section={section}
+							connected={Boolean(session)}
+							onOpen={openSection}
+						/>
+					)}
 				</Stack>
 			</ScrollArea>
 			<GlossaryDrawer
