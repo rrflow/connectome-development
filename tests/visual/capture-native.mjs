@@ -400,7 +400,7 @@ try {
 		await page.goto(workbench, { waitUntil: "domcontentloaded" });
 		await wait(4000);
 	};
-	for (const tab of ["Knowledge", "Activity", "Learning", "Services", "API reference"]) {
+	for (const tab of ["Knowledge", "Tasks", "Activity", "Learning", "Services", "API reference"]) {
 		await step(`tab ${tab}`, async () => {
 			await back();
 			await page
