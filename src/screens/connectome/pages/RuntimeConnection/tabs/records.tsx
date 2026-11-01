@@ -1,3 +1,5 @@
+import { Prec } from "@codemirror/state";
+import { EditorView, keymap } from "@codemirror/view";
 import {
 	Alert,
 	Badge,
@@ -17,14 +19,15 @@ import {
 	Stack,
 	Table,
 	Text,
-	Textarea,
 	UnstyledButton,
 } from "@mantine/core";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { CodeEditor } from "~/components/CodeEditor";
 import { Icon } from "~/components/Icon";
 import { Label } from "~/components/Label";
 import { Section } from "~/components/Section";
+import { useStable } from "~/hooks/stable";
 import {
 	iconChevronDown,
 	iconChevronUp,
@@ -36,7 +39,8 @@ import {
 	iconSearch,
 	iconTarget,
 } from "~/icons";
-import type { RrdEdgeView, RrdNodeView } from "~/rrflow/session";
+import { rrflowql, showRefusal } from "~/rrflow/editor";
+import { queryRefusal, type RrdEdgeView, type RrdNodeView } from "~/rrflow/session";
 import { plural } from "~/shared/util/helpers";
 import { formatCount, formatSize, formatTime } from "../format";
 import { Term } from "../glossary";
@@ -73,6 +77,71 @@ function defaultQuery(tables: string[], fallbackKind: string | undefined): strin
 	return table
 		? `FROM record:${table} AT VALID ${Date.now()} KNOWN HEAD PROJECT * LIMIT ${CONSOLE_ROW_LIMIT}`
 		: "";
+}
+
+/**
+ * Why the engine rejected a query: its parser's words when it gave them. The
+ * editor marks the place, on the word the engine names; the engine's offset
+ * itself can fall inside that word (it puts "end of query" one byte into the
+ * last token), so no character number is quoted.
+ */
+function refusalText(error: unknown): string {
+	return (
+		queryRefusal(error)?.reason ??
+		(error instanceof Error ? error.message : "Unknown RRD error")
+	);
+}
+
+interface QueryEditorProps {
+	query: string;
+	onChange: (query: string) => void;
+	onRun: () => void;
+	/** The query the last run sent, and how that run failed. */
+	refused: string | undefined;
+	error: unknown;
+}
+
+/**
+ * The console's rrflowQL editor. The engine's refusal of the query a run sent
+ * shows on the word the engine names, for as long as the editor holds that
+ * query.
+ */
+function QueryEditor({ query, onChange, onRun, refused, error }: QueryEditorProps) {
+	const [editor, setEditor] = useState<EditorView | null>(null);
+	const run = useStable(onRun);
+	const extensions = useMemo(
+		() => [
+			rrflowql(),
+			// Above the base keymap, which inserts a blank line on Mod-Enter.
+			Prec.highest(
+				keymap.of(
+					["Mod-Enter", "Ctrl-Enter"].map((key) => ({
+						key,
+						run: () => {
+							run();
+							return true;
+						},
+					})),
+				),
+			),
+		],
+		[],
+	);
+	const refusal = queryRefusal(error);
+	useEffect(() => {
+		if (editor) {
+			showRefusal(editor, refusal && refused === query ? { query, refusal } : null);
+		}
+	}, [editor, refusal, refused, query]);
+	return (
+		<CodeEditor
+			className={classes.queryEditor}
+			value={query}
+			onChange={onChange}
+			onMount={setEditor}
+			extensions={extensions}
+		/>
+	);
 }
 
 interface LinkedRecord {
@@ -832,20 +901,12 @@ export function RecordsTab({
 				>
 					<Collapse in={consoleOpen}>
 						<Stack gap="sm">
-							<Textarea
-								// The input draws its own font, so the family is set on it directly.
-								styles={{
-									input: { fontFamily: "var(--mantine-font-family-monospace)" },
-								}}
-								autosize
-								minRows={2}
-								value={query}
-								onChange={(event) => setDraft(event.currentTarget.value)}
-								onKeyDown={(event) => {
-									if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
-										execution.mutate(query);
-									}
-								}}
+							<QueryEditor
+								query={query}
+								onChange={setDraft}
+								onRun={() => execution.mutate(query)}
+								refused={execution.variables}
+								error={execution.error}
 							/>
 							<Group justify="space-between">
 								<Group gap="xs">
@@ -886,9 +947,7 @@ export function RecordsTab({
 									title="Query rejected"
 									icon={<Icon path={iconErrorCircle} />}
 								>
-									{execution.error instanceof Error
-										? execution.error.message
-										: "Unknown RRD error"}
+									{refusalText(execution.error)}
 								</Alert>
 							)}
 							{execution.data && (

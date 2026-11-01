@@ -89,3 +89,23 @@
 	background: color-mix(in srgb, var(--mantine-color-body) 92%, transparent);
 	scroll-margin-top: var(--mantine-spacing-md);
 }
+
+/* The rrflowQL console's editor, framed like the filled inputs around it. */
+.queryEditor {
+	/* The editor's fold gutter is its left inset, as an input's padding is. */
+	padding: calc(var(--mantine-spacing-xs) / 2) var(--mantine-spacing-xs)
+		calc(var(--mantine-spacing-xs) / 2) 0;
+	border: 1px solid transparent;
+	border-radius: var(--mantine-radius-xs);
+	background-color: var(--connectome-glass-subtle);
+
+	&:focus-within {
+		border-color: var(--connectome-focus-outline);
+		background-color: var(--connectome-focus-background);
+	}
+
+	/* At least the two rows the console's text area showed. */
+	:global(.cm-content) {
+		min-height: 2.8em;
+	}
+}

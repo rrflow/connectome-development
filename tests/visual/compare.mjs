@@ -33,9 +33,11 @@ const tolerance = Number(args.tolerance ?? 8);
 // order in which code consumes the seeded random sequence, and the storage
 // engine's live counters move when the estate writes during the capture
 // (most likely an automatic session renewal), so their pixels are reported but
-// reviewed by eye for structure (records, edges, legend, counters).
+// reviewed by eye for structure (records, edges, legend, counters). A search
+// generation is built during the capture, so its digests and the screens that
+// show it differ between runs as well.
 const DYNAMIC =
-	/graph-visualize|geography|native-lens-records-relations|native-records-|native-lens-storage-engine|native-storage-/;
+	/graph-visualize|geography|native-lens-records-relations|native-records-|native-lens-storage-engine|native-storage-|native-vectors-(build|activate|compare|generation-)/;
 mkdirSync(out, { recursive: true });
 
 const IMAGE = new Set([".png", ".webp"]);
