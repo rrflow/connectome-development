@@ -1,0 +1,99 @@
+{
+	"desktop_source_commit": "6de73eec58be5cea4cdae42fea6001772006ee3a",
+	"engine_source_commit": "c376e27126c0fd513f8ffeb1e8e17a8befe87602",
+	"kind": "actual native desktop startup and restart observations; empty credential mapping; no model request",
+	"files": {
+		"desktop-connected.jpg": {
+			"bytes": 111885,
+			"sha256": "722f68a9a0eaf84408db9f7638ed43084215615180a2398ce44f533854eb0e72"
+		},
+		"desktop-running-mapping.jpg": {
+			"bytes": 118715,
+			"sha256": "776ec9b2bd56a20c8b3513b2d326f86af44d8df2c8eddb73fb6a7d46c50f8837"
+		},
+		"desktop-ready.json.gz": {
+			"bytes": 356734,
+			"sha256": "883a20ea7694905d23a4f093071052a0c727577e58a5522f2e322b8ccf4fa734",
+			"decompressed_bytes": 7949302,
+			"decompressed_sha256": "d8d48836b5df8efa21404d0800f26a82797cccf55a615a9f2ccfb668a76383ce"
+		},
+		"desktop-reopened-ready.json.gz": {
+			"bytes": 356734,
+			"sha256": "1acc260493c64e14f5d995c8c332e9a0fe812d6ba0a77bb7ebe006c3cee8f5ca",
+			"decompressed_bytes": 7949302,
+			"decompressed_sha256": "0609443b523935b42ecaae4038666e736f12ada1280cec891d1ba66fc1a5ede1"
+		},
+		"desktop-owned-process.json.gz": {
+			"bytes": 266,
+			"sha256": "7b9549f87a8129baa2b7f027c77995fc96e5f26ebf9a0e89cc4ab4a81b0be5ee",
+			"decompressed_bytes": 510,
+			"decompressed_sha256": "176c9e330bb88d8e92452938b3518bab63b1d057513723e93aa6968680b6b2cc"
+		},
+		"frontend-0.log.gz": {
+			"bytes": 1067,
+			"sha256": "1867ab9fe80e0696fa3e7509756599e12c9ab23077683fa16e20a19ea5052de3",
+			"decompressed_bytes": 5233,
+			"decompressed_sha256": "9b3807dd8eaf70f20cb273fe3f4975edd0b127a1e14b829ed317e6e5e01889ab"
+		},
+		"serialized-frontend-0.log.gz": {
+			"bytes": 124,
+			"sha256": "02019febcdff4f5b7fcc64065dc6a0745fa8c8f335c02a50f423d90abacf039c",
+			"decompressed_bytes": 139,
+			"decompressed_sha256": "47693ddede80faaf393bfbe8561cfce5011838b00a479d738094924bf65f0c6e"
+		},
+		"final-native-0.log.gz": {
+			"bytes": 1973,
+			"sha256": "365c5a8204fbd9108860da4f0cb867c19937728df1a64c2612688922a25ae360",
+			"decompressed_bytes": 6561,
+			"decompressed_sha256": "9022f4cdcff043b7641b75e33e2141afefd660cbfbc03daae93dcb80c1c4f65d"
+		},
+		"final-native-1.log.gz": {
+			"bytes": 281,
+			"sha256": "50c8870e553cc9fa5ef63ef87d5dd0bdcd01a641360cbddad305d7e100148078",
+			"decompressed_bytes": 382,
+			"decompressed_sha256": "164ed9c8326747003ef6671613ba949ceb794974e1204c6a6148c4e392ae23dd"
+		},
+		"build-receipt.json.gz": {
+			"bytes": 274,
+			"sha256": "99829d25f1076a3dc230d84c8c8a4d1ae53e4442e3d326a73ef1ac46eaf41cea",
+			"decompressed_bytes": 428,
+			"decompressed_sha256": "bcead370ee008c44073e11944811a857ebcaadc1277a23c8e15f98c65ea7aec1"
+		},
+		"desktop-build-result.json.gz": {
+			"bytes": 190,
+			"sha256": "56b09d9e9758e4ba0b36b5d743848def39a75bcebe305fe0423f495a0cdd498f",
+			"decompressed_bytes": 271,
+			"decompressed_sha256": "3fed8c6ff32f6069781010425ccc26e68a6eb5d35669920e223b4b6fe81f1d12"
+		},
+		"desktop-verify.json.gz": {
+			"bytes": 1570,
+			"sha256": "484753129fe588e99476b78485930841b8dcb28511bd7a9c58012f607ddcf6a1",
+			"decompressed_bytes": 4307,
+			"decompressed_sha256": "05c071cea642c1228f5970adc8289e2033b349d038f9abd2713fea29b5134a44"
+		},
+		"desktop-reopened-verify.json.gz": {
+			"bytes": 1566,
+			"sha256": "c18257f44849f8c45b544e4df59188509d576e0f1f9cc512ac58ee51de7a2e80",
+			"decompressed_bytes": 4309,
+			"decompressed_sha256": "38930399a50daeda394123a84f1d3daa3020bf692d26e1868cd626c61f908b8d"
+		},
+		"native-results.json.gz": {
+			"bytes": 305,
+			"sha256": "919d6394c9b0326c815b828ab4f37628d20746c2626bdb0061a04a455aefed50",
+			"decompressed_bytes": 1249,
+			"decompressed_sha256": "9adcf3e4c8ab49d42e475685bb54ffe8f7008dc638c6912fc24e5fee9d7c415b"
+		},
+		"final-native-results.json.gz": {
+			"bytes": 270,
+			"sha256": "6800ddd822aa54d260ea9986ec90be2b85e99cde9836f181a9262308c883225b",
+			"decompressed_bytes": 986,
+			"decompressed_sha256": "ad65d5a867635f77714f60e5f26f80e498e09b169459801e58b9e2b7597a108a"
+		},
+		"serialized-frontend-results.json.gz": {
+			"bytes": 160,
+			"sha256": "77f8f84bca8630bdde3ec3f91db45d7bab14863a4b8d64227c2b193934c8c376",
+			"decompressed_bytes": 334,
+			"decompressed_sha256": "1c37778af19067929d3acd854d14264f9111254aeb03e3f659478695abc38ecd"
+		}
+	}
+}

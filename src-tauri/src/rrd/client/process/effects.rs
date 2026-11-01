@@ -95,6 +95,7 @@ impl Estate {
             executable: rrflow().to_string_lossy().into_owned(),
             accepted_plan_sha256: None,
             installation_identity: None,
+            endpoint_credentials: None,
         };
         let preview = preview_estate(&reopen).expect("reopen preview");
         assert!(

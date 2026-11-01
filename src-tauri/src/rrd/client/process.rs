@@ -25,6 +25,7 @@ mod elsewhere;
 mod language;
 mod live;
 mod quantization;
+mod startup;
 mod tasks;
 mod values;
 
@@ -125,6 +126,7 @@ impl Estate {
                 executable: rrflow().to_string_lossy().into_owned(),
                 accepted_plan_sha256: None,
                 installation_identity: None,
+                endpoint_credentials: None,
             }),
             observer.clone(),
         )
@@ -652,6 +654,7 @@ fn the_bundled_engine_serves_as_the_verified_sidecar() {
             executable: String::new(),
             accepted_plan_sha256: None,
             installation_identity: None,
+            endpoint_credentials: None,
         }),
         observer.clone(),
     );
@@ -706,6 +709,7 @@ fn native_preview_requires_exact_acceptance_and_reopens() {
         executable: rrflow().to_string_lossy().into_owned(),
         accepted_plan_sha256: None,
         installation_identity: None,
+        endpoint_credentials: None,
     };
     assert!(serve_estate(request.clone(), observer.clone()).is_err());
     assert!(!project.join(".rrflow/config.toml").exists());
@@ -747,6 +751,7 @@ fn project_registry_keeps_parallel_estates_and_sessions_isolated() {
                 executable: rrflow().to_string_lossy().into_owned(),
                 accepted_plan_sha256: None,
                 installation_identity: None,
+                endpoint_credentials: None,
             })
         })
         .collect();

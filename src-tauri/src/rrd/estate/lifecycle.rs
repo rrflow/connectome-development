@@ -22,9 +22,9 @@ use tauri::{AppHandle, Emitter, State};
 use tokio::task::JoinSet;
 
 use super::{
-    engine_stage, project_directory, prove_elsewhere, serve_with, stage, EstateServeRequest,
-    EstateStage, ServeObserver, ServedEstate, ServedEstateView, DEFAULT_ESTATE, LOCATOR,
-    OUTPUT_EVENT, SERVING_RECORD, STAGE_EVENT,
+    endpoint_credentials_path, engine_stage, project_directory, prove_elsewhere, serve_with, stage,
+    EstateServeRequest, EstateStage, ServeObserver, ServedEstate, ServedEstateView, DEFAULT_ESTATE,
+    LOCATOR, OUTPUT_EVENT, SERVING_RECORD, STAGE_EVENT,
 };
 use crate::paths::get_data_directory;
 use crate::rrd::client::answers_as;
@@ -37,6 +37,11 @@ const MAX_OWNED: usize = 4;
 /// Instances tracked at once, owned or not; each needs one of the eight
 /// native sessions to be opened.
 const MAX_TRACKED: usize = 8;
+/// A running instance keeps the startup configuration it was started with;
+/// an endpoint credential mapping applies only to a start of `rrflow serve`.
+const RUNNING_WITH_STARTUP: &str =
+    "this project is already running; open it or stop it before applying endpoint startup configuration";
+const RUNNING_ELSEWHERE_WITH_STARTUP: &str = "this project is already running outside Connectome; open it, or stop it where it was started before applying endpoint startup configuration";
 /// Known projects one status read may look at for an instance started
 /// elsewhere.
 const MAX_KNOWN_PROJECTS: usize = 64;
@@ -378,6 +383,9 @@ impl EstateState {
         mut request: EstateServeRequest,
         observer: Arc<dyn ServeObserver>,
     ) -> Result<ServedEstateView, RrdError> {
+        request.endpoint_credentials =
+            endpoint_credentials_path(request.endpoint_credentials.as_deref())?
+                .map(|path| path.to_string_lossy().into_owned());
         let project = project_directory(&request)?;
         request.project = project.to_string_lossy().into_owned();
         let reserved = {
@@ -395,7 +403,12 @@ impl EstateState {
                             .into(),
                     );
                 }
-                Some(Entry::Attached(view)) => return Ok(view.clone()),
+                Some(Entry::Attached(view)) => {
+                    if request.endpoint_credentials.is_some() {
+                        return Err(RUNNING_ELSEWHERE_WITH_STARTUP.into());
+                    }
+                    return Ok(view.clone());
+                }
                 Some(Entry::Owned(served)) => {
                     if served
                         .server
@@ -403,6 +416,11 @@ impl EstateState {
                         .map_err(|e| format!("cannot inspect owned process: {e}"))?
                         .is_none()
                     {
+                        if request.endpoint_credentials.is_some()
+                            || served.view.endpoint_credentials.is_some()
+                        {
+                            return Err(RUNNING_WITH_STARTUP.into());
+                        }
                         return Ok(served.view.clone());
                     }
                 }
@@ -755,6 +773,17 @@ fn launch(
     let engine = engine_stage(observer.as_ref(), &request.executable)?;
     if project.join(LOCATOR).is_file() {
         if let Some(view) = attach_stage(observer.as_ref(), &engine.path, project)? {
+            // The proved instance was started without this desktop's mapping,
+            // so attaching would silently drop it.
+            if request.endpoint_credentials.is_some() {
+                stage(
+                    observer.as_ref(),
+                    "attach",
+                    "failed",
+                    RUNNING_ELSEWHERE_WITH_STARTUP,
+                );
+                return Err(RUNNING_ELSEWHERE_WITH_STARTUP.into());
+            }
             return Ok(Launched::Attached(view));
         }
     }
@@ -939,6 +968,7 @@ mod registry_tests {
                 .into_owned(),
             accepted_plan_sha256: None,
             installation_identity: None,
+            endpoint_credentials: None,
         }
     }
 
@@ -962,6 +992,7 @@ mod registry_tests {
             installed: false,
             origin: Origin::Elsewhere,
             engine: None,
+            endpoint_credentials: None,
         }
     }
 
@@ -1061,6 +1092,38 @@ mod registry_tests {
         assert!(refusal.message.contains("outside Connectome"));
         assert_eq!(owner.status().instances[0].state, InstanceState::Ready);
         assert_eq!(owner.status().instances[0].origin, Origin::Elsewhere);
+        std::fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn a_running_instance_never_takes_a_startup_mapping() {
+        let directory = scratch("mapped");
+        let mapping = directory.join("mapping.json");
+        std::fs::write(&mapping, "{\"format_version\":1,\"entries\":[]}").unwrap();
+        let owner = EstateState::default();
+        let recording = Arc::new(Recording::default());
+        let view = attached(&directory, "http://127.0.0.1:9");
+        owner.lock().set(&directory, Entry::Attached(view.clone()));
+        let mut mapped = request(&directory);
+        mapped.endpoint_credentials = Some(mapping.to_string_lossy().into_owned());
+        let refusal = owner.start(mapped, recording.clone()).unwrap_err();
+        assert!(refusal.message.contains("stop it where it was started"));
+        assert_eq!(
+            owner
+                .start(request(&directory), recording.clone())
+                .unwrap()
+                .endpoint,
+            view.endpoint,
+            "opening it without a mapping still returns the attached instance"
+        );
+        let mut relative = request(&directory);
+        relative.endpoint_credentials = Some("mapping.json".into());
+        assert!(owner
+            .start(relative, recording)
+            .unwrap_err()
+            .message
+            .contains("absolute"));
+        assert_eq!(owner.status().instances[0].state, InstanceState::Ready);
         std::fs::remove_dir_all(directory).unwrap();
     }
 

@@ -86,6 +86,7 @@ fn an_instance_started_elsewhere_is_found_attached_and_left_running() {
         executable: rrflow().to_string_lossy().into_owned(),
         accepted_plan_sha256: None,
         installation_identity: None,
+        endpoint_credentials: None,
     };
 
     // The stale record proves nothing, and is not proved again.
@@ -153,6 +154,27 @@ fn an_instance_started_elsewhere_is_found_attached_and_left_running() {
         lines()
     );
     drop(fresh);
+    // A start that asks for an endpoint credential mapping is refused once
+    // the record proves an instance started elsewhere: attaching would drop
+    // the mapping, which only a start of `rrflow serve` can apply.
+    let mapping = std::env::temp_dir().join(format!(
+        "connectome-elsewhere-mapping-{}.json",
+        Uuid::new_v4()
+    ));
+    std::fs::write(&mapping, br#"{"format_version":1,"entries":[]}"#).unwrap();
+    let mapped = EstateState::default();
+    let mut with_mapping = open();
+    with_mapping.endpoint_credentials = Some(mapping.to_string_lossy().into_owned());
+    let refusal = mapped
+        .start(with_mapping, observer.clone())
+        .expect_err("a mapping is never dropped by attaching");
+    assert!(
+        refusal.message.contains("stop it where it was started"),
+        "{refusal:?}\n{}",
+        lines()
+    );
+    drop(mapped);
+    std::fs::remove_file(&mapping).unwrap();
     // Without the attach step the engine refuses a second serve itself, and
     // Connectome reports the engine's own reason.
     let second = serve_estate(open(), observer.clone())

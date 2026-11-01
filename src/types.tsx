@@ -242,6 +242,8 @@ export interface EstateSelection {
 	executable: string;
 	/** The identity a pending installation preview was planned with. */
 	installationIdentity?: string;
+	/** Explicit per-project mapping path; never contains credential values. */
+	endpointCredentialMapping?: string;
 }
 
 export interface EstatePreview {
@@ -264,6 +266,8 @@ export interface ServedEstate {
 	origin: InstanceOrigin;
 	/** The engine this desktop ran; absent for an instance started elsewhere. */
 	engine?: EngineBinding;
+	/** The mapping path this desktop started the engine with; never its contents. */
+	endpoint_credentials?: string | null;
 }
 
 export type EstateStageName = "engine" | "attach" | "install" | "serve" | "ready";
