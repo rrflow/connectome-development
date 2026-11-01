@@ -49,6 +49,10 @@ export type DataVectorValue = Mutation<"put_vector">["value"];
 export type DataTarget = Mutation<"retire_data">["target"];
 export type DataLogicalModel = Mutation<"retire_data">["model"];
 
+/** A quantization codec and its parameters, as `vector-quantization-build` takes it. */
+export type VectorQuantizationMethod = RequestPayload<"vector-quantization-build">["method"];
+export type TurboQuantBits = Extract<VectorQuantizationMethod, { method: "turbo_quant" }>["bits"];
+
 /** The result of `data-schema-read`. */
 export type DataSchemaSnapshot = SuccessPayload<"data-schema-read">;
 export type DataSchemaRegistry = NonNullable<DataSchemaSnapshot["schema"]>;

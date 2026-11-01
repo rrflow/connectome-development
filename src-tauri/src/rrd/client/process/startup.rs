@@ -1,5 +1,6 @@
 //! Actual engine startup configuration; no provider, model output or training data.
 use super::*;
+use crate::rrd::estate::lifecycle::InstanceState;
 use crate::rrd::estate::EstateState;
 
 #[test]
@@ -37,31 +38,39 @@ fn endpoint_mapping_is_engine_validated_and_requires_explicit_restart() {
         .unwrap_err()
         .message
         .contains("stop"));
-    assert_eq!(owner.status().unwrap().len(), 1);
-    assert!(owner.stop(&first.project).unwrap());
+    assert_eq!(owner.status().instances.len(), 1);
+    assert!(owner.stop(&first.project, observer.as_ref()).unwrap());
 
     // The native launcher does not parse or repair mapping contents. The real
     // engine must reject this; ignoring the argument would incorrectly serve.
     std::fs::write(&mapping, b"not-json").unwrap();
     assert!(owner.start(request.clone(), observer.clone()).is_err());
+    // The lifecycle keeps the failure (sprint 009 F4a); it holds no engine,
+    // and the next start replaces it.
     assert!(
-        owner.status().unwrap().is_empty(),
+        owner
+            .status()
+            .instances
+            .iter()
+            .all(|instance| instance.state == InstanceState::Failed),
         "failed start releases its reservation"
     );
     std::fs::write(&mapping, empty_mapping).unwrap();
     let reopened = owner.start(request.clone(), observer.clone()).unwrap();
     assert_eq!(reopened.instance, first.instance);
     assert!(!reopened.installed);
-    assert!(owner.stop(&reopened.project).unwrap());
+    assert!(owner.stop(&reopened.project, observer.as_ref()).unwrap());
 
     let unconfigured = owner.start(without_mapping, observer.clone()).unwrap();
     assert!(unconfigured.endpoint_credentials.is_none());
     assert!(owner
-        .start(request, observer)
+        .start(request, observer.clone())
         .unwrap_err()
         .message
         .contains("stop"));
-    assert!(owner.stop(&unconfigured.project).unwrap());
+    assert!(owner
+        .stop(&unconfigured.project, observer.as_ref())
+        .unwrap());
     drop(owner);
     std::fs::remove_dir_all(root).unwrap();
 }
