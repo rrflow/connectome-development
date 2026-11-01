@@ -302,7 +302,7 @@ administration have no public route yet.
 | Parameters view | vendor global parameters | rrflowQL `$name` parameters bound per query; estate configuration owns lasting settings | yes | V1, V7 |
 | 2.x to 3.0 migration view | vendor version migration | an upgrade-and-restore check on RRFlow backup and restore (design open) | yes | V7 |
 | Query view | vendor query execution, live results, graph preview, formatting | `query-execute` with `EXPLAIN`, `traverse:` sources, `query-export`, live results through a native `/v1/ws` subscription | yes | V1 |
-| Editor language, highlighting, linting, formatting | vendor CodeMirror and Lezer language and WASM parser | a Connectome rrflowQL language built from RRFlow's lexer (`rrd-query/src/syntax.rs`) and tested against RRFlow's `query-vectors.json`; the engine (`EXPLAIN CONTRACT`) validates, the client only highlights; no formatter | yes | F3 |
+| Editor language, highlighting, linting, formatting | vendor CodeMirror and Lezer language and WASM parser | a Connectome rrflowQL language: RRFlow's tokenizer (`rrd-query/src/syntax.rs`) ported exactly, held to golden engine responses for RRFlow's `query-vectors.json` and a corpus; the engine validates when a query runs, and the native layer locates its parse refusal; the client only highlights; no formatter | yes | F3, then each V step |
 | Explorer, record inspector, data table, relation graph, map | vendor reads, creates, relates, updates and deletes; binary value types | `record:`, `relation:`, `geo:` and `traverse:` queries; transaction preview then commit with `PutRecord`, `PutRelation`, `PutGeo`, `RetireData`; one engine query per graph expansion | yes | F2, V2 |
 | Designer | vendor schema definitions and introspection | `data-schema-read` with the estate organisation; next registry revision through `PutSchema` with preview; `query-index-ensure` | yes (instance-level grant) | V3 |
 | Import and export | vendor statement import and export | `query-export` (Parquet), `backup-create`, `backup-list`, `restore-create`; typed record batches for import | yes, import as batches | V5 |
@@ -363,11 +363,22 @@ each one lands.
   are generated from the pinned engine's OpenAPI, replacing the inherited
   record identifiers, durations, decimals and geometry classes. Oracle: type
   tests over golden engine responses.
-- **F3: rrflowQL language** (formerly D3). A CodeMirror language built from
-  RRFlow's token set (salvaged from PR #10), with golden tests against
-  RRFlow's query vectors. The engine validates queries through
-  `EXPLAIN CONTRACT`; the client only highlights. It replaces the inherited
-  grammar, linter and WASM value parser everywhere.
+- **F3: rrflowQL language** (formerly D3). The engine's tokenizer, ported
+  exactly; a classifier that names each token by its place in the engine's
+  grammar; and a CodeMirror language built on them. Oracle: golden engine
+  responses for RRFlow's own query vectors and for a corpus of accepted and
+  refused queries. The engine validates: its parse refusal comes back with the
+  command that ran the query, and the native layer locates it in the editor.
+  The client only highlights. Amended on 2026-10-27 from reading the engine:
+  - At the pin, `EXPLAIN CONTRACT` does not stop a query from executing, and
+    no operation parses without executing. Validation therefore happens when
+    a query runs, not as the operator types.
+  - PR #10's scanner is not salvaged. It accepted comments, single quotes,
+    backticks and decimals that the engine refuses.
+  - The inherited views still run the inherited language. So the runtime
+    console adopts rrflowQL in F3, with captures, and each inherited view
+    adopts it in its own V step. The inherited grammar, linter and WASM value
+    parser leave with the last of those views.
 - **F4: view registry.** One registry of views. Each view names the
   operations and capabilities it needs, and navigation is derived from the
   engine's catalogue and capabilities. A view whose operation is unserved
@@ -385,10 +396,10 @@ each one lands.
   - Knowledge tools served by the registry.
 
   An inherited route becomes reachable only once its view runs on RRFlow.
-- **V1: Query.** The inherited query view runs rrflowQL. That covers tabs,
-  saved queries and history; variables (which replace global parameters);
-  combined, single, table and graph results; `EXPLAIN` plans; live results;
-  and Parquet export.
+- **V1: Query.** The inherited query view runs rrflowQL, in F3's language.
+  That covers tabs, saved queries and history; variables (which replace
+  global parameters); combined, single, table and graph results; `EXPLAIN`
+  plans; live results; and Parquet export.
 - **V2: Records.** The explorer, inspector and creator: records by kind from
   the schema registry, an rrflowQL filter, typed cells, `traverse:`
   relations, and edits through transaction preview then commit. The relation
@@ -1182,3 +1193,139 @@ Branch `agent/f2-value-model` from F1b (`fd8f2daf`, PR #21), on engine pin
     18 checks);
   - `cargo fmt --check` and `cargo clippy --all-targets --locked -- -D warnings`;
   - the golden test, in write mode and in compare mode after formatting.
+
+### 2026-10-27 — Step F3: the rrflowQL editor language (decision 18)
+
+Branch `agent/f3-rrflowql-language` from F2 (`179d32e5`, PR #22), on engine
+pin `86adada6`.
+
+- **Read first:**
+  - the engine's `rrd-query/src/syntax.rs` (the grammar, the tokenizer and
+    the parser) and `fixtures/query-vectors.json`, at the pin;
+  - how a refusal reaches a client: `engine/error.rs` (a service error's
+    display is its debug form), `http/response.rs` (the error body carries
+    that display), the SDK's `error.rs`, and Connectome's `rrd/error.rs`;
+  - every use of `EXPLAIN CONTRACT` in the engine, and the operation
+    catalogue's query operations;
+  - PR #10's scanner (`src/rrflow/editor/lexical.ts`);
+  - every importer of `src/vendor/rrflowql-editor.ts` and `@surrealdb/lezer`,
+    and the inherited `CodeEditor`, editor base, theme and highlight tags.
+- **Findings that changed the plan:**
+  - **`EXPLAIN CONTRACT` does not stop execution.** At the pin it is carried
+    into the bound query and its canonical text, and nothing reads it after
+    that. No operation parses or binds without executing. The plan's "the
+    engine validates through `EXPLAIN CONTRACT`" would have run the whole query
+    on every keystroke. The engine validates when the query runs instead.
+  - **The parse location arrives only as debug text.** A refusal's error body
+    reads `Query("query parse error at byte N: …")`, with no structured details.
+    The parser reports its validation refusals (`LIMIT 0`, `PROJECT` with no
+    fields) at byte 0. It reports "end of query" one byte past the start of
+    the last token, which can fall inside a character.
+  - **PR #10's scanner is not salvaged.** It accepted comments, single quotes,
+    backticks and decimals that the engine refuses.
+  - **The inherited views still run the inherited language** over the
+    inherited client. Switching their editor now would mis-highlight and
+    mis-lint every query they run. F3 therefore supplies the language, and the
+    runtime console, which already runs rrflowQL against the engine, adopts it.
+    Each inherited view adopts it in its own V step.
+  - **Linking `rrd-query` natively is out.** It would bring DataFusion, Parquet
+    and `rrd-store` into Connectome, and it is a new dependency.
+- **The language:**
+  - **`src/rrflow/rrflowql.ts`:**
+    - `scan`, the engine's tokenizer ported exactly. It records the engine's
+      first lexical refusal and keeps going, so the rest of the query is still
+      drawn.
+    - `classify`, which names each token by its place in the engine's grammar.
+      It never refuses anything.
+    - `refusalRange`, which places an engine refusal on the token it names.
+  - **`src/rrflow/editor.ts`.** A CodeMirror language whose syntax tree comes
+    from `classify`. It uses the inherited grammar's highlight tags for the
+    same things.
+- **The refusal location.** `RrdError` gains `query: { offset, reason }` for
+  `rrd_query`, `rrd_query_export` and `rrd_live_open`.
+  - The native layer reads it from the engine's own error body: an
+    `invalid_argument` refusal in the pinned debug form, with the escapes
+    reversed.
+  - It converts the byte offset to UTF-16 units against the query it sent. An
+    offset inside a character counts that character.
+  - The webview's `RrdCommandError.query` carries it.
+- **The console.** The Records tab's RRFlowQL console moves from a text area
+  to the inherited `CodeEditor` with the new language.
+  - It is framed like the filled inputs around it, keeps at least the text
+    area's two lines, and starts its text where the text area did.
+  - Ctrl/⌘ + Enter still runs the query, above the base keymap's blank line.
+  - A refusal shows on the word the engine names, for as long as the editor
+    holds that query.
+  - The alert gives the parser's reason instead of the SDK's whole error
+    string. It quotes no character number: the engine puts "end of query" one
+    byte into the last token, so a number would point into a word.
+- **The golden.** The new RRD process test `rrd::client::process::language`:
+  - reads RRFlow's query vectors from the engine source Cargo checked out at
+    the pin, through `cargo metadata`, and requires each one to run and return
+    its canonical form;
+  - writes until the head reaches every cursor a vector names;
+  - runs 45 queries through the console's command, and requires
+    `src/rrflow/fixtures/engine-queries.json` to equal what the engine said.
+
+  The corpus covers every lexical refusal, the parser's refusals, binding
+  refusals that stay unlocated, offsets after characters wider than one UTF-16
+  unit, and `u64::MAX`.
+- **The check.** `scripts/check-rrflowql.mjs`, run by `pnpm check`, holds the
+  tokenizer and the classifier to the golden:
+  - every lexical refusal, at the engine's offset;
+  - no refusal where the engine tokenized;
+  - the token each quoted parse refusal names;
+  - each vector's family, kind, fields and parameters read where the engine's
+    parse put them.
+
+  Eight deliberate breakages each fail it. Two of them first passed, which
+  added the token-boundary check and `u64::MAX` to the corpus.
+- **Engine findings for RRFlow's POA&M,** raised after RRFlow PR #156 lands:
+  - transaction previews read the whole data scope and do not check objects;
+  - rrflowQL refusals carry no structure, and queries cannot be checked
+    without running.
+- **Verified locally:**
+  - `pnpm check`, which now includes the rrflowQL check (45 engine queries, 3
+    RRFlow vectors, 100 checks);
+  - `cargo fmt --check` and `cargo clippy --all-targets --locked -- -D warnings`;
+  - 43 native unit tests, and all 16 real-engine process tests;
+  - the editor language in a real CodeMirror state: every token tagged as
+    intended, refusals tagged invalid, and a reparse after an edit.
+- **Captures (decision 17).** The native desktop captures compare F2's head
+  (`179d32e5`) with F3 in both themes, with the same harness for both sides.
+  The first run found two real problems, both now fixed:
+  - the console's box was one line tall where the text area showed two, and
+    its text started 9 px further in;
+  - the clock reading in `AT VALID` was unmasked, because the harness matched
+    its patterns within single text nodes and the editor splits a line into
+    one node per token.
+
+  The harness changed with F3:
+  - it matches the masks over each editor line;
+  - it waits for the overview's own content, after a first launch painted a
+    blank window;
+  - it adds the step the console changes most: a query the engine refuses,
+    typed where the console takes text and run (`records-refused`).
+
+  Runs three and four found two more, both fixed:
+  - the new step clicked the autosizing text area's hidden copy;
+  - the alert quoted a character number that pointed into a word.
+
+  The final compare covers 40 pairs per theme. In dark: 9 identical, 21
+  negligible, none changed and 10 dynamic. In light: 9 identical, 21
+  negligible, none changed and 10 dynamic. The dynamic screens were reviewed
+  by eye:
+  - the console's query and traversal show the same query and rows,
+    highlighted;
+  - the refused query shows the engine's reason with `KNOWN` underlined, where
+    F2 showed the SDK's whole error string.
+
+  Across the runs, three screens F3 does not touch each changed once, every
+  time from capture timing:
+  - the serving progress, taken three seconds into an installation, which
+    flipped direction between runs;
+  - the vector map's node labels, drawn late;
+  - the vector map's scroll and zoom.
+
+  A follow-up for the harness: those three screens should wait for a settled
+  state or be classed as dynamic.
