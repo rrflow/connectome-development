@@ -62,7 +62,7 @@ pub struct RrdChangeCommitRequest {
 
 /// Whether a failed engine call may still have taken effect, so the request
 /// can only be settled by repeating it.
-fn outcome_unknown(error: &rrd_client::Error) -> bool {
+pub(super) fn outcome_unknown(error: &rrd_client::Error) -> bool {
     match error {
         rrd_client::Error::Transport(_) | rrd_client::Error::Timeout => true,
         rrd_client::Error::Api { error, .. } => error.retryable,

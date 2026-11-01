@@ -9,6 +9,7 @@
 pub mod effect;
 pub mod history;
 pub mod live;
+pub mod quantization;
 
 use super::cluster;
 use rrd_contract::{
@@ -234,6 +235,12 @@ pub struct VectorSearchView {
     pub keys_examined: u64,
     pub canonical_candidates: u64,
     pub selected_candidates: u64,
+    /// Candidates the exact scorer reranked; 0 for an exact search.
+    pub exact_rerank: u64,
+    /// Points written after the generation, searched exactly beside it.
+    pub overlay_candidates: u64,
+    /// The quantized generation an approximate search read.
+    pub selected_generation: Option<u64>,
     pub loaded_artifact_bytes: u64,
     pub hits: Vec<HitView>,
 }
@@ -735,6 +742,9 @@ pub fn search(query: &DataReference, result: &VectorSearchResult) -> VectorSearc
         keys_examined: result.read_evidence.keys_examined,
         canonical_candidates: result.resources.canonical_candidates,
         selected_candidates: result.resources.selected_candidates,
+        exact_rerank: result.resources.exact_rerank,
+        overlay_candidates: result.resources.overlay_candidates,
+        selected_generation: result.resources.selected_generation,
         loaded_artifact_bytes: result.resources.loaded_artifact_bytes,
         hits: result
             .hits

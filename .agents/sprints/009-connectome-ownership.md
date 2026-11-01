@@ -237,6 +237,28 @@ owner's desktop) were recorded on the unmerged `agent/connectome-theme` branch
       not serve shows the engine's stated reason. The product capability
       catalogue's static Connectome binding ("planned") does not gate a view.
       This was recommended with the question and not contradicted.
+20. Real views over what the engine serves, TurboQuant first. This is the
+    owner's correction of 2026-10-28. It came after an F4b draft, never
+    pushed, had replaced the fixed "unavailable" badges with notices that a
+    view is not in Connectome yet: "I should see that projects knowledge
+    paths, I should be able to edit and see the QL graphs, the schemas being
+    generated once the planning is done and ready for hand off, turboquant,
+    and properly taking the time to expand the UI properly and not just
+    blindly rush this and get all old code written connectome from surreal".
+    Asked what comes first, the owner answered "we build out systems that
+    leverage turboquants". "The schemas" means both the plan and handoff
+    records and the data schemas the plan produces. It means:
+    - **A served operation gets its real view.** The view shows what the
+      engine serves, edits it through the engine's governed path, and graphs
+      it. A notice that a view is missing is not a view, so F4b is reworked
+      to this.
+    - **TurboQuant first.** RRFlow's [E-04 TurboQuant plan](https://github.com/rrflow/rrflow-development/blob/main/docs/roadmap/e04-turboquant-persistent-serving-engineering-plan.md)
+      orders the engine work. Its package 4 is this sprint's first consumer:
+      per named vector, build, activate and retire generations, and compare
+      exact with TurboQuant search. That is step T1 below.
+    - **The other named views follow,** each over the engine operation that
+      serves it: project knowledge paths, editable rrflowQL graph results,
+      and plan and handoff records with the schemas they produce.
 
 ## Ordered implementation slices
 
@@ -423,6 +445,29 @@ each one lands.
   - **F4b: view registry.** The registry described above. A view's
     availability comes first from its instance's lifecycle, then from that
     instance's endpoint catalogue and capability states.
+- **T1: TurboQuant in the Vectors lens** (decision 20). The runtime
+  workbench's Vectors lens is RRFlow-native, so it grows in place ahead of F5
+  and S1, which concern the inherited views. It needs RRFlow's public
+  quantization lifecycle (H-04q2, RRFlow #187), so the engine pin moves to an
+  RRFlow revision that serves it.
+  - **Generations.** Per named vector, the lens lists every quantization
+    generation the engine holds, with its state, method (bits and seed for
+    TurboQuant), generation, source cursor, vectors encoded, sizes and
+    digests.
+  - **Build, activate and retire are governed effects.** The native process
+    holds the exact request under a handle and the operator confirms it. A
+    retry repeats that request's idempotency key, so the engine answers a
+    lost reply with its recorded result instead of applying it twice.
+  - **Exact and TurboQuant side by side.** For the selected record, both
+    searches run and both hit lists are shown, with recall@k against exact,
+    each search's round trip, keys examined, candidates compared and artifact
+    bytes loaded. Exact search stays the lens's default, and the map stays
+    exact.
+
+  Oracle: native tests of the request and recall rules; an RRD process test
+  that is refused before activation, then builds, activates, compares,
+  replays and retires against a real engine; and before/after captures
+  (decision 17).
 - **F5: characterisation.** Tests that pin the engine-neutral inherited
   components before they are re-pointed: the data table, the tables pane, the
   schema graph, the relation graph, the code editor, the inspector and
@@ -473,7 +518,7 @@ each one lands.
 | Functions lens | governed function catalogue, install and execute | H-04, I-06 |
 | AI models lens (the workbench's existing Models tab covers data models) | model manifest admission | Gate G |
 | Principals and access lens | principal, grant and credential administration | POAM-016 |
-| Vector index lens (TurboQuant build, activate and retire) | quantization lifecycle and HNSW build | OBJ-13, E-04 |
+| Vector index lens: HNSW build (TurboQuant's build, activate and retire is T1) | HNSW build | E-04, C-05 |
 | Live operations beyond subscriptions | WebSocket request execution | H-04 |
 | Browser runner and embed | browser deployment | RRFlow deployment profiles |
 
@@ -1538,3 +1583,218 @@ H-07h (#175), and then to `c1557fe5`, RRFlow `main` with #173, #174 and
     `attunement-cancel` and `attunement-receipt-read`), and some of its
     descriptions are newer engine text. Topics move down and a few lines
     rewrap; the layout is unchanged.
+
+### 2026-10-29 — Step T1: TurboQuant in the Vectors lens (decision 20)
+
+Branch `agent/t1-turboquant-vectors` from F4a (`88c13a84`, PR #24). The
+engine pin moves from `89ec21ea` to the head of RRFlow's E-04 stack (trial;
+RRFlow #184 to #187), which serves the quantization lifecycle.
+
+- **Read first:**
+  - the Vectors lens (`tabs/vectors.tsx`), its lens card, and the Storage
+    lens's vector artifacts table;
+  - the native client's vector reads, its request identities and lease, and
+    the transaction and backup effect modules (`rrd/client.rs`,
+    `client/transaction.rs`, `client/backup.rs`);
+  - the vector and effect views (`rrd/view.rs`, `view/effect.rs`), the
+    command layer and its registration (`rrd.rs`, `main.rs`);
+  - the webview's session client and view types (`src/rrflow/session.ts`);
+  - the process tests' estate and fixture (`client/process.rs`) and the
+    native capture harness and its vector parity items;
+  - at RRFlow's E-04 stack: the quantization lifecycle contract
+    (`BuildVectorQuantizationArtifact` and its siblings, the artifact
+    snapshot, `VectorSearchMode` and its bounds, `VectorSearchResult` and its
+    resource evidence), the four `rrd-client` methods, and the lifecycle
+    reference (`docs/reference/vector/quantization-lifecycle.md`), including
+    its replay rules.
+- **Decision 20** records the owner's direction of 2026-10-28, quoted, and T1
+  joins the ordered increments. The rebuild table's vector index row now names
+  only the HNSW build, which no public operation serves.
+- **Engine pin:** `89ec21ea` → `50349d75` (trial). That revision is the head of
+  RRFlow's E-04 stack: #187 after the owner merged `main` `57b9a355` into it.
+  Both goldens were rewritten from the engine; after formatting, only their
+  engine revision changed. Sidecar SHA-256 `42631220…`.
+- **Native lifecycle** (`rrd/client/quantization.rs`, a governed-effect module
+  beside `transaction` and `backup`):
+  - `rrd_vector_quantizations` lists one named vector's generations, by
+    artifact and then newest first.
+  - `rrd_vector_quantization_propose` builds the exact request for a build, an
+    activation or a retirement and holds it under a handle. This process sets
+    the scope and the key budget, and the contract's own validation runs
+    before anything is held. The webview chooses only the vector, the method
+    and the generation, and cannot add a field.
+  - `rrd_vector_quantization_apply` names only the handle. Every attempt sends
+    the options the proposal drew, so one idempotency key, and only an attempt
+    whose outcome is unknown keeps the step pending. A newer proposal replaces
+    it, and `rrd_vector_quantization_discard` ends it.
+- **Native comparison** (`rrd_vector_compare`):
+  - It retrieves the example's vector once, then runs an exact search and a
+    `require_approximate` search with the session already pinned. Each SDK call
+    is timed alone.
+  - Both lists drop the query point and keep `top_k` hits.
+  - Recall@k counts an approximate hit above the cut when it is an exact
+    neighbour, and hits that tie the cut up to the number of exact neighbours
+    that tie it. Approximate hits are exact-reranked, so their scores are
+    exact.
+  - A non-retryable engine refusal becomes the comparison's
+    `approximate_refusal`. Any other failure fails the command.
+  - The search view keeps the exact-rerank width, the overlay candidates and
+    the selected generation, which the projection used to drop.
+- **The Vectors lens, in place:**
+  - **A badge** after the embedding model names the active generation ("TurboQuant
+    4 bits · generation 1"), or says the lens has exact search only.
+  - **"Search generations"** sits between the map and the stored points:
+    - one row per generation with its method (bits and seed), state, source
+      cursor, vectors encoded, packed size against full precision, and build
+      time;
+    - a row opens its artifact, digests, object size, auxiliary bytes, the
+      method's largest ratio and the lifecycle revision;
+    - Build opens a method form (TurboQuant bits and seed, scalar, product
+      compression, binary). It then shows the held request as JSON before
+      Build sends it. Activate and Retire open the held request directly.
+    - An unsettled attempt says the step may have been applied and offers
+      "Apply again", which the engine answers with its recorded result.
+  - **Exact and approximate, side by side,** for the record selected on the
+    map. Neighbours (5, 10 or 20) and the exact-rerank width (the hits, twice
+    or four times them) are chosen beside it:
+    - recall@k, round trips, keys examined and vectors read at full precision
+      as stats;
+    - both ranked lists, with an exact neighbour the approximate search missed
+      and an approximate hit outside the exact list marked, and a tie at the
+      cut marked as a tie;
+    - an evidence table: access path, round trip, keys examined, vectors read
+      at full precision, candidates the plan expected to score, reranked
+      exactly, written since the generation, generation bytes loaded, and
+      cursor;
+    - without an active generation, the exact list beside "No generation is
+      active" and the engine's own words.
+  - The glossary gains search generation, TurboQuant, exact rerank and
+    recall@k.
+  - Unchanged: the map, its build, the selected-record panel (still exact,
+    with its footer) and the stored points.
+- **Found while implementing:**
+  - The exact access path is named `exact_scan`.
+  - `canonical_candidates` counts the vectors a search read at full precision
+    and `selected_candidates` the candidates its plan expected to score. On the
+    fixture at the narrowest rerank, TurboQuant planned 8 and read 4 at full
+    precision. The comparison labels them so. The panel's footer ("8 of 8
+    candidates compared") is only ever exact, where its words hold.
+  - The engine refuses an approximate search with
+    `Vector("invalid runtime object: no vector access path satisfies the
+    request contract")`. That is `ServiceError`'s debug form, the root cause
+    RRFlow's POAM-044 records for query refusals. The lens shows the engine's
+    words beneath its own explanation and parses nothing.
+  - The engine's diagnostic graph, which the Records card counts, holds
+    engine-owned records. Before T1 its 12 records were the 8 documents and 4
+    runtime traces. A build and an activation add 4 traces, one
+    `vector_quantization_artifact` and two `vector_quantization_lifecycle`
+    revisions, so the card reads 19. T1 does not change that graph; V2
+    re-authors Records onto the schema registry's kinds.
+  - On the 8-vector fixture TurboQuant reads more keys than an exact scan (70
+    against 55 at a rerank of 22). Reading the catalogue, the generation and
+    its delta costs more than scanning 8 vectors. The comparison reports what
+    it measured; RRFlow J-04 owns claims at scale.
+  - The harness's point selection clicked the first button in any table. It
+    is scoped to the stored points table, since the lens now has two.
+- **Deliberate breakages,** each restored, each failing where it should:
+  - a retry that draws a fresh idempotency key fails the process test's lost
+    reply (`ready.idempotent_replay`);
+  - a comparison that fails on an engine refusal fails it before activation;
+  - lists that keep the query point fail its exact-neighbour check;
+  - ties filling more slots than the cut has fail the recall unit test (3, not
+    2).
+- **Verified locally** (Windows, engine `50349d75`):
+  - `pnpm check` (61 API reference operations; 12 engine values, 18 checks;
+    45 engine queries and 3 RRFlow vectors, 100 checks);
+  - `cargo fmt --check` and `cargo clippy --all-targets --locked -- -D
+    warnings`;
+  - 50 native unit tests, 4 of them new;
+  - all 18 real-engine process tests, including the new
+    `rrd::client::process::quantization`: refused before activation, a lost
+    build reply settled as the engine's replay, a spent and a replaced handle
+    applying nothing, TurboQuant beside exact at the narrowest rerank with
+    recall 1, and refused again after retirement.
+- **Captures (decision 17), trial pin.** F4a's head (`88c13a84`, engine
+  `89ec21ea`) was compared against T1 (engine `50349d75`), in both themes, with
+  T1's harness on both sides. Each theme has 42 pairs and 7 new screens. Dark:
+  8 identical, 14 negligible, 10 dynamic and 10 changed. Light: 8 identical,
+  15 negligible, 10 dynamic and 9 changed.
+  - **The Vectors lens** changed as intended: the "exact search only" badge,
+    and the Search generations section below the map, which moves the stored
+    points down. The map and its facts are unchanged.
+  - **`vectors-points` and `vectors-nearest`** show the same content lower on
+    the page. The harness scrolls to the same elements, which now sit further
+    down. The map, the selected record's panel with its scores and footer, and
+    the points table are unchanged.
+  - **The glossary panel** lists the four new terms.
+  - **Three API reference screens** list the trial pin's four quantization
+    operations. Their layout is unchanged.
+  - **Advanced details, Explore project knowledge and the stopped project's
+    row** differ only in run-dependent text. The new steps build and activate
+    a generation before the panels are taken, so the records in view
+    (12 → 19), the read cursor and the table count move. A masked port of
+    another width rewraps one line, and the session message behind the stopped
+    row depends on how far the stop had got.
+  - **New screens:** the empty section, the build form, the held build
+    request, the built generation, the held activation, the comparison, and a
+    generation's details. The comparison shows recall@10 of 1.00, both lists
+    and the evidence table, in both themes.
+  - **The harness** scrolls the comparison to the top of the window, because
+    it is taller than the space below the map. The new screens show
+    run-dependent digests, so the compare reviews them by eye.
+
+  The final captures are taken after the engine pin moves to RRFlow `main`
+  with the E-04 stack.
+- **Not run here:** macOS and Linux. Connectome's candidate CI runs the checks,
+  the native suites and the RRD process tests there.
+- **Integration onto `main`** (2026-11-01). F4a landed as `main` `999c144a`
+  (#24), and this branch merged it. The journal keeps F4a's final-pin notes
+  and this section. The conflicting pins resolved to neither trial revision.
+  - **Engine pin:** `50349d75` (trial) → `15f36a87`, RRFlow `main` with the
+    E-04 stack (E-04c #190, E-04d #191) and POAM-045 (#211). `pnpm install`
+    and Cargo regenerated the locks; each changes only the `rrd-client` and
+    `rrd-contract` resolutions. Both goldens were rewritten from the engine;
+    after formatting, only their revision changed. Sidecar SHA-256
+    `f4a8d0b8…`.
+  - **Contract change.** E-04d gives the TurboQuant method an `estimator`;
+    absent means `mse`, and it is not serialized when it is `mse`. The lens
+    builds only `mse` generations, and the proposal unit test now names the
+    estimator it expects. A generation built elsewhere with the inner-product
+    estimator would show as "TurboQuant N bits" without naming its estimator.
+    That label is a follow-up, not part of this integration.
+  - **Verified locally** (Windows, engine `15f36a87`):
+    - `pnpm check`: 71 API reference operations; 12 engine values, 18
+      checks; 45 engine queries and 3 RRFlow vectors, 100 checks;
+    - `cargo fmt --check` and `cargo clippy --all-targets --locked -- -D
+      warnings`;
+    - 50 native unit tests;
+    - all 18 real-engine process tests, the sidecar's included.
+  - **Final native captures (decision 17).** `main` `999c144a` (engine
+    `c1557fe5`) against this head, both themes, T1's harness on both sides.
+    Each theme has 42 pairs and 7 new screens. Dark: 8 identical, 14
+    negligible, 10 dynamic and 10 changed. Light: 8 identical, 15
+    negligible, 10 dynamic and 9 changed. The same screens changed as at the
+    trial pin, reviewed by eye:
+    - **The Vectors lens,** its nearest and points screens and the glossary
+      changed as described above. The map, its facts (8 vectors, 8 exact
+      searches, 387 keys, cursor 37), the selected record's scores and
+      footer, and the stored points are unchanged.
+    - **Three API reference screens** list the catalogue at `15f36a87`: 71
+      operations against `main`'s 58, with the attunement, endpoint
+      configuration, prompt flight and task families. The layout is
+      unchanged.
+    - **Advanced details** (dark) and **Explore project knowledge** differ
+      only in run-dependent text: records in view (12 → 19), the read
+      cursor, the table count, and the width of masked text.
+    - **The stopped project's row.** In dark, a masked port of another width
+      rewraps one line. In light, the capture caught F4a's proof of the
+      stale endpoint record still running ("Proving a running instance"),
+      where `main`'s capture showed its refusal. F4a's lifecycle code is the
+      same on both sides.
+    - **The comparison** at `15f36a87` shows recall@10 of 1.00, 55 → 70 keys
+      examined and 8 → 8 vectors read at full precision at a rerank of 22.
+  - **Inherited screens,** with the browser harness of Slice V0, `main`
+    `999c144a` against this head, 49 per theme. Dark: 20 identical, 26
+    negligible, 2 dynamic and 1 changed. Light: 23 identical, 23 negligible,
+    2 dynamic and 1 changed. The change is the About tab's build time and the
+    engine revision it names (`c1557fe` to `15f36a8`).

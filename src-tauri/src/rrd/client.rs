@@ -11,8 +11,9 @@
 //!
 //! Governed effects live in submodules: `transaction` (preview, then commit
 //! exactly what was previewed), `backup`, `artifact` (exports held natively
-//! until saved), `history` (changefeed and audit pages) and `live` (durable
-//! subscriptions delivered over `/v1/ws`).
+//! until saved), `history` (changefeed and audit pages), `live` (durable
+//! subscriptions delivered over `/v1/ws`) and `quantization` (quantized search
+//! generations: propose a lifecycle step, then apply exactly that step).
 
 use super::error::RrdError;
 use super::transport::{is_loopback_origin, rrd_origin};
@@ -48,12 +49,17 @@ mod artifact;
 mod backup;
 mod history;
 mod live;
+mod quantization;
 mod transaction;
 
 pub use artifact::{save_artifact, RrdAuditExportRequest, RrdQueryExportRequest};
 pub use backup::{RrdBackupCreateRequest, RrdBackupRestoreRequest, RrdBackupsRequest};
 pub use history::{RrdAuditRequest, RrdChangesFollowRequest, RrdChangesRequest};
 pub use live::{LiveSink, RrdLiveOpenRequest};
+pub use quantization::{
+    RrdQuantizationApplyRequest, RrdQuantizationProposeRequest, RrdQuantizationsRequest,
+    RrdVectorCompareRequest,
+};
 pub use transaction::{RrdChangeCommitRequest, RrdChangePreviewRequest};
 
 // Connectome's own session policy; the engine enforces its own ceilings.
@@ -275,6 +281,8 @@ pub struct NativeRrdClient {
     lease: RwLock<Option<Lease>>,
     /// The previewed change waiting for its commit, if any.
     pending: tokio::sync::Mutex<Option<transaction::PendingChange>>,
+    /// The proposed quantization lifecycle step waiting to be applied, if any.
+    quantization: tokio::sync::Mutex<Option<quantization::PendingStep>>,
     artifacts: artifact::Artifacts,
     /// Counts lease refreshes. A live subscription's socket keeps the bearer
     /// it connected with, so it reconnects whenever this changes.
@@ -474,6 +482,7 @@ impl NativeRrdClient {
             query_budget: capabilities.configuration.query.clone(),
             ids,
             pending: Default::default(),
+            quantization: Default::default(),
             artifacts: Default::default(),
             bearer_generation: tokio::sync::watch::Sender::new(0),
             live: Default::default(),
