@@ -2,6 +2,7 @@ import type {
 	ConnectomeConfig,
 	EstatePreview,
 	EstateSelection,
+	InstanceStatus,
 	Platform,
 	ServedEstate,
 	UrlTarget,
@@ -87,20 +88,24 @@ export interface ConnectomeAdapter {
 
 	/**
 	 * Serve the configured local estate: install it when the project has no
-	 * estate yet, start the engine on a loopback port, and wait until it is
-	 * ready. Resolves with the served estate's coordinates.
+	 * estate yet, attach to it when another process already serves it, or
+	 * start the engine on a loopback port, and wait until it is ready.
+	 * Resolves with the served estate's coordinates.
 	 */
 	previewEstate(selection?: EstateSelection): Promise<EstatePreview>;
 	serveEstate(acceptedPlanSha256?: string, selection?: EstateSelection): Promise<ServedEstate>;
 
 	/**
-	 * The living project engines owned by this desktop process
+	 * Every project instance the native registry tracks. It looks at each one
+	 * first, and proves and attaches an instance started elsewhere for any of
+	 * the known `projects`.
 	 */
-	servedEstates(): Promise<ServedEstate[]>;
+	projectInstances(projects: string[]): Promise<InstanceStatus>;
 
 	/**
-	 * Stop only the owned engine at the exact returned canonical project path.
-	 * Resolves with whether that engine was running.
+	 * Stop the engine this desktop started at the exact canonical project
+	 * path, or dismiss its failure. An instance started elsewhere is never
+	 * stopped. Resolves with whether an engine was stopped.
 	 */
 	stopEstate(project: string): Promise<boolean>;
 

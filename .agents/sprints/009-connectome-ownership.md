@@ -214,6 +214,29 @@ owner's desktop) were recorded on the unmerged `agent/connectome-theme` branch
       navigation from the operations and capabilities each view needs.
     - **Foundations first.** Each step is reviewed before the next. D1a's API
       tab moves into the documentation view when that view is re-authored.
+19. A view is available when its project's instance runs. This is the
+    owner's answer of 2026-10-28 to F4's question of what makes a view
+    available. An instance gets running in one of two ways:
+    - the user starts `rrflow` in the project folder, and its hooks lead the
+      AI to ask about indexing;
+    - the user starts that instance from Connectome, one or several in turn.
+
+    Connectome shows each instance's real startup status. Startup is fast,
+    so the status is never padded. It means:
+    - **Availability starts from the instance lifecycle.** Each project's
+      instance is stopped, starting (at the stage it has actually reached),
+      ready, stopping or failed, whichever way it was started.
+    - **An instance started elsewhere is found and proved.** RRFlow's served
+      endpoint record (`.rrflow/serving.json`, RRFlow H-07h) says where an
+      instance listens, and `rrflow ready --project` proves it. The record
+      is only a hint. The authenticated challenge grants readiness, and a
+      failed liveness check can only take it away.
+    - **Connectome stops only what it started.** It never stops an instance
+      started elsewhere, and closing Connectome leaves that instance running.
+    - **Inside a ready instance,** a view whose operation the instance does
+      not serve shows the engine's stated reason. The product capability
+      catalogue's static Connectome binding ("planned") does not gate a view.
+      This was recommended with the question and not contradicted.
 
 ## Ordered implementation slices
 
@@ -383,7 +406,23 @@ each one lands.
   operations and capabilities it needs, and navigation is derived from the
   engine's catalogue and capabilities. A view whose operation is unserved
   shows that capability state. Oracle: registry tests against the pinned
-  catalogue.
+  catalogue. Amended by decision 19 on 2026-10-28 and split, as F1 was:
+  - **F4a: instance lifecycle.** The native process keeps one lifecycle per
+    project, whichever way the instance was started.
+    - Opening a project whose instance already runs attaches to it, instead
+      of failing with "already open in another process".
+    - A known project started from its folder appears once it is proved.
+    - The project engines panel shows each instance's lifecycle, with
+      before/after captures.
+    - The engine pin moves to an RRFlow revision with H-07h.
+
+    Oracle: native tests over every lifecycle transition, and RRD process
+    tests that start an instance outside Connectome with `rrflow serve`.
+    Connectome attaches to it, refuses to stop it, sees it stop, and attaches
+    again after a restart on a new port.
+  - **F4b: view registry.** The registry described above. A view's
+    availability comes first from its instance's lifecycle, then from that
+    instance's endpoint catalogue and capability states.
 - **F5: characterisation.** Tests that pin the engine-neutral inherited
   components before they are re-pointed: the data table, the tables pane, the
   schema graph, the relation graph, the code editor, the inspector and
@@ -1329,3 +1368,173 @@ pin `86adada6`.
 
   A follow-up for the harness: those three screens should wait for a settled
   state or be classed as dynamic.
+
+### 2026-10-28 — Step F4a: each project's instance lifecycle (decision 19)
+
+Branch `agent/f4a-instance-lifecycle` from F3 (`2670b09b`, PR #23). The
+engine pin moves from `86adada6` to `89ec21ea` (trial), RRFlow `main` with
+H-07h (#175), and then to `c1557fe5`, RRFlow `main` with #173, #174 and
+#159.
+
+- **Read first:**
+  - the native serve path (`rrd/estate.rs`), its registry, the four estate
+    commands and the process tests that drive them;
+  - the native client's loopback and capability handling (`rrd/client.rs`);
+  - the webview's adapter, serving store, project engines panel, served
+    connection and every reader of `isServing` and `servedEstate`;
+  - the native capture harness;
+  - at RRFlow `main`:
+    - the served endpoint record contract
+      (`installed-lifecycle.md#served-endpoint-record`);
+    - `rrflow serve` and `rrflow ready` in `rrflow-cli/src/installed.rs`;
+    - the SDK's `readiness` and `capabilities`;
+    - the endpoint, capability and product capability types;
+    - the Connectome client contract's capability-truth and multi-instance
+      sections.
+- **Decision 19** records the owner's answer of 2026-10-28 in the authority
+  decisions, and F4 is split into F4a and F4b in the ordered increments.
+- **What the contract allows.** A PID, port, TCP handshake or JSON file is not
+  readiness (`installed-lifecycle.md`). So:
+  - Connectome treats the served endpoint record only as a hint of where to
+    look;
+  - `rrflow --json ready --project` grants readiness with its authenticated
+    challenge;
+  - the liveness check after it can only take readiness away. It reads the
+    public capabilities, whose instance identity the SDK checks, so another
+    process on the same port does not pass;
+  - a status read never authenticates. `rrflow ready` opens and closes a
+    session, and both write to the estate.
+- **The native registry (`rrd/estate/lifecycle.rs`).**
+  - **One lifecycle per project:** starting at the stage it reached, ready,
+    stopping or failed. A project with no entry is stopped. Every transition
+    is numbered and sent as `estate:lifecycle`.
+  - **Opening an installed project** resolves the engine, then looks for a
+    record.
+    - A record that proves itself is attached, instead of the start failing
+      with "already open in another process".
+    - A record that does not prove itself is stale, and `rrflow serve`
+      replaces it.
+    - A refusal the proof itself raises fails the start.
+  - **A status read takes the known projects:**
+    - an owned engine that exited becomes failed, with its exit status;
+    - an attached instance that no longer answers as itself becomes
+      stopped, with the reason;
+    - a known project whose record is new since its last failed proof is
+      proved once and attached.
+  - **Stop applies only to engines this desktop started.** For an attached
+    instance it refuses: "started outside Connectome; stop it where it was
+    started". On a failed entry it dismisses the failure. A failure holds
+    no engine slot.
+  - **Contract check.** Every ready report, owned or attached, must show the
+    exact OpenAPI document of the pinned `rrd-contract`. An instance on
+    another RRFlow revision is refused before a native session or the
+    webview's SDK meets it.
+  - **The engine's own reason.** A serve that stops before announcing now
+    reports the engine's last line, for example "already open in another
+    process; its served endpoint is recorded at …". Before, it reported
+    only "did not announce its address".
+- **The webview.**
+  - `projectInstances(projects)` replaces `servedEstates()`.
+  - The store keeps each project's newest numbered view. A stopped instance
+    stays as a stopped entry, so an older status read cannot bring it back.
+    `isServing` and `servedEstate` are derived from it, for the screens that
+    show one estate.
+  - A connection records its project directory. Older connections derive it
+    from their credential path.
+  - The project engines panel lists every known project with its real state
+    and the actions that state allows:
+    - Start, for a stopped project;
+    - Open, and Stop only if Connectome started it, for a ready one;
+    - Try again and Dismiss, for a failed one.
+
+    A starting instance shows the stage it actually reached. The panel
+    reads the registry every two seconds while open and every five
+    otherwise.
+- **Oracles.**
+  - **Native tests:**
+    - reservation and capacity;
+    - failures kept, replaced, dismissed and holding no engine;
+    - numbered transitions;
+    - an attached instance never stopped;
+    - a lost instance stopped;
+    - a stale record proved once until it changes.
+  - **The real-engine test** `rrd::client::process::elsewhere` serves the
+    project with its own `rrflow serve`:
+    - a killed server's record proves nothing, once;
+    - the outside instance is found, proved, attached and read through a
+      native session, from a fresh registry too;
+    - the ready report is held to the contract, and a tampered one is
+      refused;
+    - a second serve reports the engine's reason;
+    - Connectome refuses to stop it;
+    - its loss is seen;
+    - Connectome serves over the stale record;
+    - dropping that registry stops its engine;
+    - an outside restart on a new port is attached again.
+- **Four deliberate breakages,** each run against the real engine or the
+  native tests, failed where they should:
+  - skipping the attach step failed at the fresh registry's open;
+  - dropping the contract comparison let the tampered report through;
+  - dropping the proved-once rule proved the same record twice;
+  - holding the registry strongly from the start's observer left the engine
+    running after its registry was dropped.
+
+  The first run of the attach breakage hung: an orphaned server kept the
+  test's output pipe open. That exposed a real reference cycle. The engine's
+  console thread holds the start's observer, which held the registry that
+  owns the engine. The observer now holds the registry weakly, and the drop
+  check above is its oracle. The same run showed that a fresh registry is
+  needed to reach the attach step, and that the engine's reason was being
+  lost, so both were added.
+- **Engine pin.** `89ec21ea` is a trial pin. It moves to the RRFlow `main` that
+  carries #173, #174 and #159 (H-11a) once they land, before this step merges.
+  Both goldens were rewritten from the engine; after formatting, only their
+  engine revision changed.
+- **Verified locally** (Windows, engine `89ec21ea`, sidecar SHA-256
+  `b0d46362…`):
+  - `pnpm check` (57 API reference operations; 12 engine values, 18 checks;
+    45 engine queries and 3 RRFlow vectors, 100 checks);
+  - `cargo fmt --check` and `cargo clippy --all-targets --locked -- -D
+    warnings`;
+  - 46 native unit tests;
+  - all 17 real-engine process tests.
+- **Captures (decision 17), trial pin.** F3's head (`2670b09b`, engine
+  `86adada6`) was compared against F4a (engine `89ec21ea`), in both themes,
+  with the same harness. Each theme has 40 pairs: 8 identical, 18 negligible,
+  10 dynamic and 4 changed.
+  - **The project engines panel** changed as intended. The row now shows the
+    project's name, a state badge, its path and what the state means, above
+    the same actions.
+  - **Three API reference screens** changed because the catalogue at
+    `89ec21ea` has two more operations, `attunement-read` and
+    `attunement-cancel`, which move every later topic down. Their layout is
+    unchanged.
+  - **The dynamic screens** were reviewed by eye. Only counter values and the
+    widths of masked text differ.
+  - **The serving progress screen** is taken three seconds into installation.
+    It now always shows the opened workbench, because the start has finished
+    by then. So the harness gains a step that stops the project from its row
+    and starts it again, and the stopped and restarted rows are captured.
+
+  The final captures are taken after the engine pin moves to the stack's
+  `main`.
+- **Final pin** (2026-10-29). RRFlow #174 landed, then #159 as `main`
+  `c1557fe5`, and the pin moved there. Both goldens were rewritten from that
+  engine; only their revision changed. Verified locally (Windows, engine
+  `c1557fe5`, sidecar SHA-256 `b413e378…`):
+  - `pnpm check`: 58 API reference operations; 12 engine values, 18 checks;
+    45 engine queries and 3 RRFlow vectors, 100 checks;
+  - `cargo fmt --check` and `cargo clippy --all-targets --locked -- -D
+    warnings`;
+  - 46 native unit tests;
+  - all 17 real-engine process tests.
+- **Final captures (decision 17).** F3's head (`2670b09b`, engine
+  `86adada6`) against F4a at `c1557fe5`, both themes, the same harness: 40
+  pairs per theme, 8 identical, 18 negligible, 10 dynamic and 4 changed, as
+  at the trial pin.
+  - **The project engines panel** changed as intended.
+  - **The three API reference screens** list the catalogue at `c1557fe5`. It
+    has three more operations than F3's pin (`attunement-read`,
+    `attunement-cancel` and `attunement-receipt-read`), and some of its
+    descriptions are newer engine text. Topics move down and a few lines
+    rewrap; the layout is unchanged.

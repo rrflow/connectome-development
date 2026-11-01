@@ -345,6 +345,24 @@ async fn reachable_loopback(candidates: &[SocketAddr]) -> Result<SocketAddr, Str
     ))
 }
 
+/// Whether the instance proved at `endpoint` still answers there as itself.
+/// The SDK checks the instance identity its public capabilities carry, so
+/// another process that took over the port does not pass. This can only take
+/// readiness away: answering is not RRFlow's authenticated proof.
+pub async fn answers_as(endpoint: &str, instance: &str) -> Result<(), RrdError> {
+    let (_, candidates) = loopback_candidates(endpoint)?;
+    let address = reachable_loopback(&candidates).await?;
+    let config = ClientConfig {
+        request_timeout: LOOPBACK_PROBE_TIMEOUT,
+        max_attempts: 1,
+        ..ClientConfig::default()
+    };
+    let client = RrdClient::connect_local(address, canonical(instance, "instance")?, config)
+        .map_err(RrdError::sdk)?;
+    client.capabilities().await.map_err(RrdError::sdk)?;
+    Ok(())
+}
+
 fn read_credential(path: &str) -> Result<(CanonicalId, Secret), String> {
     let path = Path::new(path);
     let metadata = std::fs::metadata(path)

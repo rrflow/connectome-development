@@ -9,8 +9,8 @@
 
 use super::*;
 use crate::rrd::estate::{
-    preview_estate, serve_estate, EstateServeRequest, EstateStage, InstallMode, ServeObserver,
-    ServedEstate,
+    preview_estate, serve_estate, EstateServeRequest, EstateStage, InstallMode, InstanceView,
+    ServeObserver, ServedEstate,
 };
 use rrd_contract::{
     BeginTransaction, CommitTransaction, DataSchemaRegistry, EnsureVectorCollection,
@@ -21,6 +21,7 @@ use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
 mod effects;
+mod elsewhere;
 mod language;
 mod live;
 mod values;
@@ -47,8 +48,9 @@ struct Estate {
     instance: String,
 }
 
-/// The serve sequence's boundaries and the engine's output, kept so a
-/// failing test can show what the product path reported.
+/// The serve sequence's boundaries, the engine's output and each lifecycle
+/// transition, kept so a failing test can show what the product path
+/// reported.
 #[derive(Default)]
 struct RecordingObserver {
     lines: Mutex<Vec<String>>,
@@ -64,6 +66,13 @@ impl ServeObserver for RecordingObserver {
 
     fn output(&self, line: String) {
         self.lines.lock().expect("observer").push(line);
+    }
+
+    fn lifecycle(&self, instance: InstanceView) {
+        self.lines.lock().expect("observer").push(format!(
+            "[lifecycle {:?} {:?}] {}",
+            instance.state, instance.origin, instance.detail
+        ));
     }
 }
 
@@ -656,17 +665,21 @@ fn the_bundled_engine_serves_as_the_verified_sidecar() {
     let _ = std::fs::remove_dir_all(&project);
 
     assert_eq!(
-        served.view.engine.source,
+        served.view.engine.as_ref().expect("an owned engine").source,
         crate::rrd::engine::EngineSource::Sidecar
     );
     assert_eq!(
-        served.view.engine.sha256,
+        served.view.engine.as_ref().expect("an owned engine").sha256,
         manifest["sha256"]
             .as_str()
             .expect("manifest names its sha256")
     );
     assert_eq!(
-        served.view.engine.revision.as_deref(),
+        served
+            .view
+            .engine
+            .as_ref()
+            .and_then(|engine| engine.revision.as_deref()),
         manifest["revision"].as_str()
     );
     let lines = observer.lines.lock().expect("observer");
@@ -747,9 +760,12 @@ fn project_registry_keeps_parallel_estates_and_sessions_isolated() {
     assert_ne!(first.project, second.project);
     assert_ne!(first.credential_path, second.credential_path);
     assert_ne!(first.endpoint, second.endpoint);
-    assert_eq!(owner.status().unwrap().len(), 2);
+    assert_eq!(owner.status().instances.len(), 2);
     assert_eq!(
-        owner.start(requests[0].clone(), observer).unwrap().endpoint,
+        owner
+            .start(requests[0].clone(), observer.clone())
+            .unwrap()
+            .endpoint,
         first.endpoint,
         "opening a running project reuses its owned process"
     );
@@ -857,24 +873,24 @@ fn project_registry_keeps_parallel_estates_and_sessions_isolated() {
             .await
             .expect("A reconnects independently");
         sessions.disconnect("project-a").await.unwrap();
-        assert!(owner.stop(&first.project).unwrap());
+        assert!(owner.stop(&first.project, observer.as_ref()).unwrap());
         assert!(
-            !owner.stop(&first.project).unwrap(),
+            !owner.stop(&first.project, observer.as_ref()).unwrap(),
             "stopping twice is harmless"
         );
         assert!(
-            !owner.stop("unowned-project").unwrap(),
+            !owner.stop("unowned-project", observer.as_ref()).unwrap(),
             "never stop an unowned process"
         );
-        assert_eq!(owner.status().unwrap().len(), 1);
+        assert_eq!(owner.status().instances.len(), 1);
         b.database()
             .await
             .expect("stopping A preserves B's authenticated data flow");
         b.storage().await.expect("B's storage still answers");
         sessions.disconnect("project-b").await.unwrap();
     });
-    assert!(owner.stop(&second.project).unwrap());
-    assert!(owner.status().unwrap().is_empty());
+    assert!(owner.stop(&second.project, observer.as_ref()).unwrap());
+    assert!(owner.status().instances.is_empty());
     for request in requests {
         std::fs::remove_dir_all(request.project).expect("remove test-owned project");
     }

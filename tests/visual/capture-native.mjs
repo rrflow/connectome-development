@@ -263,6 +263,16 @@ const step = async (name, fn) => {
 };
 const invoke = (command, payload) =>
 	page.evaluate(([c, p]) => window.__TAURI_INTERNALS__.invoke(c, p), [command, payload ?? {}]);
+// The served estates, from either status shape: a list of served estates
+// before step F4a, then every tracked instance with its lifecycle.
+const servedEstates = async () => {
+	const status = await invoke("rrd_estate_status", { request: { projects: [], executable: "" } });
+	return Array.isArray(status)
+		? status
+		: (status?.instances ?? [])
+				.filter((instance) => instance.state === "ready")
+				.map((instance) => instance.estate);
+};
 
 try {
 	let ready = false;
@@ -335,7 +345,7 @@ try {
 		await wait(3000);
 		await shot("serving-stages");
 		for (let i = 0; i < 90; i++) {
-			const served = await invoke("rrd_estate_status");
+			const served = await servedEstates();
 			if (Array.isArray(served) && served.length > 0) {
 				log.served = served.map((s) => ({
 					endpoint: s.endpoint,
@@ -350,7 +360,7 @@ try {
 		await shot("served");
 	});
 	await step("seed", async () => {
-		const [served] = await invoke("rrd_estate_status");
+		const [served] = await servedEstates();
 		const seed = spawnSync(
 			"cargo",
 			[
@@ -608,6 +618,30 @@ try {
 			await wait(1000);
 			await shot(`settings-${slug(t)}`);
 		}
+		await page.keyboard.press("Escape");
+	});
+	// The project's instance through a stop and a start (step F4a): the panel
+	// shows the stopped project, then the instance it started again. A build
+	// without per-project rows has no Start, and that step is logged as failed.
+	const openEngines = async () => {
+		await page.getByRole("button", { name: "Manage project engines" }).first().click();
+		await wait(2000);
+	};
+	await step("project-engines-stopped", async () => {
+		await back();
+		await openEngines();
+		await page.getByRole("button", { name: "Stop this engine" }).first().click();
+		await wait(5000);
+		await shot("project-engines-stopped");
+	});
+	await step("project-engines-restarted", async () => {
+		await page.getByRole("button", { name: "Start", exact: true }).first().click();
+		for (let i = 0; i < 90 && (await servedEstates()).length === 0; i++) {
+			await wait(1000);
+		}
+		await wait(4000);
+		await openEngines();
+		await shot("project-engines-restarted");
 		await page.keyboard.press("Escape");
 	});
 } finally {
