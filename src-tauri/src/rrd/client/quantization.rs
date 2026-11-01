@@ -444,7 +444,7 @@ impl NativeRrdClient {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rrd_contract::VectorQuantizationBits;
+    use rrd_contract::{VectorQuantizationBits, VectorQuantizationEstimator};
 
     fn build(method: serde_json::Value) -> serde_json::Value {
         serde_json::json!({
@@ -472,7 +472,8 @@ mod tests {
             built.method,
             VectorQuantizationMethod::TurboQuant {
                 bits: VectorQuantizationBits::Bits4,
-                seed: 7
+                seed: 7,
+                estimator: VectorQuantizationEstimator::Mse,
             }
         );
 
