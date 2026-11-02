@@ -167,6 +167,9 @@ take the pane's full width. Every reading, control and link is kept: a record's 
 Details, and a search's evidence line is a table there. Links stay in view at every depth.
 `baseline/window/step-3/` holds the screens that changed.
 
+Step 4 adds guides over the same screens and moves nothing. Home gains a Guides section, and
+`baseline/window/step-4/` holds it with each step of the first guide.
+
 Removed as notices, as decision 20 requires: `native-workbench-activity`,
 `native-workbench-learning`, `native-workbench-services` and `native-panel-knowledge-paths`.
 Their look stays in the baselines. Activity and Knowledge paths return as real views in steps 6

@@ -100,6 +100,10 @@ test("creates an RRD HTTP runtime profile by default", async ({ page }, testInfo
 	await expect(page.getByText("rrd-smoke", { exact: true })).toBeVisible();
 	expect(requests).toEqual(["/v1/health/live", "/v1/health/ready", "/v1/capabilities"]);
 	const firstProject = new URL(page.url()).pathname;
+	await expect(page.getByRole("button", { name: "Start guide", exact: true })).toBeDisabled();
+	await expect(
+		page.getByText("Open a session to start this guide.", { exact: true }),
+	).toBeVisible();
 	// Only the work pane scrolls: the areas and tabs stay on a real window's first screen.
 	await page.setViewportSize({ width: 1366, height: 768 });
 	await page.getByRole("button", { name: "System", exact: true }).click();

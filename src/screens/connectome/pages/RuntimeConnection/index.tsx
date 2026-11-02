@@ -32,6 +32,7 @@ import { ApiReference } from "./api";
 import { workspaceRoute } from "./areas";
 import { formatCount } from "./format";
 import { GlossaryDrawer, Term } from "./glossary";
+import { GuideCards } from "./guides/cards";
 import { databaseQuery } from "./queries";
 import { SessionPanel, sessionQueryKey } from "./session";
 import { WorkspaceShell } from "./shell";
@@ -384,6 +385,10 @@ export function RuntimeConnectionPage({
 								onOpen={() => setLens("storage")}
 							/>
 						</SimpleGrid>
+						<GuideCards
+							session={Boolean(session)}
+							records={(graph?.nodes.length ?? 0) > 0}
+						/>
 						<ProjectOverview
 							connected={Boolean(session)}
 							onOpen={openRoute}
