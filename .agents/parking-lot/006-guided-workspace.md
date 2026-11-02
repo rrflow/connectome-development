@@ -4,6 +4,9 @@ Status: COMMITTED, 2026-11-01. The repository owner reviewed a clickable
 prototype beside the running Workbench and said "lets fix and go". This is also
 the navigation model that sprint 009's step S1 requires before the shell.
 
+[Parking lot 007](007-guided-workspace-against-code.md) checks this plan against the code
+and proposes changes to it. They take effect only when the owner decides.
+
 ## The owner's direction
 
 > we want all of that work that existed in august restored but properly now

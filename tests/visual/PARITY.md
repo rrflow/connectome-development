@@ -223,7 +223,8 @@ information and supports the same interaction, at equal or better clarity.
 ### Signals: `06-visuals` to `06b` → History › Signals
 
 - [ ] Six lanes of recent events, stepping back and forward, and a selected event opening its
-      mutation and audit.
+      mutation and audit. Signals drew `reasoning`, `workflow`, `routing`, `search`, `storage` and
+      `data`, and hid `model` and `memory`; Stream folded them differently.
 
 ### Flights: `07-flight` to `07f` → Reasoning › Flights
 
@@ -237,8 +238,8 @@ information and supports the same interaction, at equal or better clarity.
 
 - [ ] First, rewind, resume, forward, latest, a scrubber and a speed control.
 - [ ] Six lanes across one cursor.
-- [ ] A frozen mutation with scope, action, timeline, audit, commit and digests, and a strip of
-      neighbouring frames.
+- [ ] A frozen mutation with scope, action, timeline, audit, commit and digests, and a filmstrip of
+      every loaded frame, up to 512.
 
 ### Traces: `09-traces` to `09d` → Reasoning › Traces (needs a public operation)
 
@@ -272,7 +273,17 @@ information and supports the same interaction, at equal or better clarity.
 
 ### Search and keys: `19`, `19a` → top bar
 
-- [ ] `/` searches loaded objects; keys switch lens.
+- [ ] `/` focuses the search field and Enter routes source files; keys switch lens. August never
+      searched loaded objects, although its placeholder said so (`app.js:1515-1522`).
+
+### Hover: every view
+
+August had one custom popup, on graph nodes, and 19 plain browser tooltips: the refresh and inspector
+buttons, the transport controls of Flights, Stream and Cluster, each flight telemetry packet, and the
+surface matrix's entrypoints. Today's window must keep all of them. Parking lot 007 proposes going further.
+
+- [ ] Each transport control says what it does on hover.
+- [ ] A graph node shows its full label, kind and detail on hover.
 
 ### Defects not to carry over
 
@@ -283,6 +294,12 @@ information and supports the same interaction, at equal or better clarity.
 - "Local" still draws all 180 nodes for most selections, and selecting a node does not recentre it
   (`10`, `10c`).
 - The inspector has no links onward.
+- Every 5 seconds a re-render wipes Connections' form values, graph pan and zoom, and an open raw object
+  (`app.js:94-95`).
+- The graph tooltip stays on screen after a Local click, and a graph click does not open a closed
+  inspector (`10g`, `app.js:1323`, `app.js:1351`).
+- Signals' stepping leaves its 48-event window (`app.js:476`, `app.js:494-495`).
+- Keys fire with modifiers held, so Ctrl+C goes to Claims (`app.js:1519-1534`).
 
 ## Not yet captured
 
