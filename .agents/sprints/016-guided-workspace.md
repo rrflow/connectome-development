@@ -95,10 +95,11 @@ Written against `c1cbff20`. Re-read before starting.
 
 ### Target
 
-- A window of fixed panes: a top bar with project, estate and domain; an area rail; tabs; a work
-  pane that scrolls by itself; an inspector column. Inherited views already use
-  `react-resizable-panels` for this, and closed PR #10's `.workspaceHeader` and
-  `.workspaceScroll` rules are reference input.
+- A window of fixed panes: a top bar with project and estate; an area rail; tabs; a work pane
+  that scrolls by itself. Closed PR #10's `.workspaceHeader` and `.workspaceScroll` rules are
+  reference input.
+- The inspector column comes with step 3, when it has real content: an empty one would be a
+  notice. The domain selector comes when the engine scopes reads by domain (RRFlow H-11c).
 - `canvas` sizes follow the pane instead of the constant 620.
 - Only today's real views get tabs in this step, moved in unchanged: Start › Home;
   Knowledge › Graph, Schema, Vectors; Reasoning › Tasks; System › Instances, Storage,
@@ -109,10 +110,14 @@ Written against `c1cbff20`. Re-read before starting.
 
 ### Behaviour that changes on purpose
 
-- The four lens cards go, replaced by tabs. Their live readings move into the tabs and Home.
+- The four lens cards stay on Home with their live readings, and open their tabs. They leave
+  the Knowledge views, where the tabs replace them.
 - The Activity, Learning, Services and Knowledge paths notices leave the navigation, as
   decision 20 of sprint 009 requires. Each returns as a real view in steps 6 and 8, or when
   the engine serves it. Their current look stays in the captured baselines.
+
+- The page toolbar's band goes to the project bar at normal widths. Its only control there, the
+  project engines button, opens the same dialog as the bar's "Manage project engines".
 
 ### Oracle
 

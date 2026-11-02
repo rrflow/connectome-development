@@ -5,10 +5,8 @@ import {
 	Button,
 	Group,
 	Paper,
-	ScrollArea,
 	Select,
 	SimpleGrid,
-	Stack,
 	Text,
 	UnstyledButton,
 } from "@mantine/core";
@@ -17,7 +15,6 @@ import { isTauri } from "@tauri-apps/api/core";
 import { type ReactNode, useMemo, useState } from "react";
 import { Redirect, useLocation } from "wouter";
 import { Icon } from "~/components/Icon";
-import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import {
 	iconBook,
@@ -32,10 +29,12 @@ import { RrdSessionClient } from "~/rrflow/session";
 import { dispatchIntent } from "~/shared/util/intents";
 import { useConfigStore } from "~/shell/stores/config";
 import { ApiReference } from "./api";
+import { workspaceRoute } from "./areas";
 import { formatCount } from "./format";
 import { GlossaryDrawer, Term } from "./glossary";
 import { databaseQuery } from "./queries";
 import { SessionPanel, sessionQueryKey } from "./session";
+import { WorkspaceShell } from "./shell";
 import classes from "./style.module.scss";
 import { ModelsTab } from "./tabs/models";
 import { RecordsTab } from "./tabs/records";
@@ -43,10 +42,9 @@ import { StorageTab } from "./tabs/storage";
 import { VectorsTab } from "./tabs/vectors";
 import { TasksPanel } from "./tasks";
 import type { RuntimeLens } from "./types";
-import { ProjectSection } from "./workspace";
+import { ProjectOverview } from "./workspace";
 
 interface LensCardProps {
-	active: boolean;
 	icon: string;
 	title: string;
 	purpose: string;
@@ -54,17 +52,13 @@ interface LensCardProps {
 	onOpen: () => void;
 }
 
-function LensCard({ active, icon, title, purpose, reading, onOpen }: LensCardProps) {
+function LensCard({ icon, title, purpose, reading, onOpen }: LensCardProps) {
 	return (
-		<UnstyledButton
-			onClick={onOpen}
-			aria-pressed={active}
-		>
+		<UnstyledButton onClick={onOpen}>
 			<Paper
 				p="md"
 				h="100%"
 				className={classes.lens}
-				data-active={active || undefined}
 			>
 				<Group
 					gap="sm"
@@ -72,7 +66,7 @@ function LensCard({ active, icon, title, purpose, reading, onOpen }: LensCardPro
 					align="flex-start"
 				>
 					<Box
-						c={active ? "violet" : "slate"}
+						c="violet"
 						mt={2}
 					>
 						<Icon path={icon} />
@@ -115,10 +109,10 @@ export function RuntimeConnectionPage({
 }) {
 	const [, navigate] = useLocation();
 	const connections = useConfigStore((state) => state.connections);
-	const openSection = (next: string) => navigate(`/runtime/${id}/${next}`);
-	const lens: RuntimeLens =
-		detail === "records" || detail === "vectors" || detail === "storage" ? detail : "models";
-	const setLens = (next: RuntimeLens) => openSection(`knowledge/${next}`);
+	const route = workspaceRoute(section, detail);
+	const openRoute = (next: string) => navigate(`/runtime/${id}/${next}`);
+	const setLens = (next: RuntimeLens) =>
+		openRoute(next === "storage" ? "system/storage" : `knowledge/${next}`);
 	const connection = useConfigStore((state) =>
 		state.connections.find((candidate) => candidate.id === id),
 	);
@@ -140,7 +134,6 @@ export function RuntimeConnectionPage({
 	});
 	const [selected, setSelected] = useState<string | null>(null);
 	const [colorBy, setColorBy] = useState("cluster");
-	const [showIdentity, setShowIdentity] = useState(false);
 	const [glossaryOpen, setGlossaryOpen] = useState(false);
 
 	const handshake = query.data;
@@ -169,8 +162,16 @@ export function RuntimeConnectionPage({
 		return <Redirect to="/overview" />;
 	}
 
-	// With a live session the lenses lead; the handshake evidence stays one click away.
-	const identityVisible = showIdentity;
+	// An address saved before these areas opens the tab that holds its view now.
+	if (route !== (detail ? `${section}/${detail}` : section)) {
+		return (
+			<Redirect
+				to={`/runtime/${id}/${route}`}
+				replace
+			/>
+		);
+	}
+
 	const stages = [
 		{
 			label: "HTTP transport",
@@ -204,38 +205,68 @@ export function RuntimeConnectionPage({
 		onOpenLens: setLens,
 	};
 
-	return (
-		<Box
-			flex={1}
-			pos="relative"
-		>
-			<ScrollArea
-				pos="absolute"
-				inset={0}
-				type="scroll"
-				scrollbars="y"
-			>
-				<Stack
-					px="xl"
-					py="lg"
-					mx="auto"
-					maw={1400}
-					pb={72}
-				>
-					<PageBreadcrumbs
-						items={[
-							{ label: "Connectome", href: "/overview" },
-							{ label: "Projects" },
-							{ label: connection.name },
-							{ label: section },
-						]}
-					/>
+	const sessionPanel = (
+		<SessionPanel
+			client={sessionClient}
+			connection={connection}
+			endpoint={endpoint}
+			handshake={handshake}
+			session={session}
+			foreign={foreign}
+			ready={nativeSession.isFetched}
+		/>
+	);
 
-					<Group
-						align="flex-start"
-						justify="space-between"
-					>
-						<Box>
+	return (
+		<>
+			<WorkspaceShell
+				route={route}
+				onOpen={openRoute}
+				top={
+					<>
+						<Group
+							gap="xs"
+							wrap="nowrap"
+							miw={0}
+						>
+							<Select
+								aria-label="Selected project"
+								size="xs"
+								w={200}
+								value={id}
+								data={connections
+									.filter((c) => c.target === "runtime")
+									.map((c) => ({ value: c.id, label: c.name }))}
+								onChange={(next) => {
+									if (next) navigate(`/runtime/${next}/${route}`);
+								}}
+								searchable
+								allowDeselect={false}
+							/>
+							<Text
+								fz="sm"
+								c="slate"
+							>
+								›
+							</Text>
+							<Text
+								fz="sm"
+								c="slate"
+							>
+								Estate
+							</Text>
+							<Text
+								ff="monospace"
+								fz="sm"
+								truncate
+							>
+								{handshake?.service.instance.id ?? "instance not confirmed"}
+							</Text>
+						</Group>
+						<Group
+							gap="xs"
+							wrap="nowrap"
+						>
 							<Badge
 								variant="dot"
 								color={handshake ? "green" : query.isError ? "red" : "gray"}
@@ -246,50 +277,25 @@ export function RuntimeConnectionPage({
 										? "Rejected"
 										: "Negotiating"}
 							</Badge>
-							<PrimaryTitle
-								fz={32}
-								mt="xs"
-							>
-								{connection.name}
-							</PrimaryTitle>
-							<Group
-								gap={6}
-								mt={4}
-							>
-								<Text
-									ff="monospace"
-									fz="sm"
-								>
-									{handshake?.service.instance.id ?? "instance not confirmed"}
-								</Text>
-								<Text
-									fz="sm"
-									c="slate"
-								>
-									· {endpoint}
-								</Text>
-							</Group>
-						</Box>
-						<Group gap="xs">
 							<Button
 								variant="subtle"
 								color="obsidian"
+								size="xs"
 								leftSection={<Icon path={iconBook} />}
 								onClick={() => setGlossaryOpen(true)}
 							>
 								What do these words mean?
 							</Button>
-							{
-								<Button
-									variant="subtle"
-									color="obsidian"
-									onClick={() => setShowIdentity((visible) => !visible)}
-								>
-									{showIdentity ? "Hide advanced details" : "Advanced details"}
-								</Button>
-							}
 							<Button
 								variant="light"
+								size="xs"
+								onClick={() => dispatchIntent("toggle-serving")}
+							>
+								Manage project engines
+							</Button>
+							<Button
+								variant="light"
+								size="xs"
 								leftSection={<Icon path={iconRefresh} />}
 								onClick={() => query.refetch()}
 								loading={query.isFetching}
@@ -297,71 +303,149 @@ export function RuntimeConnectionPage({
 								Reconnect
 							</Button>
 						</Group>
-					</Group>
+					</>
+				}
+			>
+				{query.isError && (
+					<Alert
+						color="red"
+						title="RRD handshake failed"
+						icon={<Icon path={iconErrorCircle} />}
+					>
+						{describeRrdError(query.error)}
+					</Alert>
+				)}
 
-					<Group
-						align="end"
-						justify="space-between"
-					>
-						<Select
-							label="Selected project"
-							description="A saved connection; engine identity is verified independently."
-							value={id}
-							data={connections
-								.filter((c) => c.target === "runtime")
-								.map((c) => ({ value: c.id, label: c.name }))}
-							onChange={(next) => {
-								if (next)
-									navigate(
-										`/runtime/${next}/${section}${detail ? `/${detail}` : ""}`,
-									);
-							}}
-							searchable
-							allowDeselect={false}
-							w={320}
-						/>
-						<Button
-							variant="light"
-							onClick={() => dispatchIntent("toggle-serving")}
-						>
-							Manage project engines
-						</Button>
-					</Group>
-					<Group
-						component="nav"
-						aria-label="Project sections"
-						gap="xs"
-					>
-						{[
-							["overview", "Overview"],
-							["knowledge", "Knowledge"],
-							["tasks", "Tasks"],
-							["activity", "Activity"],
-							["learning", "Learning"],
-							["services", "Services"],
-							["api", "API reference"],
-						].map(([value, label]) => (
-							<Button
-								key={value}
-								variant={section === value ? "filled" : "subtle"}
-								aria-current={section === value ? "page" : undefined}
-								onClick={() => openSection(value)}
-							>
-								{label}
-							</Button>
-						))}
-					</Group>
-					{query.isError && (
+				{(!session || route === "system/instance") && sessionPanel}
+
+				{session &&
+					(route === "overview" || route.startsWith("knowledge/")) &&
+					(database.isError || catalogue.isError) && (
 						<Alert
 							color="red"
-							title="RRD handshake failed"
-							icon={<Icon path={iconErrorCircle} />}
+							title="Project data could not be read"
 						>
-							{describeRrdError(query.error)}
+							{describeRrdError(database.error ?? catalogue.error)}
 						</Alert>
 					)}
 
-					{identityVisible && (
+				{route === "overview" && (
+					<>
+						<PrimaryTitle fz={26}>{connection.name}</PrimaryTitle>
+						<Text>
+							One <Term id="estate">estate</Term>, one database: RRFlow keeps the
+							records, the relations between them, and their vectors together in
+							rrflowDB, and stores all of it with <Term id="rrflowKV">rrflowKV</Term>.
+							The views below are different ways into the same data.
+						</Text>
+						<SimpleGrid cols={{ base: 1, md: 2, lg: 4 }}>
+							<LensCard
+								icon={iconBook}
+								title="Data models"
+								purpose="Learn the database and browse its native tables."
+								reading="Live schema and guided queries"
+								onOpen={() => setLens("models")}
+							/>
+							<LensCard
+								icon={iconRelation}
+								title="Records & relations"
+								purpose="What the estate knows and how it links together."
+								reading={
+									graph
+										? `${formatCount(graph.nodes.length)} records in view · ${formatCount(graph.edges.length)} relations`
+										: session
+											? "Reading..."
+											: "Open a native session to inspect"
+								}
+								onOpen={() => setLens("records")}
+							/>
+							<LensCard
+								icon={iconTarget}
+								title="Vectors"
+								purpose="Find records with similar content by comparing their vectors."
+								reading={
+									collections
+										? `${formatCount(collections.length)} collection${collections.length === 1 ? "" : "s"} · ${formatCount(namedVectors)} named vector${namedVectors === 1 ? "" : "s"}`
+										: session
+											? "Reading..."
+											: "Open a native session to inspect"
+								}
+								onOpen={() => setLens("vectors")}
+							/>
+							<LensCard
+								icon={iconMemory}
+								title="Storage engine"
+								purpose="How the data is kept safe on disk and quick in memory."
+								reading={
+									session
+										? `${storageProfile === "rrflow_kv" ? "rrflowKV" : storageProfile} - live counters`
+										: "Open a native session to inspect"
+								}
+								onOpen={() => setLens("storage")}
+							/>
+						</SimpleGrid>
+						<ProjectOverview
+							connected={Boolean(session)}
+							onOpen={openRoute}
+						/>
+					</>
+				)}
+
+				{session && route === "knowledge/records" && (
+					<RecordsTab
+						connection={session}
+						{...lensProps}
+					/>
+				)}
+				{session && route === "knowledge/models" && (
+					<ModelsTab
+						client={sessionClient}
+						sessionKey={sessionKey}
+						onOpenLens={setLens}
+					/>
+				)}
+				{session && route === "knowledge/vectors" && (
+					<VectorsTab
+						connection={session}
+						{...lensProps}
+					/>
+				)}
+				{session && route === "system/storage" && (
+					<StorageTab
+						connection={session}
+						client={sessionClient}
+						sessionKey={sessionKey}
+					/>
+				)}
+
+				{route === "reasoning/tasks" && (
+					<TasksPanel
+						key={sessionKey}
+						client={sessionClient}
+						instance={session?.instance ?? ""}
+						connected={Boolean(session)}
+					/>
+				)}
+
+				{route === "system/api" && endpoint && (
+					<ApiReference
+						endpoint={endpoint}
+						instance={handshake?.service.instance.id ?? connection?.runtimeInstance}
+					/>
+				)}
+
+				{route === "system/instance" && (
+					<>
+						<Box>
+							<PrimaryTitle fz={26}>{connection.name}</PrimaryTitle>
+							<Text
+								fz="sm"
+								c="slate"
+								mt={4}
+							>
+								{endpoint}
+							</Text>
+						</Box>
 						<SimpleGrid cols={{ base: 1, md: 3 }}>
 							{stages.map((stage, index) => (
 								<Paper
@@ -393,212 +477,73 @@ export function RuntimeConnectionPage({
 								</Paper>
 							))}
 						</SimpleGrid>
-					)}
-
-					{identityVisible && handshake && (
-						<Paper
-							p="lg"
-							className={classes.identity}
-						>
-							<Group justify="space-between">
-								<Box>
-									<Text
-										fz="xs"
-										tt="uppercase"
-										c="slate"
-									>
-										Verified engine identity
-									</Text>
-									<Text
-										fz="xl"
-										fw={700}
-									>
-										{handshake.service.implementation}{" "}
-										{handshake.service.implementation_version}
-									</Text>
-									<Text fz="sm">
-										{handshake.service.deployment.deployment_form} ·{" "}
-										{handshake.service.deployment.storage_profile} ·{" "}
-										{handshake.service.deployment.endpoint_presentation}
-									</Text>
-									{handshake.service.installed_estate && (
-										<Text
-											fz="sm"
-											ff="monospace"
-										>
-											{handshake.service.installed_estate.project_id} ·{" "}
-											{handshake.service.installed_estate.estate_id} ·
-											configuration r
-											{handshake.service.configuration.revision}
-										</Text>
-									)}
-								</Box>
-								<Badge variant="outline">
-									{handshake.service.capabilities.length} capabilities
-								</Badge>
-							</Group>
-							<Group
-								gap="xs"
-								mt="lg"
+						{handshake && (
+							<Paper
+								p="lg"
+								className={classes.identity}
 							>
-								{handshake.service.capabilities.map((capability) => (
-									<Badge
-										key={capability.name}
-										variant="light"
-										color={capability.status === "available" ? "green" : "gray"}
-									>
-										{capability.name} · v{capability.contract_version}
+								<Group justify="space-between">
+									<Box>
+										<Text
+											fz="xs"
+											tt="uppercase"
+											c="slate"
+										>
+											Verified engine identity
+										</Text>
+										<Text
+											fz="xl"
+											fw={700}
+										>
+											{handshake.service.implementation}{" "}
+											{handshake.service.implementation_version}
+										</Text>
+										<Text fz="sm">
+											{handshake.service.deployment.deployment_form} ·{" "}
+											{handshake.service.deployment.storage_profile} ·{" "}
+											{handshake.service.deployment.endpoint_presentation}
+										</Text>
+										{handshake.service.installed_estate && (
+											<Text
+												fz="sm"
+												ff="monospace"
+											>
+												{handshake.service.installed_estate.project_id} ·{" "}
+												{handshake.service.installed_estate.estate_id} ·
+												configuration r
+												{handshake.service.configuration.revision}
+											</Text>
+										)}
+									</Box>
+									<Badge variant="outline">
+										{handshake.service.capabilities.length} capabilities
 									</Badge>
-								))}
-							</Group>
-						</Paper>
-					)}
-
-					<SessionPanel
-						client={sessionClient}
-						connection={connection}
-						endpoint={endpoint}
-						handshake={handshake}
-						session={session}
-						foreign={foreign}
-						ready={nativeSession.isFetched}
-					/>
-
-					{(section === "overview" || section === "knowledge") && (
-						<>
-							<Text>
-								One <Term id="estate">estate</Term>, one database: RRFlow keeps the
-								records, the relations between them, and their vectors together in
-								rrflowDB, and stores all of it with{" "}
-								<Term id="rrflowKV">rrflowKV</Term>. The views below are different
-								ways into the same data.
-							</Text>
-							{session && (database.isError || catalogue.isError) && (
-								<Alert
-									color="red"
-									title="Project data could not be read"
+								</Group>
+								<Group
+									gap="xs"
+									mt="lg"
 								>
-									{describeRrdError(database.error ?? catalogue.error)}
-								</Alert>
-							)}
-							<SimpleGrid cols={{ base: 1, md: 2, lg: 4 }}>
-								<LensCard
-									active={
-										section === "knowledge" &&
-										detail !== "paths" &&
-										lens === "models"
-									}
-									icon={iconBook}
-									title="Data models"
-									purpose="Learn the database and browse its native tables."
-									reading="Live schema and guided queries"
-									onOpen={() => setLens("models")}
-								/>
-								<LensCard
-									active={section === "knowledge" && lens === "records"}
-									icon={iconRelation}
-									title="Records & relations"
-									purpose="What the estate knows and how it links together."
-									reading={
-										graph
-											? `${formatCount(graph.nodes.length)} records in view · ${formatCount(graph.edges.length)} relations`
-											: session
-												? "Reading..."
-												: "Open a native session to inspect"
-									}
-									onOpen={() => setLens("records")}
-								/>
-								<LensCard
-									active={section === "knowledge" && lens === "vectors"}
-									icon={iconTarget}
-									title="Vectors"
-									purpose="Find records with similar content by comparing their vectors."
-									reading={
-										collections
-											? `${formatCount(collections.length)} collection${collections.length === 1 ? "" : "s"} · ${formatCount(namedVectors)} named vector${namedVectors === 1 ? "" : "s"}`
-											: session
-												? "Reading..."
-												: "Open a native session to inspect"
-									}
-									onOpen={() => setLens("vectors")}
-								/>
-								<LensCard
-									active={section === "knowledge" && lens === "storage"}
-									icon={iconMemory}
-									title="Storage engine"
-									purpose="How the data is kept safe on disk and quick in memory."
-									reading={
-										session
-											? `${storageProfile === "rrflow_kv" ? "rrflowKV" : storageProfile} - live counters`
-											: "Open a native session to inspect"
-									}
-									onOpen={() => setLens("storage")}
-								/>
-							</SimpleGrid>
-
-							<Box mt="md">
-								{session &&
-									section === "knowledge" &&
-									detail !== "paths" &&
-									lens === "models" && (
-										<ModelsTab
-											client={sessionClient}
-											sessionKey={sessionKey}
-											onOpenLens={setLens}
-										/>
-									)}
-								{session && section === "knowledge" && lens === "records" && (
-									<RecordsTab
-										connection={session}
-										{...lensProps}
-									/>
-								)}
-								{session && section === "knowledge" && lens === "vectors" && (
-									<VectorsTab
-										connection={session}
-										{...lensProps}
-									/>
-								)}
-								{session && section === "knowledge" && lens === "storage" && (
-									<StorageTab
-										connection={session}
-										client={sessionClient}
-										sessionKey={sessionKey}
-									/>
-								)}
-							</Box>
-						</>
-					)}
-
-					{section === "api" && endpoint && (
-						<ApiReference
-							endpoint={endpoint}
-							instance={handshake?.service.instance.id ?? connection?.runtimeInstance}
-						/>
-					)}
-
-					{section === "tasks" && (
-						<TasksPanel
-							key={sessionKey}
-							client={sessionClient}
-							instance={session?.instance ?? ""}
-							connected={Boolean(session)}
-						/>
-					)}
-					{section !== "tasks" && (
-						<ProjectSection
-							detail={detail}
-							section={section}
-							connected={Boolean(session)}
-							onOpen={openSection}
-						/>
-					)}
-				</Stack>
-			</ScrollArea>
+									{handshake.service.capabilities.map((capability) => (
+										<Badge
+											key={capability.name}
+											variant="light"
+											color={
+												capability.status === "available" ? "green" : "gray"
+											}
+										>
+											{capability.name} · v{capability.contract_version}
+										</Badge>
+									))}
+								</Group>
+							</Paper>
+						)}
+					</>
+				)}
+			</WorkspaceShell>
 			<GlossaryDrawer
 				opened={glossaryOpen}
 				onClose={() => setGlossaryOpen(false)}
 			/>
-		</Box>
+		</>
 	);
 }

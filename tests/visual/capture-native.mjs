@@ -396,7 +396,10 @@ try {
 		}
 	});
 	await step("workbench", async () => {
-		await page.reload({ waitUntil: "domcontentloaded" });
+		// Serving a project opens its address; a stray click must not move this start point.
+		await page.goto(page.url().replace(/(\/runtime\/[^/]+).*/, "$1/overview"), {
+			waitUntil: "domcontentloaded",
+		});
 		await wait(6000);
 		await shot("workbench-overview");
 	});
@@ -405,21 +408,30 @@ try {
 		await page.goto(workbench, { waitUntil: "domcontentloaded" });
 		await wait(4000);
 	};
-	for (const tab of ["Knowledge", "Tasks", "Activity", "Learning", "Services", "API reference"]) {
-		await step(`tab ${tab}`, async () => {
+	// An area on the rail, then a tab inside it.
+	const open = async (area, tab) => {
+		await page
+			.getByRole("navigation", { name: "Project areas" })
+			.getByRole("button", { name: area })
+			.click();
+		await wait(800);
+		if (tab) await page.getByRole("tab", { name: tab, exact: true }).click();
+	};
+	for (const [name, area, tab] of [
+		["knowledge", "Knowledge"],
+		["tasks", "Reasoning", "Tasks"],
+		["api-reference", "System", "API reference"],
+	]) {
+		await step(`tab ${name}`, async () => {
 			await back();
-			await page
-				.getByRole("tab", { name: tab })
-				.or(page.getByRole("button", { name: tab, exact: true }))
-				.first()
-				.click();
+			await open(area, tab);
 			await wait(3000);
-			await shot(`workbench-${slug(tab)}`);
+			await shot(`workbench-${name}`);
 		});
 	}
 	await step("api-reference-states", async () => {
 		await back();
-		await page.getByRole("button", { name: "API reference", exact: true }).first().click();
+		await open("System", "API reference");
 		await wait(4000);
 		// The topic list jumps to an operation and follows the article in view.
 		const topics = page.getByRole("navigation", { name: "API topics" });
@@ -449,7 +461,7 @@ try {
 		await page.getByRole("option", { name: "CLI", exact: true }).first().click();
 		await wait(800);
 		// Scrolling by hand moves the active topic to an article in view.
-		await page.mouse.move(1000, 1200);
+		await page.mouse.move(windowWidth * 0.7, windowHeight * 0.7);
 		await page.mouse.wheel(0, 4000);
 		await wait(1500);
 		// Both the article and its topic are in view.
@@ -475,10 +487,15 @@ try {
 		}
 		log.apiReferenceScrolledTo = scrolledTo;
 	});
-	for (const card of ["Data models", "Records & relations", "Vectors", "Storage engine"]) {
+	for (const [card, area, tab] of [
+		["Data models", "Knowledge", "Schema"],
+		["Records & relations", "Knowledge", "Graph"],
+		["Vectors", "Knowledge", "Vectors"],
+		["Storage engine", "System", "Storage"],
+	]) {
 		await step(`lens ${card}`, async () => {
 			await back();
-			await page.getByText(card, { exact: true }).first().click();
+			await open(area, tab);
 			await wait(4000);
 			await shot(`lens-${slug(card)}`);
 			log.lensUrls = { ...(log.lensUrls ?? {}), [card]: page.url() };
@@ -644,11 +661,15 @@ try {
 		await into(page.getByTitle("Show its digests").first());
 		await shot("vectors-generation-details");
 	});
+	await step("system-instance", async () => {
+		await back();
+		await open("System", "Instance");
+		await wait(3000);
+		await shot("panel-advanced-details");
+	});
 	for (const panel of [
 		"What do these words mean?",
-		"Advanced details",
 		"Explore project knowledge",
-		"Knowledge paths",
 		"Manage project engines",
 	]) {
 		await step(`panel ${panel}`, async () => {
@@ -699,7 +720,11 @@ try {
 		await shot("project-engines-stopped");
 	});
 	await step("project-engines-restarted", async () => {
-		await page.getByRole("button", { name: "Start", exact: true }).first().click();
+		await page
+			.getByRole("dialog")
+			.getByRole("button", { name: "Start", exact: true })
+			.first()
+			.click();
 		for (let i = 0; i < 90 && (await servedEstates()).length === 0; i++) {
 			await wait(1000);
 		}

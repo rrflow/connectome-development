@@ -48,7 +48,8 @@ import { activeGenerations, methodLabel, SearchGenerations } from "./quantizatio
 /** Points requested per page while browsing; the contract bounds the maximum natively. */
 const POINT_PAGE_SIZE = 50;
 const SIMILAR_COUNTS = ["5", "10", "20"];
-const CANVAS_HEIGHT = 620;
+// Fills the work pane under the project bar, tabs and this lens's own controls.
+const CANVAS_HEIGHT = "clamp(320px, calc(100dvh - 290px), 1100px)";
 const NO_RECORD_GROUP = "no-record";
 
 function referenceText(reference: RrdReference) {
@@ -581,6 +582,7 @@ export function VectorsTab({
 						<Paper
 							p="md"
 							h={CANVAS_HEIGHT}
+							style={{ overflow: "auto" }}
 						>
 							{selected ? (
 								<Stack

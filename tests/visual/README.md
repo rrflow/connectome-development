@@ -13,6 +13,7 @@ This directory holds the evidence for that rule:
 | `baseline/workbench/6448a4f/dark/` | 85 captures of the first-party Connectome Workbench, RRFlow `crates/connectome-ui` at its last full revision, the reference for [sprint 016](../../.agents/sprints/016-guided-workspace.md) |
 | `baseline/workbench/6448a4f/manifest.json` | How those were made, with one entry per image |
 | `baseline/window/c1cbff2/` | Today's desktop at real window sizes, the "before" for sprint 016's window |
+| `baseline/window/step-2/` | The same screens after sprint 016's window, at 1366x768 |
 | `PARITY.md` | The visual elements and interactions each RRFlow lens must keep or improve |
 | `capture-only.mjs` | Applies, then restores byte for byte, the patches that let the inherited screens open and run |
 | `capture.mjs` | The capture flow: seed the in-browser Sandbox, then visit each view, mode, drawer, modal and settings tab |
