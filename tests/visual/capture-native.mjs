@@ -536,6 +536,22 @@ try {
 		await page.getByText("Around the selection", { exact: true }).first().click();
 		await wait(3000);
 		await shot("records-around-selection");
+		// The selected record's label is on the hover layer, so this counts the others'.
+		const labelled = await page
+			.locator("canvas.sigma-labels")
+			.first()
+			.evaluate((canvas) => {
+				const { width, height } = canvas;
+				const pixels = canvas.getContext("2d").getImageData(0, 0, width, height).data;
+				let painted = 0;
+				for (let alpha = 3; alpha < pixels.length; alpha += 4) {
+					if (pixels[alpha] > 0) painted += 1;
+				}
+				return painted;
+			});
+		if (labelled === 0) {
+			throw new Error("Around the selection names only the selected record");
+		}
 		await page.getByLabel("Color by").first().click();
 		await wait(600);
 		const options = (await page.getByRole("option").allInnerTexts())
