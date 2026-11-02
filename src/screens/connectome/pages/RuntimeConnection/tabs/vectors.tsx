@@ -5,7 +5,6 @@ import {
 	Button,
 	Collapse,
 	Divider,
-	Grid,
 	Group,
 	Loader,
 	Paper,
@@ -40,6 +39,7 @@ import { formatCount, formatTime } from "../format";
 import { Term } from "../glossary";
 import { type CanvasEdge, type CanvasNode, GraphCanvas } from "../graph";
 import { type ColorGroup, colorOptions, grouping } from "../groups";
+import { InspectorObject, InspectorPanel } from "../inspector";
 import { databaseQuery, quantizationsQuery } from "../queries";
 import classes from "../style.module.scss";
 import type { RecordFocusProps, RuntimeLensProps } from "../types";
@@ -488,146 +488,174 @@ export function VectorsTab({
 					</Group>
 				</Group>
 
-				<Grid>
-					<Grid.Col span={{ base: 12, lg: 8 }}>
-						<Paper
-							h={CANVAS_HEIGHT}
-							pos="relative"
-							style={{ overflow: "hidden" }}
+				<Paper
+					h={CANVAS_HEIGHT}
+					pos="relative"
+					style={{ overflow: "hidden" }}
+				>
+					{map.isFetching && !map.isPending && build && (
+						<Progress
+							size={3}
+							radius={0}
+							value={percent(build)}
+							pos="absolute"
+							top={0}
+							left={0}
+							right={0}
+							style={{ zIndex: 3 }}
+							aria-label={`Rebuilding the map: ${build.searched} of ${build.total} searches done`}
+						/>
+					)}
+					{map.isPending ? (
+						<MapBuildProgress build={build} />
+					) : map.isError ? (
+						<Box p="md">
+							<Alert
+								color="red"
+								title="The similarity map could not be built"
+								icon={<Icon path={iconErrorCircle} />}
+							>
+								{map.error instanceof Error
+									? map.error.message
+									: "Unknown RRD error"}
+							</Alert>
+						</Box>
+					) : canvasNodes.length === 0 ? (
+						<Group
+							h="100%"
+							justify="center"
 						>
-							{map.isFetching && !map.isPending && build && (
-								<Progress
-									size={3}
-									radius={0}
-									value={percent(build)}
-									pos="absolute"
-									top={0}
-									left={0}
-									right={0}
-									style={{ zIndex: 3 }}
-									aria-label={`Rebuilding the map: ${build.searched} of ${build.total} searches done`}
-								/>
-							)}
-							{map.isPending ? (
-								<MapBuildProgress build={build} />
-							) : map.isError ? (
-								<Box p="md">
-									<Alert
-										color="red"
-										title="The similarity map could not be built"
-										icon={<Icon path={iconErrorCircle} />}
-									>
-										{map.error instanceof Error
-											? map.error.message
-											: "Unknown RRD error"}
-									</Alert>
-								</Box>
-							) : canvasNodes.length === 0 ? (
-								<Group
-									h="100%"
-									justify="center"
-								>
-									<Text c="slate">This collection holds no vectors yet.</Text>
-								</Group>
-							) : (
-								<GraphCanvas
-									h="100%"
-									nodes={canvasNodes}
-									edges={canvasEdges}
-									directed={false}
-									groupOf={mapGroups.groupOf}
-									groups={mapGroups.groups}
-									legendTitle={`Color: ${colorOption?.label ?? "Kind"}`}
-									selected={selectedPointId}
-									highlighted={highlighted}
-									dimUnselected
-									onSelect={(point) =>
-										onSelect(point ? (subjectOf.get(point) ?? null) : null)
-									}
-									hint="Close dots have similar vectors · click one to find its nearest"
-									renderHover={(point) => {
-										const index = pointIds.indexOf(point);
-										const nearest = data?.links.find(
-											(link) => link.from === index && link.rank === 1,
-										);
-										return (
-											<Stack gap={4}>
-												<Text
-													fw={700}
-													c="bright"
-													lineClamp={2}
-												>
-													{labelOf(point)}
-												</Text>
-												{nearest && (
-													<Text fz="xs">
-														Nearest: {labelOf(pointIds[nearest.to])} (
-														{formatScore(nearest.score)})
-													</Text>
-												)}
-												<Text
-													fz="xs"
-													c="slate"
-												>
-													Click to list its most similar records
-												</Text>
-											</Stack>
-										);
-									}}
-								/>
-							)}
-						</Paper>
-					</Grid.Col>
-					<Grid.Col span={{ base: 12, lg: 4 }}>
-						<Paper
-							p="md"
-							h={CANVAS_HEIGHT}
-							style={{ overflow: "auto" }}
-						>
-							{selected ? (
-								<Stack
-									h="100%"
-									gap="sm"
-								>
-									<Box>
-										<Group justify="space-between">
-											<Label mb={0}>Selected record</Label>
-											<Button
-												variant="subtle"
-												size="compact-xs"
-												color="obsidian"
-												onClick={() => onSelect(null)}
-											>
-												Clear
-											</Button>
-										</Group>
+							<Text c="slate">This collection holds no vectors yet.</Text>
+						</Group>
+					) : (
+						<GraphCanvas
+							h="100%"
+							nodes={canvasNodes}
+							edges={canvasEdges}
+							directed={false}
+							groupOf={mapGroups.groupOf}
+							groups={mapGroups.groups}
+							legendTitle={`Color: ${colorOption?.label ?? "Kind"}`}
+							selected={selectedPointId}
+							highlighted={highlighted}
+							dimUnselected
+							onSelect={(point) =>
+								onSelect(point ? (subjectOf.get(point) ?? null) : null)
+							}
+							hint="Close dots have similar vectors · click one to find its nearest"
+							renderHover={(point) => {
+								const index = pointIds.indexOf(point);
+								const nearest = data?.links.find(
+									(link) => link.from === index && link.rank === 1,
+								);
+								return (
+									<Stack gap={4}>
 										<Text
 											fw={700}
-											fz="lg"
 											c="bright"
-											lineClamp={3}
+											lineClamp={2}
 										>
-											{selectedRecord?.label ?? selected}
+											{labelOf(point)}
 										</Text>
+										{nearest && (
+											<Text fz="xs">
+												Nearest: {labelOf(pointIds[nearest.to])} (
+												{formatScore(nearest.score)})
+											</Text>
+										)}
 										<Text
-											ff="monospace"
 											fz="xs"
 											c="slate"
 										>
-											{selectedPointId ?? selected}
+											Click to list its most similar records
 										</Text>
-									</Box>
-									<Group gap="xs">
-										<Button
-											size="xs"
-											variant="light"
-											leftSection={<Icon path={iconRelation} />}
-											onClick={() => onOpenLens("records")}
-										>
-											Show its relations
-										</Button>
-									</Group>
-									<Divider />
+									</Stack>
+								);
+							}}
+						/>
+					)}
+				</Paper>
+				<InspectorPanel>
+					{selected ? (
+						<InspectorObject
+							kind={<Badge variant="light">Vector</Badge>}
+							title={selectedRecord?.label ?? selected}
+							identity={selectedPointId ?? selected}
+							actions={
+								<>
+									<Button
+										size="xs"
+										variant="light"
+										leftSection={<Icon path={iconRelation} />}
+										onClick={() => onOpenLens("records")}
+									>
+										Show its relations
+									</Button>
+									<Button
+										size="xs"
+										variant="subtle"
+										color="obsidian"
+										onClick={() => onSelect(null)}
+									>
+										Clear
+									</Button>
+								</>
+							}
+							plain={
+								<>
+									This record's <Term id="vector">vector</Term> is a list of
+									numbers that stands for its content. The records below are the
+									closest ones RRFlow found, so they are likely to be about
+									similar things.
+								</>
+							}
+							details={
+								search.data ? (
+									<Table
+										fz="sm"
+										verticalSpacing={4}
+									>
+										<Table.Tbody>
+											<Table.Tr>
+												<Table.Td c="slate">Search</Table.Td>
+												<Table.Td ta="right">
+													{search.data.exact ? "Exact" : "Approximate"}
+												</Table.Td>
+											</Table.Tr>
+											<Table.Tr>
+												<Table.Td c="slate">Keys examined</Table.Td>
+												<Table.Td ta="right">
+													{formatCount(search.data.keys_examined)}
+												</Table.Td>
+											</Table.Tr>
+											<Table.Tr>
+												<Table.Td c="slate">Candidates compared</Table.Td>
+												<Table.Td ta="right">
+													{formatCount(search.data.selected_candidates)}{" "}
+													of{" "}
+													{formatCount(search.data.canonical_candidates)}
+												</Table.Td>
+											</Table.Tr>
+											<Table.Tr>
+												<Table.Td c="slate">Cursor</Table.Td>
+												<Table.Td ta="right">
+													{formatCount(search.data.known_at_cursor)}
+												</Table.Td>
+											</Table.Tr>
+										</Table.Tbody>
+									</Table>
+								) : (
+									<Text
+										fz="sm"
+										c="slate"
+									>
+										No search has finished for this record yet.
+									</Text>
+								)
+							}
+							raw={{ point: selectedPoint ?? null, search: search.data ?? null }}
+							links={
+								<Stack gap="sm">
 									{!selectedPoint && !points ? (
 										<Group gap="xs">
 											<Loader size="xs" />
@@ -685,190 +713,160 @@ export function VectorsTab({
 														: "Unknown RRD error"}
 												</Alert>
 											) : (
-												<ScrollArea
-													flex={1}
-													type="auto"
-												>
-													<Stack gap={2}>
-														{similar.map((hit) => {
-															const point = referenceText(
-																hit.reference,
-															);
-															const subject = referenceText(
-																hit.subject,
-															);
-															return (
-																<UnstyledButton
-																	key={point}
-																	px={6}
-																	py={4}
-																	className={classes.row}
-																	onClick={() =>
-																		onSelect(subject)
-																	}
+												<Stack gap={2}>
+													{similar.map((hit) => {
+														const point = referenceText(hit.reference);
+														const subject = referenceText(hit.subject);
+														return (
+															<UnstyledButton
+																key={point}
+																px={6}
+																py={4}
+																className={classes.row}
+																onClick={() => onSelect(subject)}
+															>
+																<Group
+																	gap={8}
+																	wrap="nowrap"
 																>
-																	<Group
-																		gap={8}
-																		wrap="nowrap"
-																	>
-																		<Box
-																			w={9}
-																			h={9}
-																			bg={colorOfPoint(point)}
-																			style={{
-																				borderRadius: "50%",
-																				flexShrink: 0,
-																			}}
-																		/>
-																		<Text
-																			fz="sm"
-																			truncate
-																			title={
-																				records.get(subject)
-																					?.label ??
-																				subject
-																			}
-																		>
-																			{records.get(subject)
-																				?.label ?? subject}
-																		</Text>
-																		<Text
-																			fz="xs"
-																			ff="monospace"
-																			ml="auto"
-																		>
-																			{formatScore(hit.score)}
-																		</Text>
-																	</Group>
-																	<Progress
-																		mt={4}
-																		size="xs"
-																		value={
-																			topScore > 0
-																				? Math.max(
-																						0,
-																						(hit.score /
-																							topScore) *
-																							100,
-																					)
-																				: 0
-																		}
-																		color="violet"
+																	<Box
+																		w={9}
+																		h={9}
+																		bg={colorOfPoint(point)}
+																		style={{
+																			borderRadius: "50%",
+																			flexShrink: 0,
+																		}}
 																	/>
-																</UnstyledButton>
-															);
-														})}
-													</Stack>
-												</ScrollArea>
-											)}
-											{search.data && (
-												<Text
-													fz="xs"
-													c="slate"
-												>
-													{search.data.exact ? "Exact" : "Approximate"} ·{" "}
-													{formatCount(search.data.keys_examined)} keys
-													examined ·{" "}
-													{formatCount(search.data.selected_candidates)}{" "}
-													of{" "}
-													{formatCount(search.data.canonical_candidates)}{" "}
-													candidates compared · cursor{" "}
-													{formatCount(search.data.known_at_cursor)}
-												</Text>
-											)}
-										</>
-									)}
-								</Stack>
-							) : (
-								<Stack gap="sm">
-									<Label>How to read this map</Label>
-									<Text fz="sm">
-										Each dot is one record's vector. Lines join every vector to
-										its {data?.neighbours ?? 5}{" "}
-										<Term id="neighbours">nearest neighbours</Term>, as the
-										engine's <Term id="exact">exact search</Term> returned them,
-										so dots that sit together have similar content.
-									</Text>
-									<Text fz="sm">
-										Colors match Records &amp; relations: you can see whether
-										records that link to each other also read alike.
-									</Text>
-									{data && (
-										<>
-											<Divider />
-											<Table
-												fz="sm"
-												verticalSpacing={4}
-											>
-												<Table.Tbody>
-													<Table.Tr>
-														<Table.Td c="slate">Vectors drawn</Table.Td>
-														<Table.Td ta="right">
-															{formatCount(data.points.length)}
-															{data.truncated ? " (first part)" : ""}
-														</Table.Td>
-													</Table.Tr>
-													<Table.Tr>
-														<Table.Td c="slate">
-															Exact searches
-														</Table.Td>
-														<Table.Td ta="right">
-															{formatCount(data.searches)}
-														</Table.Td>
-													</Table.Tr>
-													<Table.Tr>
-														<Table.Td c="slate">Keys examined</Table.Td>
-														<Table.Td ta="right">
-															{formatCount(data.keys_examined)}
-														</Table.Td>
-													</Table.Tr>
-													<Table.Tr>
-														<Table.Td c="slate">Built in</Table.Td>
-														<Table.Td ta="right">
-															{formatDuration(data.elapsed_ms)}
-														</Table.Td>
-													</Table.Tr>
-													<Table.Tr>
-														<Table.Td c="slate">
-															<Term id="cursor">Cursor</Term>
-														</Table.Td>
-														<Table.Td ta="right">
-															{formatCount(data.known_at_cursor_min)}
-															{data.known_at_cursor_max !==
-															data.known_at_cursor_min
-																? `–${formatCount(data.known_at_cursor_max)}`
-																: ""}
-														</Table.Td>
-													</Table.Tr>
-												</Table.Tbody>
-											</Table>
-											{data.truncated && (
-												<Text
-													fz="xs"
-													c="slate"
-												>
-													The collection holds more vectors than the map
-													draws; the map shows the first{" "}
-													{formatCount(data.points.length)} in reference
-													order.
-												</Text>
-											)}
-											{data.unsearchable > 0 && (
-												<Text
-													fz="xs"
-													c="slate"
-												>
-													{formatCount(data.unsearchable)} vectors are not
-													dense, so they are drawn without neighbours.
-												</Text>
+																	<Text
+																		fz="sm"
+																		truncate
+																		title={
+																			records.get(subject)
+																				?.label ?? subject
+																		}
+																	>
+																		{records.get(subject)
+																			?.label ?? subject}
+																	</Text>
+																	<Text
+																		fz="xs"
+																		ff="monospace"
+																		ml="auto"
+																	>
+																		{formatScore(hit.score)}
+																	</Text>
+																</Group>
+																<Progress
+																	mt={4}
+																	size="xs"
+																	value={
+																		topScore > 0
+																			? Math.max(
+																					0,
+																					(hit.score /
+																						topScore) *
+																						100,
+																				)
+																			: 0
+																	}
+																	color="violet"
+																/>
+															</UnstyledButton>
+														);
+													})}
+												</Stack>
 											)}
 										</>
 									)}
 								</Stack>
+							}
+						/>
+					) : (
+						<Stack gap="sm">
+							<Label>How to read this map</Label>
+							<Text fz="sm">
+								Each dot is one record's vector. Lines join every vector to its{" "}
+								{data?.neighbours ?? 5}{" "}
+								<Term id="neighbours">nearest neighbours</Term>, as the engine's{" "}
+								<Term id="exact">exact search</Term> returned them, so dots that sit
+								together have similar content.
+							</Text>
+							<Text fz="sm">
+								Colors match Records &amp; relations: you can see whether records
+								that link to each other also read alike.
+							</Text>
+							{data && (
+								<>
+									<Divider />
+									<Table
+										fz="sm"
+										verticalSpacing={4}
+									>
+										<Table.Tbody>
+											<Table.Tr>
+												<Table.Td c="slate">Vectors drawn</Table.Td>
+												<Table.Td ta="right">
+													{formatCount(data.points.length)}
+													{data.truncated ? " (first part)" : ""}
+												</Table.Td>
+											</Table.Tr>
+											<Table.Tr>
+												<Table.Td c="slate">Exact searches</Table.Td>
+												<Table.Td ta="right">
+													{formatCount(data.searches)}
+												</Table.Td>
+											</Table.Tr>
+											<Table.Tr>
+												<Table.Td c="slate">Keys examined</Table.Td>
+												<Table.Td ta="right">
+													{formatCount(data.keys_examined)}
+												</Table.Td>
+											</Table.Tr>
+											<Table.Tr>
+												<Table.Td c="slate">Built in</Table.Td>
+												<Table.Td ta="right">
+													{formatDuration(data.elapsed_ms)}
+												</Table.Td>
+											</Table.Tr>
+											<Table.Tr>
+												<Table.Td c="slate">
+													<Term id="cursor">Cursor</Term>
+												</Table.Td>
+												<Table.Td ta="right">
+													{formatCount(data.known_at_cursor_min)}
+													{data.known_at_cursor_max !==
+													data.known_at_cursor_min
+														? `–${formatCount(data.known_at_cursor_max)}`
+														: ""}
+												</Table.Td>
+											</Table.Tr>
+										</Table.Tbody>
+									</Table>
+									{data.truncated && (
+										<Text
+											fz="xs"
+											c="slate"
+										>
+											The collection holds more vectors than the map draws;
+											the map shows the first{" "}
+											{formatCount(data.points.length)} in reference order.
+										</Text>
+									)}
+									{data.unsearchable > 0 && (
+										<Text
+											fz="xs"
+											c="slate"
+										>
+											{formatCount(data.unsearchable)} vectors are not dense,
+											so they are drawn without neighbours.
+										</Text>
+									)}
+								</>
 							)}
-						</Paper>
-					</Grid.Col>
-				</Grid>
+						</Stack>
+					)}
+				</InspectorPanel>
 			</Section>
 
 			<SearchGenerations

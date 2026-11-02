@@ -162,6 +162,11 @@ scrolling. The native rows above stay met, with these moves:
 - `native-panel-advanced-details`: System › Instance, with the session panel. A closed session
   still shows its panel on every tab.
 
+Step 3 moved the details panels of Graph and Vectors into the inspector column, so their graphs
+take the pane's full width. Every reading, control and link is kept: a record's fields are under
+Details, and a search's evidence line is a table there. Links stay in view at every depth.
+`baseline/window/step-3/` holds the screens that changed.
+
 Removed as notices, as decision 20 requires: `native-workbench-activity`,
 `native-workbench-learning`, `native-workbench-services` and `native-panel-knowledge-paths`.
 Their look stays in the baselines. Activity and Knowledge paths return as real views in steps 6
