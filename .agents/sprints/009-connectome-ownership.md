@@ -259,6 +259,18 @@ owner's desktop) were recorded on the unmerged `agent/connectome-theme` branch
     - **The other named views follow,** each over the engine operation that
       serves it: project knowledge paths, editable rrflowQL graph results,
       and plan and handoff records with the schemas they produce.
+21. Restore every August view, guided, in today's visual. This is the owner's
+    direction of 2026-11-01, after seeing the first-party Workbench running again
+    beside today's Connectome: "we want all of that work that existed in august
+    restored but properly now authored under this visual. We need proper tabs and
+    grouping and animated interactive components that will actually guide the
+    layman user through new complex AI workflows and reasoning. we anchor them and
+    make the barrier of entry turnkey". The Workbench was RRFlow's
+    `crates/connectome-ui`, cut on 2026-08-27 and deleted on 2026-09-04, so this
+    repository's history never showed it. [Parking lot 006](../parking-lot/006-guided-workspace.md)
+    holds the reviewed navigation model and the guide contract, and
+    [sprint 016](016-guided-workspace.md) orders the work. Steps S1 and V1 to V6 below
+    continue there. Decisions 17 to 20 still bind.
 
 ## Ordered implementation slices
 
@@ -472,7 +484,8 @@ each one lands.
   components before they are re-pointed: the data table, the tables pane, the
   schema graph, the relation graph, the code editor, the inspector and
   creator drawers, and the tab and saved-query panes.
-- **S1: navigation model, then shell.** A written navigation model, mocked up
+- **S1: navigation model, then shell.** Decision 21 supersedes this step's area
+  list: the model is [parking lot 006](../parking-lot/006-guided-workspace.md). A written navigation model, mocked up
   from real captures and reviewed by the owner, comes first. Then the shell:
   - the Project ▸ Estate ▸ Domain breadcrumb, with domains read from the
     engine (RRFlow H-11a; scoping arrives with H-11c);

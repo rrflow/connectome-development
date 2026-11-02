@@ -10,6 +10,9 @@ This directory holds the evidence for that rule:
 | `baseline/inherited/38142b7/manifest.json` | Revision, viewport, seed digest, capture-only patches and one entry per image with its SHA-256 |
 | `baseline/native/83804c3/{dark,light}/` | Captures per theme of every RRFlow-native desktop screen and lens state at `main` `83804c3` |
 | `baseline/native/83804c3/manifest.json` | Revision, viewport, engine revision, estate, determinism measures and one entry per image with its SHA-256 |
+| `baseline/workbench/6448a4f/dark/` | 85 captures of the first-party Connectome Workbench, RRFlow `crates/connectome-ui` at its last full revision, the reference for [sprint 016](../../.agents/sprints/016-guided-workspace.md) |
+| `baseline/workbench/6448a4f/manifest.json` | How those were made, with one entry per image |
+| `baseline/window/c1cbff2/` | Today's desktop at real window sizes, the "before" for sprint 016's window |
 | `PARITY.md` | The visual elements and interactions each RRFlow lens must keep or improve |
 | `capture-only.mjs` | Applies, then restores byte for byte, the patches that let the inherited screens open and run |
 | `capture.mjs` | The capture flow: seed the in-browser Sandbox, then visit each view, mode, drawer, modal and settings tab |
@@ -44,6 +47,21 @@ The force-directed result graph and the map are reported as `dynamic`: a
 layout's final positions depend on how far code has consumed the seeded
 random sequence, and map tiles load from the network. Review those by eye
 for structure: the same records, edges, legend and marker.
+
+## Real window sizes
+
+The native baseline's 1440x1800 window shows a whole lens in one image, but it also hid
+how far down a lens starts. Sprint 016 judges every screen at 1440x900 and 1366x768. Pass
+`--window <width>x<height>` to `capture-native.mjs`. Without it the capture keeps the tall
+window, so existing comparisons still work.
+
+## The Workbench baseline
+
+RRFlow removed `crates/connectome-ui` with no capture. On 2026-11-01 its last full revision,
+`6448a4f6`, was built and run from history with its real server, runners off, and driven
+with Playwright at 1440x900. All data was seeded for the capture with that revision's CLI
+and routes, and none of it is a user's. Two instances supplied the images: a seeded one,
+and a fresh one for the empty states. It has one theme.
 
 ## Reproduce a desktop capture
 
