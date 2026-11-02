@@ -10,7 +10,12 @@ import { chromium } from "@playwright/test";
  * runtime workbench lens on a seeded estate.
  *
  *   node tests/visual/capture-native.mjs --root <worktree> --exe <connectome.exe> \
- *     --engine-dir <dir holding rrflow.exe> --out <dir> [--theme dark|light] [--port 9333]
+ *     --engine-dir <dir holding rrflow.exe> --out <dir> [--theme dark|light] [--port 9333] \
+ *     [--window 1440x1800]
+ *
+ * The default window is tall enough that each lens fits in one image. Pass a
+ * real window size, such as 1440x900 or 1366x768, to capture what a person sees
+ * without scrolling: sprint 016 judges every screen at a real window size.
  *
  * Build the desktop with `VITE_CONNECTOME_PREVIEW=true pnpm tauri build --debug
  * --no-bundle`: a preview build keeps its data in `RRFlow/ConnectomePreview`,
@@ -36,6 +41,7 @@ const engineDir = resolve(args["engine-dir"]);
 const out = resolve(args.out ?? "visual-native");
 const port = Number(args.port ?? 9333);
 const theme = args.theme ?? "dark";
+const [windowWidth, windowHeight] = (args.window ?? "1440x1800").split("x").map(Number);
 mkdirSync(out, { recursive: true });
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -222,7 +228,7 @@ const paintMasks = () =>
 		return boxes.length;
 	}, VARIABLE_TEXT);
 const shot = async (name) => {
-	await page.mouse.move(1439, 1799);
+	await page.mouse.move(windowWidth - 1, windowHeight - 1);
 	await wait(800);
 	log.masks = { ...(log.masks ?? {}), [name]: await paintMasks() };
 	try {
@@ -291,8 +297,7 @@ try {
 		page = context.pages()[0];
 		await wait(250);
 	}
-	// Tall enough that each lens, its graph and its map fit in one image.
-	await page.setViewportSize({ width: 1440, height: 1800 });
+	await page.setViewportSize({ width: windowWidth, height: windowHeight });
 	// Times render in UTC, so a masked time is the same width on any machine.
 	const cdp = await context.newCDPSession(page);
 	await cdp.send("Emulation.setTimezoneOverride", { timezoneId: "UTC" });
