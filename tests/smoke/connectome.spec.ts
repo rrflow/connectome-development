@@ -100,24 +100,23 @@ test("creates an RRD HTTP runtime profile by default", async ({ page }, testInfo
 	await expect(page.getByText("rrd-smoke", { exact: true })).toBeVisible();
 	expect(requests).toEqual(["/v1/health/live", "/v1/health/ready", "/v1/capabilities"]);
 	const firstProject = new URL(page.url()).pathname;
-	await page.getByRole("button", { name: "Advanced details", exact: true }).click();
+	// Only the work pane scrolls: the areas and tabs stay on a real window's first screen.
+	await page.setViewportSize({ width: 1366, height: 768 });
+	await page.getByRole("button", { name: "System", exact: true }).click();
+	await expect(page).toHaveURL(/\/system\/instance$/);
 	await expect(page.getByText("Verified engine identity", { exact: true })).toBeVisible();
-	await page.getByRole("button", { name: "Hide advanced details", exact: true }).click();
-	await page.getByRole("button", { name: "Knowledge paths", exact: true }).click();
-	await expect(page).toHaveURL(/\/knowledge\/paths$/);
-	await expect(
-		page.getByText("Connector setup unavailable in this build", { exact: true }),
-	).toBeVisible();
-	await page.getByRole("button", { name: "Learning", exact: true }).click();
-	await expect(page.getByRole("heading", { name: "RROFLOW learning" })).toBeVisible();
-	await page.reload();
-	await expect(
-		page.getByText("Learning controls unavailable in this build", { exact: true }),
-	).toBeVisible();
-	await page.goBack();
-	await expect(page).toHaveURL(/\/knowledge\/paths$/);
-	await page.getByRole("button", { name: "Services", exact: true }).click();
-	await expect(page.getByRole("heading", { name: "Planned cloud connections" })).toBeVisible();
+	await expect(page.getByRole("button", { name: "Knowledge", exact: true })).toBeInViewport();
+	await expect(page.getByRole("tab", { name: "API reference", exact: true })).toBeInViewport();
+	expect(
+		await page.evaluate(
+			() => document.documentElement.scrollHeight <= document.documentElement.clientHeight,
+		),
+	).toBe(true);
+	// Addresses saved before these areas still open their view.
+	await page.goto(`${firstProject}/knowledge/storage`);
+	await expect(page).toHaveURL(/\/system\/storage$/);
+	await page.goto(`${firstProject}/learning`);
+	await expect(page).toHaveURL(/\/overview$/);
 	await page.goto("/connections/create");
 	await page.getByLabel("RRD HTTP host").fill("localhost:9478");
 	await page.getByRole("button", { name: "Save & connect to RRD" }).click();
@@ -125,7 +124,7 @@ test("creates an RRD HTTP runtime profile by default", async ({ page }, testInfo
 	await page.getByRole("button", { name: "Knowledge", exact: true }).click();
 	await page.getByRole("textbox", { name: "Selected project", exact: true }).click();
 	await page.getByRole("option").first().click();
-	await expect(page).toHaveURL(`${firstProject}/knowledge`);
+	await expect(page).toHaveURL(`${firstProject}/knowledge/records`);
 	await expect(page.getByText("rrd-smoke", { exact: true })).toBeVisible();
 	await expect(page.getByText("rrd-project-b", { exact: true })).toHaveCount(0);
 	await page.mouse.move(1279, 360);

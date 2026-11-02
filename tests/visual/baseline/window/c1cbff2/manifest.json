@@ -8,7 +8,7 @@
 	"estate": "installed fresh by the capture in a scratch project folder, then seeded by seed_served_estate_for_visual_capture with the lens fixture",
 	"purpose": "what a person sees without scrolling at real window sizes, the before for sprint 016's window",
 	"determinism": "the same masks as the native baseline: run-varying characters painted magenta",
-	"known_failure": "the capture log records one failed check at these sizes in every run it was taken: api-reference-states, because the API reference's sticky topic list leaves the selected topic out of view",
+	"known_failure": "these runs record one failed check, api-reference-states. It was the capture's fault, not the product's: its scroll aimed below the window's edge. Sprint 016's step 2 corrects the script",
 	"format": "WebP quality 82, converted from the PNG captures",
 	"images": [
 		{

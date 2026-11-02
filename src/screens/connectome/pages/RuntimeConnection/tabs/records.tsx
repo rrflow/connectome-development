@@ -62,7 +62,8 @@ const CONSOLE_CELL_WIDTH = 320;
 const START_HERE_RECORDS = 8;
 /** Linked records listed per direction before the list says how many remain. */
 const MAX_LINKED_LISTED = 50;
-const CANVAS_HEIGHT = 620;
+// Fills the work pane under the project bar, tabs and this lens's own controls.
+const CANVAS_HEIGHT = "clamp(320px, calc(100dvh - 332px), 1100px)";
 
 function recordQuery(node: RrdNodeView): string {
 	return `FROM record:${node.kind} AT VALID ${Date.now()} KNOWN HEAD WHERE id = "${node.key}" PROJECT *`;
@@ -634,6 +635,7 @@ export function RecordsTab({
 						<Paper
 							p="md"
 							h={CANVAS_HEIGHT}
+							style={{ overflow: "auto" }}
 						>
 							{node ? (
 								<Stack

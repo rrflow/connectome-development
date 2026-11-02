@@ -62,8 +62,9 @@
 /* API reference: the topic list stays in view while the articles scroll. */
 .apiTopics {
 	position: sticky;
-	top: var(--mantine-spacing-md);
-	max-height: calc(100vh - 2 * var(--mantine-spacing-xl));
+	top: 0;
+	/* The work pane scrolls; this list stays inside it under the project bar and tabs. */
+	max-height: calc(100dvh - 130px);
 	overflow-y: auto;
 }
 
@@ -107,5 +108,119 @@
 	/* At least the two rows the console's text area showed. */
 	:global(.cm-content) {
 		min-height: 2.8em;
+	}
+}
+
+/* The project window: only the work pane scrolls (sprint 016). */
+.workspace {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+
+	/* The project bar takes the band the page toolbar would leave empty. */
+	@media (min-width: 62em) {
+		top: -68px;
+	}
+}
+
+.workspaceTop {
+	flex-shrink: 0;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+	padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+	border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.workspaceBody {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+}
+
+.areaRail {
+	flex-shrink: 0;
+	width: 168px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: var(--mantine-spacing-sm);
+	border-right: 1px solid var(--mantine-color-default-border);
+	overflow-y: auto;
+}
+
+.area {
+	display: flex;
+	align-items: center;
+	gap: var(--mantine-spacing-sm);
+	padding: 8px 10px;
+	border-radius: var(--mantine-radius-xs);
+	font-weight: 500;
+	color: var(--mantine-color-dimmed);
+
+	&:hover {
+		background: var(--mantine-color-default-hover);
+		color: var(--mantine-color-bright);
+	}
+
+	&[data-active] {
+		background: var(--mantine-color-default-hover);
+		color: var(--mantine-color-bright);
+
+		svg {
+			color: var(--mantine-color-violet-5);
+		}
+	}
+}
+
+.workspaceMain {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.areaTabs {
+	flex-shrink: 0;
+	display: flex;
+	gap: 2px;
+	padding: 4px var(--mantine-spacing-md) 0;
+	border-bottom: 1px solid var(--mantine-color-default-border);
+	overflow-x: auto;
+}
+
+.areaTab {
+	padding: 8px 12px;
+	border-bottom: 2px solid transparent;
+	font-weight: 500;
+	white-space: nowrap;
+	color: var(--mantine-color-dimmed);
+
+	&:hover {
+		color: var(--mantine-color-bright);
+	}
+
+	&[data-active] {
+		color: var(--mantine-color-bright);
+		border-image: var(--connectome-gradient) 1;
+	}
+}
+
+.workspacePane {
+	flex: 1;
+	min-height: 0;
+	position: relative;
+}
+
+@media (max-width: 62em) {
+	.areaRail {
+		width: auto;
+	}
+
+	.area span {
+		display: none;
 	}
 }

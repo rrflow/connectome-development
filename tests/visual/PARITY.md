@@ -147,6 +147,26 @@ D7 rebuild the query, records, schema and storage lenses in place).
 | `native-settings-*` | Preferences; keybindings; templates; Database Serving (project directory, installation mode, engine path, console history); backup and restore; open-source licences; About (version, build, protocol and engine revision, repositories). The inherited wordmark here is replaced in Slice C2 |
 | `native-workbench-api-reference`, `native-api-reference-query`, `native-api-reference-python` | Every public operation the engine serves, read from its operation catalogue without a session: the family topic tree, which highlights the operation in view and keeps it in the list's own view, and a jump to any operation (the capture asserts the highlight after a jump, at the top and after scrolling); per operation its summary, method and path, description, authentication, mutation and action badges, operation, request and response types, and a copyable example in the saved language; the operation and family counts and protocol version |
 
+## Sprint 016's window
+
+Step 2 moved the native lenses into one window. Compare `baseline/window/c1cbff2/` with
+`baseline/window/step-2/`, both at real window sizes, for what a person sees without
+scrolling. The native rows above stay met, with these moves:
+
+- `native-workbench-knowledge`, `native-lens-*`, `native-records-*`, `native-vectors-*`,
+  `native-models-*`: Knowledge › Graph, Schema and Vectors. The four lens cards and their
+  live readings stay on Home.
+- `native-lens-storage-engine`, `native-storage-*`: System › Storage.
+- `native-workbench-api-reference`, `native-api-reference-*`: System › API reference.
+- `native-workbench-tasks`: Reasoning › Tasks.
+- `native-panel-advanced-details`: System › Instance, with the session panel. A closed session
+  still shows its panel on every tab.
+
+Removed as notices, as decision 20 requires: `native-workbench-activity`,
+`native-workbench-learning`, `native-workbench-services` and `native-panel-knowledge-paths`.
+Their look stays in the baselines. Activity and Knowledge paths return as real views in steps 6
+and 8; Learning and Services return when the engine serves them.
+
 ## Connectome Workbench (RRFlow `6448a4f`)
 
 [Sprint 016](../../.agents/sprints/016-guided-workspace.md) returns every view below in

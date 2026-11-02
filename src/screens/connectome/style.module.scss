@@ -34,6 +34,16 @@
 
 .toolbar {
 	z-index: 1;
+
+	/* A project's bar opens the same dialog and takes this band. The toolbar stays
+	   mounted because it holds that dialog; below this width it holds the sidebar toggle. */
+	&[data-workspace] {
+		@include md-and-up {
+			visibility: hidden;
+			pointer-events: none;
+		}
+	}
+
 	padding: var(--mantine-spacing-lg);
 	padding-top: calc(var(--mantine-spacing-lg) + var(--titlebar-offset));
 
