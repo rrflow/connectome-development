@@ -863,7 +863,13 @@ try {
 		await back();
 		await openEngines();
 		await page.getByRole("button", { name: "Stop this engine" }).first().click();
-		await wait(5000);
+		// The record the engine leaves behind is proved first; the row settles once that fails.
+		await page
+			.getByRole("dialog")
+			.getByText("did not prove itself")
+			.first()
+			.waitFor({ timeout: 60000 });
+		await wait(500);
 		await shot("project-engines-stopped");
 	});
 	await step("project-engines-restarted", async () => {

@@ -169,6 +169,7 @@ Details, and a search's evidence line is a table there. Links stay in view at ev
 
 Step 4 adds guides over the same screens and moves nothing. Home gains a Guides section, and
 `baseline/window/step-4/` holds it with each step of the first guide.
+`baseline/window/around-labels/` shows Around the selection naming every record it draws.
 
 Removed as notices, as decision 20 requires: `native-workbench-activity`,
 `native-workbench-learning`, `native-workbench-services` and `native-panel-knowledge-paths`.
