@@ -1,7 +1,8 @@
-import { Box, ScrollArea, Stack, UnstyledButton } from "@mantine/core";
-import type { ReactNode } from "react";
+import { Box, Button, ScrollArea, Stack, UnstyledButton } from "@mantine/core";
+import { type ReactNode, useMemo, useState } from "react";
 import { Icon } from "~/components/Icon";
 import { WORKSPACE_AREAS, workspaceArea } from "./areas";
+import { InspectorContext } from "./inspector";
 import classes from "./style.module.scss";
 
 export interface WorkspaceShellProps {
@@ -12,11 +13,25 @@ export interface WorkspaceShellProps {
 }
 
 /**
- * One window: the project bar, the area rail and the tabs stay in place, and only
- * the work pane scrolls (sprint 016).
+ * One window: the project bar, the area rail and the tabs stay in place. The work
+ * pane and the inspector each scroll by themselves (sprint 016).
  */
 export function WorkspaceShell({ route, onOpen, top, children }: WorkspaceShellProps) {
 	const active = workspaceArea(route);
+	const [target, setTarget] = useState<HTMLElement | null>(null);
+	const [open, setOpen] = useState(true);
+	const [presented, setPresented] = useState(0);
+	const host = useMemo(
+		() => ({
+			target,
+			close: () => setOpen(false),
+			present: () => {
+				setPresented((count) => count + 1);
+				return () => setPresented((count) => count - 1);
+			},
+		}),
+		[target],
+	);
 
 	return (
 		<Box
@@ -62,6 +77,17 @@ export function WorkspaceShell({ route, onOpen, top, children }: WorkspaceShellP
 									{tab.label}
 								</UnstyledButton>
 							))}
+							{!open && presented > 0 && (
+								<Button
+									ml="auto"
+									size="compact-xs"
+									variant="subtle"
+									color="obsidian"
+									onClick={() => setOpen(true)}
+								>
+									Show details
+								</Button>
+							)}
 						</div>
 						<div className={classes.workspacePane}>
 							<ScrollArea
@@ -71,18 +97,26 @@ export function WorkspaceShell({ route, onOpen, top, children }: WorkspaceShellP
 								type="scroll"
 								scrollbars="y"
 							>
-								<Stack
-									px="lg"
-									py="md"
-									pb="xl"
-									mx="auto"
-									maw={1400}
-								>
-									{children}
-								</Stack>
+								<InspectorContext.Provider value={host}>
+									<Stack
+										px="lg"
+										py="md"
+										pb="xl"
+										mx="auto"
+										maw={1400}
+									>
+										{children}
+									</Stack>
+								</InspectorContext.Provider>
 							</ScrollArea>
 						</div>
 					</div>
+					<aside
+						ref={setTarget}
+						aria-label="Details"
+						className={classes.inspector}
+						data-closed={!open || undefined}
+					/>
 				</div>
 			</div>
 		</Box>

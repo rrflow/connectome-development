@@ -511,6 +511,28 @@ try {
 		await page.getByRole("option").first().click();
 		await wait(3000);
 		await shot("records-selected");
+		// One object at three depths, with its links in view at each.
+		for (const depth of ["Details", "Raw", "Plain words"]) {
+			await page
+				.getByRole("complementary", { name: "Details" })
+				.getByText(depth, { exact: true })
+				.click();
+			await wait(600);
+			if (
+				!(await page
+					.getByText(/^Links to/)
+					.first()
+					.isVisible())
+			) {
+				throw new Error(`the inspector lost its links at depth ${depth}`);
+			}
+			if (depth !== "Plain words") await shot(`inspector-${slug(depth)}`);
+		}
+		await page.getByRole("button", { name: "Close details" }).first().click();
+		await wait(800);
+		await shot("inspector-closed");
+		await page.getByRole("button", { name: "Show details" }).first().click();
+		await wait(800);
 		await page.getByText("Around the selection", { exact: true }).first().click();
 		await wait(3000);
 		await shot("records-around-selection");
@@ -577,7 +599,7 @@ try {
 			.first()
 			.click();
 		await wait(4000);
-		await into(page.getByText("Selected record", { exact: true }).first());
+		await into(page.getByText("Most similar records", { exact: true }).first());
 		await shot("vectors-nearest");
 	});
 	await step("storage-details", async () => {

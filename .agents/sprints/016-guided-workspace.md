@@ -129,3 +129,35 @@ stay met.
 
 Stop if a lens loses a graph, control or reading, if a route stops resolving, or if the shell
 needs a credential or bearer in the webview.
+
+## Step 3: inspector and full-window graphs
+
+Written against `1eb60184`.
+
+### Current code
+
+- `tabs/records.tsx` and `tabs/vectors.tsx` each split their width with `<Grid>`: a graph in eight
+  columns and a details panel in four. Records' panel shows fields and links together. Vectors'
+  panel shows the nearest records and a line of search evidence.
+- `graph.tsx` `bringIntoView` already frames the selection and its neighbours with an animated
+  camera, so a selection recentres. Step 3 gives it the room.
+
+### Target
+
+- `inspector.tsx`: `InspectorPanel` puts a view's details in the window's right-hand column through
+  a portal, so a view keeps its state and only the place changes. The column takes no room until a
+  view has something to show, and closes and reopens. `InspectorObject` shows one object at three
+  depths, plain words, details and raw, with its onward links in view at each.
+- Graph and Vectors move onto it and their graphs take the pane's full width.
+- Other views adopt it as they land. Schema, Storage, Tasks and the rest have no object selection
+  today, and an empty column would be a notice.
+
+### Oracle
+
+The capture walks Details, Raw and Plain words on a selected record and fails if its links leave
+the view, then closes and reopens the column. Before-and-after captures at real window sizes, with
+every lens's reading kept: `baseline/window/step-2/` is the "before".
+
+### Stop conditions
+
+Stop if a panel loses a control, a reading or a link, or if the inspector needs a credential.

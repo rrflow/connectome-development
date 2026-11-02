@@ -215,6 +215,20 @@
 	position: relative;
 }
 
+/* Details of what is selected. It takes no room until a view has something to show. */
+.inspector {
+	flex-shrink: 0;
+	width: 320px;
+	padding: var(--mantine-spacing-md);
+	border-left: 1px solid var(--mantine-color-default-border);
+	overflow-y: auto;
+
+	&:empty,
+	&[data-closed] {
+		display: none;
+	}
+}
+
 @media (max-width: 62em) {
 	.areaRail {
 		width: auto;
