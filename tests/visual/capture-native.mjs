@@ -683,6 +683,115 @@ try {
 		await into(page.getByTitle("Show its digests").first());
 		await shot("vectors-generation-details");
 	});
+	// A guide ends each step on the real action, so doing the action is the test.
+	const guideCallout = page.getByRole("status", { name: "Explore what your project knows" });
+	const details = page.getByRole("complementary", { name: "Details" });
+	const atGuideStep = async (number, name) => {
+		await wait(1500);
+		const shown = await guideCallout.innerText();
+		if (!shown.includes(`Step ${number} of 5`)) {
+			throw new Error(`expected guide step ${number}, the callout shows: ${shown}`);
+		}
+		if (name) await shot(name);
+	};
+	// A row in the details panel. The panel's heading also names the record's cluster.
+	const recordRow = (title) =>
+		details.getByRole("button", { name: new RegExp(`^${title}\\b`) }).first();
+	const startGuide = () => page.getByRole("button", { name: "Start guide", exact: true }).click();
+	const leaveGuide = async () => {
+		await page.getByRole("button", { name: "Leave guide", exact: true }).click();
+		await wait(500);
+		if ((await guideCallout.count()) > 0) throw new Error("the guide stayed open after Leave");
+	};
+	await step("guide-explore-graph", async () => {
+		await back();
+		await startGuide();
+		await atGuideStep(1, "guide-step-1");
+		await recordRow("Document a1").click();
+		await atGuideStep(2, "guide-step-2");
+		await details.getByText("Details", { exact: true }).click();
+		await atGuideStep(3, "guide-step-3");
+		await recordRow("Document a2").click();
+		await atGuideStep(4, "guide-step-4");
+		await details.getByRole("button", { name: "Show what is around it" }).click();
+		await atGuideStep(5, "guide-step-5");
+		await page.getByRole("button", { name: "Finish", exact: true }).click();
+		await wait(500);
+		if ((await guideCallout.count()) > 0) throw new Error("the guide stayed open after Finish");
+	});
+	await step("guide-ahead-of-its-steps", async () => {
+		await back();
+		await open("Knowledge", "Graph");
+		await wait(1500);
+		await recordRow("Document a1").click();
+		await wait(800);
+		// The rail keeps the selection, so the guide opens the tab with a record already picked.
+		await open("Start");
+		await wait(800);
+		await startGuide();
+		await atGuideStep(1);
+		await details.getByText("Details", { exact: true }).click();
+		await atGuideStep(1);
+		// Details is already open, so the pick passes step 2 as well.
+		await recordRow("Document a2").click();
+		await atGuideStep(3);
+		await details.getByRole("button", { name: "Show what is around it" }).click();
+		await atGuideStep(3);
+		// What is around it is already showing, so the pick passes step 4 as well.
+		await recordRow("Document a1").click();
+		await atGuideStep(5);
+		await leaveGuide();
+		// Leaving changes nothing the person did.
+		await details
+			.getByRole("button", { name: "Back to whole estate" })
+			.waitFor({ timeout: 3000 });
+	});
+	await step("guide-away-and-back", async () => {
+		await back();
+		await startGuide();
+		await atGuideStep(1);
+		await recordRow("Document a1").click();
+		await atGuideStep(2);
+		await page.getByRole("button", { name: "Close details" }).click();
+		await wait(800);
+		await guideCallout.getByText("press Show details").waitFor({ timeout: 3000 });
+		await shot("guide-control-hidden");
+		await page.getByRole("button", { name: "Show details" }).click();
+		await wait(800);
+		if ((await guideCallout.getByText("press Show details").count()) > 0) {
+			throw new Error("the guide still says its control is hidden");
+		}
+		await page.getByRole("tab", { name: "Schema", exact: true }).click();
+		await wait(1000);
+		await shot("guide-on-another-tab");
+		await guideCallout.getByRole("button", { name: "Back to this step" }).click();
+		await wait(1500);
+		await page.getByRole("tab", { name: "Graph", exact: true, selected: true }).waitFor({
+			timeout: 3000,
+		});
+		await atGuideStep(2);
+		await leaveGuide();
+	});
+	await step("guide-reduced-motion", async () => {
+		await page.emulateMedia({ reducedMotion: "reduce" });
+		try {
+			await back();
+			await startGuide();
+			await atGuideStep(1);
+			const motion = await page.locator("[data-guide-spot]").evaluate((spot) => {
+				const style = getComputedStyle(spot);
+				return { animation: style.animationName, transition: style.transitionDuration };
+			});
+			if (motion.animation !== "none" || motion.transition !== "0s") {
+				throw new Error(`the guide still moves: ${JSON.stringify(motion)}`);
+			}
+			await recordRow("Document a1").click();
+			await atGuideStep(2);
+			await leaveGuide();
+		} finally {
+			await page.emulateMedia({ reducedMotion: "no-preference" });
+		}
+	});
 	await step("system-instance", async () => {
 		await back();
 		await open("System", "Instance");

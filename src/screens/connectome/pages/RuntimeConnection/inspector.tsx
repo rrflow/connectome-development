@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { ActionButton } from "~/components/ActionButton";
 import { Icon } from "~/components/Icon";
 import { iconClose } from "~/icons";
+import { useGuideState } from "./guides/engine";
 
 interface InspectorHost {
 	target: HTMLElement | null;
@@ -82,6 +83,7 @@ export function InspectorObject({
 	links,
 }: InspectorObjectProps) {
 	const [depth, setDepth] = useState<Depth>("plain");
+	useGuideState("depth-details", depth === "details");
 
 	return (
 		<>
@@ -112,14 +114,16 @@ export function InspectorObject({
 				)}
 			</Box>
 			{actions && <Group gap="xs">{actions}</Group>}
-			<SegmentedControl
-				size="xs"
-				fullWidth
-				aria-label="Depth"
-				value={depth}
-				onChange={(next) => setDepth(next as Depth)}
-				data={DEPTHS}
-			/>
+			<Box data-guide="inspector-depth">
+				<SegmentedControl
+					size="xs"
+					fullWidth
+					aria-label="Depth"
+					value={depth}
+					onChange={(next) => setDepth(next as Depth)}
+					data={DEPTHS}
+				/>
+			</Box>
 			{depth === "plain" && <Text fz="sm">{plain}</Text>}
 			{depth === "details" && details}
 			{depth === "raw" && (
@@ -130,7 +134,7 @@ export function InspectorObject({
 					{JSON.stringify(raw, null, 2)}
 				</Code>
 			)}
-			{links}
+			{links && <Box data-guide="inspector-links">{links}</Box>}
 		</>
 	);
 }

@@ -45,6 +45,7 @@ import { formatCount, formatSize, formatTime } from "../format";
 import { Term } from "../glossary";
 import { type CanvasEdge, type CanvasNode, GraphCanvas } from "../graph";
 import { colorOptions, degrees, grouping } from "../groups";
+import { useGuideSignal, useGuideState } from "../guides/engine";
 import { InspectorObject, InspectorPanel } from "../inspector";
 import { ReadNotice } from "../notice";
 import { databaseQuery } from "../queries";
@@ -250,7 +251,7 @@ export function RecordsTab({
 	client,
 	sessionKey,
 	selected,
-	onSelect,
+	onSelect: selectRecord,
 	colorBy,
 	onColorBy,
 	onOpenLens,
@@ -265,9 +266,17 @@ export function RecordsTab({
 	const [schemaOpen, setSchemaOpen] = useState(false);
 	const [draft, setDraft] = useState<string | null>(null);
 	const consoleRef = useRef<HTMLDivElement>(null);
+	const signal = useGuideSignal();
 	const execution = useMutation({
 		mutationFn: (query: string) => client.query(query),
 	});
+
+	// Only a pick counts: the selection can already be there when this tab opens.
+	const onSelect = useStable((record: string | null) => {
+		selectRecord(record);
+		if (record) signal?.("record-selected");
+	});
+	useGuideState("scope-around", scope === "neighbourhood");
 
 	const view = database.data;
 	const graph = view?.graph;
@@ -530,6 +539,7 @@ export function RecordsTab({
 				</Text>
 
 				<Paper
+					data-guide="graph-canvas"
 					h={scope === "neighbourhood" ? CANVAS_HEIGHT_AROUND : CANVAS_HEIGHT}
 					style={{ overflow: "hidden" }}
 				>
@@ -669,6 +679,7 @@ export function RecordsTab({
 								<>
 									{scope === "estate" ? (
 										<Button
+											data-guide="graph-around"
 											size="xs"
 											variant="light"
 											leftSection={<Icon path={iconRelation} />}

@@ -2,6 +2,7 @@ import { Box, Button, ScrollArea, Stack, UnstyledButton } from "@mantine/core";
 import { type ReactNode, useMemo, useState } from "react";
 import { Icon } from "~/components/Icon";
 import { WORKSPACE_AREAS, workspaceArea } from "./areas";
+import { GuideProvider } from "./guides/engine";
 import { InspectorContext } from "./inspector";
 import classes from "./style.module.scss";
 
@@ -34,91 +35,96 @@ export function WorkspaceShell({ route, onOpen, top, children }: WorkspaceShellP
 	);
 
 	return (
-		<Box
-			flex={1}
-			pos="relative"
-			miw={0}
+		<GuideProvider
+			route={route}
+			onOpen={onOpen}
 		>
-			<div className={classes.workspace}>
-				<div className={classes.workspaceTop}>{top}</div>
-				<div className={classes.workspaceBody}>
-					<nav
-						aria-label="Project areas"
-						className={classes.areaRail}
-					>
-						{WORKSPACE_AREAS.map((area) => (
-							<UnstyledButton
-								key={area.id}
-								className={classes.area}
-								data-active={area.id === active.id || undefined}
-								aria-current={area.id === active.id ? "page" : undefined}
-								onClick={() => onOpen(area.tabs[0].route)}
-							>
-								<Icon path={area.icon} />
-								<span>{area.label}</span>
-							</UnstyledButton>
-						))}
-					</nav>
-					<div className={classes.workspaceMain}>
-						<div
-							role="tablist"
-							aria-label={`${active.label} views`}
-							className={classes.areaTabs}
+			<Box
+				flex={1}
+				pos="relative"
+				miw={0}
+			>
+				<div className={classes.workspace}>
+					<div className={classes.workspaceTop}>{top}</div>
+					<div className={classes.workspaceBody}>
+						<nav
+							aria-label="Project areas"
+							className={classes.areaRail}
 						>
-							{active.tabs.map((tab) => (
+							{WORKSPACE_AREAS.map((area) => (
 								<UnstyledButton
-									key={tab.route}
-									role="tab"
-									className={classes.areaTab}
-									data-active={tab.route === route || undefined}
-									aria-selected={tab.route === route}
-									onClick={() => onOpen(tab.route)}
+									key={area.id}
+									className={classes.area}
+									data-active={area.id === active.id || undefined}
+									aria-current={area.id === active.id ? "page" : undefined}
+									onClick={() => onOpen(area.tabs[0].route)}
 								>
-									{tab.label}
+									<Icon path={area.icon} />
+									<span>{area.label}</span>
 								</UnstyledButton>
 							))}
-							{!open && presented > 0 && (
-								<Button
-									ml="auto"
-									size="compact-xs"
-									variant="subtle"
-									color="obsidian"
-									onClick={() => setOpen(true)}
-								>
-									Show details
-								</Button>
-							)}
-						</div>
-						<div className={classes.workspacePane}>
-							<ScrollArea
-								key={route}
-								pos="absolute"
-								inset={0}
-								type="scroll"
-								scrollbars="y"
+						</nav>
+						<div className={classes.workspaceMain}>
+							<div
+								role="tablist"
+								aria-label={`${active.label} views`}
+								className={classes.areaTabs}
 							>
-								<InspectorContext.Provider value={host}>
-									<Stack
-										px="lg"
-										py="md"
-										pb="xl"
-										mx="auto"
-										maw={1400}
+								{active.tabs.map((tab) => (
+									<UnstyledButton
+										key={tab.route}
+										role="tab"
+										className={classes.areaTab}
+										data-active={tab.route === route || undefined}
+										aria-selected={tab.route === route}
+										onClick={() => onOpen(tab.route)}
 									>
-										{children}
-									</Stack>
-								</InspectorContext.Provider>
-							</ScrollArea>
+										{tab.label}
+									</UnstyledButton>
+								))}
+								{!open && presented > 0 && (
+									<Button
+										ml="auto"
+										size="compact-xs"
+										variant="subtle"
+										color="obsidian"
+										onClick={() => setOpen(true)}
+									>
+										Show details
+									</Button>
+								)}
+							</div>
+							<div className={classes.workspacePane}>
+								<ScrollArea
+									key={route}
+									pos="absolute"
+									inset={0}
+									type="scroll"
+									scrollbars="y"
+								>
+									<InspectorContext.Provider value={host}>
+										<Stack
+											px="lg"
+											py="md"
+											pb="xl"
+											mx="auto"
+											maw={1400}
+										>
+											{children}
+										</Stack>
+									</InspectorContext.Provider>
+								</ScrollArea>
+							</div>
 						</div>
+						<aside
+							ref={setTarget}
+							aria-label="Details"
+							className={classes.inspector}
+							data-closed={!open || undefined}
+						/>
 					</div>
-					<aside
-						ref={setTarget}
-						aria-label="Details"
-						className={classes.inspector}
-						data-closed={!open || undefined}
-					/>
 				</div>
-			</div>
-		</Box>
+			</Box>
+		</GuideProvider>
 	);
 }

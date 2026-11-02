@@ -161,3 +161,59 @@ every lens's reading kept: `baseline/window/step-2/` is the "before".
 ### Stop conditions
 
 Stop if a panel loses a control, a reading or a link, or if the inspector needs a credential.
+
+## Step 4: guide engine and the first guide
+
+Written against `de7cdeba`.
+
+### Current code
+
+No guide exists. Parking lot 006 sets the contract. The inspector (`inspector.tsx`) and Graph
+(`tabs/records.tsx`) hold the controls the first guide teaches.
+
+### Target
+
+- `guides/engine.tsx`: `GuideProvider` runs one guide at a time over the real window. It finds a step's
+  control by `data-guide`, follows it as panes move, and dims everything else without blocking it.
+  Dialogs and dropdowns open above it.
+- `guides/explore-graph.v1.json`: the first guide, as data. The only button is Finish on the last step.
+- A step ends in one of two ways. `useGuideSignal` reports an event, for picking a record: only a real
+  pick counts, because the selection can already be there when the tab opens. `useGuideState` reports a
+  state, for the open depth and what the graph shows: the person can get there before the step begins,
+  and then no control could produce the event the step waits for.
+- If a step's control is not on screen, the callout says why. A step on another tab offers **Back to
+  this step**.
+- `guides/cards.tsx`: Home offers guides and says why one cannot start.
+- `scripts/check-guides.mjs`, in `pnpm check`: fails if a guide names an anchor or signal the source no
+  longer has, or leaves a step with no way to finish.
+
+### Oracle
+
+The native capture walks the guide on a real engine by doing the real actions, and fails if a step does
+not advance:
+
+- `guide-explore-graph`: all five steps in order, then Finish.
+- `guide-ahead-of-its-steps`: a record already picked, Details already open, and the graph already
+  showing what is around it. No step passes without a real pick, no step strands the person, and leaving
+  changes nothing they did.
+- `guide-away-and-back`: closing the details panel and changing tab, then returning.
+- `guide-reduced-motion`: with reduced motion the spotlight has no animation or transition.
+
+The smoke test proves a guide cannot start without a session. `check-guides` is shown to fail on a stale
+anchor, a stale signal, a removed emitter and a malformed step.
+
+### Not proved here
+
+The reason shown for a project with no records is not reached by a test: the capture seeds its estate
+before the Home screen is read. Step 5 owns the empty project and its sample estate, and tests it.
+
+### Found while reviewing, not fixed here
+
+**Around the selection** names only the selected dot, so the others need a hover to read. The guide ends
+on this screen. It is older than this sprint: `baseline/native/83804c3` shows the same. It gets its own
+fix before step 5, with its cause and a capture that fails without the fix.
+
+### Stop conditions
+
+Stop if a step needs a Next button, if a guide blocks the window under it, or if a guide would claim
+something the engine did not return.
