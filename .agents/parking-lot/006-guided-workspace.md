@@ -5,7 +5,9 @@ prototype beside the running Workbench and said "lets fix and go". This is also
 the navigation model that sprint 009's step S1 requires before the shell.
 
 [Parking lot 007](007-guided-workspace-against-code.md) checks this plan against the code
-and proposes changes to it. They take effect only when the owner decides.
+and proposes changes to it. They take effect only when the owner decides. The owner decided four of
+them on 2026-11-03, and [parking lot 008](008-views-and-knowledge-surfaces.md) proposes the design that
+follows from them.
 
 ## The owner's direction
 
@@ -52,7 +54,8 @@ query editor and record editing.
    right. Each pane scrolls by itself and no page-level scroller remains. Every
    screen is judged at a real window size, 1440x900 and 1366x768.
 3. **Six areas.** See the table below. Project, estate and domain stay in view at
-   the top. Learning becomes an area when the engine serves it.
+   the top. Learning becomes an area when the engine serves it, or when a SWAG status read is
+   configured (parking lot 007, decision 5).
 4. **Three depths on every object:** plain words, details, raw evidence, plus
    links onward. No object is a dead end.
 5. **Time is a control for the whole app.** One moving read point drives every
@@ -61,6 +64,9 @@ query editor and record editing.
    click away. This supersedes the 2026-09-16 audience order.
 7. **A view exists only when it is real.** A tab appears when the engine serves
    what it needs. No notices, as decision 20 of sprint 009 requires.
+8. **What the engine no longer feeds is replaced.** Each view shows what the engine serves, labelled
+   plainly, and grows as the engine does (parking lot 007, decision 3).
+9. **Every control explains itself,** on every tab (parking lot 007, decision 4).
 
 ## The guide contract
 

@@ -1,8 +1,8 @@
 # Guided workspace checked against the code
 
-Status: OPEN, 2026-11-02. The repository owner asked for the plan to be checked against
-the existing code before more is built. Nothing here is committed until the owner decides.
-Until then, parking lot 006 and sprint 016 stand as written.
+Status: PARTLY DECIDED, 2026-11-03. The repository owner asked for the plan to be checked against
+the existing code before more is built. The owner decided 3, 4, 5 and 7 on 2026-11-03. Decisions 1,
+2 and 6 are open, and parking lot 006 and sprint 016 stand as written on those points.
 
 Paths are at Connectome `998c058f`. `RC/` is `src/screens/connectome/pages/RuntimeConnection/`.
 `wb/` is `crates/connectome-ui/` at RRFlow `6448a4f6`, the August Workbench. `contract/` and
@@ -95,6 +95,12 @@ Cluster is different. RRFlow's contract says `clustered_server` "must remain abs
 runtime capability values" and is not an alpha requirement, so that tab returns only when clustering
 becomes a supported capability.
 
+**Decided 2026-11-03: option A, with an addition.** The owner's words: "we replace with what it can
+serve and have it built with minimal defined schema for establishing naming and patterns that lend
+itself to grow and be easy to edit. we want to have components that can be triggered and provide dynamic
+a2ui passivek and direct knowledge for the operator to learn". [Parking lot 008](008-views-and-knowledge-surfaces.md)
+proposes the design for review.
+
 ## Decision 4: what "proper mouse-over popups" means
 
 **What.** The owner asked for proper mouse-over popups. Neither sprint 016 nor parking lot 006 mentions
@@ -111,6 +117,8 @@ August.
 | **A. A rule for every tab (recommended)** | Every button says what it will do, including any effect. Every technical word explains itself. Every mark on a graph or timeline shows what it is. Truncated text shows in full. Icons carry a label. The same text opens on keyboard focus. Text states real behaviour and never implies a result that has not happened. A check fails the build if a button under `RC/` has no explanation. | Teaches at the pointer, and suits the layman direction. New tabs cannot skip it. | 56 explanations to write and verify now. | Every tab | Medium |
 | B. Only where confusing | Add popups case by case. | Less work. | It drifts, and no check can hold it. | Some tabs | Small |
 
+**Decided 2026-11-03: option A.**
+
 ## Decision 5: how LFG and SWAG reach Connectome
 
 **What.** The owner wants extended tabs for LFG and SWAG. Parking lot 006 says "Learning becomes an area
@@ -126,6 +134,9 @@ works through a real RRFlow adapter, and that adapter is draft RRFlow #249.
 | **A. Read-only adapters now, effects through the engine (recommended)** | A Learning area with a SWAG tab that reads `swag.dev-status/v1` from an explicitly configured loopback endpoint, in the native process. It is absent unless configured and labelled as SWAG's own report, never as engine evidence. An LFG tab follows once LFG has a versioned status contract. Launching or selecting anything goes only through Gate G's engine path. | The owner sees real training and model state soon. Default RRFlow readiness is unaffected. | Amends decision 3 of parking lot 006. It also relies on my reading that a labelled, separate read is not the hidden connection `connectome.md` forbids, so the owner should rule on that. | `areas.ts`, native layer | Small to medium |
 | B. Engine only | No tab until Gate G projects these records through the engine. | The cleanest reading of the contract. | No LFG or SWAG tab until Gate G lands. | None | None now |
 | C. Embed their web pages | Show SWAG's `dev.html` and LFG's Inspector in a tab. | Fast. | A second visual, which decision 2 rules out. SWAG's host and origin checks refuse cross-origin use. | Security review | Small |
+
+**Decided 2026-11-03: option A.** The owner accepted it as written, which includes the reading that a
+separate, labelled, explicitly configured read is not the hidden connection `connectome.md` forbids.
 
 ## Decision 6: rulings the inherited views need
 
@@ -157,7 +168,13 @@ ran source routing (`wb/static/app.js:1515-1522`), which no longer exists at the
 | **A. Search through context assembly (recommended)** | `/` opens one search box that calls `context-assemble` with the text. Results are the engine's ranked records, each opening in the inspector. The keyboard shortcuts return, fixed so they ignore modifier keys. | A real answer from the engine, using no model. `connectome.md:499` forbids a client-side scan. | Its ranking is the engine's recall, not a file route. | Top bar, native layer | Small once Ask › Context exists |
 | B. Keep it for source routes | No search until the engine serves routes. | Matches August's behaviour. | No search for a long time. | None | None |
 
+**Decided 2026-11-03: option A, with an addition.** The owner's words: "and is configurable to improve and
+experiment". [Parking lot 008](008-views-and-knowledge-surfaces.md) proposes how. This adds an eighth engine
+item to decision 3's list: public controls over context ranking, since `AssembleContext` takes only budgets,
+seeds and valid time.
+
 ## Commit
 
-When the owner decides, this file records the outcome and the status, and parking lot 006 and sprint 016
-take the changes. Saying "go" accepts every recommendation above.
+Decisions 3, 4, 5 and 7 are recorded above, and parking lot 006 and sprint 016 took the changes. When the
+owner decides the rest, this file records the outcome. Saying "go" accepts the recommendations in decisions
+1, 2 and 6.
