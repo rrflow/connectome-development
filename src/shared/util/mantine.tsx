@@ -50,16 +50,16 @@ const ICON_SIZES: Record<string, number> = {
 
 /** Near-black violet-tinted neutrals, the surface of the dark scheme. */
 const OBSIDIAN = [
-	"#F5F5F7",
-	"#E9E7ED",
-	"#DEDCE4",
-	"#A29FAC",
-	"#888495",
-	"#595466",
-	"#3D3948",
-	"#201D29",
-	"#16141F",
-	"#0E0C14",
+	"#F3F7F7",
+	"#E3EBEC",
+	"#D3DEDF",
+	"#9BB0B3",
+	"#7D9599",
+	"#4E666B",
+	"#2F464B",
+	"#16292E",
+	"#0E1E22",
+	"#081417",
 ] as const;
 
 /** Cool blue-tinted neutrals for secondary surfaces and text. */
@@ -76,18 +76,18 @@ const SLATE = [
 	"#0C0F14",
 ] as const;
 
-/** Connectome's accent: a violet scale, the "from" end of the gradient. */
+/** Connectome's accent: a burnt orange scale, the "to" end of the gradient. */
 const RRFLOW = [
-	"#F1EDFF",
-	"#E0D7FF",
-	"#C4B3FF",
-	"#A58BFF",
-	"#8B6CFF",
-	"#7C5CF6",
-	"#6E4CE8",
-	"#5B3CC9",
-	"#4A30A6",
-	"#3A2683",
+	"#FFF1E8",
+	"#FFDCC4",
+	"#FFBE94",
+	"#F79C62",
+	"#EC7F3A",
+	"#CC5500",
+	"#B84D00",
+	"#8F3B00",
+	"#6B2C00",
+	"#4A1F00",
 ] as const;
 
 export const CONNECTOME_GRADIENT = {

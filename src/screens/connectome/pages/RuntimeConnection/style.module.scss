@@ -7,7 +7,7 @@
 .identity {
 	border: 1px solid color-mix(in srgb, var(--mantine-color-violet-6) 34%, transparent);
 	background:
-		radial-gradient(circle at 90% 0%, rgba(139, 92, 246, 0.2), transparent 36%),
+		radial-gradient(circle at 90% 0%, rgba(47, 158, 166, 0.2), transparent 36%),
 		color-mix(in srgb, var(--mantine-color-body) 92%, transparent);
 }
 
@@ -54,7 +54,7 @@
 	&[data-active] {
 		border-color: var(--mantine-color-violet-6);
 		background:
-			radial-gradient(circle at 100% 0%, rgba(139, 92, 246, 0.16), transparent 45%),
+			radial-gradient(circle at 100% 0%, rgba(47, 158, 166, 0.16), transparent 45%),
 			color-mix(in srgb, var(--mantine-color-body) 92%, transparent);
 	}
 }
