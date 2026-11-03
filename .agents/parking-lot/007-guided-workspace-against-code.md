@@ -186,7 +186,10 @@ should ensure the icon is connectome and we have enhanced layman friend visuals 
 "today's visual" in parking lot 006 now means Connectome's tokens with dark teal and burnt orange in
 place of violet and cyan, applied by changing token values and the mark's gradient, with no change
 to the mark's shape. Earlier on the same page: "needs to be grouped better it is flat and overwhelming
-no layman will even approach this likely".
+no layman will even approach this likely". Asked where the Workbench was: "where is the workbench
+shouldnt that be under overview since it is separte". So the testing and comparison Workbench is its
+own space under Overview, beside a project's workspace and not inside it. Parking lot 006's Evaluate
+area, if any is added to a project's rail, should not be built that way.
 
 ## Commit
 
