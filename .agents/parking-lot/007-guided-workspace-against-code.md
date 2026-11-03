@@ -1,8 +1,9 @@
 # Guided workspace checked against the code
 
 Status: PARTLY DECIDED, 2026-11-03. The repository owner asked for the plan to be checked against
-the existing code before more is built. The owner decided 3, 4, 5 and 7 on 2026-11-03. Decisions 1,
-2 and 6 are open, and parking lot 006 and sprint 016 stand as written on those points.
+the existing code before more is built. The owner decided 3, 4, 5 and 7 on 2026-11-03, and decision 1
+is read from the owner's words below. Decisions 2 and 6 are open, and parking lot 006 and sprint 016
+stand as written on those points.
 
 Paths are at Connectome `998c058f`. `RC/` is `src/screens/connectome/pages/RuntimeConnection/`.
 `wb/` is `crates/connectome-ui/` at RRFlow `6448a4f6`, the August Workbench. `contract/` and
@@ -43,6 +44,10 @@ order, so moving past step 5 needs the owner's word.
 |---|---|---|---|---|---|
 | **A. Build on (recommended)** | Move to the foundations and History now. Return to step 5 when its dependencies land. | Most of the remaining views need nothing from those sessions. | A new project keeps showing little until step 5 lands. | Sprint 016 order | None |
 | B. Hold | Wait for the dependencies. | Keeps the strict order. | Blocks every view on work this sprint does not control. | None | None |
+
+**Read as decided 2026-11-03: option A.** The owner's words: "restore all of my UI from augiust while
+authoring it to be properly grouped tooltips and popup modals". The owner did not name this decision,
+so this is a reading, and the owner may correct it. Step 5 returns when its dependencies land.
 
 ## Decision 2: what the read point means
 
@@ -172,6 +177,16 @@ ran source routing (`wb/static/app.js:1515-1522`), which no longer exists at the
 experiment". [Parking lot 008](008-views-and-knowledge-surfaces.md) proposes how. This adds an eighth engine
 item to decision 3's list: public controls over context ranking, since `AssembleContext` takes only budgets,
 seeds and valid time.
+
+## Later direction, 2026-11-03
+
+The owner, reviewing the Evaluate design: "it also needs to actually align with the visuals of
+connectome style tokens and we should have it be dark teal and burnt orange instead of purple and we
+should ensure the icon is connectome and we have enhanced layman friend visuals for graphs". So
+"today's visual" in parking lot 006 now means Connectome's tokens with dark teal and burnt orange in
+place of violet and cyan, applied by changing token values and the mark's gradient, with no change
+to the mark's shape. Earlier on the same page: "needs to be grouped better it is flat and overwhelming
+no layman will even approach this likely".
 
 ## Commit
 
