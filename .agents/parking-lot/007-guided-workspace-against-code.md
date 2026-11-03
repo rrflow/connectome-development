@@ -1,9 +1,9 @@
 # Guided workspace checked against the code
 
 Status: PARTLY DECIDED, 2026-11-03. The repository owner asked for the plan to be checked against
-the existing code before more is built. The owner decided 3, 4, 5 and 7 on 2026-11-03, and decision 1
-is read from the owner's words below. Decisions 2 and 6 are open, and parking lot 006 and sprint 016
-stand as written on those points.
+the existing code before more is built. The owner decided 3, 4, 5 and 7 on 2026-11-03, and decisions 1
+and 2 are read from the owner's words below. Decision 6 is open, and parking lot 006 and sprint 016
+stand as written on that point.
 
 Paths are at Connectome `998c058f`. `RC/` is `src/screens/connectome/pages/RuntimeConnection/`.
 `wb/` is `crates/connectome-ui/` at RRFlow `6448a4f6`, the August Workbench. `contract/` and
@@ -65,6 +65,11 @@ read is also written to the audit journal, so it adds rows to Activity.
 |---|---|---|---|---|---|
 | **A. Narrow it (recommended)** | The read point drives the views that can obey it: Stream, Signals, Graph, Claims, Query and Records reads. Every other view states its own real coordinate, such as "live counters" or "revision 12". The top bar always says which moment each view shows. | Truthful, and it still delivers the bi-temporal view the owner wants: scrub history, then see the graph as it stood then. | Not every view moves. | Amends decision 5 | Medium |
 | B. Keep decision 5 and ask the engine | RRFlow adds historical reads to every family, plus a time-to-cursor operation. | Matches the original words. | Blocks the control on engine work across many owners. | RRFlow roadmap | Large |
+
+**Read as decided 2026-11-03: option A.** The owner's words: "we want ease of use and clear UI favored
+and yes we want th engine to do the work build the files and connectome be the ui". The owner did not
+name this decision, and option A is the clearer one for a person, so this is a reading the owner may
+correct.
 
 ## Decision 3: August views the engine can no longer feed
 
@@ -190,6 +195,9 @@ no layman will even approach this likely". Asked where the Workbench was: "where
 shouldnt that be under overview since it is separte". So the testing and comparison Workbench is its
 own space under Overview, beside a project's workspace and not inside it. Parking lot 006's Evaluate
 area, if any is added to a project's rail, should not be built that way.
+
+The same message sets who owns the work: the engine does it and builds the files, and Connectome is the
+UI. The Workbench's screens call public engine operations, and no view keeps its own copy of that work.
 
 ## Commit
 
