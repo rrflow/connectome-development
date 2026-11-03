@@ -15,6 +15,7 @@ This directory holds the evidence for that rule:
 | `baseline/window/c1cbff2/` | Today's desktop at real window sizes, the "before" for sprint 016's window |
 | `baseline/window/step-2/` | The same screens after sprint 016's window, at 1366x768 |
 | `baseline/window/step-3/` | The inspector at three depths, closed, and in Vectors, at 1366x768 |
+| `baseline/window/teal-orange/` | Every screen at 1366x768 dark and 1440x900 light after the palette moved to dark teal and burnt orange |
 | `PARITY.md` | The visual elements and interactions each RRFlow lens must keep or improve |
 | `capture-only.mjs` | Applies, then restores byte for byte, the patches that let the inherited screens open and run |
 | `capture.mjs` | The capture flow: seed the in-browser Sandbox, then visit each view, mode, drawer, modal and settings tab |

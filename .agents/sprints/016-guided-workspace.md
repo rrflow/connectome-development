@@ -20,6 +20,12 @@ V6 into this order. Sprint 009 keeps its record and its decisions.
 - A step that adds a view also adds or extends its guide, once the guide engine
   exists.
 
+## The visual
+
+The owner, 2026-11-03: "dark teal and burnt orange instead of purple". "Today's visual" in this sprint
+means Connectome's tokens with those values, and the mark in the same shape with the same gradient
+moved to them.
+
 ## Ordered steps
 
 1. **Preserve.** Commit the 2026-09-16 plans, the Workbench captures, the Workbench
