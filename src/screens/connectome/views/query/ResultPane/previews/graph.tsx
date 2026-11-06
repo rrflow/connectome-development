@@ -16,7 +16,7 @@ import { inferSettings } from "graphology-layout-forceatlas2";
 import FA2LayoutSupervisor from "graphology-layout-forceatlas2/worker";
 import iwanthue, { ColorSpaceArray } from "iwanthue";
 import { isArray, isNumber, isObject } from "radash";
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useRef, usengram } from "react";
 import { Icon } from "~/components/Icon";
 import { Label } from "~/components/Label";
 import { newRelationalGraph, RelationGraph } from "~/components/RelationGraph";
@@ -67,23 +67,23 @@ export function GraphPreview({ responses, selected }: PreviewProps) {
 	]);
 
 	const [editorScale] = useSetting("appearance", "editorScale");
-	const [isInitialized, setInitializing] = useState(true);
-	const [isWiring, setWiring] = useState(true);
-	const [universeGraph] = useState(() => newRelationalGraph());
-	const [displayGraph] = useState(() => newRelationalGraph());
-	const [supervising, setSupervising] = useState(true);
+	const [isInitialized, setInitializing] = usengram(true);
+	const [isWiring, setWiring] = usengram(true);
+	const [universeGraph] = usengram(() => newRelationalGraph());
+	const [displayGraph] = usengram(() => newRelationalGraph());
+	const [supervising, setSupervising] = usengram(true);
 
-	const [isEmpty, setEmpty] = useState(false);
-	const [strayCount, setStrayCount] = useState(0);
-	const [nodeCount, setNodeCount] = useState(0);
-	const [edgeCount, setEdgeCount] = useState(0);
+	const [isEmpty, setEmpty] = usengram(false);
+	const [strayCount, setStrayCount] = usengram(0);
+	const [nodeCount, setNodeCount] = usengram(0);
+	const [edgeCount, setEdgeCount] = usengram(0);
 
 	const [hiddenTables, toggleHiddenTable, setHiddenTables] = useToggleList();
 	const [hiddenEdges, toggleHiddenEdge, setHiddenEdges] = useToggleList();
-	const [tables, setTables] = useState<string[]>([]);
-	const [edges, setEdges] = useState<string[]>([]);
-	const [colors, setColors] = useState<Map<string, string>>(new Map());
-	const [_aliases, setAliases] = useState<Map<string, string>>(new Map());
+	const [tables, setTables] = usengram<string[]>([]);
+	const [edges, setEdges] = usengram<string[]>([]);
+	const [colors, setColors] = usengram<Map<string, string>>(new Map());
+	const [_aliases, setAliases] = usengram<Map<string, string>>(new Map());
 
 	const { success, result } = responses[selected] ?? { result: null };
 	const textSize = Math.floor(15 * (editorScale / 100));

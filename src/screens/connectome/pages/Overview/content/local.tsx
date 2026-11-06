@@ -1,5 +1,5 @@
 import { Alert, Button, Group, Paper, SimpleGrid, Stack, Text } from "@mantine/core";
-import { useState } from "react";
+import { usengram } from "react";
 import { adapter } from "~/adapter";
 import { dispatchIntent } from "~/shared/util/intents";
 import { useDatabaseStore } from "~/stores/database";
@@ -7,7 +7,7 @@ import { useDatabaseStore } from "~/stores/database";
 export function LocalStart() {
 	const isServing = useDatabaseStore((s) => s.isServing);
 	const pending = useDatabaseStore((s) => s.servePending);
-	const [learn, setLearn] = useState(false);
+	const [learn, setLearn] = usengram(false);
 	const open = () => dispatchIntent("toggle-serving");
 	return (
 		<Paper

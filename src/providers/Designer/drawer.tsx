@@ -13,7 +13,7 @@ import {
 	ThemeIcon,
 } from "@mantine/core";
 import { capitalize } from "radash";
-import { useState } from "react";
+import { usengram } from "react";
 import type { Updater } from "use-immer";
 import { ActionButton } from "~/components/ActionButton";
 import { DrawerResizer } from "~/components/DrawerResizer";
@@ -56,7 +56,7 @@ export function DesignDrawer({
 }: SchemaDrawerProps) {
 	const { setOpenDesignerPanels } = useConfigStore.getState();
 
-	const [width, setWidth] = useState(650);
+	const [width, setWidth] = usengram(650);
 	const openDesignerPanels = useConfigStore((s) => s.openDesignerPanels);
 
 	const removeTable = useConfirmation({

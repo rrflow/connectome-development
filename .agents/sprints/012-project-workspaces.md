@@ -18,10 +18,10 @@ No product version, engine/SDK pin, alpha outcome or roadmap gate changes status
   sourced requested deliverable, not an empty planning-status commit.
 - [x] Single native session -> bounded profile-keyed `RrdClientState`; every
   authenticated command requires its profile, with no active-project fallback.
-  Single served estate -> `EstateState` registry of canonical directories with
+  Single served engram -> `engramState` registry of canonical directories with
   pending-start reservations, four-child admission, failure release, idempotent
   reopen, targeted stop and shutdown rejection. `OwnedProcess` reaps children
-  even before an announcement/readiness failure can construct a served estate.
+  even before an announcement/readiness failure can construct a served engram.
 - [x] Existing lenses remain the data/graph/vector/storage owners. Project routes
   group them under Overview/Knowledge, with Activity/Learning/Services explaining
   unavailable contracts. Advanced identity is progressively disclosed; errors
@@ -55,7 +55,7 @@ execution-map authoring/traceability owners; client/connectome, instance-topolog
 agent-bootstrap and learning/controller-training contracts. Child README,
 GOVERNANCE, screens/GOVERNANCE, sprints 009/010/011, workflows/verify, package and
 lockfile pin sections, CI workflow, Tauri config/build and engine staging;
-rrd.rs, estate.rs, engine.rs, client.rs/client/process.rs, view.rs, main.rs;
+rrd.rs, engram.rs, engine.rs, client.rs/client/process.rs, view.rs, main.rs;
 session.ts, runtime.ts, adapter base/browser/desktop, ActionBar serving, routing,
 config/idxdb/defaults, database/config stores, startup/connectome, types,
 Connectome router, CreateConnection, Overview local and RuntimeConnection

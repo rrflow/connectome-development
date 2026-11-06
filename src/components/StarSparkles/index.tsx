@@ -1,5 +1,5 @@
 import { Box } from "@mantine/core";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, usengram } from "react";
 import { useConfigStore } from "~/shell/stores/config";
 import classes from "./style.module.scss";
 
@@ -28,8 +28,8 @@ export function StarSparkles({
 	const disableAnimations = useConfigStore((s) => s.settings.appearance.disableAnimations);
 
 	const ref = useRef<HTMLDivElement>(null);
-	const [stars, setStars] = useState<Star[]>([]);
-	const [starId, setStarId] = useState(0);
+	const [stars, setStars] = usengram<Star[]>([]);
+	const [starId, setStarId] = usengram(0);
 
 	useEffect(() => {
 		if (!ref.current || hidden || disableAnimations) return;

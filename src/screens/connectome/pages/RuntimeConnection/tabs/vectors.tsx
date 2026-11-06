@@ -19,7 +19,7 @@ import {
 	UnstyledButton,
 } from "@mantine/core";
 import { skipToken, useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, usengram } from "react";
 import { Icon } from "~/components/Icon";
 import { Label } from "~/components/Label";
 import { Section } from "~/components/Section";
@@ -159,10 +159,10 @@ export function VectorsTab({
 		queryFn: () => client.vectorCollections(),
 	});
 	const database = useQuery(databaseQuery(client, sessionKey));
-	const [collectionId, setCollectionId] = useState<string | null>(null);
-	const [vectorName, setVectorName] = useState<string | null>(null);
-	const [similarCount, setSimilarCount] = useState("10");
-	const [browseOpen, setBrowseOpen] = useState(false);
+	const [collectionId, setCollectionId] = usengram<string | null>(null);
+	const [vectorName, setVectorName] = usengram<string | null>(null);
+	const [similarCount, setSimilarCount] = usengram("10");
+	const [browseOpen, setBrowseOpen] = usengram(false);
 
 	const collections = catalogue.data?.collections ?? [];
 	const collection =
@@ -370,7 +370,7 @@ export function VectorsTab({
 				title="Vectors"
 				description={
 					<>
-						This estate has no vector <Term id="collection">collections</Term> yet.
+						This engram has no vector <Term id="collection">collections</Term> yet.
 					</>
 				}
 			/>

@@ -9,20 +9,20 @@ The UI never opens the database files itself.
 Keep `connectome.exe` and `rrflow.exe` together on Windows. Open Connectome,
 choose **Start local RRFlow**, choose a project folder in **Project engines**,
 inspect the exact installation preview, and
-choose **Install and open RRFlow**. Cancel leaves the estate uninstalled; an
+choose **Install and open RRFlow**. Cancel leaves the engram uninstalled; an
 empty project folder may have been created for planning. A changed project,
-configuration or executable requires a fresh preview. An existing estate opens
+configuration or executable requires a fresh preview. An existing engram opens
 without another installation. Credentials are stored by RRFlow and read by the
 native client; no token is entered in a URL or browser storage.
 
 The default project is in Connectome's application-data directory under
-`estates/local`. The serving settings can select an absolute project path,
+`engrams/local`. The serving settings can select an absolute project path,
 fresh/existing mode, and an explicit engine override. Startup binds a free
 loopback port and creates or updates its local connection profile. Close the
 app to stop all owned engines, or use **Stop this engine** for one project; data remains.
 Restart and **Start local RRFlow** to reopen it.
 
-The binary digest is part of the installed estate identity. Retain the engine
+The binary digest is part of the installed engram identity. Retain the engine
 that installed your project; replacing it is not an automatic data upgrade.
 No account is required and this path does not enable synchronization.
 
@@ -39,7 +39,7 @@ arbitrary external engine. A directory already running reuses its owned process.
 **Selected project** switches saved runtime profiles while preserving the current
 section. Every native operation selects that profile's session explicitly; reads
 and graph focus cannot fall back to a global active project. The engine's installed
-project/estate identity is available under **Advanced details**. Profile display
+project/engram identity is available under **Advanced details**. Profile display
 names are not authority. Identical inventories can have the same deterministic
 instance ID in the pinned engine; endpoint, native credential path and owned
 project directory remain distinct. Stopping one never uses instance ID alone.

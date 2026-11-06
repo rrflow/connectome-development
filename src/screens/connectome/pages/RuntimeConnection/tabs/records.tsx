@@ -21,7 +21,7 @@ import {
 	UnstyledButton,
 } from "@mantine/core";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, usengram } from "react";
 import { Icon } from "~/components/Icon";
 import { Label } from "~/components/Label";
 import { Section } from "~/components/Section";
@@ -48,7 +48,7 @@ import classes from "../style.module.scss";
 import { type GraphDirection, type GraphScope, kinds, selectSubgraph } from "../subgraph";
 import type { RecordFocusProps, RuntimeLensProps } from "../types";
 
-/** Default row bound for console queries; the estate's query budget still applies. */
+/** Default row bound for console queries; the engram's query budget still applies. */
 const CONSOLE_ROW_LIMIT = 50;
 const TRAVERSAL_DEPTH = 2;
 const NEIGHBOURHOOD_DEPTHS = ["1", "2", "3"];
@@ -184,14 +184,14 @@ export function RecordsTab({
 	onOpenLens,
 }: RuntimeLensProps & RecordFocusProps) {
 	const database = useQuery(databaseQuery(client, sessionKey));
-	const [scope, setScope] = useState<GraphScope>("estate");
-	const [depth, setDepth] = useState(1);
-	const [direction, setDirection] = useState<GraphDirection>("both");
-	const [recordKinds, setRecordKinds] = useState<string[]>([]);
-	const [relationKinds, setRelationKinds] = useState<string[]>([]);
-	const [consoleOpen, setConsoleOpen] = useState(false);
-	const [schemaOpen, setSchemaOpen] = useState(false);
-	const [draft, setDraft] = useState<string | null>(null);
+	const [scope, setScope] = usengram<GraphScope>("engram");
+	const [depth, setDepth] = usengram(1);
+	const [direction, setDirection] = usengram<GraphDirection>("both");
+	const [recordKinds, setRecordKinds] = usengram<string[]>([]);
+	const [relationKinds, setRelationKinds] = usengram<string[]>([]);
+	const [consoleOpen, setConsoleOpen] = usengram(false);
+	const [schemaOpen, setSchemaOpen] = usengram(false);
+	const [draft, setDraft] = usengram<string | null>(null);
 	const consoleRef = useRef<HTMLDivElement>(null);
 	const execution = useMutation({
 		mutationFn: (query: string) => client.query(query),
@@ -289,7 +289,7 @@ export function RecordsTab({
 		return (
 			<Alert
 				color="red"
-				title="The estate could not be read"
+				title="The engram could not be read"
 				icon={<Icon path={iconErrorCircle} />}
 			>
 				{database.error instanceof Error ? database.error.message : "Unknown RRD error"}
@@ -323,7 +323,7 @@ export function RecordsTab({
 				title="Records & relations"
 				description={
 					<>
-						This <Term id="estate">estate</Term> holds {formatCount(graph.nodes.length)}{" "}
+						This <Term id="engram">engram</Term> holds {formatCount(graph.nodes.length)}{" "}
 						<Term id="record">records</Term> linked by {formatCount(graph.edges.length)}{" "}
 						<Term id="relation">relations</Term>. Each dot is a record and each arrow a
 						relation; bigger dots have more relations.
@@ -368,7 +368,7 @@ export function RecordsTab({
 							value={scope}
 							onChange={(value) => setScope(value as GraphScope)}
 							data={[
-								{ value: "estate", label: "Whole estate" },
+								{ value: "engram", label: "Whole engram" },
 								{ value: "neighbourhood", label: "Around the selection" },
 							]}
 						/>
@@ -468,7 +468,7 @@ export function RecordsTab({
 									h="100%"
 									justify="center"
 								>
-									<Text c="slate">This estate holds no records yet.</Text>
+									<Text c="slate">This engram holds no records yet.</Text>
 								</Group>
 							) : scope === "neighbourhood" && !node ? (
 								<Stack
@@ -483,7 +483,7 @@ export function RecordsTab({
 										c="slate"
 									>
 										Search above, choose one under “Start here”, or click a dot
-										in the whole estate.
+										in the whole engram.
 									</Text>
 								</Stack>
 							) : canvasNodes.length > 0 ? (
@@ -496,7 +496,7 @@ export function RecordsTab({
 									groups={groups.groups}
 									legendTitle={`Color: ${colorOption?.label ?? "Kind"}`}
 									selected={selected}
-									dimUnselected={scope === "estate"}
+									dimUnselected={scope === "engram"}
 									onSelect={onSelect}
 									hint="Scroll to zoom · drag to move · click a dot for details"
 									renderHover={(id) => {
@@ -620,7 +620,7 @@ export function RecordsTab({
 										</Text>
 									</Box>
 									<Group gap="xs">
-										{scope === "estate" ? (
+										{scope === "engram" ? (
 											<Button
 												size="xs"
 												variant="light"
@@ -634,9 +634,9 @@ export function RecordsTab({
 												size="xs"
 												variant="light"
 												leftSection={<Icon path={iconRelation} />}
-												onClick={() => setScope("estate")}
+												onClick={() => setScope("engram")}
 											>
-												Back to whole estate
+												Back to whole engram
 											</Button>
 										)}
 										<Button
@@ -816,7 +816,7 @@ export function RecordsTab({
 			<Box ref={consoleRef}>
 				<Section
 					title={<Term id="query">RRFlowQL console</Term>}
-					description="Read-only queries in RRFlow's query language, run through this session under the estate's query budget."
+					description="Read-only queries in RRFlow's query language, run through this session under the engram's query budget."
 					rightSection={
 						<Button
 							variant="light"

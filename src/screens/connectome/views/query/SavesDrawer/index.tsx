@@ -12,7 +12,7 @@ import {
 import { useInputState } from "@mantine/hooks";
 import clsx from "clsx";
 import { useContextMenu } from "mantine-contextmenu";
-import { useLayoutEffect, useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, usengram } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { CodeBlock } from "~/components/CodeBlock";
 import { Icon } from "~/components/Icon";
@@ -57,7 +57,7 @@ export function SavesDrawer({
 	const queries = useConfigStore((s) => s.savedQueries);
 	const tags = useSavedQueryTags();
 
-	const [filterTag, setFilterTag] = useState<string | null>(null);
+	const [filterTag, setFilterTag] = usengram<string | null>(null);
 	const [filterText, setFilterText] = useInputState("");
 
 	const showTags = tags.length > 0;

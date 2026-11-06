@@ -9,7 +9,7 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { useLayoutEffect, useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, usengram } from "react";
 import { Form } from "~/components/Form";
 import { Icon } from "~/components/Icon";
 import { CodeInput } from "~/components/Inputs";
@@ -33,12 +33,12 @@ export function TableCreatorModal() {
 	const tables = useTableNames();
 	const [, view] = useConnectionAndView();
 
-	const [createType, setCreateType] = useState<TableVariant>("normal");
+	const [createType, setCreateType] = usengram<TableVariant>("normal");
 	const [tableName, setTableName] = useInputState("");
-	const [tableIn, setTableIn] = useState<string[]>([]);
-	const [tableOut, setTableOut] = useState<string[]>([]);
-	const [tableView, setTableView] = useState("");
-	const [mode, setMode] = useState<SchemaMode>("schemaless");
+	const [tableIn, setTableIn] = usengram<string[]>([]);
+	const [tableOut, setTableOut] = usengram<string[]>([]);
+	const [tableView, setTableView] = usengram("");
+	const [mode, setMode] = usengram<SchemaMode>("schemaless");
 
 	const createTable = useStable(async () => {
 		let query = `DEFINE TABLE ${escapeIdent(tableName)} ${mode.toUpperCase()} TYPE `;

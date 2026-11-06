@@ -5,7 +5,7 @@ import { geoJSON as createGeoJSON, type Map as GeoMap, type LatLng, latLng } fro
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerIcon2 from "leaflet/dist/images/marker-icon-2x.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, usengram } from "react";
 import { GeoJSON, MapContainer, TileLayer } from "react-leaflet";
 import { getRRFlowQL } from "~/screens/connectome/connection/connection";
 import type {
@@ -55,9 +55,9 @@ export type GeographyMapProps = {
 export const GeographyMap = ({ value }: GeographyMapProps) => {
 	const ref = useRef<GeoMap>(null);
 
-	const [data, setData] = useState<any>(PLACEHOLDER);
-	const [isError, setIsError] = useState(false);
-	const [bounds, setBounds] = useState<any>();
+	const [data, setData] = usengram<any>(PLACEHOLDER);
+	const [isError, setIsError] = usengram(false);
+	const [bounds, setBounds] = usengram<any>();
 
 	useEffect(() => {
 		let cancelled = false;

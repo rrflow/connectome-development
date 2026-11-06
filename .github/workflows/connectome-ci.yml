@@ -96,7 +96,7 @@ jobs:
 
   # The gate's RRFlow generated-SDK check and the native client against a real
   # RRD process, both at the RRFlow revision Cargo.lock pins. The process
-  # tests install a fresh estate through the desktop's own serve path, serve
+  # tests install a fresh  through the desktop's own serve path, serve
   # it on loopback, and drive every lens through the session
   # (src-tauri/src/rrd/client/process.rs); one of them runs the engine as the
   # digest-verified sidecar the bundle ships.

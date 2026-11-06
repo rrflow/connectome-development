@@ -13,7 +13,7 @@ import {
 } from "@mantine/core";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { open } from "@tauri-apps/plugin-dialog";
-import { useEffect, useState } from "react";
+import { useEffect, usengram } from "react";
 import { adapter } from "~/adapter";
 import { ActionButton } from "~/components/ActionButton";
 import { Icon } from "~/components/Icon";
@@ -24,32 +24,32 @@ import { RrdSessionClient } from "~/rrflow/session";
 import { sessionQueryKey } from "~/screens/connectome/pages/RuntimeConnection/session";
 import { useConfigStore } from "~/shell/stores/config";
 import { useDatabaseStore } from "~/stores/database";
-import type { EstatePreview, EstateSelection, ServedEstate } from "~/types";
+import type { engramPreview, engramSelection, Servedengram } from "~/types";
 import { resolveServedConnection } from "./served-connection";
 
 export function DatabaseServing() {
-	const [opened, setOpened] = useState(false);
-	const [selection, setSelection] = useState<EstateSelection>(() => ({
+	const [opened, setOpened] = usengram(false);
+	const [selection, setSelection] = usengram<engramSelection>(() => ({
 		...useConfigStore.getState().settings.serving,
 	}));
-	const [preview, setPreview] = useState<{
-		value: EstatePreview;
-		selection: EstateSelection;
+	const [preview, setPreview] = usengram<{
+		value: engramPreview;
+		selection: engramSelection;
 	} | null>(null);
-	const [pending, setPending] = useState(false);
-	const [error, setError] = useState<string | null>(null);
+	const [pending, setPending] = usengram(false);
+	const [error, setError] = usengram<string | null>(null);
 	const queryClient = useQueryClient();
 	const navigate = useConnectionNavigator();
-	const estates = useQuery({
+	const engrams = useQuery({
 		queryKey: ["owned-project-engines"],
-		queryFn: () => adapter.servedEstates(),
+		queryFn: () => adapter.servedengrams(),
 		enabled: adapter.isServeSupported,
 		refetchInterval: opened ? 3000 : false,
 	});
 	useEffect(() => {
-		if (estates.data?.[0]) useDatabaseStore.getState().confirmServing(estates.data[0]);
-		else if (estates.data) useDatabaseStore.getState().stopServing();
-	}, [estates.data]);
+		if (engrams.data?.[0]) useDatabaseStore.getState().confirmServing(engrams.data[0]);
+		else if (engrams.data) useDatabaseStore.getState().stopServing();
+	}, [engrams.data]);
 	useIntent("toggle-serving", () => setOpened(true));
 	const refresh = () => queryClient.invalidateQueries({ queryKey: ["owned-project-engines"] });
 	const run = async (action: () => Promise<void>) => {
@@ -64,38 +64,38 @@ export function DatabaseServing() {
 			await refresh();
 		}
 	};
-	const start = async (request: EstateSelection, digest?: string) => {
-		const estate = await adapter.serveEstate(digest, request);
+	const start = async (request: engramSelection, digest?: string) => {
+		const engram = await adapter.serveengram(digest, request);
 		setPreview(null);
-		useDatabaseStore.getState().confirmServing(estate);
-		navigate(resolveServedConnection(estate));
+		useDatabaseStore.getState().confirmServing(engram);
+		navigate(resolveServedConnection(engram));
 		setOpened(false);
 	};
 	const prepare = () =>
 		run(async () => {
 			const request = { ...selection };
-			const value = await adapter.previewEstate(request);
+			const value = await adapter.previewengram(request);
 			// Freeze the resolved directory, mode and executable with the preview.
 			const resolved = { ...request, project: value.project };
 			if (value.installation) setPreview({ value, selection: resolved });
 			else await start(resolved);
 		});
-	const stop = (estate: ServedEstate) =>
+	const stop = (engram: Servedengram) =>
 		run(async () => {
 			const profiles = useConfigStore
 				.getState()
 				.connections.filter(
 					(c) =>
 						c.target === "runtime" &&
-						c.runtimeCredential === estate.credential_path &&
+						c.runtimeCredential === engram.credential_path &&
 						`${c.authentication.protocol}://${c.authentication.hostname}` ===
-							estate.endpoint,
+							engram.endpoint,
 				);
 			for (const profile of profiles) {
 				await new RrdSessionClient(profile.id).disconnect();
 				queryClient.setQueryData(sessionQueryKey(profile.id), null);
 			}
-			await adapter.stopEstate(estate.project);
+			await adapter.stopengram(engram.project);
 		});
 	return (
 		<>
@@ -132,17 +132,17 @@ export function DatabaseServing() {
 						Each engine uses its configured resources. This desktop limit does not
 						reserve combined CPU or memory for your machine.
 					</Text>
-					{(error || estates.error) && (
+					{(error || engrams.error) && (
 						<Alert
 							color="red"
 							title="Project operation failed"
 						>
-							{error ?? describeRrdError(estates.error)}
+							{error ?? describeRrdError(engrams.error)}
 						</Alert>
 					)}
-					{estates.data?.map((estate) => (
+					{engrams.data?.map((engram) => (
 						<Paper
-							key={estate.project}
+							key={engram.project}
 							withBorder
 							p="md"
 						>
@@ -150,15 +150,15 @@ export function DatabaseServing() {
 								fw={600}
 								style={{ overflowWrap: "anywhere" }}
 							>
-								{estate.project}
+								{engram.project}
 							</Text>
-							<Text size="sm">Running · {estate.endpoint}</Text>
+							<Text size="sm">Running · {engram.endpoint}</Text>
 							<Group mt="sm">
 								<Button
 									variant="light"
 									disabled={pending}
 									onClick={() => {
-										navigate(resolveServedConnection(estate));
+										navigate(resolveServedConnection(engram));
 										setOpened(false);
 									}}
 								>
@@ -168,14 +168,14 @@ export function DatabaseServing() {
 									variant="subtle"
 									color="red"
 									disabled={pending}
-									onClick={() => stop(estate)}
+									onClick={() => stop(engram)}
 								>
 									Stop this engine
 								</Button>
 							</Group>
 						</Paper>
 					))}
-					{estates.data?.length === 0 && (
+					{engrams.data?.length === 0 && (
 						<Text c="dimmed">No local project engines are running.</Text>
 					)}
 					{preview ? (
@@ -231,7 +231,7 @@ export function DatabaseServing() {
 								<TextInput
 									flex={1}
 									label="Project directory"
-									description="An absolute project folder; leave empty for Connectome's local estate."
+									description="An absolute project folder; leave empty for Connectome's local engram."
 									value={selection.project}
 									disabled={pending}
 									onChange={(e) =>
@@ -274,7 +274,7 @@ export function DatabaseServing() {
 							<Button
 								loading={pending}
 								disabled={
-									!adapter.isServeSupported || (estates.data?.length ?? 0) >= 4
+									!adapter.isServeSupported || (engrams.data?.length ?? 0) >= 4
 								}
 								onClick={prepare}
 							>

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { AnimationItem } from "lottie-web";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, usengram } from "react";
 import { useStable } from "./stable";
 
 export interface HoverIconOptions {
@@ -16,7 +16,7 @@ export interface HoverIconOptions {
  * @param options animation options
  */
 export function useHoverIcon(options: HoverIconOptions) {
-	const [isMounted, setIsMounted] = useState(false);
+	const [isMounted, setIsMounted] = usengram(false);
 	const ref = useRef<HTMLDivElement>(null);
 	const itemRef = useRef<AnimationItem | null>(null);
 

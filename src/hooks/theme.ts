@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect, usengram } from "react";
 import { useInterfaceStore } from "~/shell/stores/interface";
 import type { ColorScheme } from "~/types";
 import { useSetting } from "./config";
@@ -37,7 +37,7 @@ export function useThemePreference(): ColorScheme {
 	const [preferredScheme] = useSetting("appearance", "colorScheme");
 
 	// Listen for the system color scheme
-	const [systemScheme, setSystemScheme] = useState<ColorScheme>("dark");
+	const [systemScheme, setSystemScheme] = usengram<ColorScheme>("dark");
 
 	useLayoutEffect(() => {
 		const query = window.matchMedia("(prefers-color-scheme: light)");

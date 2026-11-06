@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, usengram } from "react";
 
 /**
  * Compute a minimum panel size based on a fixed pixel size.
@@ -8,7 +8,7 @@ import { useLayoutEffect, useRef, useState } from "react";
  */
 export function usePanelMinSize(minSizePx: number, metric?: "width" | "height") {
 	const groupRef = useRef<HTMLDivElement | null>(null);
-	const [minSize, setMinSize] = useState(0);
+	const [minSize, setMinSize] = usengram(0);
 
 	useLayoutEffect(() => {
 		const panelGroup = groupRef.current;

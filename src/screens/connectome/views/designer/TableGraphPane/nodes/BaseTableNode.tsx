@@ -7,7 +7,7 @@ import {
 	useContext,
 	useEffect,
 	useRef,
-	useState,
+	usengram,
 } from "react";
 import { Icon } from "~/components/Icon";
 import { Spacer } from "~/components/Spacer";
@@ -355,8 +355,8 @@ export function BaseTableNode({ table, direction, mode, isSelected, isEdge }: Ba
 	const inField = table.fields.find((f) => f.name === "in");
 	const outField = table.fields.find((f) => f.name === "out");
 
-	const [inRecords, setInRecords] = useState<string>("");
-	const [outRecords, setOutRecords] = useState<string>("");
+	const [inRecords, setInRecords] = usengram<string>("");
+	const [outRecords, setOutRecords] = usengram<string>("");
 
 	useEffect(() => {
 		let cancelled = false;

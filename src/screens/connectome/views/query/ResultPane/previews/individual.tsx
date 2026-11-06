@@ -1,5 +1,5 @@
 import { Text } from "@mantine/core";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, usengram } from "react";
 import { CodeEditor } from "~/components/CodeEditor";
 import { rrflowqlRecordLinks } from "~/editor";
 import { useSetting } from "~/hooks/config";
@@ -13,7 +13,7 @@ export function IndividualPreview({ responses, selected }: PreviewProps) {
 	const { inspect } = useInspector();
 	const { success, result } = responses[selected] ?? { result: null };
 	const [editorScale] = useSetting("appearance", "editorScale");
-	const [contents, setContents] = useState("");
+	const [contents, setContents] = usengram("");
 
 	const textSize = Math.floor(15 * (editorScale / 100));
 

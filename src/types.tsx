@@ -239,14 +239,14 @@ export interface ConnectomeTemplateSettings {
 }
 
 /**
- * How the desktop serves a local RRFlow estate. RRFlow has one storage
+ * How the desktop serves a local RRFlow engram. RRFlow has one storage
  * engine, picks its own loopback port, and keeps the operator credential in a
  * file the native process reads, so there is nothing else to configure.
  */
 export interface ConnectomeServingSettings {
-	/** The project directory that holds, or will hold, the estate. Empty means the app's default estate. */
+	/** The project directory that holds, or will hold, the engram. Empty means the app's default engram. */
 	project: string;
-	/** Installation mode used when the project has no estate yet. */
+	/** Installation mode used when the project has no engram yet. */
 	mode: InstallMode;
 	/** An explicit `rrflow` executable; empty means the one on PATH. */
 	executable: string;
@@ -265,21 +265,21 @@ export interface EngineBinding {
 	revision?: string;
 }
 
-export interface EstateSelection {
+export interface engramSelection {
 	project: string;
 	mode: InstallMode;
 	executable: string;
 }
 
-export interface EstatePreview {
+export interface engramPreview {
 	project: string;
 	mode: InstallMode;
 	engine: EngineBinding;
 	installation: { installation: { plan_sha256: string }; [key: string]: unknown } | null;
 }
 
-/** The estate the native process is serving, as the webview may see it: coordinates only. */
-export interface ServedEstate {
+/** The engram the native process is serving, as the webview may see it: coordinates only. */
+export interface Servedengram {
 	project: string;
 	endpoint: string;
 	instance: string;
@@ -288,13 +288,13 @@ export interface ServedEstate {
 	engine: EngineBinding;
 }
 
-export type EstateStageName = "engine" | "install" | "serve" | "ready";
-export type EstateStageState = "running" | "done" | "skipped" | "failed" | "stopped";
+export type engramStageName = "engine" | "install" | "serve" | "ready";
+export type engramStagengram = "running" | "done" | "skipped" | "failed" | "stopped";
 
 /** One boundary of the serve sequence, reported by the native process as it is reached. */
-export interface EstateStage {
-	stage: EstateStageName;
-	state: EstateStageState;
+export interface engramStage {
+	stage: engramStageName;
+	state: engramStagengram;
 	detail: string;
 }
 

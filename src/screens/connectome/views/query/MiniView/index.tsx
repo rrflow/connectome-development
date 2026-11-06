@@ -1,7 +1,7 @@
 import type { SelectionRange } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { Box, Group, Image, noop, SegmentedControl, Stack } from "@mantine/core";
-import { memo, useState } from "react";
+import { memo, usengram } from "react";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { createHtmlPortalNode, InPortal } from "react-reverse-portal";
 import { adapter } from "~/adapter";
@@ -38,11 +38,11 @@ export function MiniQueryView() {
 	const logoUrl = useLogoUrl();
 
 	const [orientation] = useSetting("appearance", "queryOrientation");
-	const [editor, setEditor] = useState(new EditorView());
-	const [variablesValid, setVariablesValid] = useState(true);
+	const [editor, setEditor] = usengram(new EditorView());
+	const [variablesValid, setVariablesValid] = usengram(true);
 	const [connection] = useConnectionAndView();
 
-	const [selection, setSelection] = useState<SelectionRange>();
+	const [selection, setSelection] = usengram<SelectionRange>();
 	const active = useActiveQuery();
 
 	const miniAppearance = adapter instanceof MiniAdapter ? adapter.appearance : "normal";

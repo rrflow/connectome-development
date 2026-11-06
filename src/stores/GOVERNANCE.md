@@ -12,7 +12,7 @@ Governs the 2 Zustand state stores that remain here. The inherited Cloud, Deploy
 
 | Store | File | Purpose | Phase 1 Destination |
 |-------|------|---------|-------------------|
-| Database | `database.tsx` | RRFlow connection, served-estate and lens state | RRFlow spoke |
+| Database | `database.tsx` | RRFlow connection, served- and lens state | RRFlow spoke |
 | Query | `query.tsx` | Active query state | RRFlow spoke |
 
 Deleted 2026-10-18: `cloud.tsx` (inherited vendor's hosted-cloud account state), `deploy.tsx` (its instance deployment flow), `sidekick.tsx` (its assistant). Nothing replaces them; Clyffy arrives with the prompt → frontier AI → rrflowKV increment (sprint 009, Slice D).
@@ -23,11 +23,11 @@ Deleted 2026-10-18: `cloud.tsx` (inherited vendor's hosted-cloud account state),
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
-interface StoreState {
+interface Stor {
   // State shape
 }
 
-export const useStoreName = create<StoreState>()(
+export const useStoreName = create<Stor>()(
   immer((set, get) => ({
     // Initial state + actions
   }))

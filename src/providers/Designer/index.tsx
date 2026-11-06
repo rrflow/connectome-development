@@ -1,5 +1,5 @@
 import { useDisclosure } from "@mantine/hooks";
-import { createContext, type PropsWithChildren, useContext, useMemo, useState } from "react";
+import { createContext, type PropsWithChildren, useContext, useMemo, usengram } from "react";
 import { useImmer } from "use-immer";
 import { useMinimumVersion } from "~/hooks/connection";
 import { useSaveable } from "~/hooks/save";
@@ -63,7 +63,7 @@ export function DesignerProvider({ children }: PropsWithChildren) {
 	const tables = useTables();
 
 	const [isDesigning, designingHandle] = useDisclosure();
-	const [errors, setErrors] = useState<string[]>([]);
+	const [errors, setErrors] = usengram<string[]>([]);
 	const [data, setData] = useImmer<TableInfo>(DEFAULT_DEF);
 	const [useOverwrite] = useMinimumVersion(SDB_2_0_0);
 

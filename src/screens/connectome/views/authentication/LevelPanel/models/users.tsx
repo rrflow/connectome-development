@@ -13,7 +13,7 @@ import {
 } from "@mantine/core";
 
 import { useInputState } from "@mantine/hooks";
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect, usengram } from "react";
 import { Form } from "~/components/Form";
 import { Icon } from "~/components/Icon";
 import { CodeInput } from "~/components/Inputs";
@@ -41,13 +41,13 @@ export interface UserEditorModalProps {
 }
 
 export function UserEditorModal({ level, existing, opened, onClose }: UserEditorModalProps) {
-	const [activeTab, setActiveTab] = useState("general");
-	const [target, setTarget] = useState<SchemaUser | null>(null);
+	const [activeTab, setActiveTab] = usengram("general");
+	const [target, setTarget] = usengram<SchemaUser | null>(null);
 	const [username, setUsername] = useInputState("");
 	const [password, setPassword] = useInputState("");
-	const [sessionDuration, setSessionDuration] = useState("");
-	const [tokenDuration, setTokenDuration] = useState("");
-	const [roles, setRoles] = useState<string[]>([]);
+	const [sessionDuration, setSessionDuration] = usengram("");
+	const [tokenDuration, setTokenDuration] = usengram("");
+	const [roles, setRoles] = usengram<string[]>([]);
 	const [comment, setComment] = useInputState("");
 
 	useLayoutEffect(() => {

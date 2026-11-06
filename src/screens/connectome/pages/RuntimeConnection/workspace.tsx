@@ -12,7 +12,7 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, usengram } from "react";
 import type {
 	RrdPromptFlightDetailView,
 	RrdSessionClient,
@@ -135,29 +135,31 @@ export function ProjectSection({
 	const activeWorkbenchId = workbench.activeWorkbenchId ?? workbench.workbenches[0]?.id;
 	const activeWorkbench =
 		workbench.workbenches.find((candidate) => candidate.id === activeWorkbenchId) ?? null;
-	const [newWorkbenchName, setNewWorkbenchName] = useState("");
-	const [newWorkbenchDescription, setNewWorkbenchDescription] = useState("");
-	const [receiptKind, setReceiptKind] = useState<WorkbenchRunKind>("testing");
-	const [receiptIntent, setReceiptIntent] = useState("");
-	const [receiptContext, setReceiptContext] = useState("");
-	const [receiptDiagnostics, setReceiptDiagnostics] = useState("");
-	const [receiptCaptureError, setReceiptCaptureError] = useState<string | null>(null);
-	const [capturingReceipt, setCapturingReceipt] = useState(false);
-	const [flightPrompt, setFlightPrompt] = useState("");
-	const [flightContextMode, setFlightContextMode] = useState<"fresh" | "pruned">("pruned");
-	const [flightAcceptanceMarker, setFlightAcceptanceMarker] = useState("");
-	const [launchFlightError, setLaunchFlightError] = useState<string | null>(null);
-	const [launchingFlight, setLaunchingFlight] = useState(false);
-	const [workbenchSnapshot, setWorkbenchSnapshot] = useState<RrdWorkbenchSnapshotView | null>(
+	const [newWorkbenchName, setNewWorkbenchName] = usengram("");
+	const [newWorkbenchDescription, setNewWorkbenchDescription] = usengram("");
+	const [receiptKind, setReceiptKind] = usengram<WorkbenchRunKind>("testing");
+	const [receiptIntent, setReceiptIntent] = usengram("");
+	const [receiptContext, setReceiptContext] = usengram("");
+	const [receiptDiagnostics, setReceiptDiagnostics] = usengram("");
+	const [receiptCaptureError, setReceiptCaptureError] = usengram<string | null>(null);
+	const [capturingReceipt, setCapturingReceipt] = usengram(false);
+	const [flightPrompt, setFlightPrompt] = usengram("");
+	const [flightContextMode, setFlightContextMode] = usengram<"fresh" | "pruned">("pruned");
+	const [flightAcceptanceMarker, setFlightAcceptanceMarker] = usengram("");
+	const [launchFlightError, setLaunchFlightError] = usengram<string | null>(null);
+	const [launchingFlight, setLaunchingFlight] = usengram(false);
+	const [workbenchSnapshot, setWorkbenchSnapshot] = usengram<RrdWorkbenchSnapshotView | null>(
 		null,
 	);
-	const [snapshotError, setSnapshotError] = useState<string | null>(null);
-	const [loadingSnapshot, setLoadingSnapshot] = useState(false);
-	const [selectedFlightId, setSelectedFlightId] = useState<string | null>(null);
+	const [snapshotError, setSnapshotError] = usengram<string | null>(null);
+	const [loadingSnapshot, setLoadingSnapshot] = usengram(false);
+	const [selectedFlightId, setSelectedFlightId] = usengram<string | null>(null);
 	const [selectedFlightDetail, setSelectedFlightDetail] =
-		useState<RrdPromptFlightDetailView | null>(null);
-	const [loadingFlightDetail, setLoadingFlightDetail] = useState(false);
-	const [flightDetailError, setFlightDetailError] = useState<string | null>(null);
+		usengram<RrdPromptFlightDetailView | null>(null);
+	const [loadingFlightDetail, setLoadingFlightDetail] = usengram(false);
+	const [flightDetailError, setFlightDetailError] = usengram<string | null>(null);
+	const [flightFilter, setFlightFilter] = usengram<"all" | "fresh" | "pruned">("all");
+	const [flightSort, setFlightSort] = usengram<"newest" | "oldest">("newest");
 
 	const saveWorkbench = (next: ConnectionWorkbenchState) => {
 		if (!connection) {
@@ -448,6 +450,22 @@ export function ProjectSection({
 			.sort((left, right) => right.recordedAtUnixMs - left.recordedAtUnixMs);
 	}, [activeWorkbench, workbench.receipts]);
 
+	const recentFlights = useMemo(() => {
+		if (!workbenchSnapshot) {
+			return [];
+		}
+
+		const filtered = workbenchSnapshot.recent_flights.filter((flight) => {
+			return flightFilter === "all" || flight.context_mode === flightFilter;
+		});
+
+		return [...filtered].sort((left, right) => {
+			const leftRank = left.known_at_cursor ?? left.flight_cursor;
+			const rightRank = right.known_at_cursor ?? right.flight_cursor;
+			return flightSort === "newest" ? rightRank - leftRank : leftRank - rightRank;
+		});
+	}, [flightFilter, flightSort, workbenchSnapshot]);
+
 	if (section === "overview")
 		return (
 			<Stack>
@@ -459,7 +477,7 @@ export function ProjectSection({
 					<Text mt="sm">
 						Inspect records in rrflowDB, follow their relationships through rrflowQL,
 						compare vectors, and inspect rrflowKV storage. These are views of one
-						project estate, not independent copies of its knowledge.
+						project engram, not independent copies of its knowledge.
 					</Text>
 					<Text mt="sm">
 						Running another project in parallel does not share its records, credentials,
@@ -519,7 +537,7 @@ export function ProjectSection({
 							A knowledge path is a project-scoped connection to an external database
 							or reasoning system. Qdrant, Pinecone, HydraDB and other sources must
 							preserve provenance and remote access scope when they contribute to this
-							estate.
+							engram.
 						</Text>
 						<Requirements items={prerequisites.paths} />
 						<Alert title="No source connected">
@@ -682,8 +700,39 @@ export function ProjectSection({
 									<Text size="sm">
 										Recent flights in snapshot: {workbenchSnapshot.flight_count}
 									</Text>
-									{workbenchSnapshot.recent_flights.length > 0 ? (
-										workbenchSnapshot.recent_flights.map((flight) => (
+									<Group>
+										<Select
+											label="Filter"
+											value={flightFilter}
+											data={[
+												{ value: "all", label: "All" },
+												{ value: "fresh", label: "Fresh" },
+												{ value: "pruned", label: "Pruned" },
+											]}
+											onChange={(next) =>
+												setFlightFilter(
+													(next as "all" | "fresh" | "pruned" | null) ??
+														"all",
+												)
+											}
+										/>
+										<Select
+											label="Sort"
+											value={flightSort}
+											data={[
+												{ value: "newest", label: "Newest first" },
+												{ value: "oldest", label: "Oldest first" },
+											]}
+											onChange={(next) =>
+												setFlightSort(
+													(next as "newest" | "oldest" | null) ??
+														"newest",
+												)
+											}
+										/>
+									</Group>
+									{recentFlights.length > 0 ? (
+										recentFlights.map((flight) => (
 											<Paper
 												key={flight.flight_id}
 												withBorder
@@ -726,7 +775,7 @@ export function ProjectSection({
 											size="sm"
 											c="slate"
 										>
-											No governed flights recorded yet.
+											No governed flights match the selected filter.
 										</Text>
 									)}
 									{loadingFlightDetail && (

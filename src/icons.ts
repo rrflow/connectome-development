@@ -222,7 +222,7 @@ export const iconXml = mdiXml;
 export const iconBraces = mdiCodeBraces;
 export const iconGraphql = mdiGraphql;
 
-// Runtime, estate and security
+// Runtime, engram and security
 export const iconAPI = mdiApi;
 export const iconAccount = mdiAccount;
 export const iconAccountPlus = mdiAccountPlus;

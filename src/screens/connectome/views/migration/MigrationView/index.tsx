@@ -11,7 +11,7 @@ import {
 	Title,
 } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, usengram } from "react";
 import { Icon } from "~/components/Icon";
 import { LearnMore } from "~/components/LearnMore";
 import { Spacer } from "~/components/Spacer";
@@ -31,13 +31,13 @@ export function MigrationView() {
 	const connectionId = useConnection((c) => c?.id);
 
 	// State for opened resource types
-	const [openedTypes, setOpenedTypes] = useState<string[]>([]);
+	const [openedTypes, setOpenedTypes] = usengram<string[]>([]);
 
 	// State for resolved diagnostic entry IDs
-	const [resolvedIds, setResolvedIds] = useState<Set<string>>(new Set());
+	const [resolvedIds, setResolvedIds] = usengram<Set<string>>(new Set());
 
 	// State for selected resource (detail view)
-	const [selectedResource, setSelectedResource] = useState<{
+	const [selectedResource, setSelectedResource] = usengram<{
 		type: MigrationResourceType;
 		resource: DiagnosticResource;
 	} | null>(null);

@@ -10,7 +10,7 @@ import {
 	TextInput,
 } from "@mantine/core";
 import clsx from "clsx";
-import { useState } from "react";
+import { usengram } from "react";
 import { Entry, type EntryProps } from "~/components/Entry";
 import { Icon } from "~/components/Icon";
 import { useBoolean } from "~/hooks/boolean";
@@ -27,8 +27,8 @@ import classes from "../style.module.scss";
 export function ConnectionsModal() {
 	const [isOpen, openedHandle] = useBoolean();
 
-	const [search, setSearch] = useState("");
-	const [label, setLabel] = useState("");
+	const [search, setSearch] = usengram("");
+	const [label, setLabel] = usengram("");
 	const [connection] = useConnectionAndView();
 	const navigateConnection = useConnectionNavigator();
 	const labels = useConnectionLabels();

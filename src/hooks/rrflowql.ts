@@ -1,5 +1,5 @@
 import { useDebouncedValue } from "@mantine/hooks";
-import { useEffect, useState } from "react";
+import { useEffect, usengram } from "react";
 import { getRRFlowQL } from "~/screens/connectome/connection/connection";
 import type { ResultFormat } from "~/types";
 import { useActiveQuery } from "./connection";
@@ -29,9 +29,9 @@ export function useResultFormatter(): [Formatter, ResultFormat] {
  */
 export function useValueValidator(value: string, objectRoot?: boolean): [boolean, any, boolean] {
 	const [bodyCache] = useDebouncedValue(value, 250);
-	const [isValid, setIsValid] = useState(false);
-	const [parsedValue, setParsedValue] = useState<any>({});
-	const [isLoading, setIsLoading] = useState(false);
+	const [isValid, setIsValid] = usengram(false);
+	const [parsedValue, setParsedValue] = usengram<any>({});
+	const [isLoading, setIsLoading] = usengram(false);
 
 	useEffect(() => {
 		let cancelled = false;

@@ -11,7 +11,7 @@ import {
 } from "@mantine/core";
 
 import { useDisclosure } from "@mantine/hooks";
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect, usengram } from "react";
 import { Icon } from "~/components/Icon";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";
@@ -27,7 +27,7 @@ import { useInterfaceStore } from "~/shell/stores/interface";
 export function AccessSignupModal() {
 	const { closeAccessSignup } = useInterfaceStore.getState();
 
-	const [error, setError] = useState("");
+	const [error, setError] = usengram("");
 	const [loading, loadingHandle] = useDisclosure();
 	const opened = useInterfaceStore((s) => s.showAccessSignup);
 

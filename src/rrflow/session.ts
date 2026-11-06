@@ -32,9 +32,9 @@ export interface RrdCapabilityView {
 	limitation: string | null;
 }
 
-export interface RrdInstalledEstateView {
+export interface RrdInstalledengramView {
 	project_id: string;
-	estate_id: string;
+	engram_id: string;
 	instance_id: string;
 }
 
@@ -45,7 +45,7 @@ export interface RrdServiceView {
 	deployment_form: string;
 	storage_profile: string;
 	endpoint_presentation: string;
-	installed_estate: RrdInstalledEstateView | null;
+	installed_engram: RrdInstalledengramView | null;
 	configuration_revision: number;
 	configuration_sha256: string;
 	capabilities: RrdCapabilityView[];
@@ -165,8 +165,8 @@ export interface RrdNodeView {
 
 /**
  * A group of records linked more densely to each other than to the rest of
- * the estate. Connectome computes clusters from the relations to color the
- * graph; they are not estate data.
+ * the engram. Connectome computes clusters from the relations to color the
+ * graph; they are not engram data.
  */
 export interface RrdClusterView {
 	id: number;

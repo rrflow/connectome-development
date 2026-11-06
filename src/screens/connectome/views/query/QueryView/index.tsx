@@ -2,7 +2,7 @@ import type { SelectionRange } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { Box, Button, Group, Modal, Stack, TagsInput, Text, TextInput } from "@mantine/core";
 import { useDisclosure, useInputState } from "@mantine/hooks";
-import { memo, useState } from "react";
+import { memo, usengram } from "react";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { Form } from "~/components/Form";
 import { Icon } from "~/components/Icon";
@@ -41,20 +41,20 @@ export function QueryView() {
 
 	const [connection] = useConnectionAndView();
 	const [orientation] = useSetting("appearance", "queryOrientation");
-	const [editor, setEditor] = useState(new EditorView());
-	const [variablesValid, setVariablesValid] = useState(true);
+	const [editor, setEditor] = usengram(new EditorView());
+	const [variablesValid, setVariablesValid] = usengram(true);
 
 	const [showHistory, showHistoryHandle] = useDisclosure();
 	const [showSaved, showSavedHandle] = useDisclosure();
 
 	const [allowSelectionExecution] = useSetting("behavior", "querySelectionExecution");
-	const [selection, setSelection] = useState<SelectionRange>();
+	const [selection, setSelection] = usengram<SelectionRange>();
 
 	const tags = useSavedQueryTags();
 	const active = useActiveQuery();
 
 	const [isSaving, isSavingHandle] = useDisclosure();
-	const [editingId, setEditingId] = useState("");
+	const [editingId, setEditingId] = usengram("");
 	const [saveName, setSaveName] = useInputState("");
 	const [saveContent, setSaveContent] = useInputState("");
 	const [saveTags, setSaveTags] = useInputState<string[]>([]);

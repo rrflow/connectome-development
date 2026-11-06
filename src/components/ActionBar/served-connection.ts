@@ -1,27 +1,27 @@
 import { createBaseConnection } from "~/shared/util/defaults";
 import { useConfigStore } from "~/shell/stores/config";
-import type { ServedEstate } from "~/types";
+import type { Servedengram } from "~/types";
 
 /**
- * The runtime connection that reaches the served estate. One connection per
- * estate project: it is found by the operator credential the installation
+ * The runtime connection that reaches the served engram. One connection per
+ * engram project: it is found by the operator credential the installation
  * wrote, updated with the address the engine announced this time (the kernel
  * chooses the port), and created on first serve.
  */
-export function resolveServedConnection(estate: ServedEstate) {
+export function resolveServedConnection(engram: Servedengram) {
 	const { settings, connections, addConnection, updateConnection } = useConfigStore.getState();
 
-	const hostname = estate.endpoint.replace(/^https?:\/\//, "");
+	const hostname = engram.endpoint.replace(/^https?:\/\//, "");
 	const existing = connections.find(
 		(candidate) =>
 			candidate.target === "runtime" &&
-			candidate.runtimeCredential === estate.credential_path,
+			candidate.runtimeCredential === engram.credential_path,
 	);
 
 	if (existing) {
 		updateConnection({
 			id: existing.id,
-			runtimeInstance: estate.instance,
+			runtimeInstance: engram.instance,
 			authentication: {
 				...existing.authentication,
 				protocol: "http",
@@ -37,10 +37,10 @@ export function resolveServedConnection(estate: ServedEstate) {
 	addConnection({
 		...base,
 		name:
-			estate.project.replace(/\\/g, "/").split("/").filter(Boolean).at(-1) ?? "Local project",
+			engram.project.replace(/\\/g, "/").split("/").filter(Boolean).at(-1) ?? "Local project",
 		target: "runtime",
-		runtimeInstance: estate.instance,
-		runtimeCredential: estate.credential_path,
+		runtimeInstance: engram.instance,
+		runtimeCredential: engram.credential_path,
 		authentication: {
 			...base.authentication,
 			protocol: "http",

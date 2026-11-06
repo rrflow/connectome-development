@@ -11,7 +11,7 @@ capability catalogue, release claim or replacement for RRFlow's H-06 roadmap.
 | [Microsoft: human-AI interaction guidelines](https://www.microsoft.com/en-us/research/articles/guidelines-for-human-ai-interaction-eighteen-best-practices-for-human-centered-ai-design/) | CHI 2019 research with expert validation | State capability limits, support correction and keep activation explicit. A discovery response cannot count as training progress or authorization. |
 | [Phoenix tracing](https://arize.com/docs/phoenix/get-started/get-started-tracing) | Current product documentation | Organize execution evidence by project, session and run, then drill into tool/retrieval/model spans. Trace collection, evaluation and model improvement are distinct stages. |
 | [Raindrop Signals](https://docs.raindrop.ai/signals/) | Current vendor-described workflow, not independent proof of accuracy | Let users define a behavior, inspect matching/nonmatching examples, correct labels and compare experiments. Retain links from summaries to actual events. Do not copy its UI or claim its classifiers exist in RRFlow. |
-| [Qdrant multitenancy](https://qdrant.tech/documentation/manage-data/multitenancy/) and [Pinecone multitenancy](https://docs.pinecone.io/guides/index-data/implement-multitenancy) | Current database product contracts | Knowledge paths need an explicit source partition and credential scope. RRFlow keeps its own one-project/one-estate boundary; a remote namespace is not an RRFlow project identity or permission grant. |
+| [Qdrant multitenancy](https://qdrant.tech/documentation/manage-data/multitenancy/) and [Pinecone multitenancy](https://docs.pinecone.io/guides/index-data/implement-multitenancy) | Current database product contracts | Knowledge paths need an explicit source partition and credential scope. RRFlow keeps its own one-project/one-engram boundary; a remote namespace is not an RRFlow project identity or permission grant. |
 | [Codex authentication](https://learn.chatgpt.com/docs/auth) and [Claude subscription/API distinction](https://support.claude.com/en/articles/9876003-i-subscribe-to-a-paid-claude-ai-plan-why-do-i-have-to-pay-separately-for-api-usage-on-console) | Provider-owned access/billing rules, subject to change | Distinguish supported subscription-client access, metered API credentials and local inference. Never infer API credit from a subscription or silently switch billing sources. |
 
 These inputs support design choices, not a claim that the newest technique is
@@ -21,11 +21,11 @@ same hardware/resources, named versions, raw failures and repeatable results.
 
 ## One project workspace
 
-Use the verified project/estate/instance identity, with a client display label.
+Use the verified project/engram/instance identity, with a client display label.
 Keep navigation inside that project: Overview; Knowledge (models/rrflowDB,
 relations, vectors, rrflowKV storage, knowledge paths); Activity and learning;
 Services. A selected record can move between graph and vector lenses without
-changing estate. URLs must restore the same project and section on reload.
+changing engram. URLs must restore the same project and section on reload.
 Project switching resets record focus and query caches are session-scoped.
 
 The overview explains one database: rrflowDB owns the project data, graph and

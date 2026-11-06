@@ -9,7 +9,7 @@ import {
 	Text,
 	TextInput,
 } from "@mantine/core";
-import { useState } from "react";
+import { usengram } from "react";
 import { ActionBar } from "~/components/ActionBar";
 import { ActionButton } from "~/components/ActionButton";
 import { Form } from "~/components/Form";
@@ -63,8 +63,8 @@ export function ConnectomeToolbar() {
 	const isSchemaEmpty = noTables && noFunctions && noParams && noUsers;
 
 	const [datasetModalOpen, datasetModalOpenHandle] = useBoolean();
-	const [editingTab, setEditingTab] = useState<string | null>(null);
-	const [tabName, setTabName] = useState("");
+	const [editingTab, setEditingTab] = usengram<string | null>(null);
+	const [tabName, setTabName] = usengram("");
 
 	const closeEditingTab = useStable(() => {
 		setEditingTab(null);

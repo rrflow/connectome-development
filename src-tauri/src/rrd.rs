@@ -9,7 +9,7 @@ mod client;
 mod cluster;
 pub mod engine;
 mod error;
-pub mod estate;
+pub mod engram;
 mod transport;
 mod view;
 

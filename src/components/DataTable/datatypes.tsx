@@ -1,7 +1,7 @@
 import { Group, HoverCard, Stack, Text } from "@mantine/core";
 import dayjs from "dayjs";
 import { convert } from "geo-coordinates-parser";
-import { useEffect, useState } from "react";
+import { useEffect, usengram } from "react";
 import { Icon } from "~/components/Icon";
 import { iconCheck, iconClock, iconClose, iconExplorer, iconFile, iconXml } from "~/icons";
 import { getRRFlowQL } from "~/screens/connectome/connection/connection";
@@ -207,7 +207,7 @@ function ArrayCell(props: { value: any[] }) {
 }
 
 function ObjectCell(props: { value: any }) {
-	const [formatted, setFormatted] = useState("");
+	const [formatted, setFormatted] = usengram("");
 
 	useEffect(() => {
 		let cancelled = false;

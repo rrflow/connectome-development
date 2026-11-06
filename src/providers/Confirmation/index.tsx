@@ -6,7 +6,7 @@ import {
 	type ReactNode,
 	useContext,
 	useRef,
-	useState,
+	usengram,
 } from "react";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";
@@ -59,10 +59,10 @@ const DEFAULT_DISMISS = "Close";
 const DEFAULT_CONFIRM = "Continue";
 
 export function ConfirmationProvider({ children }: PropsWithChildren) {
-	const [isConfirming, setIsConfirming] = useState(false);
-	const [options, setOptions] = useState<ConfirmOptions<any>>();
+	const [isConfirming, setIsConfirming] = usengram(false);
+	const [options, setOptions] = usengram<ConfirmOptions<any>>();
 	const [confirm, setConfirm] = useInputState("");
-	const [value, setValue] = useState<any>();
+	const [value, setValue] = usengram<any>();
 
 	const isShifting = useActiveKeys("Shift");
 	const confirmationRef = useRef<HTMLButtonElement>(null);

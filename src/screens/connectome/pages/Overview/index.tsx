@@ -16,7 +16,7 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { MouseEvent, useState } from "react";
+import { MouseEvent, usengram } from "react";
 import { Link } from "wouter";
 import { adapter } from "~/adapter";
 import { ActionButton } from "~/components/ActionButton";
@@ -46,9 +46,9 @@ export function OverviewPage() {
 	const navigateConnection = useConnectionNavigator();
 
 	const [search, setSearch] = useInputState("");
-	const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
-	const [labelMode, setLabelMode] = useState<"any" | "all">("any");
-	const [labelInclude, setLabelInclude] = useState(true);
+	const [selectedLabels, setSelectedLabels] = usengram<string[]>([]);
+	const [labelMode, setLabelMode] = usengram<"any" | "all">("any");
+	const [labelInclude, setLabelInclude] = usengram(true);
 
 	const toggleLabel = (e: MouseEvent, labelToToggle: string) => {
 		if (e.ctrlKey || e.metaKey) {

@@ -1,6 +1,6 @@
 import { Button, Group, Modal, PasswordInput, Table, Text, TextInput } from "@mantine/core";
 import { parser } from "@surrealdb/lezer";
-import { useState } from "react";
+import { usengram } from "react";
 import { useImmer } from "use-immer";
 import { adapter } from "~/adapter";
 import { Form } from "~/components/Form";
@@ -29,9 +29,9 @@ export function RegisterUserModal() {
 	]);
 
 	const [isOpen, openedHandle] = useBoolean();
-	const [access, setAccess] = useState<SchemaAccess | null>(null);
+	const [access, setAccess] = usengram<SchemaAccess | null>(null);
 	const [fields, setFields] = useImmer<AccessField[]>([]);
-	const [isLoading, setLoading] = useState(false);
+	const [isLoading, setLoading] = usengram(false);
 
 	const registerUser = useStable(async () => {
 		if (!access || !authentication) return;

@@ -1,6 +1,6 @@
 import { type BoxProps, type ElementProps, Group } from "@mantine/core";
 import type { MouseEvent } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, usengram } from "react";
 import { Icon } from "~/components/Icon";
 import { useStable } from "~/hooks/stable";
 import { iconArrowUpRight } from "~/icons";
@@ -16,7 +16,7 @@ export interface RecordLinkProps extends BoxProps, ElementProps<"div"> {
 
 export function RecordLink({ value, withOpen, ...rest }: RecordLinkProps) {
 	const { inspect } = useInspector();
-	const [recordText, setRecordText] = useState("");
+	const [recordText, setRecordText] = usengram("");
 
 	useEffect(() => {
 		let cancelled = false;

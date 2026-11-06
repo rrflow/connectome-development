@@ -1,6 +1,6 @@
 import fastDeepEqual from "fast-deep-equal";
 import { klona } from "klona";
-import { useMemo, useState } from "react";
+import { useMemo, usengram } from "react";
 import { useLater } from "./later";
 import { useStable } from "./stable";
 
@@ -79,9 +79,9 @@ export interface SaveableHandle {
 export function useSaveable<T extends Record<string, any>>(
 	options: SaveableOptions<T>,
 ): SaveableHandle {
-	const [isSaving, setIsSaving] = useState(false);
-	const [skipTrack, setSkipTrack] = useState(false);
-	const [original, setOriginal] = useState(klona(options.track));
+	const [isSaving, setIsSaving] = usengram(false);
+	const [skipTrack, setSkipTrack] = usengram(false);
+	const [original, setOriginal] = usengram(klona(options.track));
 
 	const isEqual = useMemo(
 		() => fastDeepEqual(original, options.track),

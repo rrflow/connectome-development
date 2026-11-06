@@ -13,7 +13,7 @@ import {
 	Text,
 } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { usengram } from "react";
 import { Icon } from "~/components/Icon";
 import { Section } from "~/components/Section";
 import { iconChevronDown, iconChevronUp, iconErrorCircle, iconRefresh } from "~/icons";
@@ -36,8 +36,8 @@ export function StorageTab({ client, sessionKey }: RuntimeLensProps) {
 		refetchInterval: STORAGE_REFRESH_MS,
 		...busyRetry,
 	});
-	const [countersOpen, setCountersOpen] = useState(false);
-	const [historyOpen, setHistoryOpen] = useState(false);
+	const [countersOpen, setCountersOpen] = usengram(false);
+	const [historyOpen, setHistoryOpen] = usengram(false);
 
 	if (storage.isPending) {
 		return (
@@ -75,7 +75,7 @@ export function StorageTab({ client, sessionKey }: RuntimeLensProps) {
 						)}
 					</>
 				}
-				description={`How the engine keeps this estate safe on disk and quick to read. Live: refreshes every ${STORAGE_REFRESH_MS / 1000} s; last read ${formatTime(view.physical.observed_at_unix_ms)}.`}
+				description={`How the engine keeps this engram safe on disk and quick to read. Live: refreshes every ${STORAGE_REFRESH_MS / 1000} s; last read ${formatTime(view.physical.observed_at_unix_ms)}.`}
 				rightSection={
 					<Button
 						variant="light"
@@ -114,7 +114,7 @@ export function StorageTab({ client, sessionKey }: RuntimeLensProps) {
 				title="History, retention, and indexes"
 				description={
 					<>
-						Where the estate's history stands: the <Term id="cursor">cursor</Term> of
+						Where the engram's history stands: the <Term id="cursor">cursor</Term> of
 						the latest change, what is retained, and the derived indexes the engine
 						serves.
 					</>

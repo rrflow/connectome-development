@@ -22,12 +22,12 @@ import { useInterfaceStore } from "~/shell/stores/interface";
 import { useDatabaseStore } from "~/stores/database";
 import type {
 	ConnectomeConfig,
-	EstatePreview,
-	EstateSelection,
-	EstateStage,
+	engramPreview,
+	engramSelection,
+	engramStage,
 	Platform,
 	QueryTab,
-	ServedEstate,
+	Servedengram,
 	ViewPage,
 } from "~/types";
 import { adapter } from ".";
@@ -167,29 +167,29 @@ export class DesktopAdapter implements ConnectomeAdapter {
 		});
 	}
 
-	public async previewEstate(selection?: EstateSelection) {
+	public async previewengram(selection?: engramSelection) {
 		const { project, mode, executable } =
 			selection ?? useConfigStore.getState().settings.serving;
-		return invoke<EstatePreview>("rrd_estate_preview", {
+		return invoke<engramPreview>("rrd_engram_preview", {
 			request: { project, mode, executable },
 		});
 	}
 
-	public async serveEstate(acceptedPlanSha256?: string, selection?: EstateSelection) {
+	public async serveengram(acceptedPlanSha256?: string, selection?: engramSelection) {
 		const { project, mode, executable } =
 			selection ?? useConfigStore.getState().settings.serving;
 
-		return invoke<ServedEstate>("rrd_estate_serve", {
+		return invoke<Servedengram>("rrd_engram_serve", {
 			request: { project, mode, executable, accepted_plan_sha256: acceptedPlanSha256 },
 		});
 	}
 
-	public async servedEstates() {
-		return invoke<ServedEstate[]>("rrd_estate_status");
+	public async servedengrams() {
+		return invoke<Servedengram[]>("rrd_engram_status");
 	}
 
-	public async stopEstate(project: string) {
-		return invoke<boolean>("rrd_estate_stop", { project });
+	public async stopengram(project: string) {
+		return invoke<boolean>("rrd_engram_stop", { project });
 	}
 
 	public async openUrl(url: string) {
@@ -340,7 +340,7 @@ export class DesktopAdapter implements ConnectomeAdapter {
 		// Each boundary of the serve sequence, in the order the native process
 		// reaches it: install (plan, apply), serve (announced), ready
 		// (authenticated). The serving panel explains each one.
-		listen<EstateStage>("estate:stage", (event) => {
+		listen<engramStage>("engram:stage", (event) => {
 			const stage = event.payload;
 			const historySize = getSetting("serving", "historySize");
 
@@ -353,7 +353,7 @@ export class DesktopAdapter implements ConnectomeAdapter {
 		});
 
 		// The engine's own diagnostic output.
-		listen<string>("estate:output", (event) => {
+		listen<string>("engram:output", (event) => {
 			if (throttleLevel > 50) {
 				return;
 			}

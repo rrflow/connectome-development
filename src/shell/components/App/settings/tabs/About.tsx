@@ -1,6 +1,6 @@
 import { Box, Button, Stack, Text } from "@mantine/core";
 import { format } from "date-fns";
-import { useMemo, useState } from "react";
+import { useMemo, usengram } from "react";
 import { adapter, isDesktop } from "~/adapter";
 import type { DesktopAdapter } from "~/adapter/desktop";
 import { Icon } from "~/components/Icon";
@@ -15,7 +15,7 @@ import classes from "../style.module.scss";
 export function AboutTab() {
 	const currDate = new Date();
 	const [copyDebug, clipboard] = useVersionCopy();
-	const [isChecking, setChecking] = useState(false);
+	const [isChecking, setChecking] = usengram(false);
 
 	const versionText = useMemo(() => {
 		let builder = `${import.meta.env.VERSION} ${import.meta.env.CHANNEL}`;

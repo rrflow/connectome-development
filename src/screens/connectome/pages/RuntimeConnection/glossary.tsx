@@ -10,7 +10,7 @@ import type { ReactNode } from "react";
 export type GlossaryTerm =
 	| "rrd"
 	| "session"
-	| "estate"
+	| "engram"
 	| "record"
 	| "relation"
 	| "kind"
@@ -43,15 +43,15 @@ export const GLOSSARY: Record<GlossaryTerm, GlossaryEntry> = {
 	rrd: {
 		term: "RRD",
 		meaning:
-			"The RRFlow daemon: the server process that hosts the estate and answers Connectome's requests.",
+			"The RRFlow daemon: the server process that hosts the engram and answers Connectome's requests.",
 	},
 	session: {
 		term: "Session",
 		meaning:
-			"Connectome's signed-in connection to the estate, opened with the operator credential the estate created when it was installed. Connectome renews it on its own, so you sign in only once.",
+			"Connectome's signed-in connection to the engram, opened with the operator credential the engram created when it was installed. Connectome renews it on its own, so you sign in only once.",
 	},
-	estate: {
-		term: "Estate (rrflowDB)",
+	engram: {
+		term: "engram (rrflowDB)",
 		meaning:
 			"One project's database in RRFlow. Its records, relations, vectors, and evidence live together and change together in one transaction.",
 	},
@@ -72,17 +72,17 @@ export const GLOSSARY: Record<GlossaryTerm, GlossaryEntry> = {
 	schema: {
 		term: "Schema registry",
 		meaning:
-			"The estate's list of record, relation, and vector kinds, and whether each one is strict or schemaless.",
+			"The engram's list of record, relation, and vector kinds, and whether each one is strict or schemaless.",
 	},
 	cluster: {
 		term: "Cluster",
 		meaning:
-			"A group of records that link to each other more than to the rest. Connectome works clusters out from the relations to color the graph; the estate does not store them.",
+			"A group of records that link to each other more than to the rest. Connectome works clusters out from the relations to color the graph; the engram does not store them.",
 	},
 	cursor: {
 		term: "Cursor",
 		meaning:
-			"A position in the estate's history. Every committed change moves it forward, and every read reports the cursor it saw.",
+			"A position in the engram's history. Every committed change moves it forward, and every read reports the cursor it saw.",
 	},
 	query: {
 		term: "RRFlowQL",
@@ -164,11 +164,11 @@ export const GLOSSARY: Record<GlossaryTerm, GlossaryEntry> = {
 
 const SECTIONS: { title: string; terms: GlossaryTerm[] }[] = [
 	{
-		title: "The estate",
+		title: "The engram",
 		terms: [
 			"rrd",
 			"session",
-			"estate",
+			"engram",
 			"record",
 			"relation",
 			"kind",

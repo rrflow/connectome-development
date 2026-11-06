@@ -1,6 +1,6 @@
 import { Center, Drawer, Group, Paper, SegmentedControl, Tabs, Text } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { useEffect, useState } from "react";
+import { useEffect, usengram } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { DrawerResizer } from "~/components/DrawerResizer";
 import { Icon } from "~/components/Icon";
@@ -43,12 +43,12 @@ export interface InspectorDrawerProps {
 }
 
 export function InspectorDrawer({ opened, history, onClose, onRefresh }: InspectorDrawerProps) {
-	const [currentRecord, setCurrentRecord] = useState<ActiveRecord>(DEFAULT_RECORD);
+	const [currentRecord, setCurrentRecord] = usengram<ActiveRecord>(DEFAULT_RECORD);
 	const [recordId, setRecordId] = useInputState("");
-	const [recordBody, setRecordBody] = useState("");
-	const [error, setError] = useState("");
+	const [recordBody, setRecordBody] = usengram("");
+	const [error, setError] = usengram("");
 	const [isValid, body] = useValueValidator(recordBody);
-	const [tab, setTab] = useState("content");
+	const [tab, setTab] = usengram("content");
 
 	const isLight = useIsLight();
 	const inputColor = currentRecord.exists ? undefined : "var(--mantine-color-red-6)";
@@ -151,7 +151,7 @@ export function InspectorDrawer({ opened, history, onClose, onRefresh }: Inspect
 		}
 	}, [history.current]);
 
-	const [width, setWidth] = useState(650);
+	const [width, setWidth] = usengram(650);
 
 	return (
 		<Drawer

@@ -14,7 +14,7 @@ use crate::window;
 const MAX_FILE_SIZE: u64 = 5 * 1024 * 1024;
 
 /// The state holding resources requested for opening
-pub struct OpenResourceState(pub Mutex<Vec<url::Url>>);
+pub struct OpenResourc(pub Mutex<Vec<url::Url>>);
 
 pub fn store_resources<T: IntoIterator<Item = String>>(app: &AppHandle, args: T) {
     let mut urls = Vec::new();
@@ -30,7 +30,7 @@ pub fn store_resources<T: IntoIterator<Item = String>>(app: &AppHandle, args: T)
     }
 
     if !urls.is_empty() {
-        *app.state::<OpenResourceState>().0.lock().unwrap() = urls;
+        *app.state::<OpenResourc>().0.lock().unwrap() = urls;
     }
 }
 
@@ -55,7 +55,7 @@ pub struct LinkResource {
 }
 
 #[tauri::command]
-pub fn get_opened_resources(state: State<OpenResourceState>) -> Vec<OpenedResource> {
+pub fn get_opened_resources(state: State<OpenResourc>) -> Vec<OpenedResource> {
     {
         info!("Fetching requested resources {:?}", state.0.lock().unwrap());
     }
@@ -92,7 +92,7 @@ pub fn get_opened_resources(state: State<OpenResourceState>) -> Vec<OpenedResour
 }
 
 #[tauri::command]
-pub fn clear_opened_resources(state: State<OpenResourceState>) {
+pub fn clear_opened_resources(state: State<OpenResourc>) {
     *state.0.lock().unwrap() = Vec::new();
 }
 
@@ -155,7 +155,7 @@ pub async fn open_query_file(app: AppHandle, window: Window) {
 
     info!("My paths: {:?}", urls);
 
-    *app.state::<OpenResourceState>().0.lock().unwrap() = urls;
+    *app.state::<OpenResourc>().0.lock().unwrap() = urls;
     window::emit_last(&app, "open-resource", ());
 }
 

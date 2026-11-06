@@ -1,7 +1,7 @@
 import type { EditorView } from "@codemirror/view";
 import { ActionIcon, Button, Center, Group, Paper, Stack, Text } from "@mantine/core";
 import clsx from "clsx";
-import { memo, useMemo, useState } from "react";
+import { memo, useMemo, usengram } from "react";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { adapter } from "~/adapter";
 import { Icon } from "~/components/Icon";
@@ -33,10 +33,10 @@ export function GraphqlView() {
 	const isActive = useDatabaseStore((s) => s.isGraphqlQueryActive);
 
 	const [connection] = useConnectionAndView();
-	const [isEnabled, setEnabled] = useState(false);
-	const [variablesValid, setVariablesValid] = useState(true);
-	const [queryValid, setQueryValid] = useState(true);
-	const [editor, setEditor] = useState<EditorView | null>(null);
+	const [isEnabled, setEnabled] = usengram(false);
+	const [variablesValid, setVariablesValid] = usengram(true);
+	const [queryValid, setQueryValid] = usengram(true);
+	const [editor, setEditor] = usengram<EditorView | null>(null);
 
 	const isConnected = useIsConnected();
 	const [schema, introspectSchema] = useGraphqlIntrospection();

@@ -13,7 +13,7 @@ import {
 import Graph from "graphology";
 import { circular } from "graphology-layout";
 import forceAtlas2, { inferSettings } from "graphology-layout-forceatlas2";
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, usengram } from "react";
 import Sigma from "sigma";
 import type { EdgeDisplayData, NodeDisplayData } from "sigma/types";
 import { ActionButton } from "~/components/ActionButton";
@@ -38,7 +38,7 @@ const LAYOUT_ITERATIONS = 300;
 const BARNES_HUT_THRESHOLD = 500;
 /**
  * LinLog attraction with strong gravity keeps clusters visibly apart and
- * unlinked records near the middle. On RRFlow's own 271-document estate it
+ * unlinked records near the middle. On RRFlow's own 271-document engram it
  * removed every overlapping node (300 before) and doubled the median gap.
  */
 const LAYOUT_SETTINGS = { linLogMode: true, strongGravityMode: true, gravity: 1 } as const;
@@ -208,10 +208,10 @@ export function GraphCanvas({
 	const theme = useMantineTheme();
 	const isLight = useIsLight();
 	const handleSelect = useStable(onSelect);
-	const [hover, setHover] = useState<{ id: string; left: number; top: number } | null>(null);
-	const [activeGroup, setActiveGroup] = useState<string | null>(null);
-	const [expanded, setExpanded] = useState(false);
-	const [legendOpen, setLegendOpen] = useState(true);
+	const [hover, setHover] = usengram<{ id: string; left: number; top: number } | null>(null);
+	const [activeGroup, setActiveGroup] = usengram<string | null>(null);
+	const [expanded, setExpanded] = usengram(false);
+	const [legendOpen, setLegendOpen] = usengram(true);
 
 	const colors = useMemo(
 		() =>

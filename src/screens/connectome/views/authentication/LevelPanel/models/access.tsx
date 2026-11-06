@@ -13,7 +13,7 @@ import {
 } from "@mantine/core";
 
 import { useInputState } from "@mantine/hooks";
-import { useLayoutEffect, useMemo, useState } from "react";
+import { useLayoutEffect, useMemo, usengram } from "react";
 import { Form } from "~/components/Form";
 import { Icon } from "~/components/Icon";
 import { CodeInput } from "~/components/Inputs";
@@ -54,22 +54,22 @@ export interface AccessEditorModalProps {
 }
 
 export function AccessEditorModal({ level, existing, opened, onClose }: AccessEditorModalProps) {
-	const [target, setTarget] = useState<SchemaAccess | null>(null);
+	const [target, setTarget] = usengram<SchemaAccess | null>(null);
 	const [name, setName] = useInputState("");
-	const [type, setType] = useState<AccessType>("RECORD");
-	const [authClause, setAuthClause] = useState("");
-	const [signupClause, setSignupClause] = useState("");
-	const [signinClause, setSigninClause] = useState("");
+	const [type, setType] = usengram<AccessType>("RECORD");
+	const [authClause, setAuthClause] = usengram("");
+	const [signupClause, setSignupClause] = usengram("");
+	const [signinClause, setSigninClause] = usengram("");
 	const [sessionDuration, setSessionDuration] = useInputState("");
 	const [tokenDuration, setTokenDuration] = useInputState("");
 	const [jwtIssuerKey, setJwtIssuerKey] = useInputState("");
 	const [jwtVerifyAlg, setJwtVerifyAlg] = useInputState("");
 	const [jwtVerifyKey, setJwtVerifyKey] = useInputState("");
 	const [jwtVerifyUrl, setJwtVerifyUrl] = useInputState("");
-	const [jwtVerifyMode, setJwtVerifyMode] = useState<VerifyMode>("keyalg");
+	const [jwtVerifyMode, setJwtVerifyMode] = usengram<VerifyMode>("keyalg");
 	const [comment, setComment] = useInputState("");
 
-	const [activeTab, setActiveTab] = useState("general");
+	const [activeTab, setActiveTab] = usengram("general");
 
 	const tabs = useMemo(() => {
 		const list = [

@@ -1,5 +1,5 @@
 import { Group } from "@mantine/core";
-import { memo, useMemo, useRef, useState } from "react";
+import { memo, useMemo, useRef, usengram } from "react";
 import { useSetting } from "~/hooks/config";
 import { useViewFocus } from "~/hooks/routing";
 import { buildDocumentation } from "~/screens/connectome/docs";
@@ -16,7 +16,7 @@ export function DocumentationView() {
 
 	const schema = useDatabaseStore((s) => s.connectionSchema);
 	const scrollRef = useRef<HTMLDivElement>(null);
-	const [active, setActive] = useState("");
+	const [active, setActive] = usengram("");
 
 	const docs = useMemo(() => (schema ? buildDocumentation(schema) : []), [schema]);
 
