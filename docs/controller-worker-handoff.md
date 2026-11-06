@@ -90,3 +90,39 @@ that trial. Engine PR206/222/229 and Connectome PR26/27 remain dependencies.
 Safe uncertain-attempt reconciliation, ordinary-edit successor planning, governed
 project effects, RROFLOW correlation, reviewed learning and native/container
 qualification remain required outcomes of the full SWAG workflow.
+
+## Main reconciliation, 6 November 2026
+
+The ongoing PR28 integration reconciles worker head `91b89ae46ac23af70c852c79559bc59ecd62eed5`
+with main `95ba9975c506886f79984ad956e5dba557369f93`. This carries the existing
+Tasks handoff forward; no replacement dispatch API or client authority is added.
+The five conflicted paths were dependency manifests/locks and the recorded value
+fixture. Only revision/archive identities conflicted; retain the worker pin
+`e3528330` for this merge, pending the current engine dependency's landing.
+
+Main's native client, estate and instance lifecycle, startup tests, query-language
+tests and quantization tests are byte-identical in the merged index. The worker
+command, typed projections, renderer actions and denial tests retain their existing
+implementation. Main's guided workspace and visual changes merge without edits.
+This comparison checks those boundary objects and the authored worker diff; it is
+not a line review of every imported asset or source file.
+
+Frozen dependency installation and standalone TypeScript checking pass on Node
+24.22.0. The first full check failed on Windows CRLF checkout bytes; restoring
+694 files to their already committed LF bytes changed no indexed content. The
+next run passed formatting, identity/isolation, 72 API examples and 18 value checks,
+then correctly rejected main's query fixture because it records `15f36a87`, not
+the worker pin. Preserve that failure. Regenerate both value and query fixtures
+through their real-process writers after aligning the engine/SDK revision; do not
+relabel evidence or remove checks. No fresh Rust/native or desktop success is
+claimed for this reconciliation yet.
+
+Engine PR229's current ready candidate is `a5dbb754`; its CI and protected landing
+remain required. After landing, align this package's SDKs and bundled engine,
+run native/process/frontend acceptance and repeat actual desktop handoff/recovery
+with independent engine readback. Existing desktop receipts retain their original
+source identities. Then reconcile PR29 budget recovery and PR30 project-plan
+controls in dependency order. Ordinary-edit replanning, verified project effects,
+correlated observations and independently reviewed learning remain unfinished.
+Binary, score and choice and bounded LFG/SWAG assessment cycles remain the product
+direction; this merge does not implement those engine decision contracts.

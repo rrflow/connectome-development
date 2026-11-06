@@ -22,6 +22,7 @@ export function resolveServedConnection(estate: ServedEstate) {
 		updateConnection({
 			id: existing.id,
 			runtimeInstance: estate.instance,
+			runtimeProject: estate.project,
 			authentication: {
 				...existing.authentication,
 				protocol: "http",
@@ -41,6 +42,7 @@ export function resolveServedConnection(estate: ServedEstate) {
 		target: "runtime",
 		runtimeInstance: estate.instance,
 		runtimeCredential: estate.credential_path,
+		runtimeProject: estate.project,
 		authentication: {
 			...base.authentication,
 			protocol: "http",

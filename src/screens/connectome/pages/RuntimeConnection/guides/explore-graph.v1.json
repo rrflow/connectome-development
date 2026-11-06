@@ -1,0 +1,38 @@
+{
+	"id": "explore-graph",
+	"version": 1,
+	"title": "Explore what your project knows",
+	"summary": "Pick a record on this project's graph, read it in plain words, check the fields behind it, and follow a link to the next one. Four clicks, on this project's own records.",
+	"requires": ["session", "records"],
+	"steps": [
+		{
+			"route": "knowledge/records",
+			"anchor": "graph-canvas",
+			"text": "This is the project's graph. Each dot is a record RRFlow holds, and each line is a link between two records. Bigger dots have more links.",
+			"action": "Click any dot, or a record in the list on the right.",
+			"until": "record-selected"
+		},
+		{
+			"anchor": "inspector-depth",
+			"text": "The panel on the right explains what you picked, in plain words first. Details shows the exact fields RRFlow holds behind those words.",
+			"action": "Open Details.",
+			"until": "depth-details"
+		},
+		{
+			"anchor": "inspector-links",
+			"text": "These are the records this one links to, and the records that link to it.",
+			"action": "Click a linked record, or another dot if this one has no links.",
+			"until": "record-selected"
+		},
+		{
+			"anchor": "graph-around",
+			"text": "A big project is easier to read a small area at a time.",
+			"action": "Press Show what is around it.",
+			"until": "scope-around"
+		},
+		{
+			"anchor": "graph-canvas",
+			"text": "Now the graph shows only this record and what it touches. You went from a dot, to the fields behind it, to its neighbours, all on this project's own records."
+		}
+	]
+}

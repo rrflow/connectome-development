@@ -6,7 +6,14 @@ import {
 } from "~/shared/util/file-system";
 import * as idxdb from "~/shared/util/idxdb";
 import { CONFIG_KEY } from "~/shared/util/storage";
-import type { ConnectomeConfig, EstatePreview, Platform, ServedEstate, UrlTarget } from "~/types";
+import type {
+	ConnectomeConfig,
+	EstatePreview,
+	InstanceStatus,
+	Platform,
+	ServedEstate,
+	UrlTarget,
+} from "~/types";
 import type { ConnectomeAdapter, FileFilter } from "./base";
 
 /**
@@ -77,8 +84,8 @@ export class BrowserAdapter implements ConnectomeAdapter {
 		throw new Error("Not supported");
 	}
 
-	public async servedEstates(): Promise<ServedEstate[]> {
-		return [];
+	public async projectInstances(): Promise<InstanceStatus> {
+		return { revision: 0, instances: [] };
 	}
 
 	public async stopEstate(): Promise<boolean> {

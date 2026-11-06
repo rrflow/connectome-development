@@ -1,3 +1,5 @@
+import { Prec } from "@codemirror/state";
+import { EditorView, keymap } from "@codemirror/view";
 import {
 	Alert,
 	Badge,
@@ -5,7 +7,6 @@ import {
 	Button,
 	Collapse,
 	Divider,
-	Grid,
 	Group,
 	Loader,
 	MultiSelect,
@@ -17,14 +18,15 @@ import {
 	Stack,
 	Table,
 	Text,
-	Textarea,
 	UnstyledButton,
 } from "@mantine/core";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { CodeEditor } from "~/components/CodeEditor";
 import { Icon } from "~/components/Icon";
 import { Label } from "~/components/Label";
 import { Section } from "~/components/Section";
+import { useStable } from "~/hooks/stable";
 import {
 	iconChevronDown,
 	iconChevronUp,
@@ -36,12 +38,15 @@ import {
 	iconSearch,
 	iconTarget,
 } from "~/icons";
-import type { RrdEdgeView, RrdNodeView } from "~/rrflow/session";
+import { rrflowql, showRefusal } from "~/rrflow/editor";
+import { queryRefusal, type RrdEdgeView, type RrdNodeView } from "~/rrflow/session";
 import { plural } from "~/shared/util/helpers";
 import { formatCount, formatSize, formatTime } from "../format";
 import { Term } from "../glossary";
 import { type CanvasEdge, type CanvasNode, GraphCanvas } from "../graph";
 import { colorOptions, degrees, grouping } from "../groups";
+import { useGuideSignal, useGuideState } from "../guides/engine";
+import { InspectorObject, InspectorPanel } from "../inspector";
 import { ReadNotice } from "../notice";
 import { databaseQuery } from "../queries";
 import classes from "../style.module.scss";
@@ -58,7 +63,10 @@ const CONSOLE_CELL_WIDTH = 320;
 const START_HERE_RECORDS = 8;
 /** Linked records listed per direction before the list says how many remain. */
 const MAX_LINKED_LISTED = 50;
-const CANVAS_HEIGHT = 620;
+// Fills the work pane under the project bar, tabs and this lens's own controls.
+const CANVAS_HEIGHT = "clamp(320px, calc(100dvh - 350px), 1100px)";
+// Around a selection the controls take a second row.
+const CANVAS_HEIGHT_AROUND = "clamp(320px, calc(100dvh - 416px), 1100px)";
 
 function recordQuery(node: RrdNodeView): string {
 	return `FROM record:${node.kind} AT VALID ${Date.now()} KNOWN HEAD WHERE id = "${node.key}" PROJECT *`;
@@ -73,6 +81,71 @@ function defaultQuery(tables: string[], fallbackKind: string | undefined): strin
 	return table
 		? `FROM record:${table} AT VALID ${Date.now()} KNOWN HEAD PROJECT * LIMIT ${CONSOLE_ROW_LIMIT}`
 		: "";
+}
+
+/**
+ * Why the engine rejected a query: its parser's words when it gave them. The
+ * editor marks the place, on the word the engine names; the engine's offset
+ * itself can fall inside that word (it puts "end of query" one byte into the
+ * last token), so no character number is quoted.
+ */
+function refusalText(error: unknown): string {
+	return (
+		queryRefusal(error)?.reason ??
+		(error instanceof Error ? error.message : "Unknown RRD error")
+	);
+}
+
+interface QueryEditorProps {
+	query: string;
+	onChange: (query: string) => void;
+	onRun: () => void;
+	/** The query the last run sent, and how that run failed. */
+	refused: string | undefined;
+	error: unknown;
+}
+
+/**
+ * The console's rrflowQL editor. The engine's refusal of the query a run sent
+ * shows on the word the engine names, for as long as the editor holds that
+ * query.
+ */
+function QueryEditor({ query, onChange, onRun, refused, error }: QueryEditorProps) {
+	const [editor, setEditor] = useState<EditorView | null>(null);
+	const run = useStable(onRun);
+	const extensions = useMemo(
+		() => [
+			rrflowql(),
+			// Above the base keymap, which inserts a blank line on Mod-Enter.
+			Prec.highest(
+				keymap.of(
+					["Mod-Enter", "Ctrl-Enter"].map((key) => ({
+						key,
+						run: () => {
+							run();
+							return true;
+						},
+					})),
+				),
+			),
+		],
+		[],
+	);
+	const refusal = queryRefusal(error);
+	useEffect(() => {
+		if (editor) {
+			showRefusal(editor, refusal && refused === query ? { query, refusal } : null);
+		}
+	}, [editor, refusal, refused, query]);
+	return (
+		<CodeEditor
+			className={classes.queryEditor}
+			value={query}
+			onChange={onChange}
+			onMount={setEditor}
+			extensions={extensions}
+		/>
+	);
 }
 
 interface LinkedRecord {
@@ -178,7 +251,7 @@ export function RecordsTab({
 	client,
 	sessionKey,
 	selected,
-	onSelect,
+	onSelect: selectRecord,
 	colorBy,
 	onColorBy,
 	onOpenLens,
@@ -193,9 +266,17 @@ export function RecordsTab({
 	const [schemaOpen, setSchemaOpen] = useState(false);
 	const [draft, setDraft] = useState<string | null>(null);
 	const consoleRef = useRef<HTMLDivElement>(null);
+	const signal = useGuideSignal();
 	const execution = useMutation({
 		mutationFn: (query: string) => client.query(query),
 	});
+
+	// Only a pick counts: the selection can already be there when this tab opens.
+	const onSelect = useStable((record: string | null) => {
+		selectRecord(record);
+		if (record) signal?.("record-selected");
+	});
+	useGuideState("scope-around", scope === "neighbourhood");
 
 	const view = database.data;
 	const graph = view?.graph;
@@ -350,7 +431,7 @@ export function RecordsTab({
 					align="flex-end"
 				>
 					<Select
-						w={340}
+						w={240}
 						searchable
 						clearable
 						limit={50}
@@ -398,7 +479,7 @@ export function RecordsTab({
 						</>
 					)}
 					<Select
-						w={220}
+						w={150}
 						label="Color by"
 						allowDeselect={false}
 						data={options}
@@ -457,360 +538,338 @@ export function RecordsTab({
 					<Term id="cursor">cursor</Term> {formatCount(graph.known_at_cursor)}.
 				</Text>
 
-				<Grid>
-					<Grid.Col span={{ base: 12, lg: 8 }}>
-						<Paper
-							h={CANVAS_HEIGHT}
-							style={{ overflow: "hidden" }}
+				<Paper
+					data-guide="graph-canvas"
+					h={scope === "neighbourhood" ? CANVAS_HEIGHT_AROUND : CANVAS_HEIGHT}
+					style={{ overflow: "hidden" }}
+				>
+					{graph.nodes.length === 0 ? (
+						<Group
+							h="100%"
+							justify="center"
 						>
-							{graph.nodes.length === 0 ? (
-								<Group
-									h="100%"
-									justify="center"
-								>
-									<Text c="slate">This estate holds no records yet.</Text>
-								</Group>
-							) : scope === "neighbourhood" && !node ? (
-								<Stack
-									h="100%"
-									justify="center"
-									align="center"
-									gap="xs"
-								>
-									<Text c="slate">Pick a record to draw what is around it.</Text>
-									<Text
-										fz="sm"
-										c="slate"
-									>
-										Search above, choose one under “Start here”, or click a dot
-										in the whole estate.
-									</Text>
-								</Stack>
-							) : canvasNodes.length > 0 ? (
-								<GraphCanvas
-									h="100%"
-									nodes={canvasNodes}
-									edges={canvasEdges}
-									directed
-									groupOf={groups.groupOf}
-									groups={groups.groups}
-									legendTitle={`Color: ${colorOption?.label ?? "Kind"}`}
-									selected={selected}
-									dimUnselected={scope === "estate"}
-									onSelect={onSelect}
-									hint="Scroll to zoom · drag to move · click a dot for details"
-									renderHover={(id) => {
-										const record = byId.get(id);
-										if (!record) return null;
-										const outgoing = graph.edges.filter(
-											(edge) => edge.from === id,
-										).length;
-										const incoming = graph.edges.filter(
-											(edge) => edge.to === id,
-										).length;
-										const group = groupLabel(id);
-										return (
-											<Stack gap={4}>
-												<Text
-													fw={700}
-													c="bright"
-													lineClamp={2}
-												>
-													{record.label}
-												</Text>
-												<Group gap={6}>
-													<Badge
-														size="xs"
-														variant="light"
-													>
-														{record.kind}
-													</Badge>
-													<Text
-														fz="xs"
-														c="slate"
-													>
-														{outgoing} out · {incoming} in
-													</Text>
-												</Group>
-												{group && (
-													<Text
-														fz="xs"
-														c="slate"
-														truncate
-													>
-														{colorOption?.label}: {group}
-													</Text>
-												)}
-												<Text
-													fz="xs"
-													c="slate"
-												>
-													Click for details
-												</Text>
-											</Stack>
-										);
-									}}
-								/>
-							) : (
-								<Group
-									h="100%"
-									justify="center"
-								>
-									<Text c="slate">No record matches the selected kinds.</Text>
-								</Group>
-							)}
-						</Paper>
-					</Grid.Col>
-					<Grid.Col span={{ base: 12, lg: 4 }}>
-						<Paper
-							p="md"
-							h={CANVAS_HEIGHT}
+							<Text c="slate">This estate holds no records yet.</Text>
+						</Group>
+					) : scope === "neighbourhood" && !node ? (
+						<Stack
+							h="100%"
+							justify="center"
+							align="center"
+							gap="xs"
 						>
-							{node ? (
-								<Stack
-									h="100%"
-									gap="sm"
-								>
-									<Box>
-										<Group
-											gap={6}
-											mb={4}
-										>
-											<Badge variant="light">{node.kind}</Badge>
-											{groupLabel(node.id) && (
-												<Group
-													gap={6}
-													wrap="nowrap"
-													miw={0}
-													flex={1}
-												>
-													<Box
-														w={9}
-														h={9}
-														bg={colorOf(node.id)}
-														style={{
-															borderRadius: "50%",
-															flexShrink: 0,
-														}}
-													/>
-													<Text
-														fz="xs"
-														c="slate"
-														truncate
-													>
-														{groupLabel(node.id)}
-													</Text>
-												</Group>
-											)}
-										</Group>
+							<Text c="slate">Pick a record to draw what is around it.</Text>
+							<Text
+								fz="sm"
+								c="slate"
+							>
+								Search above, choose one under “Start here”, or click a dot in the
+								whole estate.
+							</Text>
+						</Stack>
+					) : canvasNodes.length > 0 ? (
+						<GraphCanvas
+							h="100%"
+							nodes={canvasNodes}
+							edges={canvasEdges}
+							directed
+							groupOf={groups.groupOf}
+							groups={groups.groups}
+							legendTitle={`Color: ${colorOption?.label ?? "Kind"}`}
+							selected={selected}
+							dimUnselected={scope === "estate"}
+							onSelect={onSelect}
+							hint="Scroll to zoom · drag to move · click a dot for details"
+							renderHover={(id) => {
+								const record = byId.get(id);
+								if (!record) return null;
+								const outgoing = graph.edges.filter(
+									(edge) => edge.from === id,
+								).length;
+								const incoming = graph.edges.filter(
+									(edge) => edge.to === id,
+								).length;
+								const group = groupLabel(id);
+								return (
+									<Stack gap={4}>
 										<Text
 											fw={700}
-											fz="lg"
 											c="bright"
-											lineClamp={3}
+											lineClamp={2}
 										>
-											{node.label}
+											{record.label}
 										</Text>
+										<Group gap={6}>
+											<Badge
+												size="xs"
+												variant="light"
+											>
+												{record.kind}
+											</Badge>
+											<Text
+												fz="xs"
+												c="slate"
+											>
+												{outgoing} out · {incoming} in
+											</Text>
+										</Group>
+										{group && (
+											<Text
+												fz="xs"
+												c="slate"
+												truncate
+											>
+												{colorOption?.label}: {group}
+											</Text>
+										)}
 										<Text
-											ff="monospace"
 											fz="xs"
 											c="slate"
 										>
-											{node.id}
+											Click for details
 										</Text>
-									</Box>
-									<Group gap="xs">
-										{scope === "estate" ? (
-											<Button
-												size="xs"
-												variant="light"
-												leftSection={<Icon path={iconRelation} />}
-												onClick={() => setScope("neighbourhood")}
+									</Stack>
+								);
+							}}
+						/>
+					) : (
+						<Group
+							h="100%"
+							justify="center"
+						>
+							<Text c="slate">No record matches the selected kinds.</Text>
+						</Group>
+					)}
+				</Paper>
+				<InspectorPanel>
+					{node ? (
+						<InspectorObject
+							kind={
+								<>
+									<Badge variant="light">{node.kind}</Badge>
+									{groupLabel(node.id) && (
+										<Group
+											gap={6}
+											wrap="nowrap"
+											miw={0}
+											flex={1}
+										>
+											<Box
+												w={9}
+												h={9}
+												bg={colorOf(node.id)}
+												style={{
+													borderRadius: "50%",
+													flexShrink: 0,
+												}}
+											/>
+											<Text
+												fz="xs"
+												c="slate"
+												truncate
 											>
-												Show what is around it
-											</Button>
-										) : (
-											<Button
-												size="xs"
-												variant="light"
-												leftSection={<Icon path={iconRelation} />}
-												onClick={() => setScope("estate")}
-											>
-												Back to whole estate
-											</Button>
-										)}
+												{groupLabel(node.id)}
+											</Text>
+										</Group>
+									)}
+								</>
+							}
+							title={node.label}
+							identity={node.id}
+							actions={
+								<>
+									{scope === "estate" ? (
+										<Button
+											data-guide="graph-around"
+											size="xs"
+											variant="light"
+											leftSection={<Icon path={iconRelation} />}
+											onClick={() => setScope("neighbourhood")}
+										>
+											Show what is around it
+										</Button>
+									) : (
 										<Button
 											size="xs"
 											variant="light"
-											leftSection={<Icon path={iconTarget} />}
-											onClick={() => onOpenLens("vectors")}
+											leftSection={<Icon path={iconRelation} />}
+											onClick={() => setScope("estate")}
 										>
-											Similar records
+											Back to whole estate
 										</Button>
-										<Button
-											size="xs"
-											variant="subtle"
-											leftSection={<Icon path={iconQuery} />}
-											onClick={() => runQuery(recordQuery(node))}
-										>
-											Query
-										</Button>
-									</Group>
-									<Divider />
-									<ScrollArea
-										flex={1}
-										type="auto"
-									>
-										<Stack gap="md">
-											<LinkedList
-												title="Links to"
-												links={linked.outgoing}
-												showRelationKind={allRelationKinds.length > 1}
-												colorOf={colorOf}
-												onSelect={onSelect}
-											/>
-											<LinkedList
-												title="Linked from"
-												links={linked.incoming}
-												showRelationKind={allRelationKinds.length > 1}
-												colorOf={colorOf}
-												onSelect={onSelect}
-											/>
-											<Box>
-												<Label>Fields</Label>
-												<Table
-													fz="sm"
-													verticalSpacing={4}
-												>
-													<Table.Tbody>
-														{Object.entries(node.properties).map(
-															([name, value]) => (
-																<Table.Tr key={name}>
-																	<Table.Td
-																		c="slate"
-																		w="32%"
-																		style={{
-																			verticalAlign: "top",
-																		}}
-																	>
-																		{name}
-																	</Table.Td>
-																	<Table.Td
-																		style={{
-																			wordBreak: "break-word",
-																		}}
-																	>
-																		{value}
-																	</Table.Td>
-																</Table.Tr>
-															),
-														)}
-														<Table.Tr>
-															<Table.Td
-																c="slate"
-																w="32%"
-															>
-																valid from
-															</Table.Td>
-															<Table.Td
-																title={String(
-																	node.valid_from_unix_ms,
-																)}
-															>
-																{formatTime(
-																	node.valid_from_unix_ms,
-																)}
-															</Table.Td>
-														</Table.Tr>
-													</Table.Tbody>
-												</Table>
-											</Box>
-										</Stack>
-									</ScrollArea>
-								</Stack>
-							) : (
-								<Stack
-									h="100%"
-									gap="sm"
-								>
-									<Box>
-										<Label>Start here</Label>
-										<Text
-											fz="sm"
-											c="slate"
-										>
-											The most linked records. Click one to see what it links
-											to and what links to it.
-										</Text>
-									</Box>
-									<Stack gap={2}>
-										{startHere.map((record) => (
-											<RecordRow
-												key={record.id}
-												record={record}
-												color={colorOf(record.id)}
-												detail={`${formatCount(degree.get(record.id) ?? 0)} links`}
-												onSelect={onSelect}
-											/>
-										))}
-									</Stack>
-									<Divider />
-									{colorOption?.value === "cluster" && (
-										<Text
-											fz="sm"
-											c="slate"
-										>
-											Colors show <Term id="cluster">clusters</Term>: records
-											that link to each other more than to the rest. Click a
-											color in the legend to show only that cluster.
-										</Text>
 									)}
-									<Box mt="auto">
-										<Button
-											variant="subtle"
-											size="compact-sm"
-											rightSection={
-												<Icon
-													path={
-														schemaOpen ? iconChevronUp : iconChevronDown
-													}
-												/>
-											}
-											onClick={() => setSchemaOpen((open) => !open)}
-										>
-											<Term id="schema">Schema registry</Term>
-										</Button>
-										<Collapse in={schemaOpen}>
-											<Table
-												fz="sm"
-												mt="xs"
-											>
-												<Table.Thead>
-													<Table.Tr>
-														<Table.Th>Kind</Table.Th>
-														<Table.Th>Model</Table.Th>
-														<Table.Th>Mode</Table.Th>
+									<Button
+										size="xs"
+										variant="light"
+										leftSection={<Icon path={iconTarget} />}
+										onClick={() => onOpenLens("vectors")}
+									>
+										Similar records
+									</Button>
+									<Button
+										size="xs"
+										variant="subtle"
+										leftSection={<Icon path={iconQuery} />}
+										onClick={() => runQuery(recordQuery(node))}
+									>
+										Query
+									</Button>
+								</>
+							}
+							plain={
+								<>
+									{node.label} is a {node.kind} <Term id="record">record</Term>.
+									It links to {formatCount(linked.outgoing.length)}{" "}
+									{linked.outgoing.length === 1 ? "record" : "records"}, and{" "}
+									{formatCount(linked.incoming.length)}{" "}
+									{linked.incoming.length === 1 ? "record links" : "records link"}{" "}
+									to it. RRFlow has held it as true since{" "}
+									{formatTime(node.valid_from_unix_ms)}.
+								</>
+							}
+							details={
+								<Box>
+									<Label>Fields</Label>
+									<Table
+										fz="sm"
+										verticalSpacing={4}
+									>
+										<Table.Tbody>
+											{Object.entries(node.properties).map(
+												([name, value]) => (
+													<Table.Tr key={name}>
+														<Table.Td
+															c="slate"
+															w="32%"
+															style={{
+																verticalAlign: "top",
+															}}
+														>
+															{name}
+														</Table.Td>
+														<Table.Td
+															style={{
+																wordBreak: "break-word",
+															}}
+														>
+															{value}
+														</Table.Td>
 													</Table.Tr>
-												</Table.Thead>
-												<Table.Tbody>
-													{view.tables.map((table) => (
-														<Table.Tr key={table.name}>
-															<Table.Td ff="monospace">
-																{table.name}
-															</Table.Td>
-															<Table.Td>{table.model}</Table.Td>
-															<Table.Td>{table.mode}</Table.Td>
-														</Table.Tr>
-													))}
-												</Table.Tbody>
-											</Table>
-										</Collapse>
-									</Box>
+												),
+											)}
+											<Table.Tr>
+												<Table.Td
+													c="slate"
+													w="32%"
+												>
+													valid from
+												</Table.Td>
+												<Table.Td title={String(node.valid_from_unix_ms)}>
+													{formatTime(node.valid_from_unix_ms)}
+												</Table.Td>
+											</Table.Tr>
+										</Table.Tbody>
+									</Table>
+								</Box>
+							}
+							raw={{
+								...node,
+								links_to: linked.outgoing.map((link) => link.relation),
+								linked_from: linked.incoming.map((link) => link.relation),
+							}}
+							links={
+								<Stack gap="md">
+									<LinkedList
+										title="Links to"
+										links={linked.outgoing}
+										showRelationKind={allRelationKinds.length > 1}
+										colorOf={colorOf}
+										onSelect={onSelect}
+									/>
+									<LinkedList
+										title="Linked from"
+										links={linked.incoming}
+										showRelationKind={allRelationKinds.length > 1}
+										colorOf={colorOf}
+										onSelect={onSelect}
+									/>
 								</Stack>
+							}
+						/>
+					) : (
+						<Stack
+							h="100%"
+							gap="sm"
+						>
+							<Box>
+								<Label>Start here</Label>
+								<Text
+									fz="sm"
+									c="slate"
+								>
+									The most linked records. Click one to see what it links to and
+									what links to it.
+								</Text>
+							</Box>
+							<Stack gap={2}>
+								{startHere.map((record) => (
+									<RecordRow
+										key={record.id}
+										record={record}
+										color={colorOf(record.id)}
+										detail={`${formatCount(degree.get(record.id) ?? 0)} links`}
+										onSelect={onSelect}
+									/>
+								))}
+							</Stack>
+							<Divider />
+							{colorOption?.value === "cluster" && (
+								<Text
+									fz="sm"
+									c="slate"
+								>
+									Colors show <Term id="cluster">clusters</Term>: records that
+									link to each other more than to the rest. Click a color in the
+									legend to show only that cluster.
+								</Text>
 							)}
-						</Paper>
-					</Grid.Col>
-				</Grid>
+							<Box mt="auto">
+								<Button
+									variant="subtle"
+									size="compact-sm"
+									rightSection={
+										<Icon path={schemaOpen ? iconChevronUp : iconChevronDown} />
+									}
+									onClick={() => setSchemaOpen((open) => !open)}
+								>
+									<Term id="schema">Schema registry</Term>
+								</Button>
+								<Collapse in={schemaOpen}>
+									<Table
+										fz="sm"
+										mt="xs"
+									>
+										<Table.Thead>
+											<Table.Tr>
+												<Table.Th>Kind</Table.Th>
+												<Table.Th>Model</Table.Th>
+												<Table.Th>Mode</Table.Th>
+											</Table.Tr>
+										</Table.Thead>
+										<Table.Tbody>
+											{view.tables.map((table) => (
+												<Table.Tr key={table.name}>
+													<Table.Td ff="monospace">{table.name}</Table.Td>
+													<Table.Td>{table.model}</Table.Td>
+													<Table.Td>{table.mode}</Table.Td>
+												</Table.Tr>
+											))}
+										</Table.Tbody>
+									</Table>
+								</Collapse>
+							</Box>
+						</Stack>
+					)}
+				</InspectorPanel>
 			</Section>
 
 			<Box ref={consoleRef}>
@@ -832,20 +891,12 @@ export function RecordsTab({
 				>
 					<Collapse in={consoleOpen}>
 						<Stack gap="sm">
-							<Textarea
-								// The input draws its own font, so the family is set on it directly.
-								styles={{
-									input: { fontFamily: "var(--mantine-font-family-monospace)" },
-								}}
-								autosize
-								minRows={2}
-								value={query}
-								onChange={(event) => setDraft(event.currentTarget.value)}
-								onKeyDown={(event) => {
-									if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
-										execution.mutate(query);
-									}
-								}}
+							<QueryEditor
+								query={query}
+								onChange={setDraft}
+								onRun={() => execution.mutate(query)}
+								refused={execution.variables}
+								error={execution.error}
 							/>
 							<Group justify="space-between">
 								<Group gap="xs">
@@ -886,9 +937,7 @@ export function RecordsTab({
 									title="Query rejected"
 									icon={<Icon path={iconErrorCircle} />}
 								>
-									{execution.error instanceof Error
-										? execution.error.message
-										: "Unknown RRD error"}
+									{refusalText(execution.error)}
 								</Alert>
 							)}
 							{execution.data && (

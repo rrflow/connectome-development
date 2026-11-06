@@ -5,7 +5,7 @@ type TypeIcon = { type: string; icon: string; color: string };
 const TYPE_ICONS: TypeIcon[] = [
 	{ type: "variable", icon: iconVariable, color: "#ffde00" }, // Params
 	{ type: "function", icon: iconFunction, color: "#ff9b67" }, // Functions
-	{ type: "class", icon: iconTable, color: "#FF00A0" }, // Tables
+	{ type: "class", icon: iconTable, color: "#EC7F3A" }, // Tables
 ];
 
 /**
