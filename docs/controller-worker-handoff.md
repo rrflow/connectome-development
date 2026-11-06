@@ -221,3 +221,42 @@ a literal wildcard to Biome. Formatting the explicit evidence directory fixed
 the input; independent comparisons confirm every published payload still equals
 its original engine response. Private-marker checks cover the public JSON,
 and the recovered screenshot was inspected before publication.
+
+### UI attempt correlated with local RROFLOW
+
+A second isolated trial on the same `9651939c` UI and `a5dbb754` engine extends
+the driver through the existing native observation API. Its operator profile
+admits metadata export to the existing local RROFLOW receiver; both credential
+references are configured at process start. A new real integration task passed
+through UI task admission, an explicit two-step budget, controller review and
+proposal, worker review and one worker request. No earlier attempt was retried.
+The actual worker used 651 prompt and 202 completion tokens, with 15,139 ms
+observed elapsed time. The task remains open with 17,027 ms total budget charged.
+
+The operator-side driver then invoked native observation prepare/deliver/read
+for that accepted worker attempt. It did not construct a substitute event or
+infer a result from a screenshot. The engine's retained source response equals
+the actual worker readback, and its exact byte digest matches the receiver's
+reference. Independent receiver readback found one event. After desktop reload
+and UI recovery, delivery replay retained the same acknowledgment and receiver
+payload, with one delivery attempt and unchanged model budget. No provider call
+was requested by the export/readback driver. The UI supplies the task/model
+interaction; observation export currently uses public engine operations from
+the operator-side driver, not an observation button in Connectome.
+
+The [correlation receipt](evidence/controller-worker-20261106/correlation/validation.json)
+binds the original worker output, native delivery, receiver event, budget
+readbacks and [recovered UI](evidence/controller-worker-20261106/correlation/worker-recovered.png).
+Receiver binary SHA-256 is
+`786b6c48e64fc7c5962b1b4dc427af1b06867f8c05a54669e096ebf27a9b82bb`;
+its recorded build revision is `b4c04ceec6686db056b53bc48de44137c5c2f885`.
+This proves local metadata correlation, not hosted deployment or reviewed
+learning. Project-source and plan references remain null because this task used
+text only; no source identity or task-success label was manufactured.
+
+An additional forced engine stop/restart probe was rejected by automatic
+approval review before execution, with reason "blocked by policy". Independent
+process observation confirmed the original engine remained running and no stop
+record was created. The rejected action was not retried. This candidate has UI
+reload evidence, not a new process-restart claim. The correlation trial uses a
+separate estate and does not replace or stop the earlier process.
