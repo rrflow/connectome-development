@@ -1,4 +1,22 @@
-import { Alert, Badge, Button, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import {
+	Alert,
+	Badge,
+	Button,
+	Group,
+	Paper,
+	Select,
+	SimpleGrid,
+	Stack,
+	Text,
+	Textarea,
+	TextInput,
+	Title,
+} from "@mantine/core";
+import { useMemo, useState } from "react";
+import type { RrdSessionClient } from "~/rrflow/session";
+import { newId } from "~/shared/util/helpers";
+import { useConfigStore } from "~/shell/stores/config";
+import type { ConnectionWorkbenchState, WorkbenchRunKind } from "~/types";
 
 const prerequisites = {
 	paths: [
@@ -45,6 +63,26 @@ const prerequisites = {
 	],
 } as const;
 
+const workbenchKindOptions: { value: WorkbenchRunKind; label: string }[] = [
+	{ value: "testing", label: "Testing" },
+	{ value: "reverse-engineering", label: "Reverse engineering" },
+	{ value: "optimization", label: "Optimization" },
+	{ value: "release-update", label: "Release update" },
+];
+
+const flightContextModeOptions = [
+	{ value: "fresh", label: "Fresh" },
+	{ value: "pruned", label: "Pruned" },
+] as const;
+
+function normalizeWorkbench(state: ConnectionWorkbenchState | undefined): ConnectionWorkbenchState {
+	return {
+		workbenches: state?.workbenches ?? [],
+		activeWorkbenchId: state?.activeWorkbenchId,
+		receipts: state?.receipts ?? [],
+	};
+}
+
 function Requirements({ items }: { items: readonly (readonly [string, string])[] }) {
 	return (
 		<SimpleGrid cols={{ base: 1, md: 3 }}>
@@ -71,13 +109,285 @@ export function ProjectSection({
 	section,
 	detail,
 	connected,
+	sessionClient,
+	connectionId,
 	onOpen,
 }: {
 	section: string;
 	detail?: string;
 	connected: boolean;
+	sessionClient?: RrdSessionClient;
+	connectionId: string;
 	onOpen: (section: string) => void;
 }) {
+	const connection = useConfigStore((state) =>
+		state.connections.find((candidate) => candidate.id === connectionId),
+	);
+	const updateConnection = useConfigStore((state) => state.updateConnection);
+	const workbench = useMemo(
+		() => normalizeWorkbench(connection?.workbench),
+		[connection?.workbench],
+	);
+	const activeWorkbenchId = workbench.activeWorkbenchId ?? workbench.workbenches[0]?.id;
+	const activeWorkbench =
+		workbench.workbenches.find((candidate) => candidate.id === activeWorkbenchId) ?? null;
+	const [newWorkbenchName, setNewWorkbenchName] = useState("");
+	const [newWorkbenchDescription, setNewWorkbenchDescription] = useState("");
+	const [receiptKind, setReceiptKind] = useState<WorkbenchRunKind>("testing");
+	const [receiptIntent, setReceiptIntent] = useState("");
+	const [receiptContext, setReceiptContext] = useState("");
+	const [receiptDiagnostics, setReceiptDiagnostics] = useState("");
+	const [receiptCaptureError, setReceiptCaptureError] = useState<string | null>(null);
+	const [capturingReceipt, setCapturingReceipt] = useState(false);
+	const [flightPrompt, setFlightPrompt] = useState("");
+	const [flightContextMode, setFlightContextMode] = useState<"fresh" | "pruned">("pruned");
+	const [flightAcceptanceMarker, setFlightAcceptanceMarker] = useState("");
+	const [launchFlightError, setLaunchFlightError] = useState<string | null>(null);
+	const [launchingFlight, setLaunchingFlight] = useState(false);
+
+	const saveWorkbench = (next: ConnectionWorkbenchState) => {
+		if (!connection) {
+			return;
+		}
+
+		updateConnection({
+			id: connection.id,
+			workbench: next,
+		});
+	};
+
+	const createWorkbench = () => {
+		const name = newWorkbenchName.trim();
+		if (!name) {
+			return;
+		}
+
+		const now = Date.now();
+		const id = newId();
+		const definition = {
+			id,
+			name,
+			description: newWorkbenchDescription.trim(),
+			createdAtUnixMs: now,
+			updatedAtUnixMs: now,
+		};
+		saveWorkbench({
+			workbenches: [...workbench.workbenches, definition],
+			activeWorkbenchId: id,
+			receipts: workbench.receipts,
+		});
+		setNewWorkbenchName("");
+		setNewWorkbenchDescription("");
+	};
+
+	const recordReceipt = () => {
+		const intent = receiptIntent.trim();
+		if (!activeWorkbench || !intent) {
+			return;
+		}
+
+		const now = Date.now();
+		saveWorkbench({
+			workbenches: workbench.workbenches.map((candidate) =>
+				candidate.id === activeWorkbench.id
+					? { ...candidate, updatedAtUnixMs: now }
+					: candidate,
+			),
+			activeWorkbenchId: activeWorkbench.id,
+			receipts: [
+				{
+					id: newId(),
+					workbenchId: activeWorkbench.id,
+					kind: receiptKind,
+					intent,
+					context: receiptContext.trim(),
+					diagnostics: receiptDiagnostics.trim(),
+					recordedAtUnixMs: now,
+				},
+				...workbench.receipts,
+			],
+		});
+		setReceiptIntent("");
+		setReceiptContext("");
+		setReceiptDiagnostics("");
+	};
+
+	const captureRuntimeReceipt = async () => {
+		if (!activeWorkbench || !sessionClient || !connected) {
+			return;
+		}
+
+		setCapturingReceipt(true);
+		setReceiptCaptureError(null);
+		try {
+			const now = Date.now();
+			let intent = receiptIntent.trim();
+			let context = receiptContext.trim();
+			let diagnostics = receiptDiagnostics.trim();
+
+			if (receiptKind === "testing") {
+				const [capabilities, database] = await Promise.all([
+					sessionClient.capabilities(),
+					sessionClient.database(),
+				]);
+				if (!intent) {
+					intent = "Runtime testing snapshot";
+				}
+				if (!context) {
+					context = "Engine capabilities and current project dataset shape.";
+				}
+				const available = capabilities.capabilities.filter(
+					(capability) => capability.status === "available",
+				).length;
+				diagnostics =
+					diagnostics ||
+					`Capabilities available: ${available}/${capabilities.capabilities.length}; tables=${database.tables.length}; models=${database.models.length}; graphNodes=${database.graph.nodes.length}; graphEdges=${database.graph.edges.length}.`;
+			} else if (receiptKind === "reverse-engineering") {
+				const [schema, database] = await Promise.all([
+					sessionClient.schema(),
+					sessionClient.database(),
+				]);
+				if (!intent) {
+					intent = "Project reverse-engineering snapshot";
+				}
+				if (!context) {
+					context = "Schema inventory and graph topology for project mapping.";
+				}
+				diagnostics =
+					diagnostics ||
+					`Known cursor=${schema.known_at_cursor}; schemaRevision=${schema.schema_revision ?? "none"}; tableCount=${schema.tables.length}; graphNodes=${database.graph.nodes.length}; graphEdges=${database.graph.edges.length}.`;
+			} else if (receiptKind === "optimization") {
+				const [storage, vectors] = await Promise.all([
+					sessionClient.storage(),
+					sessionClient.vectorCollections(),
+				]);
+				if (!intent) {
+					intent = "Runtime optimization snapshot";
+				}
+				if (!context) {
+					context = "Storage and vector profile review for optimization candidates.";
+				}
+				const headline = storage.physical.headline
+					.map((metric) => `${metric.id}=${metric.value}`)
+					.join(", ");
+				diagnostics =
+					diagnostics ||
+					`Storage profile=${storage.storage_profile}; runtimeCursor=${storage.runtime_cursor}; vectorCollections=${vectors.collections.length}; headlineMetrics=[${headline}].`;
+			} else {
+				const capabilities = await sessionClient.capabilities();
+				if (!intent) {
+					intent = "Release-update readiness snapshot";
+				}
+				if (!context) {
+					context =
+						"Engine identity, revision, and capability readiness for release update.";
+				}
+				diagnostics =
+					diagnostics ||
+					`Implementation=${capabilities.implementation} ${capabilities.implementation_version}; configRevision=${capabilities.configuration_revision}; capabilityCount=${capabilities.capabilities.length}.`;
+			}
+			const snapshot = await sessionClient.workbenchSnapshot();
+			const latestTask = snapshot.latest_task
+				? `${snapshot.latest_task.task_id} (${snapshot.latest_task.status})`
+				: "none";
+			const latestFlight = snapshot.latest_flight
+				? `${snapshot.latest_flight.flight_id} (${snapshot.latest_flight.status})`
+				: "none";
+			const workbenchSummary = `scope=${snapshot.scope}; taskPageCount=${snapshot.task_count}; flightPageCount=${snapshot.flight_count}; latestTask=${latestTask}; latestFlight=${latestFlight}.`;
+			diagnostics = diagnostics ? `${diagnostics} ${workbenchSummary}` : workbenchSummary;
+
+			saveWorkbench({
+				workbenches: workbench.workbenches.map((candidate) =>
+					candidate.id === activeWorkbench.id
+						? { ...candidate, updatedAtUnixMs: now }
+						: candidate,
+				),
+				activeWorkbenchId: activeWorkbench.id,
+				receipts: [
+					{
+						id: newId(),
+						workbenchId: activeWorkbench.id,
+						kind: receiptKind,
+						intent,
+						context,
+						diagnostics,
+						recordedAtUnixMs: now,
+					},
+					...workbench.receipts,
+				],
+			});
+			setReceiptIntent("");
+			setReceiptContext("");
+			setReceiptDiagnostics("");
+		} catch (error) {
+			setReceiptCaptureError(error instanceof Error ? error.message : String(error));
+		} finally {
+			setCapturingReceipt(false);
+		}
+	};
+
+	const launchObserveFlight = async () => {
+		if (!activeWorkbench || !sessionClient || !connected) {
+			return;
+		}
+		const prompt = flightPrompt.trim();
+		if (!prompt) {
+			setLaunchFlightError("Prompt is required to launch an observe flight.");
+			return;
+		}
+
+		setLaunchingFlight(true);
+		setLaunchFlightError(null);
+		try {
+			const launch = await sessionClient.launchObserveFlight({
+				prompt,
+				context_mode: flightContextMode,
+				acceptance_marker: flightAcceptanceMarker.trim() || undefined,
+			});
+			const snapshot = await sessionClient.workbenchSnapshot();
+			const now = Date.now();
+			const diagnostics = `flight=${launch.flight_id}; status=${launch.status}; provider=${launch.provider}; contextMode=${launch.context_mode}; eventCount=${launch.event_count}; replay=${launch.idempotent_replay}; scope=${snapshot.scope}; flightPageCount=${snapshot.flight_count}.`;
+			const context = `prompt=${prompt}`;
+
+			saveWorkbench({
+				workbenches: workbench.workbenches.map((candidate) =>
+					candidate.id === activeWorkbench.id
+						? { ...candidate, updatedAtUnixMs: now }
+						: candidate,
+				),
+				activeWorkbenchId: activeWorkbench.id,
+				receipts: [
+					{
+						id: newId(),
+						workbenchId: activeWorkbench.id,
+						kind: receiptKind,
+						intent: `Observe flight launch (${flightContextMode})`,
+						context,
+						diagnostics,
+						recordedAtUnixMs: now,
+					},
+					...workbench.receipts,
+				],
+			});
+			setFlightPrompt("");
+			setFlightAcceptanceMarker("");
+		} catch (error) {
+			setLaunchFlightError(error instanceof Error ? error.message : String(error));
+		} finally {
+			setLaunchingFlight(false);
+		}
+	};
+
+	const receipts = useMemo(() => {
+		if (!activeWorkbench) {
+			return [];
+		}
+
+		return workbench.receipts
+			.filter((entry) => entry.workbenchId === activeWorkbench.id)
+			.sort((left, right) => right.recordedAtUnixMs - left.recordedAtUnixMs);
+	}, [activeWorkbench, workbench.receipts]);
+
 	if (section === "overview")
 		return (
 			<Stack>
@@ -109,6 +419,12 @@ export function ProjectSection({
 						onClick={() => onOpen("knowledge/paths")}
 					>
 						Knowledge paths
+					</Button>
+					<Button
+						variant="subtle"
+						onClick={() => onOpen("workbench")}
+					>
+						Open workbench
 					</Button>
 				</Group>
 				{!connected && (
@@ -159,6 +475,239 @@ export function ProjectSection({
 						</Alert>
 					)
 				)}
+			</Stack>
+		);
+	if (section === "workbench")
+		return (
+			<Stack>
+				<Title order={3}>Workbench</Title>
+				<Badge
+					color="blue"
+					variant="light"
+				>
+					Planning and receipt tracking available
+				</Badge>
+				<Text>
+					Use this project-local workbench to plan testing, reverse engineering,
+					optimization and release updates. Saved entries are tracked per project
+					connection.
+				</Text>
+				<Alert title="Execution remains engine-owned">
+					This page can launch governed observe flights through the engine and record
+					receipts, but it does not execute provider model calls, release automation, or
+					cloud synchronization in this build.
+				</Alert>
+				{!connection && (
+					<Alert
+						color="red"
+						title="Connection unavailable"
+					>
+						This workbench can only be edited when its project profile is available.
+					</Alert>
+				)}
+				<Paper
+					withBorder
+					p="lg"
+				>
+					<Stack>
+						<Title order={4}>Create workbench</Title>
+						<TextInput
+							label="Workbench name"
+							placeholder="Dogfood readiness"
+							value={newWorkbenchName}
+							onChange={(event) => setNewWorkbenchName(event.currentTarget.value)}
+						/>
+						<Textarea
+							label="Scope"
+							placeholder="What this workbench is validating"
+							minRows={2}
+							value={newWorkbenchDescription}
+							onChange={(event) =>
+								setNewWorkbenchDescription(event.currentTarget.value)
+							}
+						/>
+						<Group justify="flex-end">
+							<Button
+								onClick={createWorkbench}
+								disabled={!connection || newWorkbenchName.trim().length === 0}
+							>
+								Create workbench
+							</Button>
+						</Group>
+					</Stack>
+				</Paper>
+				<Paper
+					withBorder
+					p="lg"
+				>
+					<Stack>
+						<Title order={4}>Launch observe flight</Title>
+						<Textarea
+							label="Prompt"
+							placeholder="Describe the project intent for this flight"
+							minRows={3}
+							value={flightPrompt}
+							onChange={(event) => setFlightPrompt(event.currentTarget.value)}
+						/>
+						<Select
+							label="Context mode"
+							value={flightContextMode}
+							data={flightContextModeOptions.map((entry) => ({
+								value: entry.value,
+								label: entry.label,
+							}))}
+							onChange={(next) =>
+								setFlightContextMode(
+									(next as "fresh" | "pruned" | null) ?? "pruned",
+								)
+							}
+						/>
+						<TextInput
+							label="Acceptance marker (optional)"
+							placeholder="dogfood-workbench-01"
+							value={flightAcceptanceMarker}
+							onChange={(event) =>
+								setFlightAcceptanceMarker(event.currentTarget.value)
+							}
+						/>
+						{launchFlightError && (
+							<Alert
+								color="red"
+								title="Observe flight launch failed"
+							>
+								{launchFlightError}
+							</Alert>
+						)}
+						<Group justify="flex-end">
+							<Button
+								variant="light"
+								onClick={launchObserveFlight}
+								loading={launchingFlight}
+								disabled={!connection || !activeWorkbench || !connected}
+							>
+								Launch observe flight
+							</Button>
+						</Group>
+					</Stack>
+				</Paper>
+				<Paper
+					withBorder
+					p="lg"
+				>
+					<Stack>
+						<Title order={4}>Record work item</Title>
+						<Select
+							label="Workbench"
+							value={activeWorkbench?.id ?? null}
+							data={workbench.workbenches.map((entry) => ({
+								value: entry.id,
+								label: entry.name,
+							}))}
+							placeholder="Create a workbench first"
+							onChange={(next) =>
+								saveWorkbench({
+									workbenches: workbench.workbenches,
+									activeWorkbenchId: next ?? undefined,
+									receipts: workbench.receipts,
+								})
+							}
+						/>
+						<Select
+							label="Work type"
+							value={receiptKind}
+							data={workbenchKindOptions}
+							onChange={(next) =>
+								setReceiptKind((next as WorkbenchRunKind | null) ?? "testing")
+							}
+						/>
+						<TextInput
+							label="Intent"
+							placeholder="Validate routing narrowing on real project tasks"
+							value={receiptIntent}
+							onChange={(event) => setReceiptIntent(event.currentTarget.value)}
+						/>
+						<Textarea
+							label="Context"
+							placeholder="Prompt/context identity, scope, dependencies, expected oracles"
+							minRows={2}
+							value={receiptContext}
+							onChange={(event) => setReceiptContext(event.currentTarget.value)}
+						/>
+						<Textarea
+							label="Diagnostics"
+							placeholder="Command output, CI links, failures, or notes"
+							minRows={2}
+							value={receiptDiagnostics}
+							onChange={(event) => setReceiptDiagnostics(event.currentTarget.value)}
+						/>
+						{receiptCaptureError && (
+							<Alert
+								color="red"
+								title="Runtime receipt capture failed"
+							>
+								{receiptCaptureError}
+							</Alert>
+						)}
+						<Group justify="flex-end">
+							<Button
+								variant="light"
+								onClick={captureRuntimeReceipt}
+								loading={capturingReceipt}
+								disabled={!connection || !activeWorkbench || !connected}
+							>
+								Capture runtime receipt
+							</Button>
+							<Button
+								onClick={recordReceipt}
+								disabled={
+									!connection ||
+									!activeWorkbench ||
+									receiptIntent.trim().length === 0
+								}
+							>
+								Record receipt
+							</Button>
+						</Group>
+					</Stack>
+				</Paper>
+				<Stack gap="sm">
+					<Title order={4}>Recent receipts</Title>
+					{receipts.length === 0 && (
+						<Text c="slate">No receipts recorded for the selected workbench.</Text>
+					)}
+					{receipts.map((entry) => (
+						<Paper
+							key={entry.id}
+							withBorder
+							p="md"
+						>
+							<Group justify="space-between">
+								<Text fw={650}>{entry.intent}</Text>
+								<Badge variant="light">
+									{workbenchKindOptions.find(
+										(candidate) => candidate.value === entry.kind,
+									)?.label ?? entry.kind}
+								</Badge>
+							</Group>
+							<Text
+								size="sm"
+								c="slate"
+								mt={4}
+							>
+								{new Date(entry.recordedAtUnixMs).toLocaleString()}
+							</Text>
+							{entry.context && <Text mt="sm">{entry.context}</Text>}
+							{entry.diagnostics && (
+								<Text
+									mt="sm"
+									size="sm"
+								>
+									{entry.diagnostics}
+								</Text>
+							)}
+						</Paper>
+					))}
+				</Stack>
 			</Stack>
 		);
 	if (section === "activity")

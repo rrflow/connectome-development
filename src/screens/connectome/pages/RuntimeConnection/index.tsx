@@ -333,6 +333,7 @@ export function RuntimeConnectionPage({
 						{[
 							["overview", "Overview"],
 							["knowledge", "Knowledge"],
+							["workbench", "Workbench"],
 							["activity", "Activity"],
 							["learning", "Learning"],
 							["services", "Services"],
@@ -567,9 +568,11 @@ export function RuntimeConnectionPage({
 					)}
 
 					<ProjectSection
+						connectionId={id}
 						detail={detail}
 						section={section}
 						connected={Boolean(session)}
+						sessionClient={sessionClient}
 						onOpen={openSection}
 					/>
 				</Stack>

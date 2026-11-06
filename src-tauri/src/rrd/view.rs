@@ -67,6 +67,47 @@ pub struct ConnectionView {
     pub service: ServiceView,
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct TaskSummaryView {
+    pub task_id: String,
+    pub title: String,
+    pub status: String,
+    pub task_cursor: u64,
+    pub known_at_cursor: u64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct PromptFlightSummaryView {
+    pub flight_id: String,
+    pub status: String,
+    pub provider: String,
+    pub context_mode: String,
+    pub flight_cursor: u64,
+    pub known_at_cursor: u64,
+    pub task_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct WorkbenchSnapshotView {
+    pub scope: String,
+    pub task_count: usize,
+    pub flight_count: usize,
+    pub latest_task: Option<TaskSummaryView>,
+    pub latest_flight: Option<PromptFlightSummaryView>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct PromptFlightLaunchView {
+    pub flight_id: String,
+    pub status: String,
+    pub provider: String,
+    pub context_mode: String,
+    pub flight_cursor: u64,
+    pub known_at_cursor: u64,
+    pub event_count: usize,
+    pub idempotent_replay: bool,
+}
+
 #[derive(Debug, Serialize)]
 pub struct DatabaseView {
     pub observed_at_unix_ms: u64,

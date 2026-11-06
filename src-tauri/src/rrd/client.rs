@@ -12,17 +12,21 @@
 use super::error::RrdError;
 use super::transport::{is_loopback_origin, rrd_origin};
 use super::view::{
-    self, ConnectionView, DatabaseView, MapLinkView, MapPointView, QueryView, ServiceView,
-    SessionView, StorageView, VectorCollectionsView, VectorMapProgressView, VectorMapView,
-    VectorPointsView, VectorSearchView,
+    self, ConnectionView, DatabaseView, MapLinkView, MapPointView, PromptFlightLaunchView,
+    PromptFlightSummaryView, QueryView, ServiceView, SessionView, StorageView,
+    VectorCollectionsView, VectorMapProgressView, VectorMapView, VectorPointsView, VectorSearchView,
+    WorkbenchSnapshotView,
 };
 use rrd_client::{ClientConfig, RequestOptions, RrdClient, Session};
 use rrd_contract::{
     CanonicalId, CloseSession, CreateSession, DataReference, DataVectorValue, DiagnosticSnapshot,
-    ExecuteQuery, ListVectorCollections, QueryBudget, ReadDiagnosticSnapshot, RenewSession,
-    RetrieveVectorPoints, ScrollVectorPoints, SearchVectors, ServiceCapabilities, SessionLimits,
-    VectorPointBatch, VectorPointPage, VectorPointSnapshot, VectorSearchHit, VectorSearchMode,
-    VectorSearchQuery, VectorSearchResult, MAX_DIAGNOSTIC_RUNTIME_SCANNED_CHANGES, MAX_QUERY_BYTES,
+    ExecuteQuery, LaunchPromptFlight, ListPromptFlights, ListVectorCollections,
+    PromptFlightContextMode, PromptFlightContextRequest, PromptFlightProvider, QueryBudget,
+    ReadDiagnosticSnapshot, ReadPromptFlight, RenewSession, RetrieveVectorPoints,
+    ScrollVectorPoints, SearchVectors, ServiceCapabilities, SessionLimits, VectorPointBatch,
+    VectorPointPage, VectorPointSnapshot, VectorSearchHit, VectorSearchMode, VectorSearchQuery, VectorSearchResult,
+    MAX_CONTEXT_GRAPH_DEPTH, MAX_CONTEXT_ITEMS, MAX_CONTEXT_OUTPUT_BYTES, MAX_CONTEXT_STORAGE_KEYS,
+    MAX_DIAGNOSTIC_RUNTIME_SCANNED_CHANGES, MAX_PROMPT_FLIGHT_STORAGE_KEYS, MAX_QUERY_BYTES,
     MAX_VECTOR_POINT_PAGE, MAX_VECTOR_SEARCH_TOP_K, MAX_VECTOR_STORAGE_KEYS,
 };
 use serde::Deserialize;
@@ -62,6 +66,7 @@ const MAX_VECTOR_MAP_POINTS: usize = 600;
 const VECTOR_MAP_NEIGHBOURS: u64 = 5;
 /// Exact searches in flight at once while the similarity map is built.
 const VECTOR_MAP_CONCURRENCY: usize = 8;
+const WORKBENCH_RECENT_PAGE_LIMIT: u16 = 8;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -105,6 +110,16 @@ pub struct RrdVectorSearchRequest {
 pub struct RrdVectorMapRequest {
     pub collection_id: String,
     pub vector_name: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RrdLaunchObserveFlightRequest {
+    pub prompt: String,
+    #[serde(default)]
+    pub context_mode: Option<String>,
+    #[serde(default)]
+    pub acceptance_marker: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -515,6 +530,111 @@ impl NativeRrdClient {
 
     pub async fn capabilities(&self) -> Result<ServiceCapabilities, RrdError> {
         self.client.capabilities().await.map_err(RrdError::sdk)
+    }
+
+    pub async fn workbench_snapshot(&self) -> Result<WorkbenchSnapshotView, RrdError> {
+        let scope = self.scope();
+        let flights_request = ListPromptFlights {
+            scope: scope.clone(),
+            after_cursor: 0,
+            limit: WORKBENCH_RECENT_PAGE_LIMIT,
+            max_storage_keys: MAX_PROMPT_FLIGHT_STORAGE_KEYS,
+        };
+        let flights_page = self
+            .send(false, |session, options| async move {
+                self.client
+                    .list_prompt_flights(&session, flights_request, options)
+                    .await
+            })
+            .await?;
+        let latest_flight = flights_page.flights.last().cloned();
+        let latest_flight = if let Some(flight) = latest_flight {
+            let request = ReadPromptFlight {
+                scope: scope.clone(),
+                flight_id: flight.flight_id.clone(),
+                max_storage_keys: MAX_PROMPT_FLIGHT_STORAGE_KEYS,
+            };
+            let result = self
+                .send(false, |session, options| async move {
+                    self.client.read_prompt_flight(&session, request, options).await
+                })
+                .await?;
+            Some(PromptFlightSummaryView {
+                flight_id: result.flight.record.flight_id.as_str().to_owned(),
+                status: result.flight.record.status.as_str().to_owned(),
+                provider: result.flight.record.provider.as_str().to_owned(),
+                context_mode: result.flight.record.context_mode.as_str().to_owned(),
+                flight_cursor: result.flight.record.flight_cursor,
+                known_at_cursor: result.flight.record.known_at_cursor,
+                task_id: None,
+            })
+        } else {
+            None
+        };
+
+        Ok(WorkbenchSnapshotView {
+            scope,
+            task_count: 0,
+            flight_count: flights_page.flights.len(),
+            latest_task: None,
+            latest_flight,
+        })
+    }
+
+    pub async fn launch_observe_flight(
+        &self,
+        request: RrdLaunchObserveFlightRequest,
+    ) -> Result<PromptFlightLaunchView, RrdError> {
+        let context_mode = match request
+            .context_mode
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+        {
+            Some(value) => PromptFlightContextMode::parse(value)
+                .map_err(|error| RrdError::from(error.to_string()))?,
+            None => PromptFlightContextMode::Pruned,
+        };
+        let acceptance_marker = request
+            .acceptance_marker
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .map(str::to_owned);
+        let launch = LaunchPromptFlight {
+            scope: self.scope(),
+            prompt: request.prompt,
+            provider: PromptFlightProvider::Observe,
+            context_mode,
+            context: PromptFlightContextRequest {
+                valid_at: now_unix_ms()?,
+                seeds: Vec::new(),
+                max_graph_depth: MAX_CONTEXT_GRAPH_DEPTH,
+                max_items: MAX_CONTEXT_ITEMS,
+                max_output_bytes: MAX_CONTEXT_OUTPUT_BYTES,
+                max_storage_keys: MAX_CONTEXT_STORAGE_KEYS,
+            },
+            acceptance_marker,
+        };
+        launch
+            .validate()
+            .map_err(|error| RrdError::from(error.to_string()))?;
+        let result = self
+            .send(true, |session, options| async move {
+                self.client.launch_prompt_flight(&session, launch, options).await
+            })
+            .await?;
+
+        Ok(PromptFlightLaunchView {
+            flight_id: result.flight.record.flight_id.as_str().to_owned(),
+            status: result.flight.record.status.as_str().to_owned(),
+            provider: result.flight.record.provider.as_str().to_owned(),
+            context_mode: result.flight.record.context_mode.as_str().to_owned(),
+            flight_cursor: result.flight.record.flight_cursor,
+            known_at_cursor: result.flight.record.known_at_cursor,
+            event_count: result.flight.events.len(),
+            idempotent_replay: result.idempotent_replay,
+        })
     }
 
     async fn diagnostic_snapshot(&self) -> Result<DiagnosticSnapshot, RrdError> {

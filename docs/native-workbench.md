@@ -50,8 +50,16 @@ native components; **Knowledge** opens their existing live lenses. **Advanced
 details** reveals protocol, installed identity, readiness cursor and capabilities.
 The glossary remains available. Actual errors remain visible in either view.
 
-**Knowledge paths**, **Activity**, **Learning**, and **Services** explain the
-requirements and explicitly show what this build cannot enable: remote source
+**Workbench** provides project-scoped planning and receipt tracking for testing,
+reverse engineering, optimization and release-update work. It records operator
+intent, context and diagnostics per project profile, and can capture runtime-backed
+receipts from authenticated engine reads (capabilities/schema/database/storage/
+vector metadata), launch governed observe flights, and capture task/flight
+snapshot summaries. It still does not execute provider calls, model runs or
+cloud workflows in this build.
+
+**Knowledge paths**, **Activity**, **Learning**, and **Services** still explain
+the requirements and explicitly show what this build cannot enable: remote source
 activation, session replay, training, provider billing and cloud synchronization.
 The page has no synthetic progress, generated run history or enabled learning
 switch. rrflow.ai, rroflow.ai and shippin.cloud are planned service roles, not

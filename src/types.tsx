@@ -116,6 +116,36 @@ export interface Authentication {
 	accessFields: AccessField[];
 }
 
+export type WorkbenchRunKind =
+	| "testing"
+	| "reverse-engineering"
+	| "optimization"
+	| "release-update";
+
+export interface WorkbenchDefinition {
+	id: string;
+	name: string;
+	description: string;
+	createdAtUnixMs: number;
+	updatedAtUnixMs: number;
+}
+
+export interface WorkbenchReceipt {
+	id: string;
+	workbenchId: string;
+	kind: WorkbenchRunKind;
+	intent: string;
+	context: string;
+	diagnostics: string;
+	recordedAtUnixMs: number;
+}
+
+export interface ConnectionWorkbenchState {
+	workbenches: WorkbenchDefinition[];
+	activeWorkbenchId?: string;
+	receipts: WorkbenchReceipt[];
+}
+
 export interface Connection {
 	id: string;
 	name: string;
@@ -149,6 +179,7 @@ export interface Connection {
 	graphLabels?: Record<string, string[]>;
 	graphShowStray?: boolean;
 	graphStraightEdges?: boolean;
+	workbench?: ConnectionWorkbenchState;
 }
 
 export interface Template {

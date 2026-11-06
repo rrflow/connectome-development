@@ -51,6 +51,43 @@ export interface RrdServiceView {
 	capabilities: RrdCapabilityView[];
 }
 
+export interface RrdTaskSummaryView {
+	task_id: string;
+	title: string;
+	status: string;
+	task_cursor: number;
+	known_at_cursor: number;
+}
+
+export interface RrdPromptFlightSummaryView {
+	flight_id: string;
+	status: string;
+	provider: string;
+	context_mode: string;
+	flight_cursor: number;
+	known_at_cursor: number;
+	task_id: string | null;
+}
+
+export interface RrdWorkbenchSnapshotView {
+	scope: string;
+	task_count: number;
+	flight_count: number;
+	latest_task: RrdTaskSummaryView | null;
+	latest_flight: RrdPromptFlightSummaryView | null;
+}
+
+export interface RrdPromptFlightLaunchView {
+	flight_id: string;
+	status: string;
+	provider: string;
+	context_mode: string;
+	flight_cursor: number;
+	known_at_cursor: number;
+	event_count: number;
+	idempotent_replay: boolean;
+}
+
 export interface RrdConnectionView {
 	endpoint: string;
 	instance: string;
@@ -372,6 +409,12 @@ export interface RrdVectorSearchRequest {
 	top_k: number;
 }
 
+export interface RrdLaunchObserveFlightRequest {
+	prompt: string;
+	context_mode?: "fresh" | "pruned";
+	acceptance_marker?: string;
+}
+
 /**
  * A failed native RRD command. `retryable` is the engine's own classification:
  * it marks a transient storage conflict retryable, such as a diagnostic read
@@ -439,6 +482,18 @@ export class RrdSessionClient {
 	async capabilities(): Promise<RrdServiceView> {
 		this.requireNative();
 		return this.call<RrdServiceView>("rrd_capabilities");
+	}
+
+	async workbenchSnapshot(): Promise<RrdWorkbenchSnapshotView> {
+		this.requireNative();
+		return this.call<RrdWorkbenchSnapshotView>("rrd_workbench_snapshot");
+	}
+
+	async launchObserveFlight(
+		request: RrdLaunchObserveFlightRequest,
+	): Promise<RrdPromptFlightLaunchView> {
+		this.requireNative();
+		return this.call<RrdPromptFlightLaunchView>("rrd_launch_observe_flight", { request });
 	}
 
 	async schema(): Promise<RrdSchemaView> {
