@@ -68,9 +68,12 @@ pub struct RrdLiveOpenRequest {
     /// Deliver what follows this cursor. Without one, changes start at the
     /// estate's head, and a live query runs once and starts at the cursor of
     /// that first result. A caller that passes a cursor for a live query
-    /// already holds its result at that cursor.
+    /// already holds its result and observed identity version at that cursor.
     #[serde(default)]
     pub after_cursor: Option<u64>,
+    /// Identity version observed with the query baseline being continued.
+    #[serde(default)]
+    pub result_identity_version: Option<u16>,
 }
 
 struct LiveTask {
@@ -175,6 +178,20 @@ impl NativeRrdClient {
         request: RrdLiveOpenRequest,
         sink: LiveSink,
     ) -> Result<LiveView, RrdError> {
+        if request.after_cursor.is_some()
+            && matches!(&request.stream, RrdLiveStream::Query { .. })
+            && request.result_identity_version.is_none()
+        {
+            return Err(
+                "A query continuation requires its observed baseline identity version".into(),
+            );
+        }
+        if request.result_identity_version.is_some()
+            && (request.after_cursor.is_none() || matches!(&request.stream, RrdLiveStream::Changes))
+        {
+            return Err("A result identity version belongs to a live-query continuation".into());
+        }
+        let mut result_identity_version = request.result_identity_version;
         let scope = self.scope();
         let mut subscriptions = self.live.0.lock().await;
         subscriptions.retain(|_, live| !live.task.is_finished());
@@ -210,6 +227,7 @@ impl NativeRrdClient {
                             .await
                             .map_err(|error| error.in_query(&text))?;
                         let cursor = result.known_at_cursor;
+                        result_identity_version = Some(result.result_identity_version);
                         first = Some(view::query(&result));
                         cursor
                     }
@@ -221,6 +239,7 @@ impl NativeRrdClient {
                         parameters: query.parameters,
                         budget: query.budget,
                         max_delta_rows: LIVE_MAX_DELTA_ROWS,
+                        result_identity_version,
                     },
                     "query",
                     after_cursor,
@@ -268,6 +287,7 @@ impl NativeRrdClient {
             stream: kind,
             after_cursor,
             first,
+            result_identity_version,
         })
     }
 

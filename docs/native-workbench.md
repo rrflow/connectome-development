@@ -94,8 +94,9 @@ No credentials, authoritative result cache or training consent enter local stora
 
 The current [selected-worker handoff](controller-worker-handoff.md) extends this
 workspace with explicit review and one engine-admitted draft request, using the
-SDK pinned to engine PR229 `e3528330`. Its exact-build live desktop acceptance
-and dependency landing remain pending. Source-edit successor planning, project
+SDK pinned to engine PR229 `a5dbb754`. The current reconciliation passes the
+installed native process suite; a fresh desktop model trial and dependency
+landing remain pending. Source-edit successor planning, project
 effects, RROFLOW delivery and model qualification remain open. Recorded native
 process checks are distinct from a live BF16 desktop journey and release evidence.
 

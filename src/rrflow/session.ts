@@ -651,6 +651,8 @@ export interface RrdLiveView {
 	stream: "changes" | "query";
 	/** The cursor the subscription delivers after. */
 	after_cursor: number;
+	/** Engine-observed identity version to retain with a query continuation cursor. */
+	result_identity_version: number | null;
 	/** A live query's first result, read at `after_cursor`, when opened without a cursor. */
 	first: RrdQueryView | null;
 }
@@ -1015,17 +1017,23 @@ export class RrdSessionClient {
 	 * Opens a live subscription; `onEvent` hears its events until it is closed
 	 * or ends. Without `afterCursor`, changes start at the estate's head and a
 	 * live query runs once first, its result returned as `first`.
+	 * Query continuation also requires the identity version observed with that cursor.
 	 */
 	async openLive(
 		stream: RrdLiveStream,
 		onEvent: (event: RrdLiveEventView) => void,
 		afterCursor?: number,
+		resultIdentityVersion?: number,
 	): Promise<RrdLiveView> {
 		this.requireNative();
 		const events = new Channel<RrdLiveEventView>();
 		events.onmessage = onEvent;
 		return this.call<RrdLiveView>("rrd_live_open", {
-			request: { stream, after_cursor: afterCursor },
+			request: {
+				stream,
+				after_cursor: afterCursor,
+				result_identity_version: resultIdentityVersion,
+			},
 			onEvent: events,
 		});
 	}

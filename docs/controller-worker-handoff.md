@@ -126,3 +126,53 @@ controls in dependency order. Ordinary-edit replanning, verified project effects
 correlated observations and independently reviewed learning remain unfinished.
 Binary, score and choice and bounded LFG/SWAG assessment cycles remain the product
 direction; this merge does not implement those engine decision contracts.
+
+### Current SDK qualification
+
+The merged UI's old `e3528330` SDK failed compilation on main's existing
+quantization estimator. Updating both SDKs to published engine candidate
+`a5dbb754f78f3d3d877d2ac9bb42df04a47648bf` then exposed the required live-query
+result-identity field. Both failures are retained; no quantization or subscription
+behavior was removed to make the pin update compile.
+
+The native live client now carries the result-identity version observed in the
+initial engine query. Its returned view exposes that version with the cursor.
+Explicit query continuation requires both, including cursor zero; missing identity
+is refused before dispatch, and the engine rejects a changed version. A fresh
+query obtains a new baseline explicitly. Durable reconnect keeps the original
+version; it cannot silently adopt a newer engine identity. The TypeScript session
+bridge passes the observed version without embedding a version constant.
+
+The canonical engine builder captured clean source `a5dbb754`; its frozen Windows
+dev executable SHA-256 is
+`94989c49bf6cae7b04d273103336c158e87539dc22f9222eb3edc29dca7cc395`.
+The staged sidecar's revision and hash match. This is an unsigned, unoptimized
+engineering artifact, not a model-weight or distribution qualification.
+
+Both fixture writers ran against that executable. All 12 value observations,
+45 query observations and three engine vectors remain equal to the prior data;
+only their recorded engine revision changes. Raw writer bytes are retained before
+formatting, and the full non-writing process run independently checks readback.
+
+Current checks pass: `pnpm check` (79 API examples, 18 value checks, 100 query
+checks), TypeScript, Rust formatting and the complete 73-entry native suite with
+`--include-ignored --test-threads=1`. That suite comprises 53 ordinary tests,
+19 installed-process scenarios and one inactive visual-capture helper; the helper
+is not visual evidence. Live tests include missing/stale continuation denial,
+matching-identity continuation and actual added/updated/removed rows. Final frontend build and four rendering smoke tests pass after the live-session
+projection change. Strict `cargo clippy --all-targets --locked -- -D warnings`
+also passes. These checks do not perform a new model call or establish desktop
+model/recovery acceptance.
+
+Dependency resolution retains the existing package versions; Cargo reselected
+socket2's already-locked Windows bindings from windows-sys 0.60.2 to 0.61.2.
+Inherited cm6-graphql exact peer-version mismatches and browser/WASM/large-chunk
+build warnings remain limitations of the inherited surfaces owned by sprint 009,
+not evidence of release qualification. The worker boundary adds no such dependency.
+
+Keep PR28 draft behind engine PR229's candidate/protected acceptance and landing.
+The current desktop model/recovery trial remains required; the older published
+trial is not relabelled. Continue through the existing budget-recovery and
+project-plan PRs, then source-grounded context, verified project effects and
+reviewed outcomes. Binary/score/choice execution and bounded assessment triggers
+are not implemented by this compatibility repair.
