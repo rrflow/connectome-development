@@ -84,7 +84,6 @@ pub struct PromptFlightSummaryView {
     pub context_mode: String,
     pub flight_cursor: u64,
     pub known_at_cursor: u64,
-    pub task_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -94,6 +93,7 @@ pub struct WorkbenchSnapshotView {
     pub flight_count: usize,
     pub latest_task: Option<TaskSummaryView>,
     pub latest_flight: Option<PromptFlightSummaryView>,
+    pub recent_flights: Vec<PromptFlightSummaryView>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -106,6 +106,35 @@ pub struct PromptFlightLaunchView {
     pub known_at_cursor: u64,
     pub event_count: usize,
     pub idempotent_replay: bool,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct PromptFlightEventView {
+    pub ordinal: u64,
+    pub at_unix_ms: u64,
+    pub elapsed_ms: u64,
+    pub stage: String,
+    pub label: String,
+    pub detail: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct PromptFlightDetailView {
+    pub flight_id: String,
+    pub status: String,
+    pub provider: String,
+    pub context_mode: String,
+    pub prompt: String,
+    pub acceptance_marker: Option<String>,
+    pub cohort_sha256: String,
+    pub created_at_unix_ms: u64,
+    pub flight_cursor: u64,
+    pub known_at_cursor: u64,
+    pub event_count: u64,
+    pub context_items: u64,
+    pub context_output_bytes: u64,
+    pub elapsed_ms: u64,
+    pub events: Vec<PromptFlightEventView>,
 }
 
 #[derive(Debug, Serialize)]

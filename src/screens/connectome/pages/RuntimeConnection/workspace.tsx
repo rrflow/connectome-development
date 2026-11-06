@@ -12,8 +12,12 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import { useMemo, useState } from "react";
-import type { RrdSessionClient } from "~/rrflow/session";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type {
+	RrdPromptFlightDetailView,
+	RrdSessionClient,
+	RrdWorkbenchSnapshotView,
+} from "~/rrflow/session";
 import { newId } from "~/shared/util/helpers";
 import { useConfigStore } from "~/shell/stores/config";
 import type { ConnectionWorkbenchState, WorkbenchRunKind } from "~/types";
@@ -144,6 +148,16 @@ export function ProjectSection({
 	const [flightAcceptanceMarker, setFlightAcceptanceMarker] = useState("");
 	const [launchFlightError, setLaunchFlightError] = useState<string | null>(null);
 	const [launchingFlight, setLaunchingFlight] = useState(false);
+	const [workbenchSnapshot, setWorkbenchSnapshot] = useState<RrdWorkbenchSnapshotView | null>(
+		null,
+	);
+	const [snapshotError, setSnapshotError] = useState<string | null>(null);
+	const [loadingSnapshot, setLoadingSnapshot] = useState(false);
+	const [selectedFlightId, setSelectedFlightId] = useState<string | null>(null);
+	const [selectedFlightDetail, setSelectedFlightDetail] =
+		useState<RrdPromptFlightDetailView | null>(null);
+	const [loadingFlightDetail, setLoadingFlightDetail] = useState(false);
+	const [flightDetailError, setFlightDetailError] = useState<string | null>(null);
 
 	const saveWorkbench = (next: ConnectionWorkbenchState) => {
 		if (!connection) {
@@ -345,6 +359,7 @@ export function ProjectSection({
 				acceptance_marker: flightAcceptanceMarker.trim() || undefined,
 			});
 			const snapshot = await sessionClient.workbenchSnapshot();
+			setWorkbenchSnapshot(snapshot);
 			const now = Date.now();
 			const diagnostics = `flight=${launch.flight_id}; status=${launch.status}; provider=${launch.provider}; contextMode=${launch.context_mode}; eventCount=${launch.event_count}; replay=${launch.idempotent_replay}; scope=${snapshot.scope}; flightPageCount=${snapshot.flight_count}.`;
 			const context = `prompt=${prompt}`;
@@ -377,6 +392,51 @@ export function ProjectSection({
 			setLaunchingFlight(false);
 		}
 	};
+
+	const refreshWorkbenchSnapshot = useCallback(async () => {
+		if (!sessionClient || !connected) {
+			return;
+		}
+		setLoadingSnapshot(true);
+		setSnapshotError(null);
+		try {
+			setWorkbenchSnapshot(await sessionClient.workbenchSnapshot());
+		} catch (error) {
+			setSnapshotError(error instanceof Error ? error.message : String(error));
+		} finally {
+			setLoadingSnapshot(false);
+		}
+	}, [sessionClient, connected]);
+
+	const loadPromptFlightDetail = useCallback(
+		async (flightId: string) => {
+			if (!sessionClient || !connected) {
+				return;
+			}
+			setLoadingFlightDetail(true);
+			setFlightDetailError(null);
+			setSelectedFlightId(flightId);
+			try {
+				setSelectedFlightDetail(
+					await sessionClient.readPromptFlight({
+						flight_id: flightId,
+					}),
+				);
+			} catch (error) {
+				setSelectedFlightDetail(null);
+				setFlightDetailError(error instanceof Error ? error.message : String(error));
+			} finally {
+				setLoadingFlightDetail(false);
+			}
+		},
+		[sessionClient, connected],
+	);
+
+	useEffect(() => {
+		if (section === "workbench" && connected && sessionClient) {
+			void refreshWorkbenchSnapshot();
+		}
+	}, [section, connected, sessionClient, refreshWorkbenchSnapshot]);
 
 	const receipts = useMemo(() => {
 		if (!activeWorkbench) {
@@ -581,6 +641,14 @@ export function ProjectSection({
 						<Group justify="flex-end">
 							<Button
 								variant="light"
+								onClick={() => void refreshWorkbenchSnapshot()}
+								loading={loadingSnapshot}
+								disabled={!connection || !connected}
+							>
+								Refresh governed flights
+							</Button>
+							<Button
+								variant="light"
 								onClick={launchObserveFlight}
 								loading={launchingFlight}
 								disabled={!connection || !activeWorkbench || !connected}
@@ -588,6 +656,153 @@ export function ProjectSection({
 								Launch observe flight
 							</Button>
 						</Group>
+						{snapshotError && (
+							<Alert
+								color="red"
+								title="Workbench snapshot failed"
+							>
+								{snapshotError}
+							</Alert>
+						)}
+						{workbenchSnapshot && (
+							<Paper
+								withBorder
+								p="sm"
+							>
+								<Stack gap="xs">
+									<Text size="sm">
+										Scope:{" "}
+										<Text
+											span
+											ff="monospace"
+										>
+											{workbenchSnapshot.scope}
+										</Text>
+									</Text>
+									<Text size="sm">
+										Recent flights in snapshot: {workbenchSnapshot.flight_count}
+									</Text>
+									{workbenchSnapshot.recent_flights.length > 0 ? (
+										workbenchSnapshot.recent_flights.map((flight) => (
+											<Paper
+												key={flight.flight_id}
+												withBorder
+												p="xs"
+											>
+												<Group justify="space-between">
+													<Text
+														size="sm"
+														ff="monospace"
+													>
+														{flight.flight_id}
+													</Text>
+													<Group gap="xs">
+														<Text size="sm">
+															{flight.status} · {flight.provider} ·{" "}
+															{flight.context_mode}
+														</Text>
+														<Button
+															size="xs"
+															variant={
+																selectedFlightId ===
+																flight.flight_id
+																	? "filled"
+																	: "subtle"
+															}
+															onClick={() =>
+																void loadPromptFlightDetail(
+																	flight.flight_id,
+																)
+															}
+														>
+															Inspect
+														</Button>
+													</Group>
+												</Group>
+											</Paper>
+										))
+									) : (
+										<Text
+											size="sm"
+											c="slate"
+										>
+											No governed flights recorded yet.
+										</Text>
+									)}
+									{loadingFlightDetail && (
+										<Text size="sm">Loading selected flight details...</Text>
+									)}
+									{flightDetailError && (
+										<Alert
+											color="red"
+											title="Flight detail read failed"
+										>
+											{flightDetailError}
+										</Alert>
+									)}
+									{selectedFlightDetail && (
+										<Paper
+											withBorder
+											p="sm"
+										>
+											<Stack gap="xs">
+												<Text
+													size="sm"
+													fw={650}
+												>
+													Selected flight
+												</Text>
+												<Text size="sm">
+													ID:{" "}
+													<Text
+														span
+														ff="monospace"
+													>
+														{selectedFlightDetail.flight_id}
+													</Text>
+												</Text>
+												<Text size="sm">
+													{selectedFlightDetail.status} ·{" "}
+													{selectedFlightDetail.provider} ·{" "}
+													{selectedFlightDetail.context_mode}
+												</Text>
+												<Text size="sm">
+													{`events=${selectedFlightDetail.event_count}; contextItems=${selectedFlightDetail.context_items}; contextBytes=${selectedFlightDetail.context_output_bytes}; elapsedMs=${selectedFlightDetail.elapsed_ms}`}
+												</Text>
+												<Text
+													size="sm"
+													ff="monospace"
+												>
+													cohort={selectedFlightDetail.cohort_sha256}
+												</Text>
+												<Text size="sm">{selectedFlightDetail.prompt}</Text>
+												<Title order={6}>Events</Title>
+												{selectedFlightDetail.events.map((event) => (
+													<Paper
+														key={`${selectedFlightDetail.flight_id}-${event.ordinal}`}
+														withBorder
+														p="xs"
+													>
+														<Text size="sm">
+															#{event.ordinal} · {event.stage} ·{" "}
+															{event.label}
+														</Text>
+														<Text
+															size="sm"
+															c="slate"
+														>
+															at={event.at_unix_ms} elapsed=
+															{event.elapsed_ms}ms
+														</Text>
+														<Text size="sm">{event.detail}</Text>
+													</Paper>
+												))}
+											</Stack>
+										</Paper>
+									)}
+								</Stack>
+							</Paper>
+						)}
 					</Stack>
 				</Paper>
 				<Paper

@@ -57,6 +57,10 @@ receipts from authenticated engine reads (capabilities/schema/database/storage/
 vector metadata), launch governed observe flights, and capture task/flight
 snapshot summaries. It still does not execute provider calls, model runs or
 cloud workflows in this build.
+The Workbench also renders a bounded recent-flight snapshot from the engine so
+operators can inspect governed flight IDs, status, provider and context mode
+without leaving the project workspace, then drill into a selected flight's
+governed summary and event timeline.
 
 **Knowledge paths**, **Activity**, **Learning**, and **Services** still explain
 the requirements and explicitly show what this build cannot enable: remote source

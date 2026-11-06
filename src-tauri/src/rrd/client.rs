@@ -12,8 +12,8 @@
 use super::error::RrdError;
 use super::transport::{is_loopback_origin, rrd_origin};
 use super::view::{
-    self, ConnectionView, DatabaseView, MapLinkView, MapPointView, PromptFlightLaunchView,
-    PromptFlightSummaryView, QueryView, ServiceView, SessionView, StorageView,
+    self, ConnectionView, DatabaseView, MapLinkView, MapPointView, PromptFlightDetailView,
+    PromptFlightEventView, PromptFlightLaunchView, PromptFlightSummaryView, QueryView, ServiceView, SessionView, StorageView,
     VectorCollectionsView, VectorMapProgressView, VectorMapView, VectorPointsView, VectorSearchView,
     WorkbenchSnapshotView,
 };
@@ -120,6 +120,12 @@ pub struct RrdLaunchObserveFlightRequest {
     pub context_mode: Option<String>,
     #[serde(default)]
     pub acceptance_marker: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RrdReadPromptFlightRequest {
+    pub flight_id: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -547,6 +553,19 @@ impl NativeRrdClient {
                     .await
             })
             .await?;
+        let recent_flights = flights_page
+            .flights
+            .iter()
+            .rev()
+            .map(|flight| PromptFlightSummaryView {
+                flight_id: flight.flight_id.as_str().to_owned(),
+                status: flight.status.as_str().to_owned(),
+                provider: flight.provider.as_str().to_owned(),
+                context_mode: flight.context_mode.as_str().to_owned(),
+                flight_cursor: flight.flight_cursor,
+                known_at_cursor: flight.known_at_cursor,
+            })
+            .collect::<Vec<_>>();
         let latest_flight = flights_page.flights.last().cloned();
         let latest_flight = if let Some(flight) = latest_flight {
             let request = ReadPromptFlight {
@@ -566,7 +585,6 @@ impl NativeRrdClient {
                 context_mode: result.flight.record.context_mode.as_str().to_owned(),
                 flight_cursor: result.flight.record.flight_cursor,
                 known_at_cursor: result.flight.record.known_at_cursor,
-                task_id: None,
             })
         } else {
             None
@@ -578,6 +596,7 @@ impl NativeRrdClient {
             flight_count: flights_page.flights.len(),
             latest_task: None,
             latest_flight,
+            recent_flights,
         })
     }
 
@@ -634,6 +653,56 @@ impl NativeRrdClient {
             known_at_cursor: result.flight.record.known_at_cursor,
             event_count: result.flight.events.len(),
             idempotent_replay: result.idempotent_replay,
+        })
+    }
+
+    pub async fn read_prompt_flight(
+        &self,
+        request: RrdReadPromptFlightRequest,
+    ) -> Result<PromptFlightDetailView, RrdError> {
+        let flight_id =
+            canonical(&request.flight_id, "flight id").map_err(|error| RrdError::from(error.as_str()))?;
+        let read = ReadPromptFlight {
+            scope: self.scope(),
+            flight_id,
+            max_storage_keys: MAX_PROMPT_FLIGHT_STORAGE_KEYS,
+        };
+        let result = self
+            .send(false, |session, options| async move {
+                self.client.read_prompt_flight(&session, read, options).await
+            })
+            .await?;
+        let record = result.flight.record;
+        let events = result
+            .flight
+            .events
+            .into_iter()
+            .map(|event| PromptFlightEventView {
+                ordinal: event.ordinal,
+                at_unix_ms: event.at_unix_ms,
+                elapsed_ms: event.elapsed_ms,
+                stage: event.stage.as_str().to_owned(),
+                label: event.label,
+                detail: event.detail,
+            })
+            .collect::<Vec<_>>();
+
+        Ok(PromptFlightDetailView {
+            flight_id: record.flight_id.as_str().to_owned(),
+            status: record.status.as_str().to_owned(),
+            provider: record.provider.as_str().to_owned(),
+            context_mode: record.context_mode.as_str().to_owned(),
+            prompt: record.prompt,
+            acceptance_marker: record.acceptance_marker,
+            cohort_sha256: record.cohort_sha256,
+            created_at_unix_ms: record.created_at_unix_ms,
+            flight_cursor: record.flight_cursor,
+            known_at_cursor: record.known_at_cursor,
+            event_count: record.event_count,
+            context_items: record.metrics.context_items,
+            context_output_bytes: record.metrics.context_output_bytes,
+            elapsed_ms: record.metrics.elapsed_ms,
+            events,
         })
     }
 

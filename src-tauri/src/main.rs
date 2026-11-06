@@ -116,6 +116,7 @@ fn main() {
             rrd::rrd_capabilities,
             rrd::rrd_workbench_snapshot,
             rrd::rrd_launch_observe_flight,
+            rrd::rrd_read_prompt_flight,
             rrd::rrd_database,
             rrd::rrd_schema,
             rrd::rrd_storage,

@@ -66,7 +66,6 @@ export interface RrdPromptFlightSummaryView {
 	context_mode: string;
 	flight_cursor: number;
 	known_at_cursor: number;
-	task_id: string | null;
 }
 
 export interface RrdWorkbenchSnapshotView {
@@ -75,6 +74,7 @@ export interface RrdWorkbenchSnapshotView {
 	flight_count: number;
 	latest_task: RrdTaskSummaryView | null;
 	latest_flight: RrdPromptFlightSummaryView | null;
+	recent_flights: RrdPromptFlightSummaryView[];
 }
 
 export interface RrdPromptFlightLaunchView {
@@ -86,6 +86,33 @@ export interface RrdPromptFlightLaunchView {
 	known_at_cursor: number;
 	event_count: number;
 	idempotent_replay: boolean;
+}
+
+export interface RrdPromptFlightEventView {
+	ordinal: number;
+	at_unix_ms: number;
+	elapsed_ms: number;
+	stage: string;
+	label: string;
+	detail: string;
+}
+
+export interface RrdPromptFlightDetailView {
+	flight_id: string;
+	status: string;
+	provider: string;
+	context_mode: string;
+	prompt: string;
+	acceptance_marker: string | null;
+	cohort_sha256: string;
+	created_at_unix_ms: number;
+	flight_cursor: number;
+	known_at_cursor: number;
+	event_count: number;
+	context_items: number;
+	context_output_bytes: number;
+	elapsed_ms: number;
+	events: RrdPromptFlightEventView[];
 }
 
 export interface RrdConnectionView {
@@ -415,6 +442,10 @@ export interface RrdLaunchObserveFlightRequest {
 	acceptance_marker?: string;
 }
 
+export interface RrdReadPromptFlightRequest {
+	flight_id: string;
+}
+
 /**
  * A failed native RRD command. `retryable` is the engine's own classification:
  * it marks a transient storage conflict retryable, such as a diagnostic read
@@ -494,6 +525,13 @@ export class RrdSessionClient {
 	): Promise<RrdPromptFlightLaunchView> {
 		this.requireNative();
 		return this.call<RrdPromptFlightLaunchView>("rrd_launch_observe_flight", { request });
+	}
+
+	async readPromptFlight(
+		request: RrdReadPromptFlightRequest,
+	): Promise<RrdPromptFlightDetailView> {
+		this.requireNative();
+		return this.call<RrdPromptFlightDetailView>("rrd_read_prompt_flight", { request });
 	}
 
 	async schema(): Promise<RrdSchemaView> {

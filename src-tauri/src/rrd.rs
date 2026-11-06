@@ -15,13 +15,14 @@ mod view;
 
 use client::{
     NativeRrdClient, RrdConnectRequest, RrdLaunchObserveFlightRequest, RrdQueryRequest,
-    RrdVectorMapRequest, RrdVectorPointsRequest, RrdVectorSearchRequest,
+    RrdReadPromptFlightRequest, RrdVectorMapRequest, RrdVectorPointsRequest,
+    RrdVectorSearchRequest,
 };
 use error::RrdError;
 use transport::public_rrd_url;
 use view::{
-    ConnectionView, DatabaseView, QueryView, ServiceView, StorageView, VectorCollectionsView,
-    PromptFlightLaunchView,
+    ConnectionView, DatabaseView, PromptFlightDetailView, PromptFlightLaunchView, QueryView,
+    ServiceView, StorageView, VectorCollectionsView,
     VectorMapProgressView, VectorMapView, VectorPointsView, VectorSearchView,
     WorkbenchSnapshotView,
 };
@@ -133,6 +134,15 @@ pub async fn rrd_launch_observe_flight(
         .await?
         .launch_observe_flight(request)
         .await
+}
+
+#[tauri::command]
+pub async fn rrd_read_prompt_flight(
+    profile: String,
+    request: RrdReadPromptFlightRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<PromptFlightDetailView, RrdError> {
+    state.client(&profile).await?.read_prompt_flight(request).await
 }
 
 #[tauri::command]
