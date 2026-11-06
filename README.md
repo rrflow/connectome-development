@@ -77,7 +77,7 @@ Fleet management requires a separately accepted engine contract and evidence.
 
 ## Development
 
-Requirements: Node.js 22.13 or newer, pnpm 11.24, and the Tauri 2 platform
+Requirements: Node.js 24.22.0 or newer, pnpm 11.24, and the Tauri 2 platform
 prerequisites.
 
 ```bash

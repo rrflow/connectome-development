@@ -29,6 +29,27 @@ export interface TaskProposal {
 	elapsed_ms: string | null;
 	response_sha256: string;
 }
+export interface WorkerReview {
+	selection_attempt_id: string;
+	selection_sha256: string;
+	task_sha256: string;
+	configuration_sha256: string;
+	binding_id: string;
+	effort: string | null;
+	wait_timeout_ms: string;
+}
+export interface WorkerDraft {
+	attempt_id: string;
+	selection_attempt_id: string;
+	binding_id: string;
+	service_id: string;
+	content: string;
+	content_sha256: string;
+	response_sha256: string;
+	task_sha256: string;
+	configuration_sha256: string;
+	elapsed_ms: string | null;
+}
 export type TaskCommand =
 	| { action: "list"; after_cursor: string }
 	| { action: "open"; title: string; goal: string }
@@ -43,6 +64,16 @@ export type TaskCommand =
 			action: "propose";
 			task_id: string;
 			attempt_id: string;
+			expected_task_sha256: string;
+			expected_configuration_sha256: string;
+	  }
+	| { action: "prepare_worker"; task_id: string; selection_attempt_id: string }
+	| {
+			action: "work";
+			task_id: string;
+			attempt_id: string;
+			selection_attempt_id: string;
+			expected_selection_sha256: string;
 			expected_task_sha256: string;
 			expected_configuration_sha256: string;
 	  }
@@ -63,10 +94,13 @@ export type TaskReply =
 			unavailable: string | null;
 	  }
 	| { kind: "proposal"; proposal: TaskProposal }
+	| { kind: "worker_prepared"; review: WorkerReview }
+	| { kind: "worker"; worker: WorkerDraft }
 	| {
 			kind: "attempt";
 			status: "reserved" | "accepted" | "stopped" | "invalidated" | null;
 			proposal: TaskProposal | null;
+			worker: WorkerDraft | null;
 	  };
 
 /** Recovery metadata, never a cached outcome or permission to retry. */

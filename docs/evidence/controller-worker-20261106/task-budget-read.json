@@ -1,0 +1,24 @@
+{
+	"budget": {
+		"format_version": 1,
+		"instance_id": "instance-49f097824c98ab1ed3e49a6f",
+		"scope": "instance:instance-49f097824c98ab1ed3e49a6f",
+		"task_id": "task-ed886df6db4b2c949185fcb2e41d89a91f47c24aba6f66db1566ea67f951dcee",
+		"configuration_sha256": "2d382dbde4b923db65fb5ebbf841d12b45ec0e278c7cab41635dbff782072d55",
+		"limits": {
+			"max_run_elapsed_ms": 120000,
+			"max_steps": 2,
+			"max_step_elapsed_ms": 60000
+		},
+		"started_at_unix_ms": 1794006187017,
+		"deadline_unix_ms": 1794006307017,
+		"last_observed_at_unix_ms": 1794006225312,
+		"charged_elapsed_ms": 15119,
+		"reserved_steps": 2,
+		"active_attempt": null,
+		"execution_may_continue": false,
+		"stopped": null,
+		"stop_expected_sha256": null
+	},
+	"budget_sha256": "cfc9ee5a140e8297ad23c6c252a463324f1a5b6070f8af49a97cca99f1afae3f"
+}

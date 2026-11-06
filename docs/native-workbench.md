@@ -92,9 +92,12 @@ A lost reply must not trigger another inference. A local **Not dispatched** resu
 allows renewed input review; unresolved remote state remains visibly uncertain.
 No credentials, authoritative result cache or training consent enter local storage.
 
-This experimental integration depends on engine PR222 (`61ddb264`) and its
-unmerged prerequisites. It does not implement worker execution, source-edit
-successor planning, RROFLOW delivery or model qualification. The recorded native
+The current [selected-worker handoff](controller-worker-handoff.md) extends this
+workspace with explicit review and one engine-admitted draft request, using the
+SDK pinned to engine PR229 `a5dbb754`. The current reconciliation passes the
+installed native process suite; a fresh desktop model trial and dependency
+landing remain pending. Source-edit successor planning, project
+effects, RROFLOW delivery and model qualification remain open. Recorded native
 process checks are distinct from a live BF16 desktop journey and release evidence.
 
 ## Learn and navigate
@@ -145,6 +148,12 @@ as `rrflow.exe` (Windows) or `rrflow` (Linux/macOS). The frontend-only browser
 preview intentionally cannot launch a native engine or hold its credentials.
 
 ## Validation
+
+The [actual desktop worker trial](controller-worker-desktop-live.md) records
+source-bound BF16 selection, explicit worker draft and reload/readback evidence,
+including the remaining integration and release limits.
+The [evidence formatting correction](controller-worker-evidence-formatting.md)
+records the subsequent failed publication CI and unchanged observation values.
 
 Run `corepack pnpm check`, `corepack pnpm build` and `corepack pnpm test:smoke`.
 Native checks are `cargo test --manifest-path src-tauri/Cargo.toml --all-targets
