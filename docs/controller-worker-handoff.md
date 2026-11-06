@@ -176,3 +176,48 @@ trial is not relabelled. Continue through the existing budget-recovery and
 project-plan PRs, then source-grounded context, verified project effects and
 reviewed outcomes. Binary/score/choice execution and bounded assessment triggers
 are not implemented by this compatibility repair.
+
+### Current desktop handoff and recovery
+
+The clean UI source `9651939c8dc1a40843f0a5b0061caa7a549ab0fa` built with
+the matching identified `a5dbb754` engine and completed a fresh desktop trial.
+Its unsigned Windows dev executable is 58,861,568 bytes, SHA-256
+`09ad51711478a5c14e99d7d764f9d35fa4242c7ef42b25c2ead1850ab08e8070`.
+The [validation receipt](evidence/controller-worker-20261106/validation.json)
+binds source, artifacts and private original readback hashes. The initial launch
+harness could not access its process environment; a recorded PowerShell launch
+started the identified application. No model request preceded UI admission.
+
+An isolated installed estate used the existing operator-configured experimental
+BF16 profile. Through the actual Tasks UI, the driver recorded a
+[real PR-derived task](evidence/controller-worker-20261106/task-input.json),
+set two steps with 60-second step and 120-second run limits, reviewed controller
+inputs, requested one proposal, reconciled its budget, reviewed the selected
+worker and requested one draft. The worker returned HTTP 200, 646 prompt tokens,
+176 completion tokens and 13,200 ms observed elapsed time. This is one candidate
+with task text only, not source inspection, model ranking or weight attestation.
+
+Reloading the desktop and selecting Recover last attempt restored the same
+accepted worker attempt and content digest. Independent public-engine reads
+before reload, after reload and after UI recovery returned equal task, budget
+and attempt payloads; the readback driver permits no inference operation.
+The [comparison](evidence/controller-worker-20261106/recovery-comparison.json)
+records those equalities. Budget remains two reserved steps and 15,119 ms charged,
+with no active attempt or uncertain remote execution. The task remains open.
+No renderer error was captured. The published task/budget/attempt JSON files
+are unchanged payload projections; credentials, local paths, configuration and
+complete session logs remain private.
+
+[Accepted draft](evidence/controller-worker-20261106/worker-accepted.png) and
+[recovered draft](evidence/controller-worker-20261106/worker-recovered.png)
+are original desktop screenshots, without fixture seeding or masking. They
+establish this current UI handoff/reload boundary. They do not establish process
+restart, ordinary-edit successor planning, project mutations, RROFLOW correlation,
+independent quality review, training permission or native assessment bursts.
+Candidate CI and engine PR229's protected landing remain required before merging.
+
+The first evidence check rejected the new JSON formatting after Windows passed
+a literal wildcard to Biome. Formatting the explicit evidence directory fixed
+the input; independent comparisons confirm every published payload still equals
+its original engine response. Private-marker checks cover the public JSON,
+and the recovered screenshot was inspected before publication.

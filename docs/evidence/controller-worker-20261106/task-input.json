@@ -1,0 +1,8 @@
+{
+	"title": "Add engine-owned selected-worker handoff to Connectome",
+	"goal": "Review the real selected-worker handoff integration in https://github.com/rrflow/connectome-development/pull/28 at 9651939c8dc1a40843f0a5b0061caa7a549ab0fa. Produce a draft of remaining implementation, verification and unresolved questions. Scope: current SDK compatibility, real model request and reload/readback. Task text alone is available; do not claim code inspection, edited files, passed checks or task completion. The source PR body is retained in the trial evidence; it is not supplied as model context.",
+	"source": "https://github.com/rrflow/connectome-development/pull/28",
+	"sourceRevision": "9651939c8dc1a40843f0a5b0061caa7a549ab0fa",
+	"sourceBodySha256": "79f4055fc6396af7926b3a215985b89a26eee44f243808c47db343065d6e141c",
+	"projection": "Operator-authored bounded task based on the actual PR; no outcome or suitability label."
+}
