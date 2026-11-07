@@ -81,11 +81,13 @@ changes in `process/attunement.rs`; prior review covered the rest of that test
 module. The separate pin/lock and canonical fixture diffs were also reviewed
 and limited to the 91b6 SDK references and fixture revision updates. The local
 ignored sidecar check passed but is not a committed source change. Native
-protected checks/landing and UI candidate/protected CI are still required
-before treating the joined source-aware journey as landed. Browser smoke
+protected checks passed 24/24 and PR291 landed as
+`b9aaa9abce3c25108a53cc43c70262947dda0f62`, with the same source tree as the
+91b6 candidate. UI candidate/protected CI remain required before treating the
+joined source-aware journey as landed. Browser smoke
 responses are controlled fixtures, not installed authorization or live-provider
-evidence. Live BF16, generic binary/score/choice assessments, assessment cycles,
-file effects, and learning require their own evidence.
+evidence. The separate live BF16 observation below does not establish generic
+binary/score/choice assessments, assessment cycles, file effects, or learning.
 
 ## Actual desktop observation
 
@@ -115,3 +117,33 @@ No additional provider request occurred during these reads.
 This establishes the controlled source-handling and recovery journey. The
 fixture reports received bytes only; it is not a model assessment, reviewed
 training outcome, file-editing worker, or proof of complete project fulfillment.
+
+## Live BF16 development observation
+
+A separate isolated project used the same frozen desktop/native pair on
+7 November 2026. After an ordinary edit, the desktop accepted a successor plan
+and inventoried an exact 8,767-byte snapshot of SWAG's decision-modes document
+(SHA-256 `96192b78a536c40e30bf053704781a09f6044eab1e5b7bc03face6a1152585cc`).
+The configured custom BF16 endpoint returned an accepted selection in 2,009 ms.
+After explicit source review and export acknowledgement, one worker returned a
+draft in 18,832 ms, reporting 3,063 prompt and 240 completion tokens. It proposed
+implementation and verification steps for binary, score and choice assessments,
+and questions about abstention and concurrent bursts. This was a task about the
+supplied document, not an inspection of implementation code.
+
+RRFlow retained selection `dfee4c0b-4aec-4160-a4e4-ec275a9a5cff` and worker
+`cd56abbf-fa40-4b17-afb6-513e6db278df`. Independent public readback matched the
+source bytes, inventory checkpoint and returned-content digest
+`a912fb2f6823f8730408d6398b4898e977c5dd73bdd32fd3d904fb34b47fe6ba`.
+The budget recorded two of two steps spent, 20,918 ms charged, no active attempt
+and further execution disabled. Reloading the desktop, recovering the last
+attempt and reading its budget restored the draft. Separate public readbacks
+before and after reload returned identical attempt and budget payloads.
+
+This is live endpoint and durable UI recovery evidence. The draft is unreviewed
+and the task remains open. Packet/request/response digests are engine-reported;
+this trial did not independently capture provider wire bytes, restart the
+engine, configure an observation sink, modify project files through the worker,
+or establish model quality. Generic typed assessments, bounded LFG/SWAG cycles,
+reviewed learning, full project fulfillment and release qualification remain
+separate implementation and evidence requirements.

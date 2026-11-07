@@ -154,7 +154,7 @@ corepack pnpm engine:check
 corepack pnpm tauri:bundle
 ```
 
-Engine staging builds the exact RRFlow revision in the native Cargo lock.
+Engine staging uses the canonical builder at the exact RRFlow revision in the native Cargo lock. The sidecar helper checks the executable's embedded source revision, clean flag, target and self-reported file digest before publishing it. CI compares its builder receipt to the executable on fresh-build and cache paths. These hashes and coordinates are consistency checks, not a signature or remote build attestation.
 It is a build-time action; installed startup downloads no engine source.
 For a development artifact, `corepack pnpm tauri build --debug --no-bundle
 --config src-tauri/tauri.bundle.conf.json` embeds the production frontend and
