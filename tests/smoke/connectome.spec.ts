@@ -214,7 +214,7 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 						command: string,
 						args: {
 							profile?: string;
-							request?: { instance?: string };
+							request?: { instance?: string; action?: string; query?: string };
 							endpoint?: string;
 							path?: string;
 						},
@@ -289,6 +289,76 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 								request_id: `native-${path}`,
 								operation_id: `native-${path}`,
 								outcome: { status: "ok", payload },
+							};
+						}
+						if (command === "rrd_attunement") {
+							const profileB = profileInstances[profile] === "diagnostic-profile-b";
+							const snapshot = (profileB ? "d" : "a").repeat(64);
+							const job = profileB ? "job-b" : "job-a";
+							if (args.request?.action === "list")
+								return {
+									kind: "page",
+									page: {
+										jobs: [{ job_id: job, checkpoint_count: "1" }],
+										next_after_job_id: null,
+									},
+								};
+							return {
+								kind: "snapshot",
+								snapshot: {
+									status: {
+										job: {
+											id: job,
+											checkpoints: [
+												{
+													phase: "inventory",
+													output_sha256: snapshot,
+													coordinates: { runtime_cursor: "27" },
+													committed_at_unix_ms: "1000",
+												},
+											],
+										},
+									},
+								},
+							};
+						}
+						if (command === "rrd_query") {
+							const profileB = profileInstances[profile] === "diagnostic-profile-b";
+							const snapshot = (profileB ? "d" : "a").repeat(64);
+							const root = (profileB ? "e" : "b").repeat(64);
+							const child = (profileB ? "f" : "c").repeat(64);
+							const query = args.request?.query ?? "";
+							const edge = (fromKind: string, from: string, to: string) => ({
+								values: {
+									from_kind: fromKind,
+									from_id: from,
+									to_kind: "source-tree-entry",
+									to_id: to,
+									relation_kind: "source-tree-contains",
+									relation_id: `edge-${to}`,
+								},
+							});
+							const rows = query.includes("START source-tree-snapshot:")
+								? [edge("source-tree-snapshot", snapshot, root)]
+								: query.includes("START source-tree-entry:")
+									? [edge("source-tree-entry", root, child)]
+									: [
+											{
+												values: {
+													id: query.includes(child) ? child : root,
+													path: query.includes(child)
+														? profileB
+															? "Profile B source"
+															: "Profile A source"
+														: "",
+												},
+											},
+										];
+							return {
+								known_at_cursor: 27,
+								rows,
+								truncated: false,
+								keys_examined: 2,
 							};
 						}
 						if (
@@ -419,6 +489,7 @@ test("workbench visualizes returned project data and recorded flight events", as
 	const { profileA, profileB } = await createDiagnosticProfiles(page);
 	await openDiagnosticWorkbench(page, profileA, profileB);
 	await expect(page.getByRole("heading", { name: "Documents and relationships" })).toBeVisible();
+	await page.getByRole("button", { name: "Read all-model graph", exact: true }).click();
 	await expect(
 		page.getByText(/Showing 1 of 1 returned records and 0 of 0 returned relationships/),
 	).toBeVisible();
@@ -444,9 +515,30 @@ test("workbench visualizes returned project data and recorded flight events", as
 	await expect(page).toHaveURL(new RegExp(`${profileA}/knowledge/records$`));
 });
 
+test("inventory neighborhood follows the selected project session", async ({ page }) => {
+	const { profileA, profileB } = await createDiagnosticProfiles(page);
+	await openDiagnosticWorkbench(page, profileA, profileB);
+	const inventory = page.getByLabel("Inventory neighborhood");
+	await inventory.getByText("Choose a source entry using the keyboard", { exact: true }).click();
+	await expect(
+		inventory.getByRole("button", { name: "Profile A source", exact: true }),
+	).toBeVisible();
+	await page.getByRole("textbox", { name: "Selected project", exact: true }).click();
+	await page.getByRole("option", { name: "Diagnostic Profile B" }).click();
+	await expect(page).toHaveURL(new RegExp(`${profileB}/reasoning/workbench$`));
+	await inventory.getByText("Choose a source entry using the keyboard", { exact: true }).click();
+	await expect(
+		inventory.getByRole("button", { name: "Profile B source", exact: true }),
+	).toBeVisible();
+	await expect(
+		inventory.getByRole("button", { name: "Profile A source", exact: true }),
+	).toHaveCount(0);
+});
+
 test("visualizations expose an empty graph and a failed storage refresh", async ({ page }) => {
 	const { profileA, profileB } = await createDiagnosticProfiles(page);
 	await openDiagnosticWorkbench(page, profileA, profileB);
+	await page.getByRole("button", { name: "Read all-model graph", exact: true }).click();
 	await expect(page.getByText(/Showing 1 of 1 returned records/)).toBeVisible();
 	await page.evaluate(() =>
 		(

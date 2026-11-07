@@ -48,3 +48,7 @@ On Windows the native process test `rrd::client::process::the_lenses_read_a_live
 ## Design references
 
 [WCAG 2.2](https://www.w3.org/TR/WCAG22/) requires keyboard-operable functionality and that color not be the only way information is conveyed. The record list and textual event details support those goals; they do not by themselves establish WCAG conformance. [OpenTelemetry's trace model](https://opentelemetry.io/docs/specs/otel/overview/) defines parent/child relationships using span context, so this workbench does not infer a network topology from a list of ordered events. Its [metrics data model](https://opentelemetry.io/docs/specs/otel/metrics/data-model/) distinguishes cumulative and delta observations and their time windows; future rate charts need source timing and reset semantics rather than differences guessed across restarts.
+
+## Subsequent narrow inventory view
+
+[PR #44 candidate evidence](workbench-inventory-neighborhood-2026-11-07.md) tests a bounded, historical Inventory-checkpoint neighborhood through existing engine queries. It does not change the full-diagnostic limit or establish complete indexing.
