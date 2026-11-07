@@ -1,7 +1,7 @@
 # Task recovery after worker integration
 
-Status: reconciliation under validation; current desktop acceptance and protected
-landing remain pending.
+Status: source reconciliation and current desktop acceptance are documented;
+native landing and protected UI acceptance remain pending.
 
 ## Source and behavior
 
@@ -71,9 +71,11 @@ Inherited vendor WASM resolution, browser externalization, mixed import and larg
 chunk warnings remain. Full staged whitespace checking also reports ten incoming
 historical Markdown files; their blobs match the landed parent exactly. The
 resolved source scope passes. The [validation record](evidence/controller-task-recovery-reconciliation/validation.json)
-binds source hashes, commands, results and raw-log digests. A fresh
-source-bound desktop Stop/resume, separate worker request,
-reload and independent public readback are required after the source is committed.
+binds source hashes, commands, results and raw-log digests. The fresh source-bound
+desktop Stop/resume, separate worker request, reload and independent readback are
+now documented in the [current desktop observation](controller-task-recovery-current-desktop.md),
+with sanitized [manifest](evidence/controller-task-recovery-current-desktop-20261106/manifest.json)
+and [readback](evidence/controller-task-recovery-current-desktop-20261106/readback.json).
 
 Native PR230 must pass candidate and protected CI and land before this UI merges.
 The UI also requires its own candidate and protected checks. Source-edit successor
