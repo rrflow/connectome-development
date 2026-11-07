@@ -41,6 +41,7 @@ export const WORKSPACE_AREAS: WorkspaceArea[] = [
 		tabs: [
 			{ route: "reasoning/tasks", label: "Tasks" },
 			{ route: "reasoning/plan", label: "Project plan" },
+			{ route: "reasoning/workbench", label: "Workbench" },
 		],
 	},
 	{
@@ -62,6 +63,7 @@ export function workspaceRoute(section?: string, detail?: string): string {
 	const route = detail ? `${section}/${detail}` : (section ?? "overview");
 	if (ROUTES.has(route)) return route;
 	if (route === "tasks") return "reasoning/tasks";
+	if (route === "workbench") return "reasoning/workbench";
 	if (route === "plan") return "reasoning/plan";
 	if (route === "api") return "system/api";
 	if (route === "knowledge/storage") return "system/storage";

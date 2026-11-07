@@ -106,7 +106,7 @@ export function SessionPanel({
 		return (
 			<Alert
 				color="blue"
-				title="Looking inside the estate needs the desktop app"
+				title="Looking inside the engram needs the desktop app"
 			>
 				The operator credential and session token stay in Connectome's native process, so
 				the records, vectors, and storage views run only in the desktop build.
@@ -171,7 +171,7 @@ export function SessionPanel({
 					fz="lg"
 					fw={650}
 				>
-					Sign in to look inside this estate
+					Sign in to look inside this engram
 				</Text>
 				<Badge
 					variant="dot"
@@ -184,7 +184,7 @@ export function SessionPanel({
 				fz="sm"
 				mt={4}
 			>
-				Choose the operator credential file RRFlow created when it installed this estate.
+				Choose the operator credential file RRFlow created when it installed this engram.
 				Connectome's native process reads it; the credential and the session token never
 				reach this window.
 			</Text>

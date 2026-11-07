@@ -17,7 +17,7 @@ export function ProjectOverview({
 				<Text mt="sm">
 					Inspect records in rrflowDB, follow their relationships through rrflowQL,
 					compare vectors, and inspect rrflowKV storage. These are views of one project
-					estate, not independent copies of its knowledge.
+					engram, not independent copies of its knowledge.
 				</Text>
 				<Text mt="sm">
 					Running another project in parallel does not share its records, credentials, or

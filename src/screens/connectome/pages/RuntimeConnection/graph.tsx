@@ -38,7 +38,7 @@ const LAYOUT_ITERATIONS = 300;
 const BARNES_HUT_THRESHOLD = 500;
 /**
  * LinLog attraction with strong gravity keeps clusters visibly apart and
- * unlinked records near the middle. On RRFlow's own 271-document estate it
+ * unlinked records near the middle. On RRFlow's own 271-document engram it
  * removed every overlapping node (300 before) and doubled the median gap.
  */
 const LAYOUT_SETTINGS = { linLogMode: true, strongGravityMode: true, gravity: 1 } as const;

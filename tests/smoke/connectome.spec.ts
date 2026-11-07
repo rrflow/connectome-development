@@ -121,6 +121,22 @@ test("creates an RRD HTTP runtime profile by default", async ({ page }, testInfo
 	await expect(page).toHaveURL(/\/system\/storage$/);
 	await page.getByRole("button", { name: "Reasoning", exact: true }).click();
 	await expect(page).toHaveURL(/\/reasoning\/tasks$/);
+	await page.getByRole("tab", { name: "Workbench", exact: true }).click();
+	await expect(page).toHaveURL(/\/reasoning\/workbench$/);
+	await expect(
+		page.getByRole("heading", { name: "Prompt workbench", exact: true }),
+	).toBeVisible();
+	await expect(
+		page.getByRole("button", { name: "Launch observe flight", exact: true }),
+	).toBeDisabled();
+	await page.getByLabel("Workbench name", { exact: true }).fill("Local test notes");
+	await page.getByRole("button", { name: "Create local workbench", exact: true }).click();
+	await page.getByLabel("Note intent", { exact: true }).fill("Inspect graph");
+	await page.getByRole("button", { name: "Save local note", exact: true }).click();
+	await expect(page.getByText("testing · Inspect graph", { exact: true })).toBeVisible();
+	await expect(
+		page.getByRole("button", { name: "Capture engine diagnostics", exact: true }),
+	).toBeDisabled();
 	await page.getByRole("tab", { name: "Project plan", exact: true }).click();
 	await expect(page).toHaveURL(/\/reasoning\/plan$/);
 	await expect(page.getByRole("heading", { name: "Project plan", exact: true })).toBeVisible();

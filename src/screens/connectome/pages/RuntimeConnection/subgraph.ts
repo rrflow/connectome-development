@@ -1,6 +1,6 @@
 import type { RrdGraphView } from "~/rrflow/session";
 
-export type GraphScope = "estate" | "neighbourhood";
+export type GraphScope = "engram" | "neighbourhood";
 export type GraphDirection = "both" | "outgoing" | "incoming";
 
 export interface GraphLens {
@@ -17,7 +17,7 @@ export interface GraphLens {
 
 /**
  * Selects the part of the engine-issued graph snapshot one lens draws: the
- * whole estate or one record's neighbourhood, filtered by record and relation
+ * whole engram or one record's neighbourhood, filtered by record and relation
  * kind. It never invents records or relations; every node and edge returned
  * is in the snapshot.
  */
@@ -35,7 +35,7 @@ export function selectSubgraph(graph: RrdGraphView, lens: GraphLens): RrdGraphVi
 			visible.has(edge.to),
 	);
 
-	if (lens.scope === "estate" || !lens.focus || !visible.has(lens.focus)) {
+	if (lens.scope === "engram" || !lens.focus || !visible.has(lens.focus)) {
 		return { ...graph, nodes, edges };
 	}
 

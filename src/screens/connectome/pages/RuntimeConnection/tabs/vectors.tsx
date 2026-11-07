@@ -375,7 +375,7 @@ export function VectorsTab({
 				title="Vectors"
 				description={
 					<>
-						This estate has no vector <Term id="collection">collections</Term> yet.
+						This engram has no vector <Term id="collection">collections</Term> yet.
 					</>
 				}
 			/>

@@ -155,7 +155,7 @@ export function CreateConnectionPage() {
 		dispatchIntent("open-settings", { tab: "templates" });
 	});
 
-	// The estate the desktop is serving, as a template for a runtime
+	// The engram the desktop is serving, as a template for a runtime
 	// connection: the announced loopback address, the instance the engine
 	// identified as, and a reference to the operator credential file.
 	const served = useDatabaseStore((s) => s.servedEstate);
@@ -166,7 +166,7 @@ export function CreateConnectionPage() {
 
 		return {
 			id: "_localhost",
-			name: "Served estate",
+			name: "Served engram",
 			icon: 0,
 			values: {
 				mode: "none",
@@ -252,10 +252,10 @@ export function CreateConnectionPage() {
 														fw={500}
 														lh={1}
 													>
-														Served estate
+														Served engram
 													</Text>
 													<Text fz="sm">
-														The estate Connectome is serving
+														The engram Connectome is serving
 													</Text>
 												</Box>
 											</Menu.Item>

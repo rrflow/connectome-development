@@ -441,6 +441,86 @@ fn a_second_connection_never_replays_the_first_session() {
 
 #[test]
 #[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
+fn observe_flight_is_read_back_after_reconnecting() {
+    let estate = Estate::install_and_serve();
+    tauri::async_runtime::block_on(async {
+        load_fixture(&estate).await;
+        let client = NativeRrdClient::connect(estate.connect_request())
+            .await
+            .expect("native connection");
+        let launched = client
+            .launch_observe_flight(RrdLaunchObserveFlightRequest {
+                prompt: "Inspect the loaded project documents and relationships".into(),
+                context_mode: Some("pruned".into()),
+                acceptance_marker: None,
+            })
+            .await
+            .expect("observe flight launch");
+        let before = client
+            .read_prompt_flight(RrdReadPromptFlightRequest {
+                flight_id: launched.flight_id.clone(),
+            })
+            .await
+            .expect("read launched flight");
+        assert_eq!(before.flight_id, launched.flight_id);
+        assert_eq!(before.provider, "observe");
+        assert_eq!(before.event_count as usize, before.events.len());
+        assert!(!before.events.is_empty());
+        for index in 0..8 {
+            client
+                .launch_observe_flight(RrdLaunchObserveFlightRequest {
+                    prompt: format!("Inspect project context {index}"),
+                    context_mode: Some("pruned".into()),
+                    acceptance_marker: None,
+                })
+                .await
+                .expect("additional flight for cursor pagination");
+        }
+        let first_page = client
+            .workbench_snapshot(0)
+            .await
+            .expect("first flight page");
+        assert_eq!(first_page.flights.len(), 8);
+        assert!(first_page.truncated);
+        let last_cursor = first_page
+            .flights
+            .last()
+            .expect("first page has a cursor")
+            .flight_cursor;
+        let next_page = client
+            .workbench_snapshot(last_cursor)
+            .await
+            .expect("next flight page");
+        assert_eq!(next_page.flights.len(), 1);
+        assert!(!next_page.truncated);
+        assert!(next_page.flights[0].flight_cursor > last_cursor);
+        client.close().await.expect("close first session");
+
+        let reopened = NativeRrdClient::connect(estate.connect_request())
+            .await
+            .expect("reconnect to same instance");
+        let after = reopened
+            .read_prompt_flight(RrdReadPromptFlightRequest {
+                flight_id: launched.flight_id.clone(),
+            })
+            .await
+            .expect("read flight after reconnect");
+        assert_eq!(after.flight_id, before.flight_id);
+        assert_eq!(after.event_count, before.event_count);
+        assert_eq!(after.known_at_cursor, before.known_at_cursor);
+        assert!(reopened
+            .workbench_snapshot(0)
+            .await
+            .expect("flight list")
+            .flights
+            .iter()
+            .any(|flight| flight.flight_id == launched.flight_id));
+        reopened.close().await.expect("close reconnected session");
+    });
+}
+
+#[test]
+#[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
 fn the_lenses_read_a_live_estate() {
     let estate = Estate::install_and_serve();
     tauri::async_runtime::block_on(async {

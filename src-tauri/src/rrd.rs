@@ -16,10 +16,10 @@ mod view;
 use client::{
     NativeRrdClient, RrdAuditExportRequest, RrdAuditRequest, RrdBackupCreateRequest,
     RrdBackupRestoreRequest, RrdBackupsRequest, RrdChangeCommitRequest, RrdChangePreviewRequest,
-    RrdChangesFollowRequest, RrdChangesRequest, RrdConnectRequest, RrdLiveOpenRequest,
-    RrdQuantizationApplyRequest, RrdQuantizationProposeRequest, RrdQuantizationsRequest,
-    RrdQueryExportRequest, RrdQueryRequest, RrdVectorCompareRequest, RrdVectorMapRequest,
-    RrdVectorPointsRequest, RrdVectorSearchRequest,
+    RrdChangesFollowRequest, RrdChangesRequest, RrdConnectRequest, RrdLaunchObserveFlightRequest,
+    RrdLiveOpenRequest, RrdQuantizationApplyRequest, RrdQuantizationProposeRequest,
+    RrdQuantizationsRequest, RrdQueryExportRequest, RrdQueryRequest, RrdReadPromptFlightRequest,
+    RrdVectorCompareRequest, RrdVectorMapRequest, RrdVectorPointsRequest, RrdVectorSearchRequest,
 };
 use error::RrdError;
 use transport::public_rrd_url;
@@ -33,8 +33,9 @@ use view::quantization::{
     QuantizationAppliedView, QuantizationProposalView, QuantizationsView, VectorCompareView,
 };
 use view::{
-    ConnectionView, DatabaseView, QueryView, ServiceView, StorageView, VectorCollectionsView,
-    VectorMapProgressView, VectorMapView, VectorPointsView, VectorSearchView,
+    ConnectionView, DatabaseView, PromptFlightDetailView, PromptFlightLaunchView, QueryView,
+    ServiceView, StorageView, VectorCollectionsView, VectorMapProgressView, VectorMapView,
+    VectorPointsView, VectorSearchView, WorkbenchSnapshotView,
 };
 
 const MAX_RRD_RESPONSE_BYTES: u64 = 1024 * 1024;
@@ -123,6 +124,45 @@ pub async fn rrd_capabilities(
     Ok(view::service(
         &state.client(&profile).await?.capabilities().await?,
     ))
+}
+
+#[tauri::command]
+pub async fn rrd_workbench_snapshot(
+    profile: String,
+    after_cursor: u64,
+    state: State<'_, RrdClientState>,
+) -> Result<WorkbenchSnapshotView, RrdError> {
+    state
+        .client(&profile)
+        .await?
+        .workbench_snapshot(after_cursor)
+        .await
+}
+
+#[tauri::command]
+pub async fn rrd_launch_observe_flight(
+    profile: String,
+    request: RrdLaunchObserveFlightRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<PromptFlightLaunchView, RrdError> {
+    state
+        .client(&profile)
+        .await?
+        .launch_observe_flight(request)
+        .await
+}
+
+#[tauri::command]
+pub async fn rrd_read_prompt_flight(
+    profile: String,
+    request: RrdReadPromptFlightRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<PromptFlightDetailView, RrdError> {
+    state
+        .client(&profile)
+        .await?
+        .read_prompt_flight(request)
+        .await
 }
 
 #[tauri::command]

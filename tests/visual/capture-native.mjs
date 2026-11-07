@@ -743,7 +743,7 @@ try {
 		await leaveGuide();
 		// Leaving changes nothing the person did.
 		await details
-			.getByRole("button", { name: "Back to whole estate" })
+			.getByRole("button", { name: "Back to whole engram" })
 			.waitFor({ timeout: 3000 });
 	});
 	await step("guide-away-and-back", async () => {
@@ -864,6 +864,24 @@ try {
 		await shot("project-engines-restarted");
 		await page.keyboard.press("Escape");
 	});
+	await step("prompt-flight-timeline", async () => {
+		await page.goto(workbench.replace(/(\/runtime\/[^/]+).*/, "$1/reasoning/workbench"), {
+			waitUntil: "domcontentloaded",
+		});
+		await page.getByRole("heading", { name: "Prompt workbench", exact: true }).waitFor();
+		const prompt = page.getByLabel("Prompt", { exact: true });
+		const text = "Inspect the temporary project's documents and relationships.";
+		await prompt.fill(text);
+		await page
+			.getByRole("button", { name: "Launch observe flight", exact: true })
+			.click({ timeout: 60_000 });
+		if ((await prompt.inputValue()) !== text)
+			throw new Error("prompt was lost during session initialization");
+		const timeline = page.getByRole("heading", { name: "Recorded events", exact: true });
+		await timeline.waitFor({ timeout: 60_000 });
+		await timeline.scrollIntoViewIfNeeded();
+		await shot("prompt-flight-timeline");
+	});
 } finally {
 	writeFileSync(join(out, "native-capture-log.json"), JSON.stringify(log, null, 1));
 	console.log(
@@ -875,4 +893,4 @@ try {
 	);
 	stopApp();
 }
-process.exit(0);
+process.exit(log.failed.length ? 1 : 0);

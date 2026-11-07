@@ -138,6 +138,10 @@ export function createBaseConnection(settings: ConnectomeSettings): Connection {
 		graphqlQuery: "",
 		graphqlVariables: "{}",
 		graphqlShowVariables: false,
+		workbench: {
+			workbenches: [],
+			receipts: [],
+		},
 	};
 }
 

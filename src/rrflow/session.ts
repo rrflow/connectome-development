@@ -58,6 +58,68 @@ export interface RrdServiceView {
 	capabilities: RrdCapabilityView[];
 }
 
+export interface RrdTaskSummaryView {
+	task_id: string;
+	title: string;
+	status: string;
+	task_cursor: number;
+	known_at_cursor: number;
+}
+
+export interface RrdPromptFlightSummaryView {
+	flight_id: string;
+	status: string;
+	provider: string;
+	context_mode: string;
+	flight_cursor: number;
+	known_at_cursor: number;
+}
+
+export interface RrdWorkbenchSnapshotView {
+	scope: string;
+	after_cursor: number;
+	truncated: boolean;
+	flights: RrdPromptFlightSummaryView[];
+}
+
+export interface RrdPromptFlightLaunchView {
+	flight_id: string;
+	status: string;
+	provider: string;
+	context_mode: string;
+	flight_cursor: number;
+	known_at_cursor: number;
+	event_count: number;
+	idempotent_replay: boolean;
+}
+
+export interface RrdPromptFlightEventView {
+	ordinal: number;
+	at_unix_ms: number;
+	elapsed_ms: number;
+	stage: string;
+	label: string;
+	detail: string;
+}
+
+export interface RrdPromptFlightDetailView {
+	flight_id: string;
+	status: string;
+	provider: string;
+	context_mode: string;
+	prompt: string;
+	acceptance_marker: string | null;
+	cohort_sha256: string;
+	created_at_unix_ms: number;
+	flight_cursor: number;
+	known_at_cursor: number;
+	event_count: number;
+	context_items: number;
+	context_output_bytes: number;
+	elapsed_ms: number;
+	events: RrdPromptFlightEventView[];
+}
+
 export interface RrdConnectionView {
 	endpoint: string;
 	instance: string;
@@ -108,8 +170,8 @@ export interface RrdNodeView {
 
 /**
  * A group of records linked more densely to each other than to the rest of
- * the estate. Connectome computes clusters from the relations to color the
- * graph; they are not estate data.
+ * the engram. Connectome computes clusters from the relations to color the
+ * graph; they are not engram data.
  */
 export interface RrdClusterView {
 	id: number;
@@ -723,6 +785,16 @@ export interface RrdVectorSearchRequest {
 	top_k: number;
 }
 
+export interface RrdLaunchObserveFlightRequest {
+	prompt: string;
+	context_mode?: "fresh" | "pruned";
+	acceptance_marker?: string;
+}
+
+export interface RrdReadPromptFlightRequest {
+	flight_id: string;
+}
+
 export interface RrdVectorCompareRequest {
 	collection_id: string;
 	vector_name: string;
@@ -831,6 +903,25 @@ export class RrdSessionClient {
 	async capabilities(): Promise<RrdServiceView> {
 		this.requireNative();
 		return this.call<RrdServiceView>("rrd_capabilities");
+	}
+
+	async workbenchSnapshot(afterCursor: number): Promise<RrdWorkbenchSnapshotView> {
+		this.requireNative();
+		return this.call<RrdWorkbenchSnapshotView>("rrd_workbench_snapshot", { afterCursor });
+	}
+
+	async launchObserveFlight(
+		request: RrdLaunchObserveFlightRequest,
+	): Promise<RrdPromptFlightLaunchView> {
+		this.requireNative();
+		return this.call<RrdPromptFlightLaunchView>("rrd_launch_observe_flight", { request });
+	}
+
+	async readPromptFlight(
+		request: RrdReadPromptFlightRequest,
+	): Promise<RrdPromptFlightDetailView> {
+		this.requireNative();
+		return this.call<RrdPromptFlightDetailView>("rrd_read_prompt_flight", { request });
 	}
 
 	async schema(): Promise<RrdSchemaView> {
