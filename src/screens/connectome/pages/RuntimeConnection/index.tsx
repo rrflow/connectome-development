@@ -432,6 +432,12 @@ export function RuntimeConnectionPage({
 						connectionId={id}
 						sessionKey={sessionKey}
 						connected={Boolean(session)}
+						onOpenGraph={() => setLens("records")}
+						onOpenStorage={() => setLens("storage")}
+						onSelectRecord={(record) => {
+							setSelected(record);
+							setLens("records");
+						}}
 					/>
 				)}
 				{route === "reasoning/plan" && (

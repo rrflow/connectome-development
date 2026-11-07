@@ -903,6 +903,36 @@ try {
 		await timeline.waitFor({ timeout: 60_000 });
 		await timeline.scrollIntoViewIfNeeded();
 		await shot("prompt-flight-timeline");
+		const flow = page.getByRole("heading", { name: "Recorded event flow", exact: true });
+		await flow.scrollIntoViewIfNeeded();
+		if (
+			(await page
+				.getByRole("list", { name: "Recorded flight event sequence" })
+				.locator("li")
+				.count()) === 0
+		)
+			throw new Error("The observed flight did not render its returned events");
+		await shot("workbench-event-flow");
+		const graph = page.getByRole("heading", {
+			name: "Documents and relationships",
+			exact: true,
+		});
+		await graph.scrollIntoViewIfNeeded();
+		await page.getByText(/returned records and .*returned relationships/).waitFor();
+		const keyboardRecords = page.getByText("Choose a record using the keyboard", {
+			exact: true,
+		});
+		await keyboardRecords.waitFor();
+		await keyboardRecords.evaluate((element) => element.scrollIntoView({ block: "end" }));
+		await wait(500);
+		await shot("workbench-project-graph");
+		const storage = page.getByRole("heading", { name: "rrflowKV storage path", exact: true });
+		await storage.evaluate((element) => element.scrollIntoView({ block: "start" }));
+		await wait(500);
+		await page
+			.getByText("Process-local measurements, independent of the graph cursor.")
+			.waitFor();
+		await shot("workbench-storage-path");
 	});
 } finally {
 	writeFileSync(join(out, "native-capture-log.json"), JSON.stringify(log, null, 1));

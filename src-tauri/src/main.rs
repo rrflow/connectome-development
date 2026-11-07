@@ -120,6 +120,7 @@ fn main() {
             rrd::rrd_database,
             rrd::rrd_schema,
             rrd::rrd_storage,
+            rrd::rrd_physical_storage,
             rrd::rrd_query,
             rrd::rrd_task,
             rrd::rrd_attunement,

@@ -28,11 +28,12 @@ use rrd_contract::{
     CanonicalId, CloseSession, CreateSession, DataReference, DataVectorValue, DiagnosticSnapshot,
     ExecuteQuery, LaunchPromptFlight, ListPromptFlights, ListVectorCollections,
     PromptFlightContextMode, PromptFlightContextRequest, PromptFlightProvider, QueryBudget,
-    ReadDiagnosticSnapshot, ReadPromptFlight, RenewSession, RetrieveVectorPoints,
-    ScrollVectorPoints, SearchVectors, ServiceCapabilities, SessionLimits, VectorPointBatch,
-    VectorPointPage, VectorPointSnapshot, VectorSearchHit, VectorSearchMode, VectorSearchQuery,
-    VectorSearchResult, MAX_DIAGNOSTIC_RUNTIME_SCANNED_CHANGES, MAX_PROMPT_FLIGHT_STORAGE_KEYS,
-    MAX_QUERY_BYTES, MAX_VECTOR_POINT_PAGE, MAX_VECTOR_SEARCH_TOP_K, MAX_VECTOR_STORAGE_KEYS,
+    ReadDiagnosticSnapshot, ReadPromptFlight, ReadStorageDiagnostics, RenewSession,
+    RetrieveVectorPoints, ScrollVectorPoints, SearchVectors, ServiceCapabilities, SessionLimits,
+    VectorPointBatch, VectorPointPage, VectorPointSnapshot, VectorSearchHit, VectorSearchMode,
+    VectorSearchQuery, VectorSearchResult, MAX_DIAGNOSTIC_RUNTIME_SCANNED_CHANGES,
+    MAX_PROMPT_FLIGHT_STORAGE_KEYS, MAX_QUERY_BYTES, MAX_VECTOR_POINT_PAGE,
+    MAX_VECTOR_SEARCH_TOP_K, MAX_VECTOR_STORAGE_KEYS,
 };
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -883,6 +884,20 @@ impl NativeRrdClient {
     pub async fn storage(&self) -> Result<StorageView, RrdError> {
         let snapshot = self.diagnostic_snapshot().await?;
         Ok(view::storage(&snapshot, &self.service.storage_profile))
+    }
+
+    pub async fn physical_storage(&self) -> Result<view::PhysicalStorageView, RrdError> {
+        let request = ReadStorageDiagnostics {
+            scope: self.scope(),
+        };
+        let snapshot = self
+            .send(false, |session, options| async move {
+                self.client
+                    .read_storage_diagnostics(&session, request, options)
+                    .await
+            })
+            .await?;
+        Ok(view::physical(&snapshot))
     }
 
     pub async fn query(&self, request: RrdQueryRequest) -> Result<QueryView, RrdError> {

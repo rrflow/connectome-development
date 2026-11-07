@@ -90,6 +90,9 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 			Object.assign(globalThis, { isTauri: true });
 			let connectedAt = 101;
 			let handshakeInstance = "diagnostic-profile-a";
+			let showFlight = false;
+			let emptyGraph = false;
+			let failStorage = false;
 			const profileSessions: Record<string, Record<string, unknown> | null> = {};
 			let deferReads = false;
 			const deferred: { command: string; resolve: (value: unknown) => void }[] = [];
@@ -127,6 +130,13 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 			Object.assign(window, {
 				__diagnosticCaptureTest: {
 					calls: () => calls,
+					showFlight: () => {
+						showFlight = true;
+					},
+					showEmptyAndError: () => {
+						emptyGraph = true;
+						failStorage = true;
+					},
 					setHandshakeInstance: (instance: string) => {
 						handshakeInstance = instance;
 					},
@@ -152,13 +162,38 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 								});
 							else if (item.command === "rrd_database")
 								item.resolve({
+									observed_at_unix_ms: 1,
 									graph: {
-										nodes: Array.from({ length: 99 }),
-										edges: Array.from({ length: 98 }),
+										valid_at_unix_ms: 1,
+										known_at_cursor: 99,
+										nodes: Array.from({ length: 99 }, (_, index) => ({
+											id: `${prefix}-${index}`,
+											kind: "document",
+											key: `${index}`,
+											label: `${prefix} ${index}`,
+											properties: {},
+											cluster: 0,
+										})),
+										edges: Array.from({ length: 98 }, (_, index) => ({
+											id: `${prefix}-edge-${index}`,
+											kind: "links_to",
+											from: `${prefix}-${index}`,
+											to: `${prefix}-${index + 1}`,
+										})),
+										clusters: [],
 									},
 								});
 							else if (item.command === "rrd_storage")
-								item.resolve({ runtime_cursor: 99, physical: { profile: prefix } });
+								item.resolve({
+									runtime_cursor: 99,
+									physical: {
+										profile: prefix,
+										observed_at_unix_ms: 1,
+										evidence_level: "process-local",
+										headline: [],
+										groups: [],
+									},
+								});
 							else
 								item.resolve({
 									collections: Array.from({ length: 97 }, () => ({
@@ -258,6 +293,7 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 						}
 						if (
 							deferReads &&
+							deferred.length < 4 &&
 							[
 								"rrd_capabilities",
 								"rrd_database",
@@ -268,16 +304,101 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 							return new Promise((resolve) => deferred.push({ command, resolve }));
 						if (command === "rrd_capabilities") return service("diagnostic-profile-a");
 						if (command === "rrd_database")
-							return { graph: { nodes: [{ id: "stable-node" }], edges: [] } };
+							return {
+								observed_at_unix_ms: 1,
+								graph: {
+									valid_at_unix_ms: 1,
+									known_at_cursor: 7,
+									nodes: emptyGraph
+										? []
+										: [
+												{
+													id: "stable-node",
+													kind: "document",
+													key: "stable-node",
+													label: "Stable document",
+													properties: {},
+													cluster: 0,
+												},
+											],
+									edges: [],
+									clusters: [],
+								},
+							};
+						if (command === "rrd_physical_storage" && failStorage)
+							throw new Error("Storage unavailable");
+						if (command === "rrd_physical_storage")
+							return {
+								profile: "stable-profile",
+								observed_at_unix_ms: 1,
+								evidence_level: "process-local",
+								headline: [],
+								groups: [],
+							};
 						if (command === "rrd_storage")
-							return { runtime_cursor: 7, physical: { profile: "stable-profile" } };
+							return {
+								runtime_cursor: 7,
+								physical: {
+									profile: "stable-profile",
+									observed_at_unix_ms: 1,
+									evidence_level: "process-local",
+									headline: [],
+									groups: [],
+								},
+							};
 						if (command === "rrd_vector_collections") return { collections: [] };
 						if (command === "rrd_workbench_snapshot")
 							return {
 								scope: "session",
 								after_cursor: 0,
 								truncated: false,
-								flights: [],
+								flights: showFlight
+									? [
+											{
+												flight_id: "flight-test",
+												status: "completed",
+												provider: "observe",
+												context_mode: "fresh",
+												flight_cursor: 8,
+												known_at_cursor: 8,
+											},
+										]
+									: [],
+							};
+						if (command === "rrd_read_prompt_flight")
+							return {
+								flight_id: "flight-test",
+								status: "completed",
+								provider: "observe",
+								context_mode: "fresh",
+								prompt: "test",
+								acceptance_marker: null,
+								cohort_sha256: "a".repeat(64),
+								created_at_unix_ms: 1,
+								flight_cursor: 8,
+								known_at_cursor: 8,
+								event_count: 2,
+								context_items: 0,
+								context_output_bytes: 0,
+								elapsed_ms: 5,
+								events: [
+									{
+										ordinal: 1,
+										at_unix_ms: 1,
+										elapsed_ms: 2,
+										stage: "accepted",
+										label: "Request accepted",
+										detail: "Recorded by engine",
+									},
+									{
+										ordinal: 2,
+										at_unix_ms: 2,
+										elapsed_ms: 5,
+										stage: "completed",
+										label: "Observe finished",
+										detail: "Recorded by engine",
+									},
+								],
 							};
 						throw new Error(`Unexpected command ${command}`);
 					},
@@ -293,6 +414,52 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 	await page.getByRole("tab", { name: "Workbench", exact: true }).click();
 	await expect(page).toHaveURL(new RegExp(`${profileA}/reasoning/workbench$`));
 }
+
+test("workbench visualizes returned project data and recorded flight events", async ({ page }) => {
+	const { profileA, profileB } = await createDiagnosticProfiles(page);
+	await openDiagnosticWorkbench(page, profileA, profileB);
+	await expect(page.getByRole("heading", { name: "Documents and relationships" })).toBeVisible();
+	await expect(
+		page.getByText(/Showing 1 of 1 returned records and 0 of 0 returned relationships/),
+	).toBeVisible();
+	await expect(page.getByText("No storage observation is available.")).toHaveCount(0);
+	await expect(page.getByRole("heading", { name: "Storage path", exact: true })).toBeVisible();
+	await expect(
+		page.getByRole("heading", { name: "rrflowKV storage path", exact: true }),
+	).toHaveCount(0);
+	await expect(page.getByText(/reports process-local evidence/)).toBeVisible();
+	await page.evaluate(() =>
+		(
+			window as unknown as { __diagnosticCaptureTest: { showFlight: () => void } }
+		).__diagnosticCaptureTest.showFlight(),
+	);
+	await page.getByRole("button", { name: "Refresh flights" }).click();
+	await page.getByRole("button", { name: "Inspect", exact: true }).click();
+	const sequence = page.getByRole("list", { name: "Recorded flight event sequence" });
+	await expect(sequence.locator("li")).toHaveCount(2);
+	await expect(sequence.locator("li").nth(0)).toContainText("Request accepted");
+	await expect(sequence.locator("li").nth(1)).toContainText("Observe finished");
+	await page.getByText("Choose a record using the keyboard", { exact: true }).click();
+	await page.getByRole("button", { name: "Stable document · stable-node" }).click();
+	await expect(page).toHaveURL(new RegExp(`${profileA}/knowledge/records$`));
+});
+
+test("visualizations expose an empty graph and a failed storage refresh", async ({ page }) => {
+	const { profileA, profileB } = await createDiagnosticProfiles(page);
+	await openDiagnosticWorkbench(page, profileA, profileB);
+	await expect(page.getByText(/Showing 1 of 1 returned records/)).toBeVisible();
+	await page.evaluate(() =>
+		(
+			window as unknown as { __diagnosticCaptureTest: { showEmptyAndError: () => void } }
+		).__diagnosticCaptureTest.showEmptyAndError(),
+	);
+	await page.getByRole("button", { name: "Refresh visualizations" }).click();
+	await expect(
+		page.getByText("The engine returned no records for this graph view."),
+	).toBeVisible();
+	await expect(page.getByText("Storage read failed", { exact: true })).toBeVisible();
+	await expect(page.getByText("Storage unavailable", { exact: true })).toBeVisible();
+});
 
 test("diagnostic capture rejects a response completed after the same profile reconnects", async ({
 	page,
