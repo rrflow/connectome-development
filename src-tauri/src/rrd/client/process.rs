@@ -20,6 +20,7 @@ use serde_json::{json, Value};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
+mod attunement;
 mod effects;
 mod elsewhere;
 mod language;

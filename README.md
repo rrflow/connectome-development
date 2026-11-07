@@ -38,6 +38,13 @@ their engine contracts are implemented. The home screen's **How RRFlow fits toge
 rrflowDB, rrflowQL and rrflowKV. [Native workbench instructions](docs/native-workbench.md)
 cover building, startup, persistence, exact limits and validation.
 
+**Project plan** discovers the installed engine's jobs and displays its stored
+phase order, source identity and progress. Explicit prepare/approve controls can
+request lifecycle transitions or preview and accept a successor after source edits.
+[Project-plan controls](docs/project-plan-controls.md) explain stale-preview
+rejection and receipt recovery. This does not establish full attunement execution
+or a completed development task.
+
 Credentials and session tokens remain in the native process. The renderer
 receives bounded public results and catalogue metadata. Cloud synchronization,
 PostgreSQL wire/SQL compatibility, full attunement and automatic image/audio/video

@@ -33,6 +33,7 @@ import { workspaceRoute } from "./areas";
 import { formatCount } from "./format";
 import { GlossaryDrawer, Term } from "./glossary";
 import { GuideCards } from "./guides/cards";
+import { ProjectPlanPanel } from "./plan";
 import { databaseQuery } from "./queries";
 import { SessionPanel, sessionQueryKey } from "./session";
 import { WorkspaceShell } from "./shell";
@@ -423,6 +424,14 @@ export function RuntimeConnectionPage({
 					/>
 				)}
 
+				{route === "reasoning/plan" && (
+					<ProjectPlanPanel
+						key={sessionKey}
+						client={sessionClient}
+						instance={session?.instance ?? ""}
+						connected={Boolean(session)}
+					/>
+				)}
 				{route === "reasoning/tasks" && (
 					<TasksPanel
 						key={sessionKey}

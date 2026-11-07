@@ -38,7 +38,10 @@ export const WORKSPACE_AREAS: WorkspaceArea[] = [
 		id: "reasoning",
 		label: "Reasoning",
 		icon: iconBrain,
-		tabs: [{ route: "reasoning/tasks", label: "Tasks" }],
+		tabs: [
+			{ route: "reasoning/tasks", label: "Tasks" },
+			{ route: "reasoning/plan", label: "Project plan" },
+		],
 	},
 	{
 		id: "system",
@@ -59,6 +62,7 @@ export function workspaceRoute(section?: string, detail?: string): string {
 	const route = detail ? `${section}/${detail}` : (section ?? "overview");
 	if (ROUTES.has(route)) return route;
 	if (route === "tasks") return "reasoning/tasks";
+	if (route === "plan") return "reasoning/plan";
 	if (route === "api") return "system/api";
 	if (route === "knowledge/storage") return "system/storage";
 	if (section === "knowledge") return "knowledge/records";

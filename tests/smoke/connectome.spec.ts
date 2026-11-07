@@ -119,6 +119,27 @@ test("creates an RRD HTTP runtime profile by default", async ({ page }, testInfo
 	// Addresses saved before these areas still open their view.
 	await page.goto(`${firstProject}/knowledge/storage`);
 	await expect(page).toHaveURL(/\/system\/storage$/);
+	await page.getByRole("button", { name: "Reasoning", exact: true }).click();
+	await expect(page).toHaveURL(/\/reasoning\/tasks$/);
+	await page.getByRole("tab", { name: "Project plan", exact: true }).click();
+	await expect(page).toHaveURL(/\/reasoning\/plan$/);
+	await expect(page.getByRole("heading", { name: "Project plan", exact: true })).toBeVisible();
+	// Browser preview has no native session; navigation keeps discovery disabled.
+	await expect(page.getByRole("button", { name: "Discover jobs", exact: true })).toBeDisabled();
+	await page.goto(`${firstProject}/plan`);
+	await expect(page).toHaveURL(/\/reasoning\/plan$/);
+	await expect(page.getByRole("heading", { name: "Project plan", exact: true })).toBeVisible();
+	await page.getByRole("tab", { name: "Tasks", exact: true }).click();
+	await expect(page).toHaveURL(/\/reasoning\/tasks$/);
+	await expect(
+		page.getByRole("alert", { name: "Tasks require a native session", exact: true }),
+	).toBeVisible();
+	await expect(page.getByRole("heading", { name: "Project plan", exact: true })).toHaveCount(0);
+	expect(
+		requests.every((path) =>
+			["/v1/health/live", "/v1/health/ready", "/v1/capabilities"].includes(path),
+		),
+	).toBe(true);
 	await page.goto(`${firstProject}/learning`);
 	await expect(page).toHaveURL(/\/overview$/);
 	await page.goto("/connections/create");

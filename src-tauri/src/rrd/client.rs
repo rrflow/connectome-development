@@ -46,6 +46,7 @@ use tokio::task::JoinSet;
 use uuid::Uuid;
 
 mod artifact;
+pub mod attunement;
 mod backup;
 mod history;
 mod live;
@@ -283,6 +284,7 @@ pub struct NativeRrdClient {
     lease: RwLock<Option<Lease>>,
     /// The previewed change waiting for its commit, if any.
     pending: tokio::sync::Mutex<Option<transaction::PendingChange>>,
+    pending_attunement: tokio::sync::Mutex<Option<attunement::PendingAttunement>>,
     /// The proposed quantization lifecycle step waiting to be applied, if any.
     quantization: tokio::sync::Mutex<Option<quantization::PendingStep>>,
     artifacts: artifact::Artifacts,
@@ -486,6 +488,7 @@ impl NativeRrdClient {
             query_budget: capabilities.configuration.query.clone(),
             ids,
             pending: Default::default(),
+            pending_attunement: Default::default(),
             quantization: Default::default(),
             artifacts: Default::default(),
             bearer_generation: tokio::sync::watch::Sender::new(0),
@@ -964,6 +967,7 @@ impl NativeRrdClient {
             return Ok(());
         };
         *self.pending.lock().await = None;
+        *self.pending_attunement.lock().await = None;
         self.artifacts.clear();
         self.client
             .close_session(&lease.session, CloseSession {}, self.ids.next(true)?)
