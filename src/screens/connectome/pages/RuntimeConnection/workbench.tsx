@@ -35,8 +35,13 @@ export function WorkbenchPanel({
 }) {
 	const [prompt, setPrompt] = useState("");
 	const [contextMode, setContextMode] = useState<"fresh" | "pruned">("pruned");
-	const [selected, setSelected] = useState<string | null>(null);
-	const [afterCursor, setAfterCursor] = useState(0);
+	const [selection, setSelection] = useState<{ sessionKey: string; id: string } | null>(null);
+	const [page, setPage] = useState<{ sessionKey: string; cursor: number }>({
+		sessionKey,
+		cursor: 0,
+	});
+	const selected = selection?.sessionKey === sessionKey ? selection.id : null;
+	const afterCursor = page.sessionKey === sessionKey ? page.cursor : 0;
 	const [workbenchName, setWorkbenchName] = useState("");
 	const [workbenchDescription, setWorkbenchDescription] = useState("");
 	const [noteKind, setNoteKind] = useState<WorkbenchRunKind>("testing");
@@ -154,12 +159,19 @@ export function WorkbenchPanel({
 		retry: false,
 	});
 	const launch = useMutation({
-		mutationFn: () =>
-			client.launchObserveFlight({ prompt: prompt.trim(), context_mode: contextMode }),
-		onSuccess: async (result) => {
-			setSelected(result.flight_id);
+		mutationFn: (request: {
+			sessionKey: string;
+			prompt: string;
+			contextMode: "fresh" | "pruned";
+		}) =>
+			client.launchObserveFlight({
+				prompt: request.prompt,
+				context_mode: request.contextMode,
+			}),
+		onSuccess: async (result, request) => {
+			setSelection({ sessionKey: request.sessionKey, id: result.flight_id });
 			await queryClient.invalidateQueries({
-				queryKey: ["rrd-workbench-snapshot", sessionKey],
+				queryKey: ["rrd-workbench-snapshot", request.sessionKey],
 			});
 		},
 	});
@@ -201,7 +213,9 @@ export function WorkbenchPanel({
 						<Button
 							disabled={!connected || !prompt.trim()}
 							loading={launch.isPending}
-							onClick={() => launch.mutate()}
+							onClick={() =>
+								launch.mutate({ sessionKey, prompt: prompt.trim(), contextMode })
+							}
 						>
 							Launch observe flight
 						</Button>
@@ -253,7 +267,9 @@ export function WorkbenchPanel({
 								<Button
 									size="xs"
 									variant={selected === flight.flight_id ? "filled" : "light"}
-									onClick={() => setSelected(flight.flight_id)}
+									onClick={() =>
+										setSelection({ sessionKey, id: flight.flight_id })
+									}
 								>
 									Inspect
 								</Button>
@@ -263,7 +279,7 @@ export function WorkbenchPanel({
 							<Button
 								variant="light"
 								disabled={afterCursor === 0}
-								onClick={() => setAfterCursor(0)}
+								onClick={() => setPage({ sessionKey, cursor: 0 })}
 							>
 								First page
 							</Button>
@@ -274,7 +290,7 @@ export function WorkbenchPanel({
 								}
 								onClick={() => {
 									const last = snapshot.data.flights.at(-1);
-									if (last) setAfterCursor(last.flight_cursor);
+									if (last) setPage({ sessionKey, cursor: last.flight_cursor });
 								}}
 							>
 								Next page

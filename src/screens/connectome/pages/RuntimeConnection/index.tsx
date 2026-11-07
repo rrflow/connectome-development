@@ -256,7 +256,7 @@ export function RuntimeConnectionPage({
 								fz="sm"
 								c="slate"
 							>
-								Estate
+								Engram
 							</Text>
 							<Text
 								ff="monospace"
@@ -352,7 +352,7 @@ export function RuntimeConnectionPage({
 							<LensCard
 								icon={iconRelation}
 								title="Records & relations"
-								purpose="What the estate knows and how it links together."
+								purpose="What the engram knows and how it links together."
 								reading={
 									graph
 										? `${formatCount(graph.nodes.length)} records in view · ${formatCount(graph.edges.length)} relations`
@@ -427,7 +427,7 @@ export function RuntimeConnectionPage({
 
 				{route === "reasoning/workbench" && (
 					<WorkbenchPanel
-						key={sessionKey}
+						key={id}
 						client={sessionClient}
 						connectionId={id}
 						sessionKey={sessionKey}

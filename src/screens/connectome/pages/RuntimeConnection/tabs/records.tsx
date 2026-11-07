@@ -53,7 +53,7 @@ import classes from "../style.module.scss";
 import { type GraphDirection, type GraphScope, kinds, selectSubgraph } from "../subgraph";
 import type { RecordFocusProps, RuntimeLensProps } from "../types";
 
-/** Default row bound for console queries; the estate's query budget still applies. */
+/** Default row bound for console queries; the engram's query budget still applies. */
 const CONSOLE_ROW_LIMIT = 50;
 const TRAVERSAL_DEPTH = 2;
 const NEIGHBOURHOOD_DEPTHS = ["1", "2", "3"];
@@ -370,7 +370,7 @@ export function RecordsTab({
 		return (
 			<Alert
 				color="red"
-				title="The estate could not be read"
+				title="The engram could not be read"
 				icon={<Icon path={iconErrorCircle} />}
 			>
 				{database.error instanceof Error ? database.error.message : "Unknown RRD error"}
@@ -548,7 +548,7 @@ export function RecordsTab({
 							h="100%"
 							justify="center"
 						>
-							<Text c="slate">This estate holds no records yet.</Text>
+							<Text c="slate">This engram holds no records yet.</Text>
 						</Group>
 					) : scope === "neighbourhood" && !node ? (
 						<Stack
@@ -563,7 +563,7 @@ export function RecordsTab({
 								c="slate"
 							>
 								Search above, choose one under “Start here”, or click a dot in the
-								whole estate.
+								whole engram.
 							</Text>
 						</Stack>
 					) : canvasNodes.length > 0 ? (
@@ -694,7 +694,7 @@ export function RecordsTab({
 											leftSection={<Icon path={iconRelation} />}
 											onClick={() => setScope("engram")}
 										>
-											Back to whole estate
+											Back to whole engram
 										</Button>
 									)}
 									<Button
@@ -875,7 +875,7 @@ export function RecordsTab({
 			<Box ref={consoleRef}>
 				<Section
 					title={<Term id="query">RRFlowQL console</Term>}
-					description="Read-only queries in RRFlow's query language, run through this session under the estate's query budget."
+					description="Read-only queries in RRFlow's query language, run through this session under the engram's query budget."
 					rightSection={
 						<Button
 							variant="light"

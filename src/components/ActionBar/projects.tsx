@@ -441,7 +441,7 @@ export function DatabaseServing() {
 								<TextInput
 									flex={1}
 									label="Project directory"
-									description="An absolute project folder; leave empty for Connectome's local estate."
+									description="An absolute project folder; leave empty for Connectome's local engram."
 									value={selection.project}
 									disabled={pending}
 									onChange={(e) =>
