@@ -1,7 +1,6 @@
 import { redo, redoSelection, undo, undoSelection } from "@codemirror/commands";
 import type { KeyBinding } from "@codemirror/view";
-import { addCursorAbove, addCursorBelow, suggestCompletions } from "./commands";
-import { executeGraphqlEditorQuery, selectCursorQuery } from "./query";
+import { addCursorAbove, addCursorBelow } from "./commands";
 
 /**
  * A custom variant of the history keymap that uses
@@ -18,30 +17,6 @@ export const customHistoryKeymap: readonly KeyBinding[] = [
 		run: redoSelection,
 		preventDefault: true,
 	},
-];
-
-/**
- * A keymap used to run the editor contents as a query
- */
-export const runQueryKeymap: readonly KeyBinding[] = [
-	{ key: "Mod-Enter", run: () => true },
-	{ key: "Mod-e", run: selectCursorQuery },
-];
-
-/**
- * A keymap used to run the editor contents as a GraphQL query
- */
-export const runGraphqlQueryKeymap: readonly KeyBinding[] = [
-	{ key: "Mod-Enter", run: executeGraphqlEditorQuery },
-	{ key: "F9", run: executeGraphqlEditorQuery },
-];
-
-/**
- * A keymap used to suggest GraphQL completions
- */
-export const graphqlSuggestions: readonly KeyBinding[] = [
-	{ key: "Enter", run: suggestCompletions },
-	{ key: "Shift-(", run: suggestCompletions },
 ];
 
 /**

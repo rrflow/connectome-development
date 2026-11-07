@@ -1,8 +1,8 @@
 import { Box, Button, Indicator, Loader, Menu, Text } from "@mantine/core";
-import { usengram } from "react";
+import { useState } from "react";
 import { Icon } from "~/components/Icon";
 import { SANDBOX } from "~/constants";
-import { useConnection, useRequireDatabase } from "~/hooks/connection";
+import { useConnection } from "~/hooks/connection";
 import { useConnectionAndView } from "~/hooks/routing";
 import { useStable } from "~/hooks/stable";
 import {
@@ -19,6 +19,7 @@ import {
 import { openConnectionDiagnosticsModal } from "~/modals/connection-diagnostics";
 import { openConnectionEditModal } from "~/modals/edit-connection";
 import { showNodeStatus } from "~/modals/node-status";
+import { useRequireDatabase } from "~/modals/require-database";
 import { getConnectionById } from "~/shared/util/connection";
 import { dispatchIntent } from "~/shared/util/intents";
 import { syncConnectionSchema } from "~/shared/util/schema";
@@ -27,7 +28,7 @@ import { useDatabaseStore } from "~/stores/database";
 import { closeConnection, openConnection } from "../../connection/connection";
 
 export function ConnectionStatus() {
-	const [isDropped, setIsDropped] = usengram(false);
+	const [isDropped, setIsDropped] = useState(false);
 
 	const [connection] = useConnectionAndView();
 	const [connectionId, name, icon, _database, instance] = useConnection((c) => [

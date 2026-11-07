@@ -4,7 +4,7 @@ import { EditorState, Prec, type SelectionRange } from "@codemirror/state";
 import { type EditorView, keymap, scrollPastEnd } from "@codemirror/view";
 import { Button, Group, HoverCard, Paper, rem, Text, ThemeIcon, Transition } from "@mantine/core";
 import { objectify, trim } from "radash";
-import { useMemo, useRef, usengram } from "react";
+import { useMemo, useRef, useState } from "react";
 import { type HtmlPortalNode, OutPortal } from "react-reverse-portal";
 import { ActionButton } from "~/components/ActionButton";
 import { CodeEditor, StateSnapshot } from "~/components/CodeEditor";
@@ -37,8 +37,8 @@ import {
 	iconWarning,
 } from "~/icons";
 import { useInspector } from "~/providers/Inspector";
-import { getRRFlowQL } from "~/screens/connectome/connection/connection";
-import { showErrorNotification, tryParseParams } from "~/shared/util/helpers";
+import { getRRFlowQL, tryParseParams } from "~/screens/connectome/connection/connection";
+import { showErrorNotification } from "~/shared/util/helpers";
 import { dispatchIntent } from "~/shared/util/intents";
 import { parseVariables } from "~/shared/util/language";
 import { useConfigStore } from "~/shell/stores/config";
@@ -87,7 +87,7 @@ export function QueryPane({
 	const rrflowqlVersion = useDatabaseVersionLinter(editor);
 	const queryStateMap = useQueryStore((s) => s.queryState);
 	const saveTasks = useRef<Map<string, any>>(new Map());
-	const [executionHidden, setExecutionHidden] = usengram(false);
+	const [executionHidden, setExecutionHidden] = useState(false);
 	const [allowSelectionExecution] = useSetting("behavior", "querySelectionExecution");
 	const [showSelectionExecutionWarning] = useSetting(
 		"behavior",
@@ -112,7 +112,7 @@ export function QueryPane({
 	}, [queryStateMap, activeTab, updateQueryState]);
 
 	// Cache the editor state and schedule query writing
-	const updatengram = useStable((query: string, snapshot: StateSnapshot, state: EditorState) => {
+	const updateState = useStable((query: string, snapshot: StateSnapshot, state: EditorState) => {
 		const id = activeTab.id;
 		const task = saveTasks.current.get(id);
 		const selection = state.selection.main;
@@ -310,7 +310,7 @@ export function QueryPane({
 		>
 			<CodeEditor
 				state={queryState as unknown as StateSnapshot | undefined}
-				onChange={updatengram}
+				onChange={updateState}
 				onMount={onEditorMounted}
 				lineNumbers={lineNumbers}
 				serialize={SERIALIZE}

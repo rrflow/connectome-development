@@ -22,12 +22,14 @@ import { useInterfaceStore } from "~/shell/stores/interface";
 import { useDatabaseStore } from "~/stores/database";
 import type {
 	ConnectomeConfig,
-	engramPreview,
-	engramSelection,
-	engramStage,
+	EstatePreview,
+	EstateSelection,
+	EstateStage,
+	InstanceStatus,
 	Platform,
+	ProjectInstance,
 	QueryTab,
-	Servedengram,
+	ServedEstate,
 	ViewPage,
 } from "~/types";
 import { adapter } from ".";
@@ -167,29 +169,48 @@ export class DesktopAdapter implements ConnectomeAdapter {
 		});
 	}
 
-	public async previewengram(selection?: engramSelection) {
+	public async previewEstate(selection?: EstateSelection) {
 		const { project, mode, executable } =
 			selection ?? useConfigStore.getState().settings.serving;
-		return invoke<engramPreview>("rrd_engram_preview", {
-			request: { project, mode, executable },
+		// Only a pending preview carries an identity; saved settings never do.
+		const installationIdentity = selection?.installationIdentity;
+		return invoke<EstatePreview>("rrd_estate_preview", {
+			request: {
+				project,
+				mode,
+				executable,
+				installation_identity: installationIdentity,
+				endpoint_credentials: selection?.endpointCredentialMapping,
+			},
 		});
 	}
 
-	public async serveengram(acceptedPlanSha256?: string, selection?: engramSelection) {
+	public async serveEstate(acceptedPlanSha256?: string, selection?: EstateSelection) {
 		const { project, mode, executable } =
 			selection ?? useConfigStore.getState().settings.serving;
+		const installationIdentity = selection?.installationIdentity;
 
-		return invoke<Servedengram>("rrd_engram_serve", {
-			request: { project, mode, executable, accepted_plan_sha256: acceptedPlanSha256 },
+		return invoke<ServedEstate>("rrd_estate_serve", {
+			request: {
+				project,
+				mode,
+				executable,
+				accepted_plan_sha256: acceptedPlanSha256,
+				installation_identity: installationIdentity,
+				endpoint_credentials: selection?.endpointCredentialMapping,
+			},
 		});
 	}
 
-	public async servedengrams() {
-		return invoke<Servedengram[]>("rrd_engram_status");
+	public async projectInstances(projects: string[]) {
+		const { executable } = useConfigStore.getState().settings.serving;
+		return invoke<InstanceStatus>("rrd_estate_status", {
+			request: { projects, executable },
+		});
 	}
 
-	public async stopengram(project: string) {
-		return invoke<boolean>("rrd_engram_stop", { project });
+	public async stopEstate(project: string) {
+		return invoke<boolean>("rrd_estate_stop", { project });
 	}
 
 	public async openUrl(url: string) {
@@ -340,7 +361,7 @@ export class DesktopAdapter implements ConnectomeAdapter {
 		// Each boundary of the serve sequence, in the order the native process
 		// reaches it: install (plan, apply), serve (announced), ready
 		// (authenticated). The serving panel explains each one.
-		listen<engramStage>("engram:stage", (event) => {
+		listen<EstateStage>("estate:stage", (event) => {
 			const stage = event.payload;
 			const historySize = getSetting("serving", "historySize");
 
@@ -352,8 +373,14 @@ export class DesktopAdapter implements ConnectomeAdapter {
 				.pushConsoleLine(`[${stage.stage}] ${stage.detail}`, historySize);
 		});
 
+		// Each transition of a project's instance, numbered by the native
+		// registry, whichever way the instance was started.
+		listen<ProjectInstance>("estate:lifecycle", (event) => {
+			useDatabaseStore.getState().applyInstance(event.payload);
+		});
+
 		// The engine's own diagnostic output.
-		listen<string>("engram:output", (event) => {
+		listen<string>("estate:output", (event) => {
 			if (throttleLevel > 50) {
 				return;
 			}

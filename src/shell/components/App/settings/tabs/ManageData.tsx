@@ -1,6 +1,6 @@
 import { Box, Button, Checkbox, Group, MultiSelect, ScrollArea, Stack, Text } from "@mantine/core";
 import { assign } from "radash";
-import { useMemo, usengram } from "react";
+import { useMemo, useState } from "react";
 import { adapter } from "~/adapter";
 import { Icon } from "~/components/Icon";
 import { JSON_FILTER } from "~/constants";
@@ -16,9 +16,9 @@ import { useConfigStore } from "~/shell/stores/config";
 export function ManageDataTab() {
 	const connections = useConnectionList();
 
-	const [filterConnections, setFilterConnections] = usengram(false);
-	const [includeSensitive, setIncludeSensitive] = usengram(false);
-	const [filteredConnections, setFilteredConnections] = usengram<string[]>([]);
+	const [filterConnections, setFilterConnections] = useState(false);
+	const [includeSensitive, setIncludeSensitive] = useState(false);
+	const [filteredConnections, setFilteredConnections] = useState<string[]>([]);
 
 	const connectionOptions = useMemo(
 		() => connections.map((con) => ({ value: con.id, label: con.name })),
@@ -42,7 +42,7 @@ export function ManageDataTab() {
 		);
 	});
 
-	const [restoreConfig, setRestoreConfig] = usengram<string | null>(null);
+	const [restoreConfig, setRestoreConfig] = useState<string | null>(null);
 
 	const restoreFile = useStable(async () => {
 		const [file] = await adapter.openFile("Select a backup file", [JSON_FILTER], false);

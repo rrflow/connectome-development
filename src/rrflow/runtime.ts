@@ -22,6 +22,10 @@ export type RrdLiveness = SuccessPayload<"health-live">;
 export type RrdReadiness = SuccessPayload<"health-ready">;
 export type RrdServiceCapabilities = SuccessPayload<"capabilities-read">;
 export type RrdCapability = RrdServiceCapabilities["capabilities"][number];
+/** The engine's public operation catalogue, with each operation's reference text. */
+export type RrdOperationCatalogue = SuccessPayload<"endpoint-catalogue">;
+export type RrdOperation = RrdOperationCatalogue["endpoints"][number];
+export type RrdOperationFamily = RrdOperationCatalogue["families"][number];
 
 export interface RrdHandshake {
 	endpoint: string;
@@ -134,5 +138,10 @@ export class RrdRuntimeClient {
 			readiness,
 			service,
 		};
+	}
+
+	/** Reads the public operation catalogue; it needs no credential. */
+	catalogue(): Promise<RrdOperationCatalogue> {
+		return this.client.call("endpoint-catalogue", undefined, {});
 	}
 }

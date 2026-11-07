@@ -1,0 +1,102 @@
+{
+	"engine_revision": "8d47500869329f1a5604821138f1a6c8efc349a5",
+	"engine_sha256": "4a8ac57f1766b9c06e6816bc820ef027c4dbbfd1b90d408b1c563dfcf6a591f7",
+	"logs": {
+		"process-first.log": {
+			"file": "process-first.log.gz",
+			"bytes": 4398,
+			"sha256": "916baad7613149f0136e6b89026ad732cfa3dc6604723bb71a9a6cbd5142a868",
+			"gzip_sha256": "31f54d3665ed7837b13a5b82f2f667c333d1ca5930cd35b9f6be2d0558e21d73"
+		},
+		"process-fault.log": {
+			"file": "process-fault.log.gz",
+			"bytes": 2682,
+			"sha256": "6699be279bf139a2f6c4803bfb3b25060f1fb53a54bb8fd660056b7f94ca2156",
+			"gzip_sha256": "5ee67178ab50fda8103edc92b98b3a2f990fcf41dcb81b38c3c882729216aa2a"
+		},
+		"process-fault-corrected.log": {
+			"file": "process-fault-corrected.log.gz",
+			"bytes": 2046,
+			"sha256": "aa7cf77c50cd6becd07436f048cc5f2307ad052ad4fd19989ab5ea530dc26a3f",
+			"gzip_sha256": "7ce2bc8faac7c392bf7697474b255716a9c5083ee7c230ce6c797e6c513ffb5f"
+		},
+		"process-controls-final.log": {
+			"file": "process-controls-final.log.gz",
+			"bytes": 3394,
+			"sha256": "799c483e6f93773d91261966e7fb71efd2dc9f755a0feca56a4fd2a2c90ebff0",
+			"gzip_sha256": "7f4c025791395420825e9a3d0fbfe8b928e1bd9851ef1b334e29156c51a7ecf4"
+		},
+		"process-controls-expiry-corrected.log": {
+			"file": "process-controls-expiry-corrected.log.gz",
+			"bytes": 2278,
+			"sha256": "1972b57cdf2f3aafb6dbff0492a9610c6162eaec9bb978f332770c234aff74c0",
+			"gzip_sha256": "b4816db247a9ac175d8e824d5d3aea91825710cf20854ec474463618f6ef4146"
+		},
+		"native-tests-final.log": {
+			"file": "native-tests-final.log.gz",
+			"bytes": 15508,
+			"sha256": "f672cb0ffde05fece62fd7781b22423d138a3854c6a290a5904e40c0ed83fe22",
+			"gzip_sha256": "9e8917d2abef0b5174d745d8c92fc95253791de31a5f60ec12ab04bd3e0a83db"
+		},
+		"native-clippy-classification.log": {
+			"file": "native-clippy-classification.log.gz",
+			"bytes": 998,
+			"sha256": "3c94f8b51c1aa80f84365eaf549bdab26ed4843bbc0b0a6212c896c9512d3a36",
+			"gzip_sha256": "0e7ce4aa75a8f9d3e28cdce935604bbf94c484a0f73a7655d395378293a0faa5"
+		},
+		"native-check.log": {
+			"file": "native-check.log.gz",
+			"bytes": 996,
+			"sha256": "f504160f86063cc386af6a6163d139c6bc9f756e69ff10e3085caeae455054d7",
+			"gzip_sha256": "eaa1800bcb441093cc9dc073db426f81a05a8013a49fb82f6bcf9f37adeafb2d"
+		},
+		"installed-process-suite.log": {
+			"file": "installed-process-suite.log.gz",
+			"bytes": 5022,
+			"sha256": "afe59abe879e6f61e8dcb0c96b6fdb37b4555bf7b359a4ad7ef89b39e25036d8",
+			"gzip_sha256": "f200c537479b325621c5924da7dfbf03c5365b193c2e8711c01cbd488102497f"
+		},
+		"engine-golden.log": {
+			"file": "engine-golden.log.gz",
+			"bytes": 1514,
+			"sha256": "f3779ce868467551c63f53374db5aa84535df542285541e2f0f4b7f750218f3d",
+			"gzip_sha256": "9c87d88c20adbdda6aab1a0ae3b9c369bd47354a1bcfd0c4f0229f1285a1f346"
+		},
+		"frontend-check-final.log": {
+			"file": "frontend-check-final.log.gz",
+			"bytes": 2560,
+			"sha256": "f921f1601a6cceb2c6f30fc671bcd8c7a11f2faa775a988c43c2692983d9f609",
+			"gzip_sha256": "e1543fb8f52bdd2fbe41f37ee6bc15870f8123de277df4ddb6e4a3f03c936b69"
+		},
+		"frontend-build.log": {
+			"file": "frontend-build.log.gz",
+			"bytes": 7636,
+			"sha256": "84cff151bca27c536501a9a0ea6657fe236eab0d615f51d7b2f799402e74ba82",
+			"gzip_sha256": "f2eb8dcd5022f5a87bf89b9331f81d91a2be551afe9915e89b53dd3ba866cd25"
+		},
+		"frontend-build-final.log": {
+			"file": "frontend-build-final.log.gz",
+			"bytes": 35008,
+			"sha256": "736e08f0b4076381df1c099f567eb99650d1f048762c0b16d27c77e351c8be7b",
+			"gzip_sha256": "f8776af450c9471559ccd233ec3116317c8bc5befe51e09cbf13d75ac87d6bf5"
+		},
+		"browser-smoke.log": {
+			"file": "browser-smoke.log.gz",
+			"bytes": 2566,
+			"sha256": "3dcfb50e1382cfbcbd955976b26310949ca4139c9eff800ae6fbd2268587cf45",
+			"gzip_sha256": "aec74d550e239c4fd9a0475df7ae850c308eeedff9963b9f1d22fd050c7e6ecd"
+		},
+		"browser-smoke-pinned-node.log": {
+			"file": "browser-smoke-pinned-node.log.gz",
+			"bytes": 2356,
+			"sha256": "ece847cf95a0af9f79d2c218d7125b8cac7b83dc068bf51260cf1a10e998574b",
+			"gzip_sha256": "5913d3f1ed3be44dc221c5ebbe161c8048d369928672b293f127137152ce72a9"
+		}
+	},
+	"limits": [
+		"The broad installed-process suite precedes the final error classification and added expiry scenario; the three focused installed controls pass after those changes.",
+		"The 19-entry installed suite includes one inactive visual-capture helper, not a nineteenth execution scenario.",
+		"The production build and browser smoke precede restoration of UTF-8 punctuation; final frontend checks follow it. A clean native desktop build/trial remains pending.",
+		"No model-quality, learning, release, clean-machine or protected-merge acceptance follows."
+	]
+}

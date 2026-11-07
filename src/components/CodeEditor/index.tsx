@@ -6,7 +6,9 @@ import { Box, type BoxProps } from "@mantine/core";
 import clsx from "clsx";
 import equal from "fast-deep-equal";
 import { useEffect, useMemo, useRef } from "react";
-import { applyAutoFolding, editorBase, editorTheme } from "~/editor";
+import { editorBase } from "~/editor/base";
+import { applyAutoFolding } from "~/editor/folding";
+import { editorTheme } from "~/editor/theme";
 import { useSetting } from "~/hooks/config";
 import { useStable } from "~/hooks/stable";
 import { useTheme } from "~/hooks/theme";
@@ -89,9 +91,11 @@ export function CodeEditor(props: CodeEditorProps) {
 	useEffect(() => {
 		if (!elementRef.current) return;
 
+		// A new editor starts at its top. `EditorView.scrollIntoView` would also
+		// scroll every scrollable ancestor, so a page of code blocks jumped to
+		// whichever block mounted last.
 		const editor = new EditorView({
 			parent: elementRef.current,
-			scrollTo: EditorView.scrollIntoView(0),
 			state: EditorState.create(),
 		});
 
@@ -154,10 +158,13 @@ export function CodeEditor(props: CodeEditorProps) {
 				to: editor.state.doc.length,
 				insert: value,
 			},
-			effects: [EditorView.scrollIntoView(0)],
 		});
 
 		editor.dispatch(transaction);
+		// Replaced content is read from its top; only the editor's own scroller
+		// moves, never the page around it.
+		editor.scrollDOM.scrollTop = 0;
+		editor.scrollDOM.scrollLeft = 0;
 		forceLinting(editor);
 
 		// After content is updated, allow change notifications to proceed

@@ -1,6 +1,6 @@
 import { Box, Group, Image, Menu, Text } from "@mantine/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { usengram } from "react";
+import { useState } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { Icon } from "~/components/Icon";
 import { Spacer } from "~/components/Spacer";
@@ -25,7 +25,7 @@ export function AppTitleBar() {
 	const menuItems = getMenuItems();
 
 	const { title } = useInterfaceStore.getState();
-	const [isMaximized, setMaximized] = usengram(false);
+	const [isMaximized, setMaximized] = useState(false);
 
 	const commands = cmdCategories.reduce((acc, category) => {
 		for (const command of category.commands) {

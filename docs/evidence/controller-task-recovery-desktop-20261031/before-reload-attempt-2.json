@@ -1,0 +1,49 @@
+{
+	"protocol": "rrd",
+	"protocol_version": 1,
+	"request_id": "desktop-observation-a27f0ec07d3a437eb9334130e1f7d835",
+	"operation_id": "desktop-observation-a27f0ec07d3a437eb9334130e1f7d835",
+	"outcome": {
+		"status": "ok",
+		"payload": {
+			"attempt": {
+				"attempt_id": "56573bdc-b356-4dcb-9d08-be50fffc53a9",
+				"ordinal": 2,
+				"status": "accepted",
+				"outcome_sha256": "62c68514b87249324dec395f35fb04284bdb7c8e17897a16f2fb1b48d57a1a39",
+				"result": null,
+				"worker_output": {
+					"contract_version": 1,
+					"scope": "instance:instance-eeac456970b0e85859ec6989",
+					"task_id": "task-507644d1def1a5d1f86657fca362fd227eb7afee35336971e52f1bb4e126bca7",
+					"attempt_id": "56573bdc-b356-4dcb-9d08-be50fffc53a9",
+					"selection_attempt_id": "e88af8fa-4f5a-4c5f-9f1e-51ae8fd6c3a0",
+					"selection_sha256": "a1b2ccb13dd252bb11159167d2035be91530ee406555b38001a6de4b335c5938",
+					"task_sha256": "0c7d6d4dc6bf62ca6693330c5c09f1dde0aaf289d54f33e33b528678df0bf2c7",
+					"configuration_sha256": "c44c2a440bc123cde83804109da1b18dcd1f84d4f50c3bd9f7b7ce1246c037fb",
+					"binding_id": "swag-custom-bf16",
+					"service_id": "swag-qwen3-coder-intent-20261028",
+					"packet_sha256": "b9016a9c67d91bbc595a9e3890f52d5f0cb51fe22b97639c85bd62c6b60ef785",
+					"request_sha256": "74deff6c031d97e094bdd034f7d303dd59d11a59bf4b03a6dafd7b60bc5c0685",
+					"response_sha256": "1dfbf5a8677c1f3cad70991d6b9aaa5eb3f92d214a788d5c58553b117d2b3e2c",
+					"content_sha256": "911f5abff6d58cc1711eca1d818ba067eb72f86ba45605cdbe925c06c10ea218",
+					"content": "{\n  \"implementation_steps\": [\n    \"Integrate the `task-budget-resume` operation from RRFlow PR230 into the Connectome task workspace to enable explicit resume functionality.\",\n    \"Update native `client/tasks.rs` and TypeScript files (`src/rrflow/tasks.ts` and `RuntimeConnection/tasks.tsx`) to support resume with preserved deadline, effort, and attempt history.\",\n    \"Pin the SDK/engine to version `6a4cbb04` and regenerate the value fixture using the pinned engine to ensure consistency.\"\n  ],\n  \"verification_steps\": [\n    \"Execute the installed Stop/reconnect/resume test to confirm retained deadline/effort and proper rejection of stale resumes.\",\n    \"Run native process tests and browser smoke cases to validate that Clippy/fmt, pnpm checks, and UI behavior function correctly.\",\n    \"Confirm that the resumed task state matches the original and that lost replies trigger required readback without automatic retry.\"\n  ],\n  \"unresolved_questions\": [\n    \"Will the exact-source desktop build/observation be completed before finalizing this draft?\",\n    \"Is the pinned engine version `6a4cbb04` compatible with all existing dependencies and configurations?\",\n    \"Should additional UI validation be added beyond the current browser smoke tests?\"\n  ]\n}",
+					"read": {
+						"runtime_manifest_sha256": "cb9d834eacbd24ed668f72f104889993209619835f17867cd05bc0e7ed023a8b",
+						"runtime_cursor": 11,
+						"schema_revision": 3,
+						"catalogue_revision": 0
+					},
+					"context": null,
+					"usage": {
+						"prompt_tokens": 1490,
+						"completion_tokens": 263,
+						"total_tokens": 1753
+					},
+					"elapsed_ms": 20445,
+					"http_status": 200
+				}
+			}
+		}
+	}
+}

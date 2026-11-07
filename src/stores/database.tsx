@@ -1,9 +1,17 @@
 import { omit } from "radash";
 import { create } from "zustand";
+import { applyInstance, applyStatus, firstServed, type InstanceMap } from "~/rrflow/instances";
 import type { GraphqlResponse } from "~/screens/connectome/connection/connection";
 import { createConnectionSchema } from "~/shared/util/defaults";
-import type { ConnectionSchema, engramStage, QueryResponse, Servedengram } from "~/types";
-import { Diagnostic } from "~/vendor/rrflow-client";
+import type {
+	ConnectionSchema,
+	EstateStage,
+	InstanceStatus,
+	ProjectInstance,
+	QueryResponse,
+	ServedEstate,
+} from "~/types";
+import type { Diagnostic } from "~/vendor/rrflow-client";
 
 export type State = "disconnected" | "connecting" | "retrying" | "connected";
 export type DiagnosticWithTime = Diagnostic & { timestamp: number };
@@ -11,10 +19,12 @@ export type DiagnosticWithTime = Diagnostic & { timestamp: number };
 export type DatabaseStore = {
 	isServing: boolean;
 	servePending: boolean;
-	/** The engram the native process is serving; null while nothing is served. */
-	servedengram: Servedengram | null;
+	/** The estate the native process is serving; null while nothing is served. */
+	servedEstate: ServedEstate | null;
+	/** Each project's instance, as the native registry last numbered it. */
+	instances: InstanceMap;
 	/** The serve sequence's boundaries, oldest first, cleared on each start. */
-	engramStages: engramStage[];
+	estateStages: EstateStage[];
 	currentState: State;
 	latestError: string;
 	isSyncingSchema: boolean;
@@ -31,10 +41,12 @@ export type DatabaseStore = {
 	setGraphqlQueryActive: (isQueryActive: boolean) => void;
 	clearSchema: () => void;
 	prepareServe: () => void;
-	confirmServing: (engram: Servedengram) => void;
+	confirmServing: (estate: ServedEstate) => void;
 	stopServing: () => void;
+	applyInstance: (instance: ProjectInstance) => void;
+	applyStatus: (status: InstanceStatus) => void;
 	cancelServe: () => void;
-	pushStage: (stage: engramStage) => void;
+	pushStage: (stage: EstateStage) => void;
 	pushConsoleLine: (line: string, max: number) => void;
 	clearConsole: () => void;
 	setIsSyncingSchema: (isSyncingSchema: boolean) => void;
@@ -52,8 +64,9 @@ export type DatabaseStore = {
 export const useDatabaseStore = create<DatabaseStore>((set) => ({
 	isServing: false,
 	servePending: false,
-	servedengram: null,
-	engramStages: [],
+	servedEstate: null,
+	instances: {},
+	estateStages: [],
 	currentState: "disconnected",
 	latestError: "",
 	isSyncingSchema: false,
@@ -85,26 +98,40 @@ export const useDatabaseStore = create<DatabaseStore>((set) => ({
 		set(() => ({
 			servePending: true,
 			consoleOutput: [],
-			engramStages: [],
+			estateStages: [],
 		})),
 
-	confirmServing: (servedengram) =>
+	confirmServing: (servedEstate) =>
 		set(() => ({
 			isServing: true,
 			servePending: false,
-			servedengram,
+			servedEstate,
 		})),
 
 	stopServing: () =>
 		set(() => ({
 			isServing: false,
 			servePending: false,
-			servedengram: null,
+			servedEstate: null,
 		})),
+
+	applyInstance: (instance) =>
+		set((state) => {
+			const instances = applyInstance(state.instances, instance);
+			const servedEstate = firstServed(instances);
+			return { instances, servedEstate, isServing: servedEstate !== null };
+		}),
+
+	applyStatus: (status) =>
+		set((state) => {
+			const instances = applyStatus(state.instances, status);
+			const servedEstate = firstServed(instances);
+			return { instances, servedEstate, isServing: servedEstate !== null };
+		}),
 
 	pushStage: (stage) =>
 		set((state) => ({
-			engramStages: [...state.engramStages, stage].slice(-128),
+			estateStages: [...state.estateStages, stage].slice(-128),
 		})),
 
 	cancelServe: () =>

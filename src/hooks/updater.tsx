@@ -1,7 +1,7 @@
 import { Alert, Group } from "@mantine/core";
 import { invoke } from "@tauri-apps/api/core";
 import { relaunch } from "@tauri-apps/plugin-process";
-import { usengram } from "react";
+import { useState } from "react";
 import { Icon } from "~/components/Icon";
 import { iconDownload } from "~/icons";
 import { useConfirmation } from "~/providers/Confirmation";
@@ -23,9 +23,9 @@ export function useDesktopUpdater() {
 
 	const update = useInterfaceStore((s) => s.availableUpdate);
 
-	const [phase, setPhase] = usengram<Phase>("idle");
-	const [packageTotal, setPackageTotal] = usengram(0);
-	const [packageProgress, setPackageProgress] = usengram(0);
+	const [phase, setPhase] = useState<Phase>("idle");
+	const [packageTotal, setPackageTotal] = useState(0);
+	const [packageProgress, setPackageProgress] = useState(0);
 
 	const currentMajor = extractMajor(import.meta.env.VERSION);
 	const latestMajor = extractMajor(update?.version || "0.0.0");

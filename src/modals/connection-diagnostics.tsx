@@ -15,7 +15,7 @@ import {
 } from "@mantine/core";
 import { closeModal, openModal } from "@mantine/modals";
 import { formatDistanceToNow } from "date-fns";
-import { FC, memo, useMemo, usengram } from "react";
+import { FC, memo, useMemo, useState } from "react";
 import { adapter } from "~/adapter";
 import { CodeBlock } from "~/components/CodeBlock";
 import { Icon } from "~/components/Icon";
@@ -111,8 +111,8 @@ function ConnectionDiagnosticsSelector() {
 	const [recordDiagnostics, setRecordDiagnostics] = useSetting("behavior", "recordDiagnostics");
 	const isLight = useIsLight();
 
-	const [focusedDiagnostic, setFocusedDiagnostic] = usengram<DiagnosticEntry | null>(null);
-	const [selectedFilter, setSelectedFilter] = usengram<string[]>([]);
+	const [focusedDiagnostic, setFocusedDiagnostic] = useState<DiagnosticEntry | null>(null);
+	const [selectedFilter, setSelectedFilter] = useState<string[]>([]);
 
 	const diagnostics = useDatabaseStore((s) => s.diagnostics);
 

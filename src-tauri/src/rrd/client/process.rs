@@ -1,16 +1,16 @@
 //! Connectome's native client against a real RRD process.
 //!
-//! Each test installs and serves a fresh engram through the product's own
-//! serve path (`rrd::engram::serve_engram`, the sequence behind the desktop's
+//! Each test installs and serves a fresh estate through the product's own
+//! serve path (`rrd::estate::serve_estate`, the sequence behind the desktop's
 //! "Start serving") with the `rrflow` binary named by `RRFLOW_BIN`, loads a
 //! small fixture through the SDK, and drives `NativeRrdClient` the way the
 //! lenses do. They are ignored by default; CI's RRD process job builds
 //! `rrflow` at the revision `Cargo.lock` pins and runs them with `--ignored`.
 
 use super::*;
-use crate::rrd::engram::{
-    preview_engram, serve_engram, engramServeRequest, engramStage, InstallMode, ServeObserver,
-    Servedengram,
+use crate::rrd::estate::{
+    preview_estate, serve_estate, EstateServeRequest, EstateStage, InstallMode, InstanceView,
+    ServeObserver, ServedEstate,
 };
 use rrd_contract::{
     BeginTransaction, CommitTransaction, DataSchemaRegistry, EnsureVectorCollection,
@@ -19,6 +19,16 @@ use rrd_contract::{
 use serde_json::{json, Value};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
+
+mod attunement;
+mod effects;
+mod elsewhere;
+mod language;
+mod live;
+mod quantization;
+mod startup;
+mod tasks;
+mod values;
 
 const FIXTURE_COLLECTION: &str = "notes";
 const FIXTURE_VECTOR: &str = "body";
@@ -35,22 +45,23 @@ const DIMENSIONS: usize = GROUPS.len() * DIMENSIONS_PER_GROUP;
 const TRANSACTION_TIMEOUT: Duration = Duration::from_secs(60);
 const TRANSACTION_MAX_STORAGE_KEYS: u32 = 10_000;
 
-/// One installed and served engram, stopped and removed when dropped.
-struct engram {
-    served: Servedengram,
+/// One installed and served estate, stopped and removed when dropped.
+struct Estate {
+    served: ServedEstate,
     address: SocketAddr,
     instance: String,
 }
 
-/// The serve sequence's boundaries and the engine's output, kept so a
-/// failing test can show what the product path reported.
+/// The serve sequence's boundaries, the engine's output and each lifecycle
+/// transition, kept so a failing test can show what the product path
+/// reported.
 #[derive(Default)]
 struct RecordingObserver {
     lines: Mutex<Vec<String>>,
 }
 
 impl ServeObserver for RecordingObserver {
-    fn stage(&self, stage: engramStage) {
+    fn stage(&self, stage: EstateStage) {
         self.lines.lock().expect("observer").push(format!(
             "[{} {}] {}",
             stage.stage, stage.state, stage.detail
@@ -60,6 +71,13 @@ impl ServeObserver for RecordingObserver {
     fn output(&self, line: String) {
         self.lines.lock().expect("observer").push(line);
     }
+
+    fn lifecycle(&self, instance: InstanceView) {
+        self.lines.lock().expect("observer").push(format!(
+            "[lifecycle {:?} {:?}] {}",
+            instance.state, instance.origin, instance.detail
+        ));
+    }
 }
 
 fn rrflow() -> PathBuf {
@@ -68,8 +86,19 @@ fn rrflow() -> PathBuf {
     )
 }
 
-fn accepted(mut request: engramServeRequest) -> engramServeRequest {
-    let preview = preview_engram(&request).expect("native installation preview");
+/// The RRFlow revision `Cargo.lock` pins, which is the engine under test.
+fn pinned_revision() -> String {
+    let lock =
+        std::fs::read_to_string(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("Cargo.lock"))
+            .expect("read Cargo.lock");
+    lock.split("rrflow-development?rev=")
+        .nth(1)
+        .map(|rest| rest[..40].to_owned())
+        .expect("Cargo.lock pins an RRFlow revision")
+}
+
+fn accepted(mut request: EstateServeRequest) -> EstateServeRequest {
+    let preview = preview_estate(&request).expect("native installation preview");
     assert!(!PathBuf::from(&preview.project)
         .join(".rrflow/config.toml")
         .exists());
@@ -78,23 +107,27 @@ fn accepted(mut request: engramServeRequest) -> engramServeRequest {
         .as_ref()
         .and_then(|p| p["installation"]["plan_sha256"].as_str())
         .map(str::to_owned);
+    // The desktop keeps the identity with its pending preview the same way.
+    request.installation_identity = preview.installation_identity;
     request
 }
 
-impl engram {
-    /// Installs a fresh engram and serves it exactly as the desktop does.
+impl Estate {
+    /// Installs a fresh estate and serves it exactly as the desktop does.
     fn install_and_serve() -> Self {
         let project = std::env::temp_dir().join(format!(
             "connectome-rrd-process-{}.project",
             Uuid::new_v4().simple()
         ));
         let observer = Arc::new(RecordingObserver::default());
-        let served = serve_engram(
-            accepted(engramServeRequest {
+        let served = serve_estate(
+            accepted(EstateServeRequest {
                 project: project.to_string_lossy().into_owned(),
                 mode: InstallMode::Fresh,
                 executable: rrflow().to_string_lossy().into_owned(),
                 accepted_plan_sha256: None,
+                installation_identity: None,
+                endpoint_credentials: None,
             }),
             observer.clone(),
         )
@@ -110,7 +143,7 @@ impl engram {
             .endpoint
             .strip_prefix("http://")
             .and_then(|address| address.parse().ok())
-            .expect("the served engram names a loopback HTTP address");
+            .expect("the served estate names a loopback HTTP address");
         let instance = served.view.instance.clone();
 
         Self {
@@ -129,7 +162,7 @@ impl engram {
     }
 }
 
-impl Drop for engram {
+impl Drop for Estate {
     fn drop(&mut self) {
         let _ = self.served.server.kill();
         let _ = self.served.server.wait();
@@ -205,8 +238,8 @@ fn vector(group: usize, index: usize) -> Vec<f64> {
 
 /// Two groups of four documents, densely linked inside each group and joined
 /// by one link, each with a vector near its group's.
-async fn load_fixture(engram: &engram) {
-    load_fixture_at(engram.connect_request(), engram.address).await;
+async fn load_fixture(estate: &Estate) {
+    load_fixture_at(estate.connect_request(), estate.address).await;
 }
 
 async fn load_fixture_at(request: RrdConnectRequest, address: SocketAddr) {
@@ -226,7 +259,7 @@ async fn load_fixture_at(request: RrdConnectRequest, address: SocketAddr) {
         .expect("operator session");
     let session = &lease.session;
 
-    // A fresh engram already carries the engine's own types, so the fixture
+    // A fresh estate already carries the engine's own types, so the fixture
     // extends the current registry under the next revision. The read asks for
     // the same one-record pages the lenses do.
     let current = client
@@ -381,12 +414,12 @@ fn group_of(record: &str) -> char {
 #[test]
 #[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
 fn a_second_connection_never_replays_the_first_session() {
-    let engram = engram::install_and_serve();
+    let estate = Estate::install_and_serve();
     tauri::async_runtime::block_on(async {
-        let first = NativeRrdClient::connect(engram.connect_request())
+        let first = NativeRrdClient::connect(estate.connect_request())
             .await
             .expect("first connection");
-        let second = NativeRrdClient::connect(engram.connect_request())
+        let second = NativeRrdClient::connect(estate.connect_request())
             .await
             .expect("second connection");
         // With per-launch request counters both connections sent the same
@@ -408,17 +441,97 @@ fn a_second_connection_never_replays_the_first_session() {
 
 #[test]
 #[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
-fn the_lenses_read_a_live_engram() {
-    let engram = engram::install_and_serve();
+fn observe_flight_is_read_back_after_reconnecting() {
+    let estate = Estate::install_and_serve();
     tauri::async_runtime::block_on(async {
-        load_fixture(&engram).await;
+        load_fixture(&estate).await;
+        let client = NativeRrdClient::connect(estate.connect_request())
+            .await
+            .expect("native connection");
+        let launched = client
+            .launch_observe_flight(RrdLaunchObserveFlightRequest {
+                prompt: "Inspect the loaded project documents and relationships".into(),
+                context_mode: Some("pruned".into()),
+                acceptance_marker: None,
+            })
+            .await
+            .expect("observe flight launch");
+        let before = client
+            .read_prompt_flight(RrdReadPromptFlightRequest {
+                flight_id: launched.flight_id.clone(),
+            })
+            .await
+            .expect("read launched flight");
+        assert_eq!(before.flight_id, launched.flight_id);
+        assert_eq!(before.provider, "observe");
+        assert_eq!(before.event_count as usize, before.events.len());
+        assert!(!before.events.is_empty());
+        for index in 0..8 {
+            client
+                .launch_observe_flight(RrdLaunchObserveFlightRequest {
+                    prompt: format!("Inspect project context {index}"),
+                    context_mode: Some("pruned".into()),
+                    acceptance_marker: None,
+                })
+                .await
+                .expect("additional flight for cursor pagination");
+        }
+        let first_page = client
+            .workbench_snapshot(0)
+            .await
+            .expect("first flight page");
+        assert_eq!(first_page.flights.len(), 8);
+        assert!(first_page.truncated);
+        let last_cursor = first_page
+            .flights
+            .last()
+            .expect("first page has a cursor")
+            .flight_cursor;
+        let next_page = client
+            .workbench_snapshot(last_cursor)
+            .await
+            .expect("next flight page");
+        assert_eq!(next_page.flights.len(), 1);
+        assert!(!next_page.truncated);
+        assert!(next_page.flights[0].flight_cursor > last_cursor);
+        client.close().await.expect("close first session");
+
+        let reopened = NativeRrdClient::connect(estate.connect_request())
+            .await
+            .expect("reconnect to same instance");
+        let after = reopened
+            .read_prompt_flight(RrdReadPromptFlightRequest {
+                flight_id: launched.flight_id.clone(),
+            })
+            .await
+            .expect("read flight after reconnect");
+        assert_eq!(after.flight_id, before.flight_id);
+        assert_eq!(after.event_count, before.event_count);
+        assert_eq!(after.known_at_cursor, before.known_at_cursor);
+        assert!(reopened
+            .workbench_snapshot(0)
+            .await
+            .expect("flight list")
+            .flights
+            .iter()
+            .any(|flight| flight.flight_id == launched.flight_id));
+        reopened.close().await.expect("close reconnected session");
+    });
+}
+
+#[test]
+#[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
+fn the_lenses_read_a_live_estate() {
+    let estate = Estate::install_and_serve();
+    tauri::async_runtime::block_on(async {
+        load_fixture(&estate).await;
         let client = Arc::new(
-            NativeRrdClient::connect(engram.connect_request())
+            NativeRrdClient::connect(estate.connect_request())
                 .await
                 .expect("connection"),
         );
         let connection = client.connection();
-        assert_eq!(connection.instance, engram.instance);
+        assert_eq!(connection.instance, estate.instance);
         assert_eq!(connection.session.idle_timeout_ms, SESSION_IDLE_TIMEOUT_MS);
 
         let schema = client.schema().await.expect("authenticated native schema");
@@ -449,7 +562,7 @@ fn the_lenses_read_a_live_engram() {
             rrd_contract::DataLogicalModel::Vector
         );
 
-        // Records & relations: the graph and its clusters. A fresh engram also
+        // Records & relations: the graph and its clusters. A fresh estate also
         // holds the engine's own records, so the fixture's kinds are counted.
         let database = client.database().await.expect("database view");
         let graph = &database.graph;
@@ -615,12 +728,14 @@ fn the_bundled_engine_serves_as_the_verified_sidecar() {
         Uuid::new_v4().simple()
     ));
     let observer = Arc::new(RecordingObserver::default());
-    let served = serve_engram(
-        accepted(engramServeRequest {
+    let served = serve_estate(
+        accepted(EstateServeRequest {
             project: project.to_string_lossy().into_owned(),
             mode: InstallMode::Fresh,
             executable: String::new(),
             accepted_plan_sha256: None,
+            installation_identity: None,
+            endpoint_credentials: None,
         }),
         observer.clone(),
     );
@@ -636,17 +751,21 @@ fn the_bundled_engine_serves_as_the_verified_sidecar() {
     let _ = std::fs::remove_dir_all(&project);
 
     assert_eq!(
-        served.view.engine.source,
+        served.view.engine.as_ref().expect("an owned engine").source,
         crate::rrd::engine::EngineSource::Sidecar
     );
     assert_eq!(
-        served.view.engine.sha256,
+        served.view.engine.as_ref().expect("an owned engine").sha256,
         manifest["sha256"]
             .as_str()
             .expect("manifest names its sha256")
     );
     assert_eq!(
-        served.view.engine.revision.as_deref(),
+        served
+            .view
+            .engine
+            .as_ref()
+            .and_then(|engine| engine.revision.as_deref()),
         manifest["revision"].as_str()
     );
     let lines = observer.lines.lock().expect("observer");
@@ -665,27 +784,29 @@ fn native_preview_requires_exact_acceptance_and_reopens() {
     let project =
         std::env::temp_dir().join(format!("connectome-preview-{}", Uuid::new_v4().simple()));
     let observer = Arc::new(RecordingObserver::default());
-    let mut request = engramServeRequest {
+    let mut request = EstateServeRequest {
         project: project.to_string_lossy().into_owned(),
         mode: InstallMode::Fresh,
         executable: rrflow().to_string_lossy().into_owned(),
         accepted_plan_sha256: None,
+        installation_identity: None,
+        endpoint_credentials: None,
     };
-    assert!(serve_engram(request.clone(), observer.clone()).is_err());
+    assert!(serve_estate(request.clone(), observer.clone()).is_err());
     assert!(!project.join(".rrflow/config.toml").exists());
     request.accepted_plan_sha256 = Some("0".repeat(64));
-    assert!(serve_engram(request.clone(), observer.clone()).is_err());
+    assert!(serve_estate(request.clone(), observer.clone()).is_err());
     assert!(!project.join(".rrflow/config.toml").exists());
     request = accepted(request);
     let mut served =
-        serve_engram(request.clone(), observer.clone()).expect("approved installation");
+        serve_estate(request.clone(), observer.clone()).expect("approved installation");
     let instance = served.view.instance.clone();
     served.server.kill().unwrap();
     served.server.wait().unwrap();
-    let reopened_preview = preview_engram(&request).unwrap();
+    let reopened_preview = preview_estate(&request).unwrap();
     assert!(reopened_preview.installation.is_none());
     request.accepted_plan_sha256 = None;
-    let mut reopened = serve_engram(request, observer).expect("open installed engram");
+    let mut reopened = serve_estate(request, observer).expect("open installed estate");
     assert!(!reopened.view.installed);
     assert_eq!(reopened.view.instance, instance);
     reopened.server.kill().unwrap();
@@ -697,12 +818,12 @@ fn native_preview_requires_exact_acceptance_and_reopens() {
 /// disconnect, reconnect and targeted stop, not just simultaneous handshakes.
 #[test]
 #[ignore = "drives real RRD processes: set RRFLOW_BIN and run with --ignored"]
-fn project_registry_keeps_parallel_engrams_and_sessions_isolated() {
-    use crate::rrd::{engram::engramState, RrdClientState};
-    let owner = engramState::default();
+fn project_registry_keeps_parallel_estates_and_sessions_isolated() {
+    use crate::rrd::{estate::EstateState, RrdClientState};
+    let owner = EstateState::default();
     let requests: Vec<_> = (0..2)
         .map(|_| {
-            accepted(engramServeRequest {
+            accepted(EstateServeRequest {
                 project: std::env::temp_dir()
                     .join(format!("connectome-project-{}", Uuid::new_v4().simple()))
                     .to_string_lossy()
@@ -710,6 +831,8 @@ fn project_registry_keeps_parallel_engrams_and_sessions_isolated() {
                 mode: InstallMode::Fresh,
                 executable: rrflow().to_string_lossy().into_owned(),
                 accepted_plan_sha256: None,
+                installation_identity: None,
+                endpoint_credentials: None,
             })
         })
         .collect();
@@ -725,16 +848,19 @@ fn project_registry_keeps_parallel_engrams_and_sessions_isolated() {
     assert_ne!(first.project, second.project);
     assert_ne!(first.credential_path, second.credential_path);
     assert_ne!(first.endpoint, second.endpoint);
-    assert_eq!(owner.status().unwrap().len(), 2);
+    assert_eq!(owner.status().instances.len(), 2);
     assert_eq!(
-        owner.start(requests[0].clone(), observer).unwrap().endpoint,
+        owner
+            .start(requests[0].clone(), observer.clone())
+            .unwrap()
+            .endpoint,
         first.endpoint,
         "opening a running project reuses its owned process"
     );
-    let request = |engram: &crate::rrd::engram::ServedengramView| RrdConnectRequest {
-        endpoint: engram.endpoint.clone(),
-        instance: engram.instance.clone(),
-        credential_path: engram.credential_path.clone(),
+    let request = |estate: &crate::rrd::estate::ServedEstateView| RrdConnectRequest {
+        endpoint: estate.endpoint.clone(),
+        instance: estate.instance.clone(),
+        credential_path: estate.credential_path.clone(),
     };
     tauri::async_runtime::block_on(async {
         load_fixture_at(
@@ -835,25 +961,57 @@ fn project_registry_keeps_parallel_engrams_and_sessions_isolated() {
             .await
             .expect("A reconnects independently");
         sessions.disconnect("project-a").await.unwrap();
-        assert!(owner.stop(&first.project).unwrap());
+        assert!(owner.stop(&first.project, observer.as_ref()).unwrap());
         assert!(
-            !owner.stop(&first.project).unwrap(),
+            !owner.stop(&first.project, observer.as_ref()).unwrap(),
             "stopping twice is harmless"
         );
         assert!(
-            !owner.stop("unowned-project").unwrap(),
+            !owner.stop("unowned-project", observer.as_ref()).unwrap(),
             "never stop an unowned process"
         );
-        assert_eq!(owner.status().unwrap().len(), 1);
+        assert_eq!(owner.status().instances.len(), 1);
         b.database()
             .await
             .expect("stopping A preserves B's authenticated data flow");
         b.storage().await.expect("B's storage still answers");
         sessions.disconnect("project-b").await.unwrap();
     });
-    assert!(owner.stop(&second.project).unwrap());
-    assert!(owner.status().unwrap().is_empty());
+    assert!(owner.stop(&second.project, observer.as_ref()).unwrap());
+    assert!(owner.status().instances.is_empty());
     for request in requests {
         std::fs::remove_dir_all(request.project).expect("remove test-owned project");
     }
+}
+
+/// Seeds the estate the desktop is serving with the lens fixture, for the
+/// visual baseline (`tests/visual/capture-native.mjs`, sprint 009 decision
+/// 17). The capture passes the served estate's endpoint, instance and
+/// operator credential path in `CONNECTOME_CAPTURE_ENDPOINT`,
+/// `CONNECTOME_CAPTURE_INSTANCE` and `CONNECTOME_CAPTURE_CREDENTIAL`; the
+/// credential file is read only here, inside the native process. Without all
+/// three it does nothing, so CI's `--ignored` run passes over it.
+#[test]
+#[ignore = "seeds a desktop-served estate for the visual capture"]
+fn seed_served_estate_for_visual_capture() {
+    let variable = |name: &str| std::env::var(name).ok().filter(|value| !value.is_empty());
+    let (Some(endpoint), Some(instance), Some(credential_path)) = (
+        variable("CONNECTOME_CAPTURE_ENDPOINT"),
+        variable("CONNECTOME_CAPTURE_INSTANCE"),
+        variable("CONNECTOME_CAPTURE_CREDENTIAL"),
+    ) else {
+        return;
+    };
+    let address: SocketAddr = endpoint
+        .strip_prefix("http://")
+        .and_then(|address| address.parse().ok())
+        .expect("the capture names a loopback HTTP endpoint");
+    tauri::async_runtime::block_on(load_fixture_at(
+        RrdConnectRequest {
+            endpoint,
+            instance,
+            credential_path,
+        },
+        address,
+    ));
 }

@@ -1,5 +1,5 @@
 import { buildClientSchema, type GraphQLSchema, getIntrospectionQuery } from "graphql";
-import { usengram } from "react";
+import { useState } from "react";
 import { sendGraphqlRequest } from "~/screens/connectome/connection/connection";
 import { useStable } from "./stable";
 
@@ -8,7 +8,7 @@ import { useStable } from "./stable";
  * GraphQL schema of the currently selected database.
  */
 export function useGraphqlIntrospection() {
-	const [schema, setSchema] = usengram<GraphQLSchema | null>(null);
+	const [schema, setSchema] = useState<GraphQLSchema | null>(null);
 
 	const introspectSchema = useStable(async () => {
 		try {

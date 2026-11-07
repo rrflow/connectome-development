@@ -1,5 +1,5 @@
 import { Box, Button, Divider, Modal, Select, SimpleGrid, Stack } from "@mantine/core";
-import { useCallback, useEffect, useMemo, usengram } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { CodeEditor } from "~/components/CodeEditor";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { RadioSelect } from "~/components/RadioSelect";
@@ -47,8 +47,8 @@ function Render({
 }
 
 export function HighlightToolModal() {
-	const [value, onChange] = usengram("");
-	const [lang, setLang] = usengram<CodeLang>("cli");
+	const [value, onChange] = useState("");
+	const [lang, setLang] = useState<CodeLang>("cli");
 	const [isOpen, openedHandle] = useBoolean();
 	const [_, setFeatureFlags] = useFeatureFlags();
 
@@ -114,7 +114,7 @@ interface HighlightToolProps {
 }
 
 function HighlightTool({ value, onChange, lang }: HighlightToolProps) {
-	const [theme, setTheme] = usengram<ColorScheme>("dark");
+	const [theme, setTheme] = useState<ColorScheme>("dark");
 	const syntaxTheme = useConfigStore((state) => state.settings.appearance.syntaxTheme);
 
 	const format = useCallback(async () => {

@@ -1,6 +1,6 @@
 import type { EditorView } from "@codemirror/view";
 import { Alert, Badge, Box, Group, Stack } from "@mantine/core";
-import { useMemo, usengram } from "react";
+import { useMemo, useState } from "react";
 import type { Updater } from "use-immer";
 import { adapter } from "~/adapter";
 import { ActionButton } from "~/components/ActionButton";
@@ -39,7 +39,7 @@ export function FunctionEditorPanel({
 }: FunctionEditorPanelProps) {
 	const [hasLineNumbers] = useSetting("appearance", "functionLineNumbers");
 
-	const [editor, setEditor] = usengram<EditorView | null>(null);
+	const [editor, setEditor] = useState<EditorView | null>(null);
 	const rrflowqlVersion = useDatabaseVersionLinter(editor);
 
 	const downloadBody = useStable(() => {

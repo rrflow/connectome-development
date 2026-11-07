@@ -9,22 +9,33 @@ mod client;
 mod cluster;
 pub mod engine;
 mod error;
-pub mod engram;
+pub mod estate;
 mod transport;
 mod view;
 
 use client::{
-    NativeRrdClient, RrdConnectRequest, RrdLaunchObserveFlightRequest, RrdQueryRequest,
-    RrdReadPromptFlightRequest, RrdVectorMapRequest, RrdVectorPointsRequest,
-    RrdVectorSearchRequest,
+    NativeRrdClient, RrdAuditExportRequest, RrdAuditRequest, RrdBackupCreateRequest,
+    RrdBackupRestoreRequest, RrdBackupsRequest, RrdChangeCommitRequest, RrdChangePreviewRequest,
+    RrdChangesFollowRequest, RrdChangesRequest, RrdConnectRequest, RrdLaunchObserveFlightRequest,
+    RrdLiveOpenRequest, RrdQuantizationApplyRequest, RrdQuantizationProposeRequest,
+    RrdQuantizationsRequest, RrdQueryExportRequest, RrdQueryRequest, RrdReadPromptFlightRequest,
+    RrdVectorCompareRequest, RrdVectorMapRequest, RrdVectorPointsRequest, RrdVectorSearchRequest,
 };
 use error::RrdError;
 use transport::public_rrd_url;
+use view::effect::{
+    AuditExportView, BackupCreatedView, BackupsView, ChangePreviewView, CommitReceiptView,
+    QueryExportView, RestoreView, SavedArtifactView,
+};
+use view::history::{AuditView, ChangesFollowView, ChangesView};
+use view::live::{LiveEventView, LiveView};
+use view::quantization::{
+    QuantizationAppliedView, QuantizationProposalView, QuantizationsView, VectorCompareView,
+};
 use view::{
     ConnectionView, DatabaseView, PromptFlightDetailView, PromptFlightLaunchView, QueryView,
-    ServiceView, StorageView, VectorCollectionsView,
-    VectorMapProgressView, VectorMapView, VectorPointsView, VectorSearchView,
-    WorkbenchSnapshotView,
+    ServiceView, StorageView, VectorCollectionsView, VectorMapProgressView, VectorMapView,
+    VectorPointsView, VectorSearchView, WorkbenchSnapshotView,
 };
 
 const MAX_RRD_RESPONSE_BYTES: u64 = 1024 * 1024;
@@ -118,9 +129,14 @@ pub async fn rrd_capabilities(
 #[tauri::command]
 pub async fn rrd_workbench_snapshot(
     profile: String,
+    after_cursor: u64,
     state: State<'_, RrdClientState>,
 ) -> Result<WorkbenchSnapshotView, RrdError> {
-    state.client(&profile).await?.workbench_snapshot().await
+    state
+        .client(&profile)
+        .await?
+        .workbench_snapshot(after_cursor)
+        .await
 }
 
 #[tauri::command]
@@ -142,7 +158,11 @@ pub async fn rrd_read_prompt_flight(
     request: RrdReadPromptFlightRequest,
     state: State<'_, RrdClientState>,
 ) -> Result<PromptFlightDetailView, RrdError> {
-    state.client(&profile).await?.read_prompt_flight(request).await
+    state
+        .client(&profile)
+        .await?
+        .read_prompt_flight(request)
+        .await
 }
 
 #[tauri::command]
@@ -232,6 +252,208 @@ pub async fn rrd_vector_map(
             let _ = on_progress.send(progress);
         })
         .await
+}
+
+/// The quantized search generations of one named vector.
+#[tauri::command]
+pub async fn rrd_vector_quantizations(
+    profile: String,
+    request: RrdQuantizationsRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<QuantizationsView, RrdError> {
+    state.client(&profile).await?.quantizations(request).await
+}
+
+/// Holds one quantization lifecycle step under the returned handle, with the
+/// exact request that applying it sends; nothing is sent to the engine.
+#[tauri::command]
+pub async fn rrd_vector_quantization_propose(
+    profile: String,
+    request: RrdQuantizationProposeRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<QuantizationProposalView, RrdError> {
+    state
+        .client(&profile)
+        .await?
+        .propose_quantization(request)
+        .await
+}
+
+/// Applies the proposed step exactly as proposed, once the operator confirmed
+/// it.
+#[tauri::command]
+pub async fn rrd_vector_quantization_apply(
+    profile: String,
+    request: RrdQuantizationApplyRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<QuantizationAppliedView, RrdError> {
+    state
+        .client(&profile)
+        .await?
+        .apply_quantization(request)
+        .await
+}
+
+#[tauri::command]
+pub async fn rrd_vector_quantization_discard(
+    profile: String,
+    handle: String,
+    state: State<'_, RrdClientState>,
+) -> Result<(), RrdError> {
+    state
+        .client(&profile)
+        .await?
+        .discard_quantization(&handle)
+        .await
+}
+
+/// Exact and approximate search for one stored example, side by side.
+#[tauri::command]
+pub async fn rrd_vector_compare(
+    profile: String,
+    request: RrdVectorCompareRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<VectorCompareView, RrdError> {
+    state.client(&profile).await?.vector_compare(request).await
+}
+
+/// Previews a data change inside a new transaction and keeps it pending under
+/// the returned handle; nothing is committed.
+#[tauri::command]
+pub async fn rrd_change_preview(
+    profile: String,
+    request: RrdChangePreviewRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<ChangePreviewView, RrdError> {
+    state.client(&profile).await?.preview_change(request).await
+}
+
+/// Commits the pending change exactly as previewed, once the operator
+/// approved its digest.
+#[tauri::command]
+pub async fn rrd_change_commit(
+    profile: String,
+    request: RrdChangeCommitRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<CommitReceiptView, RrdError> {
+    state.client(&profile).await?.commit_change(request).await
+}
+
+#[tauri::command]
+pub async fn rrd_change_discard(
+    profile: String,
+    handle: String,
+    state: State<'_, RrdClientState>,
+) -> Result<(), RrdError> {
+    state.client(&profile).await?.discard_change(&handle).await
+}
+
+#[tauri::command]
+pub async fn rrd_changes(
+    profile: String,
+    request: RrdChangesRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<ChangesView, RrdError> {
+    state.client(&profile).await?.changes(request).await
+}
+
+#[tauri::command]
+pub async fn rrd_changes_follow(
+    profile: String,
+    request: RrdChangesFollowRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<ChangesFollowView, RrdError> {
+    state.client(&profile).await?.follow_changes(request).await
+}
+
+#[tauri::command]
+pub async fn rrd_audit(
+    profile: String,
+    request: RrdAuditRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<AuditView, RrdError> {
+    state.client(&profile).await?.audit(request).await
+}
+
+#[tauri::command]
+pub async fn rrd_audit_export(
+    profile: String,
+    request: RrdAuditExportRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<AuditExportView, RrdError> {
+    state.client(&profile).await?.export_audit(request).await
+}
+
+#[tauri::command]
+pub async fn rrd_query_export(
+    profile: String,
+    request: RrdQueryExportRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<QueryExportView, RrdError> {
+    state.client(&profile).await?.export_query(request).await
+}
+
+/// Saves a held export where the operator chooses; `null` when cancelled.
+#[tauri::command]
+pub async fn rrd_artifact_save(
+    profile: String,
+    handle: String,
+    app: tauri::AppHandle,
+    state: State<'_, RrdClientState>,
+) -> Result<Option<SavedArtifactView>, RrdError> {
+    let client = state.client(&profile).await?;
+    client::save_artifact(&app, &client, &handle).await
+}
+
+#[tauri::command]
+pub async fn rrd_backups(
+    profile: String,
+    request: RrdBackupsRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<BackupsView, RrdError> {
+    state.client(&profile).await?.backups(request).await
+}
+
+#[tauri::command]
+pub async fn rrd_backup_create(
+    profile: String,
+    request: RrdBackupCreateRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<BackupCreatedView, RrdError> {
+    state.client(&profile).await?.create_backup(request).await
+}
+
+/// Restores a backup into its own verified root beside the estate; the
+/// serving estate is not replaced.
+#[tauri::command]
+pub async fn rrd_backup_restore(
+    profile: String,
+    request: RrdBackupRestoreRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<RestoreView, RrdError> {
+    state.client(&profile).await?.restore_backup(request).await
+}
+
+/// Opens a live subscription; its events arrive on `on_event` until it is
+/// closed or ends.
+#[tauri::command]
+pub async fn rrd_live_open(
+    profile: String,
+    request: RrdLiveOpenRequest,
+    on_event: Channel<LiveEventView>,
+    state: State<'_, RrdClientState>,
+) -> Result<LiveView, RrdError> {
+    let sink: client::LiveSink = Arc::new(move |event| on_event.send(event).is_ok());
+    state.client(&profile).await?.open_live(request, sink).await
+}
+
+#[tauri::command]
+pub async fn rrd_live_close(
+    profile: String,
+    handle: String,
+    state: State<'_, RrdClientState>,
+) -> Result<(), RrdError> {
+    state.client(&profile).await?.close_live(&handle).await
 }
 
 #[tauri::command]
@@ -329,4 +551,26 @@ mod tests {
         assert_eq!(response["outcome"]["payload"]["observed_at_unix_ms"], 1);
         server.join().expect("join test server");
     }
+}
+
+#[tauri::command]
+pub async fn rrd_task(
+    profile: String,
+    request: client::tasks::TaskCommand,
+    state: State<'_, RrdClientState>,
+) -> Result<client::tasks::TaskReply, RrdError> {
+    state.client(&profile).await?.task_command(request).await
+}
+
+#[tauri::command]
+pub async fn rrd_attunement(
+    profile: String,
+    request: client::attunement::AttunementCommand,
+    state: State<'_, RrdClientState>,
+) -> Result<client::attunement::AttunementReply, RrdError> {
+    state
+        .client(&profile)
+        .await?
+        .attunement_command(request)
+        .await
 }

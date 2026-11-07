@@ -1,0 +1,518 @@
+{
+	"revision": "83804c3",
+	"viewport": [1440, 1800],
+	"application": "Connectome desktop preview build (VITE_CONNECTOME_PREVIEW=true, tauri build --debug --no-bundle), WebView2 attached over CDP",
+	"engine": {
+		"revision": "4860a253663c9c757800aafeb40890b76114c4f0",
+		"source": "the rrflow binary built from the pinned revision, on PATH"
+	},
+	"estate": "installed fresh by the capture in a scratch project folder, then seeded by seed_served_estate_for_visual_capture with the lens fixture",
+	"determinism": "time zone UTC; run-varying characters (instance identity, port, dates and times, a query's pinned clock reading, durations, the capture folder) painted magenta; the application's own motion, animation and randomness otherwise",
+	"format": "lossless WebP converted from the PNG capture",
+	"images": [
+		{
+			"theme": "dark",
+			"state": "overview",
+			"file": "dark/native-overview.webp",
+			"bytes": 177230,
+			"sha256": "6ed8f39051e4161569714ac3d04a15b499c3bb923c294076de2230dfff79e1e8"
+		},
+		{
+			"theme": "dark",
+			"state": "project-engines",
+			"file": "dark/native-project-engines.webp",
+			"bytes": 119744,
+			"sha256": "19a20ded1bb0cc01a9831bfeb394fb38153abcc0ea84393183fc6e3538fb1d24"
+		},
+		{
+			"theme": "dark",
+			"state": "installation-preview",
+			"file": "dark/native-installation-preview.webp",
+			"bytes": 125950,
+			"sha256": "61d734b8699a8ae87e3867a84bfff70ed67a91086c57bff0ee3037d0c894ea12"
+		},
+		{
+			"theme": "dark",
+			"state": "serving-stages",
+			"file": "dark/native-serving-stages.webp",
+			"bytes": 125878,
+			"sha256": "f3345f0d3ae36d3e413904a3d70efc5a01e966a8cb8b5c9e6c73e3057275898b"
+		},
+		{
+			"theme": "dark",
+			"state": "served",
+			"file": "dark/native-served.webp",
+			"bytes": 160010,
+			"sha256": "59d9d752842d831489952c73982416544ba8b11c1e55b740e172d033261b31a5"
+		},
+		{
+			"theme": "dark",
+			"state": "workbench-overview",
+			"file": "dark/native-workbench-overview.webp",
+			"bytes": 159978,
+			"sha256": "956023abd4d292f4a3a785629d3cdb4468b92adf5a3be41f1384261b4a093133"
+		},
+		{
+			"theme": "dark",
+			"state": "workbench-knowledge",
+			"file": "dark/native-workbench-knowledge.webp",
+			"bytes": 202698,
+			"sha256": "f6c56481da856d566d3674c30b9e02f6ada4fceac672945777c316fb6c058fa3"
+		},
+		{
+			"theme": "dark",
+			"state": "workbench-activity",
+			"file": "dark/native-workbench-activity.webp",
+			"bytes": 159144,
+			"sha256": "892e209a19dc34f14f08035f4cbc6f3230ffa9c1062bfe5f6f9fc0eab4769372"
+		},
+		{
+			"theme": "dark",
+			"state": "workbench-learning",
+			"file": "dark/native-workbench-learning.webp",
+			"bytes": 149610,
+			"sha256": "e2e1edf86fcc4bc41a9ed5f8ed9626226f3eb3e7cb59b4a4ca0efc0613d33898"
+		},
+		{
+			"theme": "dark",
+			"state": "workbench-services",
+			"file": "dark/native-workbench-services.webp",
+			"bytes": 156736,
+			"sha256": "a04056f6be8340d30407cca218f9bcdc71c7ba4ef2ba118e1e6d92d1f7c4a370"
+		},
+		{
+			"theme": "dark",
+			"state": "lens-data-models",
+			"file": "dark/native-lens-data-models.webp",
+			"bytes": 202698,
+			"sha256": "f6c56481da856d566d3674c30b9e02f6ada4fceac672945777c316fb6c058fa3"
+		},
+		{
+			"theme": "dark",
+			"state": "lens-records-relations",
+			"file": "dark/native-lens-records-relations.webp",
+			"bytes": 290720,
+			"sha256": "c7133c22c287c30c5845ef64afdd9acf1adb12d69d38dfd732371b53b02c7a44"
+		},
+		{
+			"theme": "dark",
+			"state": "lens-vectors",
+			"file": "dark/native-lens-vectors.webp",
+			"bytes": 299190,
+			"sha256": "cd4ad5c182cfa6ca432b230eaab27c02049145a100b0a4170a86b49a07adee6d"
+		},
+		{
+			"theme": "dark",
+			"state": "lens-storage-engine",
+			"file": "dark/native-lens-storage-engine.webp",
+			"bytes": 156998,
+			"sha256": "65e85daf275271a53edfaa083f1be3c92db3a053aa85b0d653f6a034e056223c"
+		},
+		{
+			"theme": "dark",
+			"state": "records-selected",
+			"file": "dark/native-records-selected.webp",
+			"bytes": 277980,
+			"sha256": "51d3342de0b851ecda5f93df0a997e727e53ff6d6a35649c0aae587e51eb916f"
+		},
+		{
+			"theme": "dark",
+			"state": "records-around-selection",
+			"file": "dark/native-records-around-selection.webp",
+			"bytes": 278936,
+			"sha256": "5c88f39a7b25e1c9d21759e9c7ce401a16d8df3c851454a75eafdae320cb673c"
+		},
+		{
+			"theme": "dark",
+			"state": "records-color-kind",
+			"file": "dark/native-records-color-kind.webp",
+			"bytes": 282916,
+			"sha256": "1e13edae8541e12ea32d9bdc5f2a557a9489654040a6c4f57123ebd383727b9d"
+		},
+		{
+			"theme": "dark",
+			"state": "records-query",
+			"file": "dark/native-records-query.webp",
+			"bytes": 308320,
+			"sha256": "2333d1497d14e73c33ff9cb29d8adf49a5462da6c42a2074b40dadc5d40dccd5"
+		},
+		{
+			"theme": "dark",
+			"state": "records-traverse",
+			"file": "dark/native-records-traverse.webp",
+			"bytes": 320758,
+			"sha256": "533f0f87fd6b8aa1ed53f31e07f7a24239fe8a62f30917f015ea7027d4414f52"
+		},
+		{
+			"theme": "dark",
+			"state": "vectors-points",
+			"file": "dark/native-vectors-points.webp",
+			"bytes": 328874,
+			"sha256": "f806e2a86badc6b0669754a16c1b8b028a7e144046c65c7951cab5820c0b3d4b"
+		},
+		{
+			"theme": "dark",
+			"state": "vectors-nearest",
+			"file": "dark/native-vectors-nearest.webp",
+			"bytes": 324150,
+			"sha256": "daa75c29370bcd69998edef3101592b86a596590fccc2ee0971fc9dcb258ec18"
+		},
+		{
+			"theme": "dark",
+			"state": "storage-counters",
+			"file": "dark/native-storage-counters.webp",
+			"bytes": 176952,
+			"sha256": "32dde3311bd59896e0ca14c3583a3ac635fcfe546690e493a1f8f3f494d4e84f"
+		},
+		{
+			"theme": "dark",
+			"state": "storage-history",
+			"file": "dark/native-storage-history.webp",
+			"bytes": 114192,
+			"sha256": "c53efbe96e30190e6e5e374efea488252ad1c41773ffe5476c7f9a10f2954660"
+		},
+		{
+			"theme": "dark",
+			"state": "models-document-rows",
+			"file": "dark/native-models-document-rows.webp",
+			"bytes": 227430,
+			"sha256": "d645860484c9d4897181a7fd03324b278a818a58b8fa869e179453080eca3e23"
+		},
+		{
+			"theme": "dark",
+			"state": "panel-what-do-these-words-mean",
+			"file": "dark/native-panel-what-do-these-words-mean.webp",
+			"bytes": 114688,
+			"sha256": "9aac26ca40b99bac558b936e5243e4a4bffc0d40fc2142f5d9167fb2c369b7af"
+		},
+		{
+			"theme": "dark",
+			"state": "panel-advanced-details",
+			"file": "dark/native-panel-advanced-details.webp",
+			"bytes": 239908,
+			"sha256": "2065992e5ebf0ffc77caa364356dfcdc5eaaaf3cc170d789677ff3a3da3406fa"
+		},
+		{
+			"theme": "dark",
+			"state": "panel-explore-project-knowledge",
+			"file": "dark/native-panel-explore-project-knowledge.webp",
+			"bytes": 202698,
+			"sha256": "f6c56481da856d566d3674c30b9e02f6ada4fceac672945777c316fb6c058fa3"
+		},
+		{
+			"theme": "dark",
+			"state": "panel-knowledge-paths",
+			"file": "dark/native-panel-knowledge-paths.webp",
+			"bytes": 133100,
+			"sha256": "e89878aeaa087bbd767caad7f6cf1e2daa6365e83bc9be3c7d1262e88137f54d"
+		},
+		{
+			"theme": "dark",
+			"state": "panel-manage-project-engines",
+			"file": "dark/native-panel-manage-project-engines.webp",
+			"bytes": 91458,
+			"sha256": "70a625bc0c8b99366e9d87a138f553d73f6978a4ca57b72c9524a507e23dd471"
+		},
+		{
+			"theme": "dark",
+			"state": "settings-preferences",
+			"file": "dark/native-settings-preferences.webp",
+			"bytes": 125474,
+			"sha256": "c97d8b814a5c635f79d236fed1c4dec292e4ea72767a6a6f67897bcc94c244f6"
+		},
+		{
+			"theme": "dark",
+			"state": "settings-keybindings",
+			"file": "dark/native-settings-keybindings.webp",
+			"bytes": 121426,
+			"sha256": "9148bfc6c9643c4a8e8f60c9338630641d0a6780809a4a1abce8a05e7b32e273"
+		},
+		{
+			"theme": "dark",
+			"state": "settings-templates",
+			"file": "dark/native-settings-templates.webp",
+			"bytes": 112774,
+			"sha256": "69602010a2136ffdc865af3f386e2d0cef011dd39d65e7789c41fdf529879ec3"
+		},
+		{
+			"theme": "dark",
+			"state": "settings-database-serving",
+			"file": "dark/native-settings-database-serving.webp",
+			"bytes": 143188,
+			"sha256": "f6ccde9ddb4843bbf942926c65d15c2ea9e83a8a7c0b9322a3037b7eaa8f8bfe"
+		},
+		{
+			"theme": "dark",
+			"state": "settings-backup-restore",
+			"file": "dark/native-settings-backup-restore.webp",
+			"bytes": 129796,
+			"sha256": "acb3589df3999cdc7da9ad45c07064df912d4e24f76d9817d7e2c6218a7f2a5e"
+		},
+		{
+			"theme": "dark",
+			"state": "settings-oss-licenses",
+			"file": "dark/native-settings-oss-licenses.webp",
+			"bytes": 88386,
+			"sha256": "de8fb16d244b8f8cece9ffe2a708e05e9dc4493ef0ab59d3461e6e930be5eae6"
+		},
+		{
+			"theme": "dark",
+			"state": "settings-about",
+			"file": "dark/native-settings-about.webp",
+			"bytes": 123032,
+			"sha256": "b482d9079f999d3e17c3ded12deec8461f553434ae69cea1f596bcebe75ef41b"
+		},
+		{
+			"theme": "light",
+			"state": "overview",
+			"file": "light/native-overview.webp",
+			"bytes": 165754,
+			"sha256": "8e04d2a516872748cd59c09c87e4c56f961d4ca85dd1103d79d7beee491fbf19"
+		},
+		{
+			"theme": "light",
+			"state": "project-engines",
+			"file": "light/native-project-engines.webp",
+			"bytes": 109946,
+			"sha256": "91bdfa99d92d39506244f240354f42d4ee161f64197c045007e2dd82f47ca420"
+		},
+		{
+			"theme": "light",
+			"state": "installation-preview",
+			"file": "light/native-installation-preview.webp",
+			"bytes": 116330,
+			"sha256": "7397ef719d01f94f78c50e3150cb7a0beaa798d0d1947ea170fa62650a0dc1d5"
+		},
+		{
+			"theme": "light",
+			"state": "serving-stages",
+			"file": "light/native-serving-stages.webp",
+			"bytes": 151682,
+			"sha256": "fe78fea390e5c73bf005f76a47e6c40e2e774e615aaf385cda628fbd62169c65"
+		},
+		{
+			"theme": "light",
+			"state": "served",
+			"file": "light/native-served.webp",
+			"bytes": 151682,
+			"sha256": "fe78fea390e5c73bf005f76a47e6c40e2e774e615aaf385cda628fbd62169c65"
+		},
+		{
+			"theme": "light",
+			"state": "workbench-overview",
+			"file": "light/native-workbench-overview.webp",
+			"bytes": 151578,
+			"sha256": "bc250e0f3969f2bc82e70bc42b6e3cfd81e2d0a32386523c3100a09a1a7b9d14"
+		},
+		{
+			"theme": "light",
+			"state": "workbench-knowledge",
+			"file": "light/native-workbench-knowledge.webp",
+			"bytes": 195064,
+			"sha256": "e33715fbc3cfe9f422f07a5e00e2ad21f1be2ce63a0d08833c16dcd87f2ada30"
+		},
+		{
+			"theme": "light",
+			"state": "workbench-activity",
+			"file": "light/native-workbench-activity.webp",
+			"bytes": 126204,
+			"sha256": "bf3c026595bbe5335b6133ed3d6e6ba0cc6498966efc64555397a420b7865c6a"
+		},
+		{
+			"theme": "light",
+			"state": "workbench-learning",
+			"file": "light/native-workbench-learning.webp",
+			"bytes": 140326,
+			"sha256": "f844174fd5ff328c073f4421984129e9ab257b3fdb42f1d0ea5485df08cd9cb1"
+		},
+		{
+			"theme": "light",
+			"state": "workbench-services",
+			"file": "light/native-workbench-services.webp",
+			"bytes": 148544,
+			"sha256": "15be14a1e1f9e5215e469343c73267320c8e6b887a74da4452bdb064363ba901"
+		},
+		{
+			"theme": "light",
+			"state": "lens-data-models",
+			"file": "light/native-lens-data-models.webp",
+			"bytes": 195064,
+			"sha256": "e33715fbc3cfe9f422f07a5e00e2ad21f1be2ce63a0d08833c16dcd87f2ada30"
+		},
+		{
+			"theme": "light",
+			"state": "lens-records-relations",
+			"file": "light/native-lens-records-relations.webp",
+			"bytes": 282984,
+			"sha256": "ff04ff271029beec6d513d2a10968c47f4d551299930bcbb7bd6e05ead985363"
+		},
+		{
+			"theme": "light",
+			"state": "lens-vectors",
+			"file": "light/native-lens-vectors.webp",
+			"bytes": 288684,
+			"sha256": "9030e0b0d1818c95bf52ff8ba710bda3dcb8bc060eb3de12cff5c045b18fdb60"
+		},
+		{
+			"theme": "light",
+			"state": "lens-storage-engine",
+			"file": "light/native-lens-storage-engine.webp",
+			"bytes": 151814,
+			"sha256": "7912b79346400ba916800d0141ec0a3fea73bdf3f69772f15d658380551595bb"
+		},
+		{
+			"theme": "light",
+			"state": "records-selected",
+			"file": "light/native-records-selected.webp",
+			"bytes": 270762,
+			"sha256": "1a33e1bd6ec6a436acbcf68597a7c909744ededf70d0a5a02ee1f5d6f4389581"
+		},
+		{
+			"theme": "light",
+			"state": "records-around-selection",
+			"file": "light/native-records-around-selection.webp",
+			"bytes": 228340,
+			"sha256": "a0b52576aafd6fc74b0fc48e6565d385b0253c5ebb1b1863446ab8a3d7586234"
+		},
+		{
+			"theme": "light",
+			"state": "records-color-kind",
+			"file": "light/native-records-color-kind.webp",
+			"bytes": 276420,
+			"sha256": "86fae36a8968f789d113a82cba82624c6aa89d6a11065f8df3ab6aff15454cf4"
+		},
+		{
+			"theme": "light",
+			"state": "records-query",
+			"file": "light/native-records-query.webp",
+			"bytes": 299866,
+			"sha256": "5831a1b79328fcb0f9d3fc45fda7aa26f08975065585f2fc419a342c57c7d970"
+		},
+		{
+			"theme": "light",
+			"state": "records-traverse",
+			"file": "light/native-records-traverse.webp",
+			"bytes": 310974,
+			"sha256": "325f6d77b5ff88d3de38a7b7f2566a611aaeee3ffe37fd0e5622af2dc3f0949a"
+		},
+		{
+			"theme": "light",
+			"state": "vectors-points",
+			"file": "light/native-vectors-points.webp",
+			"bytes": 317690,
+			"sha256": "acddb0ff49ab8ed8f4355d7b0cdc82d0a1cdf260c639ef6dc94304142d1d6145"
+		},
+		{
+			"theme": "light",
+			"state": "vectors-nearest",
+			"file": "light/native-vectors-nearest.webp",
+			"bytes": 309284,
+			"sha256": "d28b8222bd4ba314177bd10d847c1dd4d78ecbdbdca8c7e9808dac85efe757ce"
+		},
+		{
+			"theme": "light",
+			"state": "storage-counters",
+			"file": "light/native-storage-counters.webp",
+			"bytes": 172028,
+			"sha256": "f5e7ddccae24a8c68b16cde734fd14ea5243abb0f9fd6458fbf8f690a09ccb13"
+		},
+		{
+			"theme": "light",
+			"state": "storage-history",
+			"file": "light/native-storage-history.webp",
+			"bytes": 111374,
+			"sha256": "d1231b6f0e1ee9ee64a592068a9f2494dbfaac1f55db177743403b73e72553a8"
+		},
+		{
+			"theme": "light",
+			"state": "models-document-rows",
+			"file": "light/native-models-document-rows.webp",
+			"bytes": 219390,
+			"sha256": "6b2e42e73679f326a67d1e875bb71ad5fc16c7d8d7b693950907c3ba31407a3f"
+		},
+		{
+			"theme": "light",
+			"state": "panel-what-do-these-words-mean",
+			"file": "light/native-panel-what-do-these-words-mean.webp",
+			"bytes": 111854,
+			"sha256": "178058b2975187057749117af54d08e2ecb15dc54f8f72c49b1b809e995b0f79"
+		},
+		{
+			"theme": "light",
+			"state": "panel-advanced-details",
+			"file": "light/native-panel-advanced-details.webp",
+			"bytes": 240132,
+			"sha256": "027d845a8322066d69d8665b6270195d38d65fde5fb69bee483b09819002c65a"
+		},
+		{
+			"theme": "light",
+			"state": "panel-explore-project-knowledge",
+			"file": "light/native-panel-explore-project-knowledge.webp",
+			"bytes": 195064,
+			"sha256": "e33715fbc3cfe9f422f07a5e00e2ad21f1be2ce63a0d08833c16dcd87f2ada30"
+		},
+		{
+			"theme": "light",
+			"state": "panel-knowledge-paths",
+			"file": "light/native-panel-knowledge-paths.webp",
+			"bytes": 176972,
+			"sha256": "8c889d967a98e74d377d7f8187982b6fcb8923682a9002341071581added5ba2"
+		},
+		{
+			"theme": "light",
+			"state": "panel-manage-project-engines",
+			"file": "light/native-panel-manage-project-engines.webp",
+			"bytes": 91286,
+			"sha256": "4728eea256c34ce90edbc6b475e2fa3b4b6822c81e6e3e29358619be9b022bbc"
+		},
+		{
+			"theme": "light",
+			"state": "settings-preferences",
+			"file": "light/native-settings-preferences.webp",
+			"bytes": 124850,
+			"sha256": "c11aee75a2009855f4044c40e9dbcb72b4e33d679b951640dc5c71171a2c5a28"
+		},
+		{
+			"theme": "light",
+			"state": "settings-keybindings",
+			"file": "light/native-settings-keybindings.webp",
+			"bytes": 119792,
+			"sha256": "389c0e6b8e956378f1dac6589dea96838b940aad83983ad327250d5e242829c8"
+		},
+		{
+			"theme": "light",
+			"state": "settings-templates",
+			"file": "light/native-settings-templates.webp",
+			"bytes": 110832,
+			"sha256": "db5ac8c4305d7f82dd2f001f2dd162246d9672fcabfdbb40738c416b900a8f03"
+		},
+		{
+			"theme": "light",
+			"state": "settings-database-serving",
+			"file": "light/native-settings-database-serving.webp",
+			"bytes": 142220,
+			"sha256": "f713ab498096be707889af59c8b1c2ab79019e5310ef127090b129863eaa4212"
+		},
+		{
+			"theme": "light",
+			"state": "settings-backup-restore",
+			"file": "light/native-settings-backup-restore.webp",
+			"bytes": 127172,
+			"sha256": "b0ee58a51b72f0138d9ac007c6e56f95d403f25210ece6fcd816644bee0d6ce6"
+		},
+		{
+			"theme": "light",
+			"state": "settings-oss-licenses",
+			"file": "light/native-settings-oss-licenses.webp",
+			"bytes": 131336,
+			"sha256": "5c6f15655bff90d029803051c7313188a01a66dde1339507ba7625223f6fe540"
+		},
+		{
+			"theme": "light",
+			"state": "settings-about",
+			"file": "light/native-settings-about.webp",
+			"bytes": 119824,
+			"sha256": "64baefe651d39ff234ff8d6fc08a360b763498a1be5f78432e9cbef249cc5e9e"
+		}
+	]
+}

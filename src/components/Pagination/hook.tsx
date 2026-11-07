@@ -1,4 +1,4 @@
-import { usengram } from "react";
+import { useState } from "react";
 import { useStable } from "~/hooks/stable";
 
 export interface PaginationStore {
@@ -15,9 +15,9 @@ export interface PaginationStore {
 }
 
 export function usePagination(): PaginationStore {
-	const [total, setTotal] = usengram(0);
-	const [currentPage, setCurrentPage] = usengram(1);
-	const [pageSize, setPageSize] = usengram(25);
+	const [total, setTotal] = useState(0);
+	const [currentPage, setCurrentPage] = useState(1);
+	const [pageSize, setPageSize] = useState(25);
 	const pageCount = Math.ceil(total / pageSize);
 
 	const previousPage = useStable(() => {

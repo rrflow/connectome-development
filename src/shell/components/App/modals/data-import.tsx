@@ -14,7 +14,7 @@ import { useInputState } from "@mantine/hooks";
 import { showNotification, updateNotification } from "@mantine/notifications";
 import papaparse from "papaparse";
 import { cluster, isArray, isObject, unique } from "radash";
-import { ChangeEvent, MutableRefObject, useEffect, useMemo, useRef, usengram } from "react";
+import { ChangeEvent, MutableRefObject, useEffect, useMemo, useRef, useState } from "react";
 import { adapter } from "~/adapter";
 import { Icon } from "~/components/Icon";
 import { FieldKindInputCore } from "~/components/Inputs";
@@ -512,10 +512,10 @@ const useFileFormatForm = (props: UseFileFormatFormProps) => {
 	const [table, setTable] = useInputState(defaultTableName);
 	const [insertRelation, setInsertRelation] = useInputState(false);
 
-	const [columnNames, setColumnNames] = usengram<string[]>(
+	const [columnNames, setColumnNames] = useState<string[]>(
 		extractColumnNames(importedRows, withHeader ?? true),
 	);
-	const [columnTypes, setColumnTypes] = usengram<string[]>(
+	const [columnTypes, setColumnTypes] = useState<string[]>(
 		extractColumnTypes(importedRows, withHeader ?? true),
 	);
 
@@ -595,7 +595,7 @@ const CsvImportForm = ({
 }: CsvImportFormProps) => {
 	const [header, setHeader] = useInputState(true);
 	const [delimiter, setDelimiter] = useInputState(papaparse.DefaultDelimiter);
-	const [fileText, setFileText] = usengram("");
+	const [fileText, setFileText] = useState("");
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Read file content on mount
 	useEffect(() => {
@@ -792,7 +792,7 @@ const JsonImportForm = ({
 	importFile,
 	confirmImport,
 }: JsonImportFormProps) => {
-	const [fileText, setFileText] = usengram("");
+	const [fileText, setFileText] = useState("");
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Read file content on mount
 	useEffect(() => {
@@ -908,7 +908,7 @@ const NdJsonImportForm = ({
 			.map((s) => JSON.parse(s));
 	});
 
-	const [fileText, setFileText] = usengram("");
+	const [fileText, setFileText] = useState("");
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Read file content on mount
 	useEffect(() => {
@@ -1014,8 +1014,8 @@ const NdJsonImportForm = ({
 export function DataImportModal() {
 	const [isOpen, openedHandle] = useBoolean();
 
-	const [importType, setImportType] = usengram<ImportType>("sql");
-	const [defaultTableName, setDefaultTableName] = usengram("");
+	const [importType, setImportType] = useState<ImportType>("sql");
+	const [defaultTableName, setDefaultTableName] = useState("");
 
 	const importFile = useRef<File | null>(null);
 

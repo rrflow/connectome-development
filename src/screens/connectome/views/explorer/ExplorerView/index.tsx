@@ -1,13 +1,13 @@
 import { Box, Button, Group, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { memo, usengram } from "react";
+import { memo, useState } from "react";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { adapter } from "~/adapter";
 import { Entry } from "~/components/Entry";
 import { Icon } from "~/components/Icon";
 import { Introduction } from "~/components/Introduction";
 import { PanelDragger } from "~/components/Pane/dragger";
-import { useConnection, useIsConnected, useRequireDatabase } from "~/hooks/connection";
+import { useConnection, useIsConnected } from "~/hooks/connection";
 import { useEventSubscription } from "~/hooks/event";
 import { usePanelMinSize } from "~/hooks/panels";
 import { useConnectionAndView, useIntent, useViewFocus } from "~/hooks/routing";
@@ -22,6 +22,7 @@ import {
 	iconTable,
 	iconUpload,
 } from "~/icons";
+import { useRequireDatabase } from "~/modals/require-database";
 import { useDesigner } from "~/providers/Designer";
 import { TablesPane } from "~/screens/connectome/components/TablesPane";
 import { ActivateDatabaseEvent, DisconnectedEvent } from "~/shared/util/global-events";
@@ -47,10 +48,10 @@ export function ExplorerView() {
 	const importDatabase = useRequireDatabase(() => dispatchIntent("import-database"));
 	const exportDatabase = useRequireDatabase(() => dispatchIntent("export-database"));
 
-	const [activeTable, setActiveTable] = usengram<string>();
+	const [activeTable, setActiveTable] = useState<string>();
 	const [isCreating, isCreatingHandle] = useDisclosure();
-	const [creatorTable, setCreatorTable] = usengram<string>();
-	const [creatorContent, setCreatorContent] = usengram<any>();
+	const [creatorTable, setCreatorTable] = useState<string>();
+	const [creatorContent, setCreatorContent] = useState<any>();
 
 	const openCreator = useStable((table?: string, content?: any) => {
 		setCreatorTable(table || activeTable);

@@ -3,13 +3,20 @@
 //! `rrd-contract` owns the wire schema. These structs carry only what the
 //! Database, Vectors, and Storage lenses render, so the webview never decodes a
 //! wire type and never receives a credential, token, or raw vector payload
-//! larger than its preview.
+//! larger than its preview. `effect`, `history` and `live` hold the views of
+//! governed effects, of the estate's history, and of live results.
+
+pub mod effect;
+pub mod history;
+pub mod live;
+pub mod quantization;
 
 use super::cluster;
 use rrd_contract::{
     DataReference, DataVectorValue, DiagnosticRrflowKvSnapshot, DiagnosticRuntimeReference,
-    DiagnosticSnapshot, DiagnosticStorageSnapshot, QueryResult, QueryValue, ServiceCapabilities,
-    VectorCollectionCatalogueSnapshot, VectorPointPage, VectorPointSnapshot, VectorSearchResult,
+    DiagnosticSnapshot, DiagnosticStorageAdmission, DiagnosticStorageSnapshot, QueryResult,
+    QueryRowSnapshot, QueryValue, ServiceCapabilities, VectorCollectionCatalogueSnapshot,
+    VectorPointPage, VectorPointSnapshot, VectorSearchResult,
 };
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
@@ -36,16 +43,16 @@ pub struct ServiceView {
     pub deployment_form: String,
     pub storage_profile: String,
     pub endpoint_presentation: String,
-    pub installed_: Option<InstalledView>,
+    pub installed_estate: Option<InstalledEstateView>,
     pub configuration_revision: u64,
     pub configuration_sha256: String,
     pub capabilities: Vec<CapabilityView>,
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub struct InstalledView {
+pub struct InstalledEstateView {
     pub project_id: String,
-    pub _id: String,
+    pub estate_id: String,
     pub instance_id: String,
 }
 
@@ -68,15 +75,6 @@ pub struct ConnectionView {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub struct TaskSummaryView {
-    pub task_id: String,
-    pub title: String,
-    pub status: String,
-    pub task_cursor: u64,
-    pub known_at_cursor: u64,
-}
-
-#[derive(Debug, Clone, Serialize)]
 pub struct PromptFlightSummaryView {
     pub flight_id: String,
     pub status: String,
@@ -89,11 +87,9 @@ pub struct PromptFlightSummaryView {
 #[derive(Debug, Clone, Serialize)]
 pub struct WorkbenchSnapshotView {
     pub scope: String,
-    pub task_count: usize,
-    pub flight_count: usize,
-    pub latest_task: Option<TaskSummaryView>,
-    pub latest_flight: Option<PromptFlightSummaryView>,
-    pub recent_flights: Vec<PromptFlightSummaryView>,
+    pub after_cursor: u64,
+    pub truncated: bool,
+    pub flights: Vec<PromptFlightSummaryView>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -170,7 +166,7 @@ pub struct GraphView {
     pub known_at_cursor: u64,
     pub nodes: Vec<NodeView>,
     pub edges: Vec<EdgeView>,
-    /// Connectome-computed clusters, largest first; not  data.
+    /// Connectome-computed clusters, largest first; not estate data.
     pub clusters: Vec<ClusterView>,
 }
 
@@ -298,6 +294,12 @@ pub struct VectorSearchView {
     pub keys_examined: u64,
     pub canonical_candidates: u64,
     pub selected_candidates: u64,
+    /// Candidates the exact scorer reranked; 0 for an exact search.
+    pub exact_rerank: u64,
+    /// Points written after the generation, searched exactly beside it.
+    pub overlay_candidates: u64,
+    /// The quantized generation an approximate search read.
+    pub selected_generation: Option<u64>,
     pub loaded_artifact_bytes: u64,
     pub hits: Vec<HitView>,
 }
@@ -521,11 +523,11 @@ pub fn service(capabilities: &ServiceCapabilities) -> ServiceView {
         deployment_form: label(&capabilities.deployment.deployment_form),
         storage_profile: label(&capabilities.deployment.storage_profile),
         endpoint_presentation: label(&capabilities.deployment.endpoint_presentation),
-        installed_: capabilities.installed_.as_ref().map(|| {
-            InstalledView {
-                project_id: .project_id.as_str().into(),
-                _id: ._id.as_str().into(),
-                instance_id: .instance_id.as_str().into(),
+        installed_estate: capabilities.installed_estate.as_ref().map(|estate| {
+            InstalledEstateView {
+                project_id: estate.project_id.as_str().into(),
+                estate_id: estate.estate_id.as_str().into(),
+                instance_id: estate.instance_id.as_str().into(),
             }
         }),
         configuration_revision: capabilities.configuration.revision,
@@ -683,6 +685,13 @@ pub fn database(snapshot: &DiagnosticSnapshot) -> DatabaseView {
     }
 }
 
+pub fn query_row(row: &QueryRowSnapshot) -> RowView {
+    RowView {
+        identity: row.identity.clone(),
+        values: display_properties(&row.values),
+    }
+}
+
 pub fn query(result: &QueryResult) -> QueryView {
     let mut columns = BTreeSet::new();
     let rows = result
@@ -690,10 +699,7 @@ pub fn query(result: &QueryResult) -> QueryView {
         .iter()
         .map(|row| {
             columns.extend(row.values.keys().cloned());
-            RowView {
-                identity: row.identity.clone(),
-                values: display_properties(&row.values),
-            }
+            query_row(row)
         })
         .collect();
     QueryView {
@@ -795,6 +801,9 @@ pub fn search(query: &DataReference, result: &VectorSearchResult) -> VectorSearc
         keys_examined: result.read_evidence.keys_examined,
         canonical_candidates: result.resources.canonical_candidates,
         selected_candidates: result.resources.selected_candidates,
+        exact_rerank: result.resources.exact_rerank,
+        overlay_candidates: result.resources.overlay_candidates,
+        selected_generation: result.resources.selected_generation,
         loaded_artifact_bytes: result.resources.loaded_artifact_bytes,
         hits: result
             .hits
@@ -921,17 +930,123 @@ fn binary_size(bytes: u64) -> String {
 }
 
 fn physical(storage: &DiagnosticStorageSnapshot) -> PhysicalStorageView {
-    let (headline, groups) = storage
+    let (headline, mut groups) = storage
         .rrflow_kv
         .as_ref()
         .map(rrflow_kv_metrics)
         .unwrap_or_default();
+    groups.extend(storage.admission.as_ref().map(admission_metrics));
     PhysicalStorageView {
         observed_at_unix_ms: storage.observed_at_unix_ms,
         profile: label(&storage.profile),
         evidence_level: label(&storage.evidence_level),
         headline,
         groups,
+    }
+}
+
+/// The engine's storage admission state: what it has admitted, pinned and
+/// retained, and what is waiting.
+fn admission_metrics(admission: &DiagnosticStorageAdmission) -> MetricGroupView {
+    use MetricUnit::{Bytes, Count};
+    let mut notes = vec![
+        "Retained mutable and projected bytes are logical owner charges, not allocator or process memory.".to_owned(),
+        "Retained source pages count owned page allocations and exclude borrowed mmap residency.".to_owned(),
+        "Outstanding requests include the transaction being served and the admitted waiters.".to_owned(),
+    ];
+    if admission.active {
+        notes.push("A transaction holds the serialization permit now.".to_owned());
+    }
+    if admission.fenced {
+        notes.push(
+            "Fenced: a transaction failed while holding the permit, so new transactions are refused until the engine restarts.".to_owned(),
+        );
+    }
+    MetricGroupView {
+        id: "admission",
+        label: "Admission",
+        metrics: vec![
+            filled(
+                "checkpoint_entries",
+                "Checkpoint entries",
+                Count,
+                admission.checkpoint_entries,
+                admission.checkpoint_limit,
+            ),
+            gauge(
+                "native_transactions",
+                "Native transactions",
+                Count,
+                admission.native_transactions,
+            ),
+            gauge(
+                "native_transaction_bytes",
+                "Native transaction bytes",
+                Bytes,
+                admission.native_transaction_bytes,
+            ),
+            gauge(
+                "active_read_views",
+                "Active read views",
+                Count,
+                admission.active_read_views,
+            ),
+            gauge(
+                "pinned_read_bytes",
+                "Pinned read bytes",
+                Bytes,
+                admission.pinned_read_bytes,
+            ),
+            gauge(
+                "retained_mutable_bytes",
+                "Retained mutable",
+                Bytes,
+                admission.retained_mutable_bytes,
+            ),
+            gauge(
+                "retained_projected_bytes",
+                "Retained projected",
+                Bytes,
+                admission.retained_projected_bytes,
+            ),
+            gauge(
+                "retained_source_bytes",
+                "Retained source pages",
+                Bytes,
+                admission.retained_source_bytes,
+            ),
+            gauge(
+                "peak_source_bytes",
+                "Peak source pages",
+                Bytes,
+                admission.peak_source_bytes,
+            ),
+            cumulative(
+                "denied_source_allocations",
+                "Denied source allocations",
+                Count,
+                admission.denied_source_allocations,
+            ),
+            gauge(
+                "outstanding_requests",
+                "Outstanding requests",
+                Count,
+                admission.outstanding_requests,
+            ),
+            gauge(
+                "outstanding_logical_bytes",
+                "Outstanding logical bytes",
+                Bytes,
+                admission.outstanding_logical_bytes,
+            ),
+            gauge(
+                "queued_requests",
+                "Queued requests",
+                Count,
+                admission.queued_requests,
+            ),
+        ],
+        notes,
     }
 }
 
@@ -1254,6 +1369,27 @@ fn rrflow_kv_metrics(kv: &DiagnosticRrflowKvSnapshot) -> (Vec<MetricView>, Vec<M
                     io.peak_request_bytes,
                     io.max_request_bytes,
                 ),
+                filled(
+                    "open_files",
+                    "Open files",
+                    Count,
+                    io.open_files,
+                    io.max_open_files,
+                ),
+                gauge(
+                    "peak_open_files",
+                    "Peak open files",
+                    Count,
+                    io.peak_open_files,
+                ),
+                cumulative(
+                    "handle_evictions",
+                    "Handle evictions",
+                    Count,
+                    io.handle_evictions,
+                ),
+                cumulative("handle_reopens", "Handle reopens", Count, io.handle_reopens),
+                cumulative("handle_denials", "Handle denials", Count, io.handle_denials),
             ],
             notes: io_notes,
         },
@@ -1367,8 +1503,86 @@ mod tests {
                 bytes_read: 40_960,
                 max_request_bytes: 1 << 20,
                 peak_request_bytes: 4_096,
+                max_open_files: 256,
+                open_files: 2,
+                peak_open_files: 3,
+                handle_evictions: 1,
+                handle_reopens: 1,
+                handle_denials: 0,
             },
         }
+    }
+
+    fn admission(fenced: bool) -> DiagnosticStorageAdmission {
+        DiagnosticStorageAdmission {
+            checkpoint_entries: 3,
+            checkpoint_limit: 64,
+            native_transactions: 1,
+            native_transaction_bytes: 2_048,
+            active_read_views: 2,
+            pinned_read_bytes: 8_192,
+            retained_mutable_bytes: 4_096,
+            retained_projected_bytes: 1_024,
+            retained_source_bytes: 16_384,
+            peak_source_bytes: 32_768,
+            denied_source_allocations: 0,
+            outstanding_requests: 2,
+            outstanding_logical_bytes: 4_096,
+            queued_requests: 1,
+            active: true,
+            fenced,
+        }
+    }
+
+    #[test]
+    fn segment_handles_and_admission_state_are_every_counter_the_engine_reports() {
+        let view = physical(&DiagnosticStorageSnapshot {
+            observed_at_unix_ms: 7,
+            profile: StorageProfileKind::RrflowKv,
+            evidence_level: DiagnosticStorageEvidenceLevel::RrflowKvCounters,
+            rrflow_kv: Some(rrflow_kv()),
+            admission: Some(admission(false)),
+        });
+        let metric = |group: &str, id: &str| {
+            view.groups
+                .iter()
+                .find(|candidate| candidate.id == group)
+                .and_then(|found| found.metrics.iter().find(|metric| metric.id == id))
+                .unwrap_or_else(|| panic!("{group}/{id} is shown"))
+        };
+        let open = metric("segment_io", "open_files");
+        assert_eq!((open.value, open.limit), (2.0, Some(256.0)));
+        assert_eq!(metric("segment_io", "handle_evictions").value, 1.0);
+        assert_eq!(metric("segment_io", "handle_denials").value, 0.0);
+        let checkpoint = metric("admission", "checkpoint_entries");
+        assert_eq!((checkpoint.value, checkpoint.limit), (3.0, Some(64.0)));
+        assert_eq!(metric("admission", "queued_requests").value, 1.0);
+        let notes = &view
+            .groups
+            .iter()
+            .find(|group| group.id == "admission")
+            .expect("admission group")
+            .notes;
+        assert!(notes
+            .iter()
+            .any(|note| note.contains("serialization permit")));
+        assert!(!notes.iter().any(|note| note.starts_with("Fenced")));
+
+        let fenced = physical(&DiagnosticStorageSnapshot {
+            observed_at_unix_ms: 7,
+            profile: StorageProfileKind::RrflowKv,
+            evidence_level: DiagnosticStorageEvidenceLevel::RrflowKvCounters,
+            rrflow_kv: Some(rrflow_kv()),
+            admission: Some(admission(true)),
+        });
+        assert!(fenced
+            .groups
+            .iter()
+            .find(|group| group.id == "admission")
+            .expect("admission group")
+            .notes
+            .iter()
+            .any(|note| note.starts_with("Fenced")));
     }
 
     #[test]
@@ -1378,6 +1592,7 @@ mod tests {
             profile: StorageProfileKind::RrflowKv,
             evidence_level: DiagnosticStorageEvidenceLevel::RrflowKvCounters,
             rrflow_kv: Some(rrflow_kv()),
+            admission: None,
         });
         assert_eq!(view.profile, "rrflow_kv");
         assert_eq!(view.evidence_level, "rrflow_kv_counters");
@@ -1472,6 +1687,7 @@ mod tests {
             profile: StorageProfileKind::RrflowKv,
             evidence_level: DiagnosticStorageEvidenceLevel::RrflowKvCounters,
             rrflow_kv: Some(fresh),
+            admission: None,
         });
         let cache = view
             .groups
@@ -1498,6 +1714,7 @@ mod tests {
             profile: StorageProfileKind::RrflowKv,
             evidence_level: DiagnosticStorageEvidenceLevel::RrflowKvCounters,
             rrflow_kv: Some(idle),
+            admission: None,
         });
         assert!(view
             .headline
@@ -1508,6 +1725,7 @@ mod tests {
             profile: StorageProfileKind::RrflowMx,
             evidence_level: DiagnosticStorageEvidenceLevel::LogicalOnly,
             rrflow_kv: None,
+            admission: None,
         });
         assert!(logical.headline.is_empty() && logical.groups.is_empty());
         assert_eq!(logical.evidence_level, "logical_only");

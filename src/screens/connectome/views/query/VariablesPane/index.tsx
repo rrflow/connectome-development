@@ -1,7 +1,7 @@
 import { Prec } from "@codemirror/state";
 import { type EditorView, keymap } from "@codemirror/view";
 import { Badge, Group } from "@mantine/core";
-import { useEffect, useMemo, usengram } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { type HtmlPortalNode, OutPortal } from "react-reverse-portal";
 import { ActionButton } from "~/components/ActionButton";
 import { CodeEditor } from "~/components/CodeEditor";
@@ -41,7 +41,7 @@ export function VariablesPane({
 	const [connection] = useConnectionAndView();
 	const activeTab = useActiveQuery();
 
-	const [variableEditor, setVariableEditor] = usengram<EditorView | null>(null);
+	const [variableEditor, setVariableEditor] = useState<EditorView | null>(null);
 
 	const setVariables = useDebouncedFunction(async (content: string | undefined) => {
 		if (!activeTab || !connection) return;

@@ -100,24 +100,64 @@ test("creates an RRD HTTP runtime profile by default", async ({ page }, testInfo
 	await expect(page.getByText("rrd-smoke", { exact: true })).toBeVisible();
 	expect(requests).toEqual(["/v1/health/live", "/v1/health/ready", "/v1/capabilities"]);
 	const firstProject = new URL(page.url()).pathname;
-	await page.getByRole("button", { name: "Advanced details", exact: true }).click();
+	await expect(page.getByRole("button", { name: "Start guide", exact: true })).toBeDisabled();
+	await expect(
+		page.getByText("Open a session to start this guide.", { exact: true }),
+	).toBeVisible();
+	// Only the work pane scrolls: the areas and tabs stay on a real window's first screen.
+	await page.setViewportSize({ width: 1366, height: 768 });
+	await page.getByRole("button", { name: "System", exact: true }).click();
+	await expect(page).toHaveURL(/\/system\/instance$/);
 	await expect(page.getByText("Verified engine identity", { exact: true })).toBeVisible();
-	await page.getByRole("button", { name: "Hide advanced details", exact: true }).click();
-	await page.getByRole("button", { name: "Knowledge paths", exact: true }).click();
-	await expect(page).toHaveURL(/\/knowledge\/paths$/);
+	await expect(page.getByRole("button", { name: "Knowledge", exact: true })).toBeInViewport();
+	await expect(page.getByRole("tab", { name: "API reference", exact: true })).toBeInViewport();
+	expect(
+		await page.evaluate(
+			() => document.documentElement.scrollHeight <= document.documentElement.clientHeight,
+		),
+	).toBe(true);
+	// Addresses saved before these areas still open their view.
+	await page.goto(`${firstProject}/knowledge/storage`);
+	await expect(page).toHaveURL(/\/system\/storage$/);
+	await page.getByRole("button", { name: "Reasoning", exact: true }).click();
+	await expect(page).toHaveURL(/\/reasoning\/tasks$/);
+	await page.getByRole("tab", { name: "Workbench", exact: true }).click();
+	await expect(page).toHaveURL(/\/reasoning\/workbench$/);
 	await expect(
-		page.getByText("Connector setup unavailable in this build", { exact: true }),
+		page.getByRole("heading", { name: "Prompt workbench", exact: true }),
 	).toBeVisible();
-	await page.getByRole("button", { name: "Learning", exact: true }).click();
-	await expect(page.getByRole("heading", { name: "RROFLOW learning" })).toBeVisible();
-	await page.reload();
 	await expect(
-		page.getByText("Learning controls unavailable in this build", { exact: true }),
+		page.getByRole("button", { name: "Launch observe flight", exact: true }),
+	).toBeDisabled();
+	await page.getByLabel("Workbench name", { exact: true }).fill("Local test notes");
+	await page.getByRole("button", { name: "Create local workbench", exact: true }).click();
+	await page.getByLabel("Note intent", { exact: true }).fill("Inspect graph");
+	await page.getByRole("button", { name: "Save local note", exact: true }).click();
+	await expect(page.getByText("testing · Inspect graph", { exact: true })).toBeVisible();
+	await expect(
+		page.getByRole("button", { name: "Capture engine diagnostics", exact: true }),
+	).toBeDisabled();
+	await page.getByRole("tab", { name: "Project plan", exact: true }).click();
+	await expect(page).toHaveURL(/\/reasoning\/plan$/);
+	await expect(page.getByRole("heading", { name: "Project plan", exact: true })).toBeVisible();
+	// Browser preview has no native session; navigation keeps discovery disabled.
+	await expect(page.getByRole("button", { name: "Discover jobs", exact: true })).toBeDisabled();
+	await page.goto(`${firstProject}/plan`);
+	await expect(page).toHaveURL(/\/reasoning\/plan$/);
+	await expect(page.getByRole("heading", { name: "Project plan", exact: true })).toBeVisible();
+	await page.getByRole("tab", { name: "Tasks", exact: true }).click();
+	await expect(page).toHaveURL(/\/reasoning\/tasks$/);
+	await expect(
+		page.getByRole("alert", { name: "Tasks require a native session", exact: true }),
 	).toBeVisible();
-	await page.goBack();
-	await expect(page).toHaveURL(/\/knowledge\/paths$/);
-	await page.getByRole("button", { name: "Services", exact: true }).click();
-	await expect(page.getByRole("heading", { name: "Planned cloud connections" })).toBeVisible();
+	await expect(page.getByRole("heading", { name: "Project plan", exact: true })).toHaveCount(0);
+	expect(
+		requests.every((path) =>
+			["/v1/health/live", "/v1/health/ready", "/v1/capabilities"].includes(path),
+		),
+	).toBe(true);
+	await page.goto(`${firstProject}/learning`);
+	await expect(page).toHaveURL(/\/overview$/);
 	await page.goto("/connections/create");
 	await page.getByLabel("RRD HTTP host").fill("localhost:9478");
 	await page.getByRole("button", { name: "Save & connect to RRD" }).click();
@@ -125,7 +165,7 @@ test("creates an RRD HTTP runtime profile by default", async ({ page }, testInfo
 	await page.getByRole("button", { name: "Knowledge", exact: true }).click();
 	await page.getByRole("textbox", { name: "Selected project", exact: true }).click();
 	await page.getByRole("option").first().click();
-	await expect(page).toHaveURL(`${firstProject}/knowledge`);
+	await expect(page).toHaveURL(`${firstProject}/knowledge/records`);
 	await expect(page.getByText("rrd-smoke", { exact: true })).toBeVisible();
 	await expect(page.getByText("rrd-project-b", { exact: true })).toHaveCount(0);
 	await page.mouse.move(1279, 360);

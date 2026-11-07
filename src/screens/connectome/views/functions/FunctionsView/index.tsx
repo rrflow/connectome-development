@@ -1,6 +1,6 @@
 import { Box, Button, Group, Modal, Stack, Text, TextInput } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { type ChangeEvent, memo, useEffect, useRef, usengram } from "react";
+import { type ChangeEvent, memo, useEffect, useRef, useState } from "react";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { useImmer } from "use-immer";
 import { adapter } from "~/adapter";
@@ -9,13 +9,14 @@ import { Icon } from "~/components/Icon";
 import { Introduction } from "~/components/Introduction";
 import { PanelDragger } from "~/components/Pane/dragger";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
-import { useConnection, useIsConnected, useRequireDatabase } from "~/hooks/connection";
+import { useConnection, useIsConnected } from "~/hooks/connection";
 import { usePanelMinSize } from "~/hooks/panels";
 import { useViewFocus } from "~/hooks/routing";
 import { useSaveable } from "~/hooks/save";
 import { useDatabaseSchema } from "~/hooks/schema";
 import { useStable } from "~/hooks/stable";
 import { iconChevronRight, iconFunction, iconOpen, iconPlus } from "~/icons";
+import { useRequireDatabase } from "~/modals/require-database";
 import { useConfirmation } from "~/providers/Confirmation";
 import {
 	composeHttpConnection,
@@ -52,13 +53,13 @@ export function FunctionsView() {
 
 	const { functions, models } = useDatabaseSchema();
 
-	const [available, setAvailable] = usengram<FunctionDetails[]>([]);
+	const [available, setAvailable] = useState<FunctionDetails[]>([]);
 	const [active, setActive] = useImmer<FunctionDetails | null>(null);
 	const [isCreating, isCreatingHandle] = useDisclosure();
 	const [showCreator, showCreatorHandle] = useDisclosure();
-	const [createName, setCreateName] = usengram("");
+	const [createName, setCreateName] = useState("");
 
-	const [error, setError] = usengram("");
+	const [error, setError] = useState("");
 
 	useEffect(() => {
 		const availableFunctions: FunctionDetails[] = functions.map((f) => ({

@@ -1,0 +1,92 @@
+{
+	"uiSourceCommit": "9651939c8dc1a40843f0a5b0061caa7a549ab0fa",
+	"engineSourceCommit": "a5dbb754f78f3d3d877d2ac9bb42df04a47648bf",
+	"binaryIdentities": {
+		"connectome.exe": {
+			"sha256": "09ad51711478a5c14e99d7d764f9d35fa4242c7ef42b25c2ead1850ab08e8070",
+			"bytes": 58861568
+		},
+		"rrflow.exe": {
+			"sha256": "94989c49bf6cae7b04d273103336c158e87539dc22f9222eb3edc29dca7cc395",
+			"bytes": 174679040
+		}
+	},
+	"receiver": {
+		"binarySha256": "786b6c48e64fc7c5962b1b4dc427af1b06867f8c05a54669e096ebf27a9b82bb",
+		"recordedBuildInfo": {
+			"revision": "b4c04ceec6686db056b53bc48de44137c5c2f885",
+			"target": "x86_64-pc-windows-msvc",
+			"migrations": "49958799aa5f8780958938199e6f327b9012d44db209998045f326a733501a34"
+		}
+	},
+	"scope": "Real UI proposal and worker draft followed by native metadata export to configured local RROFLOW ingest; original process remains running.",
+	"eventId": "880141f6-294d-8536-a26b-936f5424c7c8",
+	"workerAttemptId": "196c2ccd-cb3f-4bde-986b-cd5bcd59f690",
+	"taskId": "task-b9e7b5e2006b5ed84179fc9925600fddfd06e421038b707c56f1de711024f4f7",
+	"checks": {
+		"uiReloadSameAttemptAndContent": true,
+		"nativeSourceResponseEqualsRetainedWorkerRead": true,
+		"nativeSourceResponseDigestEqualsReceiverReference": true,
+		"replayReceiptAndReceiverPayloadUnchanged": true,
+		"receiverEventCount": 1,
+		"deliveryAttempts": 1,
+		"modelBudgetUnchangedByExportAndReplay": true,
+		"taskRemainsOpen": true,
+		"rendererErrors": []
+	},
+	"notEstablished": [
+		"project source context or effects",
+		"independently reviewed suitability or quality",
+		"training consent",
+		"cloud receiver deployment",
+		"process restart on this candidate",
+		"binary/score/choice native execution",
+		"bounded LFG/SWAG assessment cycles"
+	],
+	"artifacts": {
+		"task-input.json": {
+			"projection": "Original unchanged JSON values or original PNG; JSON may be whitespace-formatted for repository style.",
+			"originalBytesSha256": "7f0179ac4f9b253d071d0921e6c9e6527c3a905d376e2ab4960daf1e76b545e9",
+			"canonicalValueSha256": "2fb586d14922abbe3d39db4fd8bdbbfb8e9c4eee27a4cb9981fbd89768a57fb5"
+		},
+		"source-attempt.json": {
+			"projection": "Original unchanged JSON values or original PNG; JSON may be whitespace-formatted for repository style.",
+			"originalBytesSha256": "d335e5c5161b8faaa589b112937baf60e45224ddb389b1ba0a50e74a75ae0d51",
+			"canonicalValueSha256": "1f3330a80a80b1f2ee73596b21fdcbfe9304fb8094833e1ec51eb617fe760b3d"
+		},
+		"delivery-readback.json": {
+			"projection": "Original unchanged JSON values or original PNG; JSON may be whitespace-formatted for repository style.",
+			"originalBytesSha256": "5bd12b16fc4cb7d60dade210d474357e312d1de8f26d44ca5320a30621471362",
+			"canonicalValueSha256": "ea6552c43d080e45043dec9f762410b88638c8a73006af13a1ea9f4c99ed13a3"
+		},
+		"receiver-readback.json": {
+			"projection": "Original unchanged JSON values or original PNG; JSON may be whitespace-formatted for repository style.",
+			"originalBytesSha256": "a986754cbf13f880e98679d5a567fe6f66ca7627411c5584dccb2cd30dd18171",
+			"canonicalValueSha256": "335aec282c3e32da22b6c081606a8d12a2407f4f4ed9250cccc1d3d2a722401d"
+		},
+		"budget-before.json": {
+			"projection": "Original unchanged JSON values or original PNG; JSON may be whitespace-formatted for repository style.",
+			"originalBytesSha256": "cf8fd1ca47b3732c0b6a6a7575dfc42ab54975c963f202d0a5569f491e57bad5",
+			"canonicalValueSha256": "e437aea2f28f469bb84173ed7d1850430204217590908fd6d34356a9075fb364"
+		},
+		"budget-after.json": {
+			"projection": "Original unchanged JSON values or original PNG; JSON may be whitespace-formatted for repository style.",
+			"originalBytesSha256": "cf8fd1ca47b3732c0b6a6a7575dfc42ab54975c963f202d0a5569f491e57bad5",
+			"canonicalValueSha256": "e437aea2f28f469bb84173ed7d1850430204217590908fd6d34356a9075fb364"
+		},
+		"task-read.json": {
+			"projection": "Original unchanged JSON values or original PNG; JSON may be whitespace-formatted for repository style.",
+			"originalBytesSha256": "9abb65f1d5947ec207bf9d464c144feafaeb67d7a5610eafbd3dc53ab1932088",
+			"canonicalValueSha256": "ee1d957b4124446d626d10055ce596b27f5fcccf081133628a28347fc962d123"
+		},
+		"replay-result.json": {
+			"projection": "Original unchanged JSON values or original PNG; JSON may be whitespace-formatted for repository style.",
+			"originalBytesSha256": "3dd9cf0805ce496e507cca1ac06b73218baa5a6b16742d9bc06f19ee2d7acde4",
+			"canonicalValueSha256": "9e0524c4fa7e8e3b0358eabc45c37b7e2536ccf2dfef2e4d0b3348d6e021eb0d"
+		},
+		"worker-recovered.png": {
+			"projection": "Original unchanged JSON values or original PNG; JSON may be whitespace-formatted for repository style.",
+			"originalBytesSha256": "a6fd1f0ab9a95b6ebe1c6bb8146ae69caef40a5acac112d54dab3ecbc5acd8c1"
+		}
+	}
+}

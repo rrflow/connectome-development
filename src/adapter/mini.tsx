@@ -1,7 +1,5 @@
 import type { MantineColorScheme } from "@mantine/core";
-import { createWasmEngines } from "@surrealdb/wasm";
 import { ORIENTATIONS, RESULT_MODES } from "~/constants";
-import { executeQuery, executeUserQuery } from "~/screens/connectome/connection/connection";
 import { dedent } from "~/shared/util/dedent";
 import {
 	createBaseQuery,
@@ -10,10 +8,7 @@ import {
 } from "~/shared/util/defaults";
 import { showErrorNotification } from "~/shared/util/helpers";
 import { getDatasetURL } from "~/shared/util/language";
-import { broadcastMessage } from "~/shared/util/messaging";
-import { createRRFlowQL } from "~/shared/util/rrflowql";
 import type { ConnectomeConfig, MiniAppearance, Orientation, ResultMode } from "~/types";
-import { RRFlow } from "~/vendor/rrflow-client";
 import { BrowserAdapter } from "./browser";
 
 const THEMES = new Set(["light", "dark", "auto"]);
@@ -37,6 +32,7 @@ export class MiniAdapter extends BrowserAdapter {
 		const mainTab = createBaseQuery(settings, "config");
 		const params = new URL(document.location.toString()).searchParams;
 		const version = await this.#getEmbeddedVersion();
+		const { createRRFlowQL } = await import("~/shared/util/rrflowql");
 		const rrflowql = createRRFlowQL(version);
 
 		const {
@@ -190,17 +186,24 @@ export class MiniAdapter extends BrowserAdapter {
 	}
 
 	public initializeContent() {
-		if (this.#datasetQuery) {
-			executeQuery(this.#datasetQuery);
-		}
+		// The inherited query runner loads on demand, in the original order, so
+		// the shared adapter selector that imports this class does not load the
+		// inherited client into every page (sprint 009 Slice D0).
+		import("~/screens/connectome/connection/connection").then(
+			({ executeQuery, executeUserQuery }) => {
+				if (this.#datasetQuery) {
+					executeQuery(this.#datasetQuery);
+				}
 
-		if (this.#setupQuery) {
-			executeQuery(this.#setupQuery);
-		}
+				if (this.#setupQuery) {
+					executeQuery(this.#setupQuery);
+				}
 
-		if (this.autorun) {
-			executeUserQuery();
-		}
+				if (this.autorun) {
+					executeUserQuery();
+				}
+			},
+		);
 	}
 
 	public broadcastReady() {
@@ -210,10 +213,18 @@ export class MiniAdapter extends BrowserAdapter {
 			opts.ref = this.uniqueRef;
 		}
 
-		broadcastMessage("ready", opts);
+		// The embed's message channel runs queries through the inherited client,
+		// so it loads on demand with the rest of this adapter's engine code.
+		import("~/shared/util/messaging").then(({ broadcastMessage }) => {
+			broadcastMessage("ready", opts);
+		});
 	}
 
 	async #getEmbeddedVersion(): Promise<string> {
+		const [{ RRFlow }, { createWasmEngines }] = await Promise.all([
+			import("~/vendor/rrflow-client"),
+			import("@surrealdb/wasm"),
+		]);
 		const rrflow = new RRFlow({
 			engines: createWasmEngines(),
 		});

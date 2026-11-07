@@ -31,10 +31,19 @@ RRFlow**, then explore **Data models**, **Records & relations**, **Vectors** and
 **Storage engine** under the selected project. **Manage project engines** runs
 up to four independent local projects; **Advanced details** exposes engine
 identity and evidence. Project sections preserve their URL across navigation.
+**Guides** on a project's home walk through real views on that project's records.
+A step ends when you do the real action, and you can leave a guide at any time.
 Learning, knowledge-path setup and cloud services are labelled unavailable until
 their engine contracts are implemented. The home screen's **How RRFlow fits together** guide explains
 rrflowDB, rrflowQL and rrflowKV. [Native workbench instructions](docs/native-workbench.md)
 cover building, startup, persistence, exact limits and validation.
+
+**Project plan** discovers the installed engine's jobs and displays its stored
+phase order, source identity and progress. Explicit prepare/approve controls can
+request lifecycle transitions or preview and accept a successor after source edits.
+[Project-plan controls](docs/project-plan-controls.md) explain stale-preview
+rejection and receipt recovery. This does not establish full attunement execution
+or a completed development task.
 
 Credentials and session tokens remain in the native process. The renderer
 receives bounded public results and catalogue metadata. Cloud synchronization,
@@ -75,7 +84,7 @@ Fleet management requires a separately accepted engine contract and evidence.
 
 ## Development
 
-Requirements: Node.js 22.13 or newer, pnpm 11.24, and the Tauri 2 platform
+Requirements: Node.js 24.22.0 or newer, pnpm 11.24, and the Tauri 2 platform
 prerequisites.
 
 ```bash

@@ -77,6 +77,7 @@ import {
 	mdiHammer,
 	mdiHelpCircleOutline,
 	mdiHistory,
+	mdiHome,
 	mdiHomePlus,
 	mdiImage,
 	mdiKeyVariant,
@@ -233,6 +234,8 @@ export const iconKey = mdiKeyVariant;
 export const iconMemory = mdiMemory;
 export const iconSandbox = mdiTestTube;
 export const iconServer = mdiServer;
+export const iconHome = mdiHome;
+export const iconBrain = mdiBrain;
 export const iconServerSecure = mdiServerSecurity;
 
 // Communication and content

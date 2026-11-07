@@ -1,0 +1,368 @@
+{
+	"observedAtUtc": "2026-11-07T02:19:28.518138+00:00",
+	"parents": [
+		"59526643f0a6d7ae8ef04d1858d988af6d6e1efd",
+		"1032dd05e536e98f7b69eb55bdd64129a7472c31"
+	],
+	"engineRevision": "f45305394dbe391786c7d618645a5fc0b1b2bbee",
+	"engineSha256": "086c42cec160de19104a67976f7608f74e61d86000f66e4c2c310a2ffd9a8af3",
+	"commandProjection": "Executable basenames; test engine path is relative to repository. Exact invocations and raw logs remain private.",
+	"sourceHashNormalization": "raw working-file bytes",
+	"testEngineEnvironment": {
+		"RRFLOW_BIN": "src-tauri/binaries/rrflow-x86_64-pc-windows-msvc.exe"
+	},
+	"sourceSha256": {
+		"package.json": "e14485c12468311eaa2eaeac0ed558a785a9546531ae64fade03b051d4bf962c",
+		"pnpm-lock.yaml": "dec4f3464afcabfbb0dfa290668151fe7ab025c3f4f275728bc5d7f70d2eb90f",
+		"src-tauri/Cargo.toml": "599f4d625ef2dd5c11554e64ad5e3feecb59a6506e7c39fcebd228813d9afff5",
+		"src-tauri/Cargo.lock": "fdaf293599aa99d6ab4ff58a981cad8912dc678b3574eefaa88f733c1002d73d",
+		"src-tauri/src/rrd/client/tasks.rs": "55f1abfb49ad0e17d7bae70db7427808e46caeb6e66cbe99890d95ac329bd7fd",
+		"src-tauri/src/rrd/client/process/tasks.rs": "97b6aca061b28ca97309bc67f3902ad7e8fdfc955704a4915c78ca1590ffe5a5",
+		"src-tauri/src/rrd/client/process/values.rs": "0f0948da003823b8649d3e4aa4e6fd3ef4a6eb51dae310a0ca3fa3cd77528cd2",
+		"src-tauri/src/rrd/client/process/language.rs": "2fc574a043efbd366f33832af91629d544b971e870673fd90d8fcf438963ba65",
+		"src/rrflow/tasks.ts": "3edde75b1fa4f6c76c49412ab80447e04340167a71c556f66be03a6382c75992",
+		"src/screens/connectome/pages/RuntimeConnection/tasks.tsx": "96addbbf75b4d33febe5c21840e6356446e9ba1cdbf8234393ade45edd341356",
+		"src/rrflow/fixtures/engine-values.json": "798f6ccd85647528101183cc494fee1dea900ec99b13625e15025fa4c5cf033a",
+		"src/rrflow/fixtures/engine-queries.json": "ab16987af6ed588476bbc7e5fb8047d76af18abb6d447b608cf6e8f29e39d38a"
+	},
+	"checks": [
+		{
+			"name": "fixture-write",
+			"command": [
+				"cargo",
+				"test",
+				"--manifest-path",
+				"src-tauri/Cargo.toml",
+				"--locked",
+				"rrd::client::process::values",
+				"--",
+				"--ignored",
+				"--test-threads=1"
+			],
+			"extraEnvironment": {
+				"CARGO_BUILD_JOBS": "1",
+				"CONNECTOME_WRITE_GOLDEN": "1"
+			},
+			"exitCode": 0,
+			"elapsedSeconds": 583.642,
+			"logSha256": "8a4dc587a725fe18d7341bd2eea0a4b261181f30688bd97712f8d9db9d086c28"
+		},
+		{
+			"name": "fixture-format",
+			"command": [
+				"corepack",
+				"pnpm",
+				"exec",
+				"biome",
+				"format",
+				"--write",
+				"src/rrflow/fixtures/engine-values.json"
+			],
+			"extraEnvironment": {
+				"CARGO_BUILD_JOBS": "1"
+			},
+			"exitCode": 0,
+			"elapsedSeconds": 1.736,
+			"logSha256": "99f581922b85f26082b78fa40d7c9e6d7bd50b69308b4ca3411501614c5c5901"
+		},
+		{
+			"name": "fixture-readback",
+			"command": [
+				"cargo",
+				"test",
+				"--manifest-path",
+				"src-tauri/Cargo.toml",
+				"--locked",
+				"rrd::client::process::values",
+				"--",
+				"--ignored",
+				"--test-threads=1"
+			],
+			"extraEnvironment": {
+				"CARGO_BUILD_JOBS": "1"
+			},
+			"exitCode": 0,
+			"elapsedSeconds": 25.645,
+			"logSha256": "1ef038755f3a407f97bde15e8bf9eb81107ee8c7d39cae5d5fe5574c4909c126"
+		},
+		{
+			"name": "installed-tasks",
+			"command": [
+				"cargo",
+				"test",
+				"--manifest-path",
+				"src-tauri/Cargo.toml",
+				"--locked",
+				"rrd::client::process::tasks",
+				"--",
+				"--ignored",
+				"--test-threads=1"
+			],
+			"extraEnvironment": {
+				"CARGO_BUILD_JOBS": "1"
+			},
+			"exitCode": 0,
+			"elapsedSeconds": 8.489,
+			"logSha256": "235328ef9787c53ae3ab3c07b06a793982fdadf688193652b2c20d9a57edb7c0"
+		},
+		{
+			"name": "installed-process",
+			"command": [
+				"cargo",
+				"test",
+				"--manifest-path",
+				"src-tauri/Cargo.toml",
+				"--locked",
+				"rrd::client::process",
+				"--",
+				"--ignored",
+				"--test-threads=1"
+			],
+			"extraEnvironment": {
+				"CARGO_BUILD_JOBS": "1"
+			},
+			"exitCode": 101,
+			"elapsedSeconds": 259.734,
+			"logSha256": "3e01c61dcde89941b3b4206be5b9e5108b3eaaf67253caa4d8c380c330c0dfa1"
+		},
+		{
+			"name": "query-fixture-write",
+			"command": [
+				"cargo",
+				"test",
+				"--manifest-path",
+				"src-tauri/Cargo.toml",
+				"--locked",
+				"rrd::client::process::language",
+				"--",
+				"--ignored",
+				"--test-threads=1"
+			],
+			"extraEnvironment": {
+				"CARGO_BUILD_JOBS": "1",
+				"CONNECTOME_WRITE_GOLDEN": "1"
+			},
+			"exitCode": 0,
+			"elapsedSeconds": 14.5,
+			"logSha256": "640fd1f1cf79c538615b94c5d312496b88b8bb097c30aa58295ad856afc9daf9"
+		},
+		{
+			"name": "query-fixture-format",
+			"command": [
+				"corepack",
+				"pnpm",
+				"exec",
+				"biome",
+				"format",
+				"--write",
+				"src/rrflow/fixtures/engine-queries.json"
+			],
+			"extraEnvironment": {
+				"CARGO_BUILD_JOBS": "1"
+			},
+			"exitCode": 0,
+			"elapsedSeconds": 0.706,
+			"logSha256": "5e797199ba8bdb174d1aa613cea13a1185f25521ab46b4c7e752aeff251195d9"
+		},
+		{
+			"name": "query-fixture-readback",
+			"command": [
+				"cargo",
+				"test",
+				"--manifest-path",
+				"src-tauri/Cargo.toml",
+				"--locked",
+				"rrd::client::process::language",
+				"--",
+				"--ignored",
+				"--test-threads=1"
+			],
+			"extraEnvironment": {
+				"CARGO_BUILD_JOBS": "1"
+			},
+			"exitCode": 0,
+			"elapsedSeconds": 9.435,
+			"logSha256": "da12df9ab9cc236d732d2806a3c0eda1bb9122d3a46fb27e69e337d5435cb124"
+		},
+		{
+			"name": "installed-process-corrected",
+			"command": [
+				"cargo",
+				"test",
+				"--manifest-path",
+				"src-tauri/Cargo.toml",
+				"--locked",
+				"rrd::client::process",
+				"--",
+				"--ignored",
+				"--test-threads=1"
+			],
+			"extraEnvironment": {
+				"CARGO_BUILD_JOBS": "1"
+			},
+			"exitCode": 0,
+			"elapsedSeconds": 271.728,
+			"logSha256": "6161837e273998d31de1548bd7c8e65627803a8792cad5560e2fb8631cde6482"
+		},
+		{
+			"name": "native",
+			"command": [
+				"cargo",
+				"test",
+				"--manifest-path",
+				"src-tauri/Cargo.toml",
+				"--locked",
+				"--all-targets"
+			],
+			"extraEnvironment": {
+				"CARGO_BUILD_JOBS": "1"
+			},
+			"exitCode": 0,
+			"elapsedSeconds": 16.779,
+			"logSha256": "7798351aeb2cb0577983c7b7bb1486f38e498220db463277de093c92582a1049"
+		},
+		{
+			"name": "clippy",
+			"command": [
+				"cargo",
+				"clippy",
+				"--manifest-path",
+				"src-tauri/Cargo.toml",
+				"--all-targets",
+				"--locked",
+				"--",
+				"-D",
+				"warnings"
+			],
+			"extraEnvironment": {
+				"CARGO_BUILD_JOBS": "1"
+			},
+			"exitCode": 0,
+			"elapsedSeconds": 313.418,
+			"logSha256": "7f1725e600793ea12ef7bd01cf4ab4059abafb05d5be565f9c43097ef03933d9"
+		},
+		{
+			"name": "fmt",
+			"command": ["cargo", "fmt", "--manifest-path", "src-tauri/Cargo.toml", "--", "--check"],
+			"extraEnvironment": {
+				"CARGO_BUILD_JOBS": "1"
+			},
+			"exitCode": 0,
+			"elapsedSeconds": 0.449,
+			"logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+		},
+		{
+			"name": "frozen-install",
+			"command": ["corepack", "pnpm", "install", "--frozen-lockfile"],
+			"extraEnvironment": {
+				"CARGO_BUILD_JOBS": "1"
+			},
+			"exitCode": 0,
+			"elapsedSeconds": 0.909,
+			"logSha256": "a110db38ff4843d24c67f744e534bad0a086178621f6f31aab6958ca2a415469"
+		},
+		{
+			"name": "frontend-check",
+			"command": ["corepack", "pnpm", "check"],
+			"extraEnvironment": {
+				"CARGO_BUILD_JOBS": "1"
+			},
+			"exitCode": 0,
+			"elapsedSeconds": 30.121,
+			"logSha256": "4e2ab67ee643fb76703bd28de2aa81dcca300ca593288b00a9a49e0e6cff13bf"
+		},
+		{
+			"name": "frontend-build",
+			"command": ["corepack", "pnpm", "build"],
+			"extraEnvironment": {
+				"CARGO_BUILD_JOBS": "1"
+			},
+			"exitCode": 0,
+			"elapsedSeconds": 33.675,
+			"logSha256": "a144e1414663a7526065f41364dbce67656f9edadda30634312d47e478982c3b"
+		},
+		{
+			"name": "frontend-smoke",
+			"command": ["corepack", "pnpm", "test:smoke"],
+			"extraEnvironment": {
+				"CARGO_BUILD_JOBS": "1"
+			},
+			"exitCode": 0,
+			"elapsedSeconds": 11.421,
+			"logSha256": "ee471d2ff1bb0aaae63ee532df488adcdbd2439bb0e10df5bda33ce384e97a82"
+		},
+		{
+			"name": "pinned-frozen-install",
+			"command": ["corepack", "pnpm", "install", "--frozen-lockfile"],
+			"extraEnvironment": {
+				"nodeVersion": "v24.22.0",
+				"pnpmVersion": "11.24.0"
+			},
+			"exitCode": 0,
+			"elapsedSeconds": 0.365,
+			"logSha256": "b195dfb5647246ae11a67328fb32c1553515585c63c5e7525a1d6f7812501bfd"
+		},
+		{
+			"name": "pinned-frontend-check",
+			"command": ["corepack", "pnpm", "check"],
+			"extraEnvironment": {
+				"nodeVersion": "v24.22.0",
+				"pnpmVersion": "11.24.0"
+			},
+			"exitCode": 0,
+			"elapsedSeconds": 9.337,
+			"logSha256": "423b00d42a7e49ef62bbd9408bb309f079ead4a27789326590d948046d002f5d"
+		},
+		{
+			"name": "pinned-frontend-build",
+			"command": ["corepack", "pnpm", "build"],
+			"extraEnvironment": {
+				"nodeVersion": "v24.22.0",
+				"pnpmVersion": "11.24.0"
+			},
+			"exitCode": 0,
+			"elapsedSeconds": 23.715,
+			"logSha256": "86d4cf15fb1e283cdb8bb4e39e5e4791edb6975f825b362c44f742fa5a62acd1"
+		},
+		{
+			"name": "pinned-frontend-smoke",
+			"command": ["corepack", "pnpm", "test:smoke"],
+			"extraEnvironment": {
+				"nodeVersion": "v24.22.0",
+				"pnpmVersion": "11.24.0"
+			},
+			"exitCode": 1,
+			"elapsedSeconds": 1.126,
+			"logSha256": "5555b5629a3a2539cd92776063df85e9d9bb97a1c88912c7488773514f7d22bb"
+		},
+		{
+			"name": "pinned-nested-smoke",
+			"command": ["corepack", "pnpm", "test:smoke"],
+			"extraEnvironment": {
+				"node": "v24.22.0",
+				"corepackPnpm": "11.24.0",
+				"directPnpm": "11.24.0"
+			},
+			"exitCode": 0,
+			"elapsedSeconds": 9.307,
+			"logSha256": "cece5464ff272e01ad29dd0d053fe48b3e0c7c473377c770ae9ba76bad0c63fa"
+		}
+	],
+	"preservation": {
+		"recoveryOnlyPathsBeforeFixtureCorrection": 52,
+		"landingOnlyPathsBeforeFixtureCorrection": 589,
+		"unexplainedMismatches": 0,
+		"laterLandingOnlyException": "src/rrflow/fixtures/engine-queries.json, generated by its real-engine writer"
+	},
+	"limits": [
+		"Initial full process suite: 19 passes and one stale query fixture failure; corrected full suite: 20 passes, including one inactive visual-capture helper.",
+		"Ordinary native suite: 53 passed and 20 deliberately ignored; installed scenarios exercised separately.",
+		"Five unchanged cm6-graphql exact CodeMirror peer requirements remain unmet; peer check exits 1. Sprint 009 owns this compatibility gap.",
+		"Full staged whitespace check reports ten byte-preserved incoming Markdown files; resolved source scope passes.",
+		"The first private diagnostic printer failed to encode Unicode after saving the test exit and full log; corrected continuation uses UTF-8.",
+		"The first frontend continuation inherited Node 24.21.0 and reported an unsupported-engine warning. Its zero exits are retained but pinned verification uses the separate Node 24.22.0 / pnpm 11.24.0 runs.",
+		"The first pinned smoke invocation failed before tests because its nested server command found global pnpm 12.16.1. A process-local official Corepack shim PATH correction made both commands use pnpm 11.24.0; the final smoke rerun kept the verified build unchanged.",
+		"Production builds retain inherited vendor WASM resolution, browser externalization, mixed static/dynamic import and large-chunk warnings; passing builds are not full inherited-feature compatibility or optimized size evidence.",
+		"No current desktop model trial, project-file effects, reviewed learning, serving-memory measurement or release qualification is established by these checks."
+	]
+}

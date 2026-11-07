@@ -1,0 +1,113 @@
+# Engine-owned project plan controls
+
+[Current reconciliation and validation](project-plan-reconciliation.md) records
+the protected dependency landing and current workspace integration. The original
+source identities and historical validation below remain unchanged.
+
+## Pre-implementation brief, 31 October 2026
+
+Connectome currently exposes tasks but cannot discover an installed project's
+attunement jobs or approve a successor after an ordinary source edit. This
+package composes recovery candidate `59526643` and public RRFlow discovery
+candidate `8d47500869329f1a5604821138f1a6c8efc349a5`. Both remain subject to
+their own protected acceptance; this package does not declare integration.
+
+Use the pinned public SDK for bounded job discovery, stored plan/status reads,
+explicit lifecycle commands and source replan preview/accept. Display the
+engine's phase sequence and source identity; reads do not verify current source.
+Keep exact prepared commands/previews in the native process under opaque handles,
+bound to the authenticated session. Approval cannot change their content. Preserve
+idempotency coordinates for uncertain outcomes; no automatic mutation retry.
+Transmit integer values as decimal strings to preserve full native precision.
+
+Replace the unused fixed phase/estimate catalogue with engine projections. No
+provider, model, routing preference or project-specific policy belongs here.
+Connect/Inventory support does not imply later phases or project execution work.
+
+Validation must cover real installed-engine discovery, lifecycle/readback,
+ordinary edits, stale preview rejection, session replacement, exact approval and
+recovery. Run native tests/lint, frontend checks/build and a matching desktop trial.
+Record failures and exact source/binary identities. Until those checks and
+protected dependency merges pass, this is an engineering candidate, not a release.
+
+## Operator workflow
+
+Open **Reasoning → Project plan** in a connected project's workbench and choose **Discover
+jobs**. Pages follow the engine's lineage from the initial job toward successors;
+use **Next job page** when present. Each page is a separate stored observation.
+Select a job to read its exact plan, phase order, revision, checkpoints and lease.
+Neither discovery nor **Refresh stored job** inspects the current filesystem.
+The previous `/plan` project bookmark redirects to `/reasoning/plan`; Tasks remains
+available beside Project plan. Opening either tab does not approve engine work.
+
+After editing project source, choose **Preview source replan**. Compare the
+observed source digest and proposed plan with the displayed predecessor. Choose
+**Approve command** to submit exactly that native-held preview. Acceptance fences
+the predecessor and creates a pending successor; it does not run that successor.
+A further edit between preview and acceptance is rejected. Refresh and prepare
+again against the new source observation; ordinary edits do not require deleting
+or reinstalling the project. Source observation is not an atomic filesystem snapshot.
+
+Before approval, **Exact engine command** shows the **Receipt request key** for
+correlating the eventual receipt with that job. Save it before approving if you
+need independent readback; successful approval clears the prepared view. This
+identifier grants no access: receipt reads still require an authorized session.
+
+Lifecycle controls are explicit prepare/approve operations. Start and Resume
+require a requested lease duration; the engine enforces its limits. Next step
+requests one transition. Pause, expired-lease recovery and cancellation preserve
+the engine's revision/checkpoint authority. A cancellation request is not a claim
+that a worker has terminated. A phase being listed does not prove its executor
+exists; the engine reports unsupported work instead of manufacturing progress.
+
+## Recovery and boundaries
+
+Approval retains the exact SDK command and idempotency identity in the native
+process. The webview cannot edit it after preparation. A replaced session cannot
+approve an old preview. New preparation replaces an unsubmitted preview; an
+uncertain submitted command cannot be overwritten or discarded.
+
+Before dispatch, the UI stores only job/request coordinates, scoped to project
+profile and instance. A webview remount can recover a preview still held natively.
+Use **Read command receipt** after a lost reply; this does not resend work. An
+explicit **Retry same approval** reuses the native-held command and identity.
+After native-process replacement, only receipt recovery is available. A missing
+receipt is unresolved, not proof of rejection; retain the coordinates rather
+than inventing an acknowledgement or resetting the job.
+
+All integer fields cross the native/webview boundary as decimal strings, including
+64-bit revisions and timestamps. Plan types derive from the pinned public SDK.
+No alternate phase ordering, duration estimate, job-ID derivation, route ranking,
+model credential or project lifecycle is owned by the UI.
+
+## Validation status
+
+The real installed-process checks cover discovery, source edits, stale preview
+denial, exact approval, session replacement, start/step/pause/resume and receipt
+readback after reconnect. A loopback transport fault test drops actual successful
+engine replies: same-key explicit retry advances once, and replan receipt recovery
+after reconnect sends no second acceptance. Temporary files are test fixtures;
+these tests produce no model outputs, training records, labels or review consent.
+
+The engine value fixture was regenerated by the actual pinned-engine process test;
+its only data change is the engine revision. Final native checks and strict lint
+pass; 42 regular tests pass (20 installed/capture entries ignored by default).
+The broad installed run passed all 19 then-existing entries: 18 execution scenarios
+and an inactive visual-capture helper. After adding the expiry/cancellation test
+and tightening uncertain-error classification, all three focused plan scenarios
+pass again. This is not a claim that a final 20-entry broad suite was rerun.
+
+Frontend checks and 74-operation API parity pass. Production build and four
+browser smoke checks pass; the nested preview server was corrected to Node
+24.22.0. A subsequent diff review restored UTF-8 separators and one comment;
+final frontend checks pass on that text. The clean native bundle build and actual
+desktop trial remain pending. Inherited build warnings about large chunks and
+WASM externalization remain visible; no public-release qualification is inferred.
+
+[Evidence manifest](evidence/project-plan-controls-20261031/manifest.json) links
+15 byte-preserved compressed logs. The accompanying attempt record preserves the
+initial compiler errors, a build overlapping a source write, the overly short
+1 ms lease test, the nested Node version correction and the text-encoding fix.
+The initial CorrelationId diagnostic is retained as a tool-transcript observation;
+it has no separately captured raw log. Gzip decompression and original SHA-256
+checks preserve each published log. No failure was relabelled as success.

@@ -13,7 +13,6 @@ import { shake, uid } from "radash";
 import type { CSSProperties, FocusEvent, ReactNode, SyntheticEvent } from "react";
 import { adapter } from "~/adapter";
 import { Spacer } from "~/components/Spacer";
-import { getRRFlowQL } from "~/screens/connectome/connection/connection";
 import type { Authentication, Protocol, Selectable } from "~/types";
 import { openErrorModal } from "./errors";
 
@@ -331,31 +330,6 @@ export function uniqueName(baseName: string, existing: string[]) {
 	} while (existing.includes(tempName));
 
 	return tempName;
-}
-
-/**
- * Attempt to parse the given string as a valid params object
- * while silently handling any errors
- *
- * @param paramString The string to parse
- * @returns The parsed params object
- */
-export async function tryParseParams(paramString: string) {
-	let params: any = {};
-
-	try {
-		const parsed = await getRRFlowQL().parseValue(paramString);
-
-		if (typeof parsed !== "object" || Array.isArray(parsed)) {
-			throw new TypeError("Must be object");
-		}
-
-		params = parsed;
-	} catch {
-		adapter.warn("Params", "Invalid JSON in variables");
-	}
-
-	return params;
 }
 
 /**

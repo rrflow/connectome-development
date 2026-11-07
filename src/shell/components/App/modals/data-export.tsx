@@ -16,7 +16,7 @@ import {
 import { useInputState, useSet } from "@mantine/hooks";
 import { showNotification, updateNotification } from "@mantine/notifications";
 import dayjs from "dayjs";
-import { useMemo, usengram } from "react";
+import { useMemo, useState } from "react";
 import { adapter, isBrowser } from "~/adapter";
 import { Icon } from "~/components/Icon";
 import { Option } from "~/components/Option";
@@ -108,7 +108,7 @@ export function DataExportModal() {
 
 	const [configSupport] = useMinimumVersion("2.1.0");
 	const [isOpen, openedHandle] = useBoolean();
-	const [exportV3, setExportV3] = usengram(false);
+	const [exportV3, setExportV3] = useState(false);
 	const [search, setSearch] = useInputState("");
 
 	const exportFlags = useSet<ExportFlag>();

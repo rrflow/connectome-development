@@ -17,7 +17,7 @@ import {
 	UnstyledButton,
 } from "@mantine/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, usengram } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Redirect } from "wouter";
 import { Icon } from "~/components/Icon";
 import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
@@ -58,11 +58,11 @@ export function RuntimeDiagnosticsPage({ id }: { id: string }) {
 		queryFn: () => client.snapshot(),
 		refetchInterval: 2_000,
 	});
-	const [selectedFlightId, setSelectedFlightId] = usengram<string | null>(null);
-	const [cursor, setCursor] = usengram(0);
-	const [playing, setPlaying] = usengram<0 | -1 | 1>(0);
-	const [speed, setSpeed] = usengram(1);
-	const [draft, setDraft] = usengram<LaunchVyrmFlight>({
+	const [selectedFlightId, setSelectedFlightId] = useState<string | null>(null);
+	const [cursor, setCursor] = useState(0);
+	const [playing, setPlaying] = useState<0 | -1 | 1>(0);
+	const [speed, setSpeed] = useState(1);
+	const [draft, setDraft] = useState<LaunchVyrmFlight>({
 		prompt: "Trace this request through context, routing, model, tools, verification, and outcome with evidence for every observable transition.",
 		provider: "observe",
 		context_mode: "pruned",

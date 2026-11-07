@@ -1,0 +1,38 @@
+{
+	"command": [
+		"C:/Users/jessa/AppData/Roaming/fnm/node-versions/v24.22.0/installation/node.exe",
+		"C:/Users/jessa/AppData/Local/pnpm/.tools/pnpm/11.24.0/node_modules/pnpm/bin/pnpm.cjs",
+		"tauri",
+		"build",
+		"--debug",
+		"--no-bundle",
+		"--config",
+		"src-tauri/tauri.bundle.conf.json"
+	],
+	"cwd": "D:\\localdev\\devlabs\\connectome-resume",
+	"sourceCommit": "0f75c015c0687a554cdf2b1a48c36488f8113aee",
+	"sourceTree": "862e481d833fe32a6f26afcf3c4db2e7ad4d39c7",
+	"environment": {
+		"CARGO_TARGET_DIR": "D:\\localdev\\devlabs\\connectome-controller\\src-tauri\\target",
+		"CARGO_BUILD_JOBS": "2",
+		"VITE_CONNECTOME_PREVIEW": "true"
+	},
+	"engineManifest": {
+		"revision": "6a4cbb042a13f5a7c41b53d11d62b54a85df3bed",
+		"target": "x86_64-pc-windows-msvc",
+		"file": "rrflow-x86_64-pc-windows-msvc.exe",
+		"size": 154068480,
+		"sha256": "d4cc99d8527b97ba145023e0b1cc4a7c26a0682f6edc8c2d5d8d9ff1ad4ffec0"
+	},
+	"files": {
+		"connectome.exe": {
+			"sha256": "1cdee435a65acaa92dedabccfd50e4555c210cdfa5be241465a41453ca4ef926",
+			"bytes": 52248064
+		},
+		"rrflow.exe": {
+			"sha256": "d4cc99d8527b97ba145023e0b1cc4a7c26a0682f6edc8c2d5d8d9ff1ad4ffec0",
+			"bytes": 154068480
+		}
+	},
+	"unsignedPreview": true
+}

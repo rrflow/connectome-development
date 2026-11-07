@@ -14,7 +14,7 @@ import {
 } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
 import { omit } from "radash";
-import { useLayoutEffect, useMemo, usengram } from "react";
+import { useLayoutEffect, useMemo, useState } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { CodeEditor } from "~/components/CodeEditor";
 import { DrawerResizer } from "~/components/DrawerResizer";
@@ -45,13 +45,13 @@ export interface CreatorDrawerProps {
 }
 
 export function CreatorDrawer({ opened, table, content, onClose }: CreatorDrawerProps) {
-	const [recordTable, setRecordTable] = usengram("");
+	const [recordTable, setRecordTable] = useState("");
 	const [recordId, setRecordId] = useInputState("");
 	const [recordBody, setRecordBody] = useInputState("");
 	const [recordFrom, setRecordFrom] = useInputState("");
-	const [recordTo, setRecordTo] = usengram("");
+	const [recordTo, setRecordTo] = useState("");
 	const [isValid, body] = useValueValidator(recordBody);
-	const [errors, setErrors] = usengram<string[]>([]);
+	const [errors, setErrors] = useState<string[]>([]);
 	const tables = useTableNames();
 
 	const tableInfo = useTables().find((t) => t.schema.name === recordTable);
@@ -140,7 +140,7 @@ export function CreatorDrawer({ opened, table, content, onClose }: CreatorDrawer
 
 	const extensions = useMemo(() => [rrflowql(), rrflowqlLinting()], []);
 	const isFullyValid = isValid && (!isRelation || (recordFrom && recordTo));
-	const [width, setWidth] = usengram(650);
+	const [width, setWidth] = useState(650);
 
 	return (
 		<Drawer

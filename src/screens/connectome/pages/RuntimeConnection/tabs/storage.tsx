@@ -13,7 +13,7 @@ import {
 	Text,
 } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
-import { usengram } from "react";
+import { useState } from "react";
 import { Icon } from "~/components/Icon";
 import { Section } from "~/components/Section";
 import { iconChevronDown, iconChevronUp, iconErrorCircle, iconRefresh } from "~/icons";
@@ -36,8 +36,8 @@ export function StorageTab({ client, sessionKey }: RuntimeLensProps) {
 		refetchInterval: STORAGE_REFRESH_MS,
 		...busyRetry,
 	});
-	const [countersOpen, setCountersOpen] = usengram(false);
-	const [historyOpen, setHistoryOpen] = usengram(false);
+	const [countersOpen, setCountersOpen] = useState(false);
+	const [historyOpen, setHistoryOpen] = useState(false);
 
 	if (storage.isPending) {
 		return (

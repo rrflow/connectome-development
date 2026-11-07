@@ -1,6 +1,6 @@
 import { ActionIcon, Box, Drawer, Group, Stack } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
-import { lazy, Suspense, useEffect, useMemo, usengram } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { DrawerResizer } from "~/components/DrawerResizer";
 import { Icon } from "~/components/Icon";
 import { Label } from "~/components/Label";
@@ -23,7 +23,7 @@ export interface GeographyDrawerProps {
 }
 
 export function GeographyDrawer({ opened, data, onClose }: GeographyDrawerProps) {
-	const [width, setWidth] = usengram(650);
+	const [width, setWidth] = useState(650);
 	const [geoJSON, setGeoJSON] = useInputState("");
 
 	useEffect(() => {
@@ -36,7 +36,7 @@ export function GeographyDrawer({ opened, data, onClose }: GeographyDrawerProps)
 	const extensions = useMemo(() => [rrflowql()], []);
 
 	// parses geoJSON and splits langitude and latitude and creates a fitting string with bail out if it doesn't fit
-	const [coordLabel, setCoordLabel] = usengram<string | null>(null);
+	const [coordLabel, setCoordLabel] = useState<string | null>(null);
 
 	useEffect(() => {
 		let cancelled = false;

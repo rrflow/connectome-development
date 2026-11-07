@@ -1,0 +1,139 @@
+{
+	"baseline": "91b89ae46ac23af70c852c79559bc59ecd62eed5",
+	"engineRevision": "6a4cbb042a13f5a7c41b53d11d62b54a85df3bed",
+	"engineSha256": "d4cc99d8527b97ba145023e0b1cc4a7c26a0682f6edc8c2d5d8d9ff1ad4ffec0",
+	"sourceSha256": {
+		"package.json": "3772e92c9c8f60994c438bd7c310f26a657a1fb4351e180eac16b90a1ca14cf5",
+		"pnpm-lock.yaml": "8a3cc0978eab8086483898071d576e6048055879eb5edcb7af6ca57fb0b520b5",
+		"src-tauri/Cargo.toml": "0ca480a43cc3f10b6dac839b5b5233aa700263fde79ae4583866b473a953747f",
+		"src-tauri/Cargo.lock": "54d197127de357527ca3c88da48d01751c0c680e84b141b411786d11d9765c15",
+		"src-tauri/src/rrd/client/tasks.rs": "55f1abfb49ad0e17d7bae70db7427808e46caeb6e66cbe99890d95ac329bd7fd",
+		"src-tauri/src/rrd/client/process/tasks.rs": "97b6aca061b28ca97309bc67f3902ad7e8fdfc955704a4915c78ca1590ffe5a5",
+		"src/rrflow/tasks.ts": "3edde75b1fa4f6c76c49412ab80447e04340167a71c556f66be03a6382c75992",
+		"src/screens/connectome/pages/RuntimeConnection/tasks.tsx": "96addbbf75b4d33febe5c21840e6356446e9ba1cdbf8234393ade45edd341356",
+		"src/rrflow/fixtures/engine-values.json": "01a11ebdf15492fbd150821275b0e2e7f293db79a0b606a41ef4df77a6047f6b"
+	},
+	"native": {
+		"installed-task": {
+			"exitCode": 0,
+			"sha256": "fe7207b69b5c7a747a9614034ef3757fb9508c6cdeab33e0bc217c224a42393c",
+			"command": [
+				"cargo",
+				"test",
+				"--manifest-path",
+				"src-tauri/Cargo.toml",
+				"--locked",
+				"rrd::client::process::tasks",
+				"--",
+				"--ignored",
+				"--test-threads=1"
+			],
+			"extraEnvironment": {}
+		},
+		"value-writer": {
+			"exitCode": 0,
+			"sha256": "f1c66651db7ad061b18c9e45f86c4a72a3fc15f2158df8e4d1cfc966c3517373",
+			"command": [
+				"cargo",
+				"test",
+				"--manifest-path",
+				"src-tauri/Cargo.toml",
+				"--locked",
+				"rrd::client::process::values",
+				"--",
+				"--ignored",
+				"--test-threads=1"
+			],
+			"extraEnvironment": {
+				"CONNECTOME_WRITE_GOLDEN": "1"
+			}
+		},
+		"native-suite": {
+			"exitCode": 0,
+			"sha256": "1b6d501348ea49c5df02b6363d5a56889af41005add31114ad83ed77dad17dfb",
+			"command": [
+				"cargo",
+				"test",
+				"--manifest-path",
+				"src-tauri/Cargo.toml",
+				"--locked",
+				"--all-targets"
+			],
+			"extraEnvironment": {}
+		},
+		"process-suite": {
+			"exitCode": 101,
+			"sha256": "7264d2c208db25d79bf9cbaf7b86a15d255bfa43ebc46c7c2b352bb42123ae0d",
+			"command": [
+				"cargo",
+				"test",
+				"--manifest-path",
+				"src-tauri/Cargo.toml",
+				"--locked",
+				"rrd::client::process",
+				"--",
+				"--ignored",
+				"--test-threads=1"
+			],
+			"extraEnvironment": {}
+		},
+		"sidecar-process": {
+			"exitCode": 0,
+			"sha256": "1c9fad71726d53b6f4ca3783b0ed0948e43d252f234b78c871d131385a21a6fd",
+			"command": [
+				"cargo",
+				"test",
+				"--manifest-path",
+				"src-tauri/Cargo.toml",
+				"--locked",
+				"rrd::client::process::the_bundled_engine_serves_as_the_verified_sidecar",
+				"--",
+				"--ignored",
+				"--test-threads=1"
+			],
+			"extraEnvironment": {}
+		},
+		"clippy": {
+			"exitCode": 0,
+			"sha256": "42edfcfacc33f30a3ebede6f0a8ed295fb44d12d3c62504a98b44c4f37d73872",
+			"command": [
+				"cargo",
+				"clippy",
+				"--manifest-path",
+				"src-tauri/Cargo.toml",
+				"--all-targets",
+				"--locked",
+				"--",
+				"-D",
+				"warnings"
+			],
+			"extraEnvironment": {}
+		},
+		"format": {
+			"exitCode": 0,
+			"sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+			"command": ["cargo", "fmt", "--manifest-path", "src-tauri/Cargo.toml", "--", "--check"],
+			"extraEnvironment": {}
+		}
+	},
+	"processSuiteCorrection": "First run: 16 passed, one missing staged sidecar failure. After staging the exact verified engine, the affected sidecar process check passed; unchanged process cases were not repeated.",
+	"otherObservedSuccessfulCommands": {
+		"native-check": "cargo check --manifest-path src-tauri/Cargo.toml",
+		"install": "pnpm 11.24.0 install --no-frozen-lockfile",
+		"typecheck": "pnpm exec tsc --noEmit",
+		"frontend-check": "pnpm check",
+		"frontend-build": "pnpm build",
+		"browser-smoke": "pnpm test:smoke"
+	},
+	"otherLogSha256": {
+		"native-check": "b690d9a4157e9f546f522864fa09ea5455c72f4aac903858dde9a9297a485176",
+		"install": "138a0139c4fcdeba9b5f06c63a587e05c870ed92ca025eaffd35a945e819ac77",
+		"typecheck": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+		"frontend-check": "454104d0b6c46d886ec402a31e542fa80e42539c2cbd2a8120b4d0879c46d8f7",
+		"frontend-build": "965ce795b29d8d81094b2ec7ea78cce5904e55595c5103d0d44d598a87f41274",
+		"browser-smoke": "211b182a34e982c8b05a190d278b303716543a855b4b1f589d13bf0d8cd644da"
+	},
+	"scope": "native operation integration and existing frontend checks; actual desktop resume not yet observed",
+	"trainingDataCreated": false,
+	"modelQualityQualified": false
+}

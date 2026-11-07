@@ -4,14 +4,14 @@ Status: active
 
 ## Goal
 
-Make Connectome start, bind to, and explain a real RRFlow  through the
+Make Connectome start, bind to, and explain a real RRFlow estate through the
 contract it is pinned to, so the desktop "Start serving" action produces a
 green RRD handshake on a clean machine.
 
 ## Source
 
 Repository owner's Decision 8 (2026-10-18): "Connectome spine first". Stated
-acceptance: RRFlow is "0.0" until Connectome shows every tab, browses s
+acceptance: RRFlow is "0.0" until Connectome shows every tab, browses estates
 and drills into the graphs, and shows prompts processed through a frontier AI
 with memories held in rrflowKV/rrflowDB, with the frontier AI forced to use
 it. Connectome must be contracted to RRFlow so it is easy to maintain and
@@ -104,7 +104,7 @@ Work:
 Rationale: every later slice builds on the contract; a stale pin would make
 the serve flow target an engine nobody ships.
 
-### Slice B — the contracted  serve replaces the legacy lane
+### Slice B — the contracted estate serve replaces the legacy lane
 
 Files:
 
@@ -149,7 +149,7 @@ Current `src-tauri/src/database/mod.rs` lines 170–195:
     args.push("--allow-all");
 ```
 
-Target: the module becomes `src-tauri/src/rrd/.rs` with three Tauri
+Target: the module becomes `src-tauri/src/rrd/estate.rs` with three Tauri
 commands and one event stream, lifted from the process tests:
 
 ```rust
@@ -157,17 +157,17 @@ commands and one event stream, lifted from the process tests:
 /// optional executable override. No credential, user, password, driver, or
 /// port: RRFlow has one storage engine, the kernel picks the loopback port,
 /// and the operator credential stays a file the native process reads.
-pub struct ServeRequest { project: PathBuf, mode: InstallMode, executable: Option<PathBuf> }
+pub struct EstateServeRequest { project: PathBuf, mode: InstallMode, executable: Option<PathBuf> }
 
-/// `rrd__prepare`: `rrflow --json install plan --project --mode` when
+/// `rrd_estate_prepare`: `rrflow --json install plan --project --mode` when
 /// the project has no locator; returns the preview (managed paths, digests,
 /// grants) for the guided explanation. Read-only.
-/// `rrd__serve`: `install apply --plan --expect <plan_sha256>` when
+/// `rrd_estate_serve`: `install apply --plan --expect <plan_sha256>` when
 /// needed, then `--json serve --bind 127.0.0.1:0 --project`; parses the one
 /// announcement line; polls `rrflow ready --address --project`; emits
-/// `:stage` { stage: install | serve | ready | handshake, state, detail }
+/// `estate:stage` { stage: install | serve | ready | handshake, state, detail }
 /// after each boundary; returns { url, instance_id, credential_path }.
-/// `rrd__stop`: stops the child it started; never kills by name.
+/// `rrd_estate_stop`: stops the child it started; never kills by name.
 ```
 
 Work:
@@ -176,7 +176,7 @@ Work:
    `cmd /C` wrapper is not needed: `Command` spawns the executable directly,
    with no shell and no secrets on the command line).
 2. `ConnectomeServingSettings` becomes `{ project, mode, executable, logLevel }`;
-   defaults point at a per-user  directory under the app data dir.
+   defaults point at a per-user estate directory under the app data dir.
 3. On the announcement, the adapter upserts the `runtime` connection
    (`authentication.hostname` = announced address, `runtimeInstance` =
    `instance_id`, `runtimeCredential` = `<project>/.rrflow/credentials/local-operator.json`)
@@ -186,7 +186,7 @@ Work:
    stage card explains itself in plain words (what "install plan" sealed,
    why the port is kernel-chosen, what "ready" authenticated), using the
    glossary terms already defined for the lenses.
-5. The process tests keep their own `` fixture but call the same
+5. The process tests keep their own `Estate` fixture but call the same
    native functions as the commands, so CI proves the product path.
 
 Rationale: this is the one change the owner sees; it removes the dead lane
@@ -228,7 +228,7 @@ Work:
 ## Definition of done
 
 On a clean machine with the desktop build: "Start serving" installs or opens
-the configured , the stage cards go green in order, the runtime
+the configured estate, the stage cards go green in order, the runtime
 connection opens itself, the RRD handshake shows `rrd v1` and the instance
 id, and every lens renders — proven by the native unit tests, the RRD process
 tests at the pinned revision in CI, the Playwright smoke of the stage flow,
@@ -247,7 +247,7 @@ Branch `agent/rrflow-serve-spine` from `main` `b388e48`.
   26 engine commits are additive on the surfaces the native client uses).
 - Native unit tests: 23 passed (2 ignored, the process tests). RRD process
   tests against `rrflow` built at `4705941` (`RRFLOW_BIN`, `--ignored`):
-  `the_lenses_read_a_live_` and
+  `the_lenses_read_a_live_estate` and
   `a_second_connection_never_replays_the_first_session` passed (39.8 s on
   the unoptimised build). Strict Clippy and `cargo fmt --check`: clean.
 - `engineProtocol` removed from `package.json`. `vite.config.ts` reads the
@@ -266,40 +266,40 @@ Branch `agent/rrflow-serve-spine` from `main` `b388e48`.
 - Landed as pull request #2, squash-merged to `main` as `8c1daa2` (Connectome
   CI green: frontend, native on three platforms, RRD process job).
 
-### 2026-10-18 — Slice B: the contracted  serve replaces the legacy lane
+### 2026-10-18 — Slice B: the contracted estate serve replaces the legacy lane
 
 Branch `agent/rrflow-serve-spine-b` from `main` `8c1daa2`.
 
 - `src-tauri/src/database/{mod.rs,shell.rs}` are deleted. The `sh -c`/`cmd /C`
   wrapper, the `rrflow start` line, the root user/password, the driver URI,
   and the fixed port are gone with them.
-- `src-tauri/src/rrd/.rs` holds the product path, `serve_`:
-  resolve the project (empty → `<app data>/s/local`), `install plan
+- `src-tauri/src/rrd/estate.rs` holds the product path, `serve_estate`:
+  resolve the project (empty → `<app data>/estates/local`), `install plan
   --mode <fresh|existing>` when the project has no `.rrflow/config.toml`,
   write the plan outside the project (it hashes the project's inventory),
   `install apply --plan --expect <plan_sha256>`, `--json serve --bind
   127.0.0.1:0 --project` (the one-line announcement names the address and
   instance), then `rrflow ready --address --project` until it succeeds, with
   the engine's exit or a 180 s deadline as the failure boundaries. Three Tauri
-  commands wrap it: `rrd__serve` (idempotent while serving; a raced
-  second serve is stopped), `rrd__status` (a new window resumes the
-  served ), `rrd__stop` (kills only the child it started; nothing
-  by name). Every boundary is an `:stage` event — install (plan, apply,
+  commands wrap it: `rrd_estate_serve` (idempotent while serving; a raced
+  second serve is stopped), `rrd_estate_status` (a new window resumes the
+  served estate), `rrd_estate_stop` (kills only the child it started; nothing
+  by name). Every boundary is an `estate:stage` event — install (plan, apply,
   skipped when installed), serve (announced), ready (authenticated) — and the
-  engine's stderr streams as `:output`. `ServeObserver` is the seam:
+  engine's stderr streams as `estate:output`. `ServeObserver` is the seam:
   `AppHandle` emits, the process tests record.
-- The RRD process tests now drive `serve_` with `RRFLOW_BIN` instead of
+- The RRD process tests now drive `serve_estate` with `RRFLOW_BIN` instead of
   their own copy of the sequence, so CI proves the desktop's serve path, not
-  a parallel one: `the_lenses_read_a_live_` and
+  a parallel one: `the_lenses_read_a_live_estate` and
   `a_second_connection_never_replays_the_first_session` pass (41 s, debug
   engine at `4705941`).
 - `ConnectomeServingSettings` is `{ project, mode, executable, historySize }`;
   `DriverType` and `LogLevel` are gone. The Serving settings tab explains what
   starting does and asks only for those. The adapter contract is
-  `serve | served | stop`; the browser adapter reports
+  `serveEstate | servedEstate | stopEstate`; the browser adapter reports
   serving unsupported as before.
-- "Start serving" calls `serve`, records the `Served` in the
-  database store, then resolves the runtime connection for that  — one
+- "Start serving" calls `serveEstate`, records the `ServedEstate` in the
+  database store, then resolves the runtime connection for that estate — one
   per operator credential path, updated with the announced address (the
   kernel chooses the port) and the instance id, created on first serve — and
   navigates to it, where the session panel reopens from the saved credential.
@@ -309,7 +309,7 @@ Branch `agent/rrflow-serve-spine-b` from `main` `8c1daa2`.
   been showing "Unknown RRD connection error" because that string is not an
   `Error` instance, which hid "connection refused" in the screenshot.
   The CreateConnection "Localhost" template (SurrealDB root/ws) is replaced by
-  a "Served " template available while an  is served.
+  a "Served estate" template available while an estate is served.
 - Evidence: `cargo check/clippy -D warnings/fmt --check --locked
   --all-targets`: clean; native unit tests 23 passed; RRD process tests 2
   passed through the product path; `pnpm check` (Biome, identity gate,
@@ -387,13 +387,13 @@ Branch `agent/rrflow-serve-spine-d` from `main` `7ad821b`.
   run only when it hashes to the embedded digest — a mismatch, or a sidecar
   with no embedded manifest, is refused with no fallback; last, `rrflow` on
   `PATH`. The binding (path, source, SHA-256, revision) is reported as the
-  first serve stage ("engine") and carried on `Served.engine`, so the
+  first serve stage ("engine") and carried on `ServedEstate.engine`, so the
   operator always sees which engine ran and what it hashed to. Four unit tests
   cover the order and the refusals.
 - The RRD process job stages the engine it already builds
   (`--from ~/.rrflow-engine/rrflow`), verifies the manifest, and runs a third
   process test, `the_bundled_engine_serves_as_the_verified_sidecar`, which
-  copies the staged sidecar beside the test executable and serves an 
+  copies the staged sidecar beside the test executable and serves an estate
   with nothing configured: the binding reports `sidecar`, the manifest's
   digest and revision, and the "bundled with this build" stage line.
 - Verified here: `TAURI_CONFIG` with the bundle config makes tauri-build place
@@ -403,7 +403,7 @@ Branch `agent/rrflow-serve-spine-d` from `main` `7ad821b`.
   where it belongs and is the next packaging step.
 - Evidence: `cargo check/clippy -D warnings/fmt --check --locked
   --all-targets`: clean; native unit tests 27 passed (4 new); RRD process
-  tests 3 passed through the product path (`the_lenses_read_a_live_`,
+  tests 3 passed through the product path (`the_lenses_read_a_live_estate`,
   `a_second_connection_never_replays_the_first_session`,
   `the_bundled_engine_serves_as_the_verified_sidecar`); `pnpm check`: clean;
   `node scripts/engine/build-sidecar.mjs --check`: the staged engine matches.

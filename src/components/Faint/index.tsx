@@ -12,7 +12,7 @@ export function Faint({ containerRef: _unused }: FaintProps) {
 	// const { x: mouseX, y: mouseY } = useMouse();
 
 	// // Track whether we've received a mouse position
-	// const [hasMouseMoved, setHasMouseMoved] = usengram(false);
+	// const [hasMouseMoved, setHasMouseMoved] = useState(false);
 
 	// // Animation frame ID reference for cleanup
 	// const animationFrameRef = useRef<number | null>(null);
