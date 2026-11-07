@@ -250,7 +250,11 @@ export function ProjectVisuals({
 								align="flex-start"
 							>
 								<Box>
-									<Title order={5}>rrflowKV storage path</Title>
+									<Title order={5}>
+										{storage.data?.physical.profile === "rrflow_kv"
+											? "rrflowKV storage path"
+											: "Storage path"}
+									</Title>
 									<Text
 										size="sm"
 										c="dimmed"

@@ -91,6 +91,8 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 			let connectedAt = 101;
 			let handshakeInstance = "diagnostic-profile-a";
 			let showFlight = false;
+			let emptyGraph = false;
+			let failStorage = false;
 			const profileSessions: Record<string, Record<string, unknown> | null> = {};
 			let deferReads = false;
 			const deferred: { command: string; resolve: (value: unknown) => void }[] = [];
@@ -130,6 +132,10 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 					calls: () => calls,
 					showFlight: () => {
 						showFlight = true;
+					},
+					showEmptyAndError: () => {
+						emptyGraph = true;
+						failStorage = true;
 					},
 					setHandshakeInstance: (instance: string) => {
 						handshakeInstance = instance;
@@ -303,20 +309,24 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 								graph: {
 									valid_at_unix_ms: 1,
 									known_at_cursor: 7,
-									nodes: [
-										{
-											id: "stable-node",
-											kind: "document",
-											key: "stable-node",
-											label: "Stable document",
-											properties: {},
-											cluster: 0,
-										},
-									],
+									nodes: emptyGraph
+										? []
+										: [
+												{
+													id: "stable-node",
+													kind: "document",
+													key: "stable-node",
+													label: "Stable document",
+													properties: {},
+													cluster: 0,
+												},
+											],
 									edges: [],
 									clusters: [],
 								},
 							};
+						if (command === "rrd_storage" && failStorage)
+							throw new Error("Storage unavailable");
 						if (command === "rrd_storage")
 							return {
 								runtime_cursor: 7,
@@ -405,6 +415,10 @@ test("workbench visualizes returned project data and recorded flight events", as
 		page.getByText(/Showing 1 of 1 returned records and 0 of 0 returned relationships/),
 	).toBeVisible();
 	await expect(page.getByText("No storage observation is available.")).toHaveCount(0);
+	await expect(page.getByRole("heading", { name: "Storage path", exact: true })).toBeVisible();
+	await expect(
+		page.getByRole("heading", { name: "rrflowKV storage path", exact: true }),
+	).toHaveCount(0);
 	await expect(page.getByText(/reports process-local evidence/)).toBeVisible();
 	await page.evaluate(() =>
 		(
@@ -420,6 +434,23 @@ test("workbench visualizes returned project data and recorded flight events", as
 	await page.getByText("Choose a record using the keyboard", { exact: true }).click();
 	await page.getByRole("button", { name: "Stable document · stable-node" }).click();
 	await expect(page).toHaveURL(new RegExp(`${profileA}/knowledge/records$`));
+});
+
+test("visualizations expose an empty graph and a failed storage refresh", async ({ page }) => {
+	const { profileA, profileB } = await createDiagnosticProfiles(page);
+	await openDiagnosticWorkbench(page, profileA, profileB);
+	await expect(page.getByText(/Showing 1 of 1 returned records/)).toBeVisible();
+	await page.evaluate(() =>
+		(
+			window as unknown as { __diagnosticCaptureTest: { showEmptyAndError: () => void } }
+		).__diagnosticCaptureTest.showEmptyAndError(),
+	);
+	await page.getByRole("button", { name: "Refresh visualizations" }).click();
+	await expect(
+		page.getByText("The engine returned no records for this graph view."),
+	).toBeVisible();
+	await expect(page.getByText("Storage read failed", { exact: true })).toBeVisible();
+	await expect(page.getByText("Storage unavailable", { exact: true })).toBeVisible();
 });
 
 test("diagnostic capture rejects a response completed after the same profile reconnects", async ({
