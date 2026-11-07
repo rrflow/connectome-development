@@ -1,4 +1,694 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
+
+async function createDiagnosticProfiles(page: Page) {
+	await page.route(/http:\/\/localhost:947[78]\/v1\//, async (route) => {
+		const requestUrl = new URL(route.request().url());
+		const path = requestUrl.pathname;
+		const payload =
+			path === "/v1/health/live"
+				? { observed_at_unix_ms: 1 }
+				: path === "/v1/health/ready"
+					? {
+							observed_at_unix_ms: 2,
+							claim_sequence: 3,
+							runtime_cursor: 4,
+							backend: "rrflow_kv",
+						}
+					: {
+							protocol: "rrd",
+							protocol_version: 1,
+							implementation: "rrflow",
+							implementation_version: "1.0.0",
+							deployment: {
+								contract_version: 1,
+								deployment_form: "single_node_server",
+								storage_profile: "rrflow_kv",
+								endpoint_presentation: "loopback_http_websocket",
+							},
+							configuration: {
+								format_version: 1,
+								revision: 1,
+								configuration_sha256: "b".repeat(64),
+							},
+							instance: {
+								kind: "instance",
+								id:
+									requestUrl.port === "9478"
+										? "diagnostic-profile-b"
+										: "diagnostic-profile-a",
+							},
+							capabilities: [],
+							product_capabilities: {},
+						};
+		await route.fulfill({
+			contentType: "application/json",
+			headers: { "Access-Control-Allow-Origin": "*" },
+			body: JSON.stringify({
+				protocol: "rrd",
+				protocol_version: 1,
+				request_id: `request-${path}`,
+				operation_id: `operation-${path}`,
+				outcome: { status: "ok", payload },
+			}),
+		});
+	});
+
+	await page.goto("/connections/create", { waitUntil: "domcontentloaded" });
+	await page.getByPlaceholder("Connection name").fill("Diagnostic Profile A");
+	await page.getByLabel("RRD HTTP host").fill("localhost:9477");
+	await page.getByRole("button", { name: "Save & connect to RRD" }).click();
+	await expect(page.getByText("diagnostic-profile-a", { exact: true })).toBeVisible();
+	const profileA = new URL(page.url()).pathname;
+	await page.goto("/connections/create");
+	await page.getByPlaceholder("Connection name").fill("Diagnostic Profile B");
+	await page.getByLabel("RRD HTTP host").fill("localhost:9478");
+	await page.getByRole("button", { name: "Save & connect to RRD" }).click();
+	await expect(page.getByText("diagnostic-profile-b", { exact: true })).toBeVisible();
+	const profileB = new URL(page.url()).pathname;
+	await page.getByRole("button", { name: "Knowledge", exact: true }).click();
+	await page.getByRole("textbox", { name: "Selected project", exact: true }).click();
+	await page.getByRole("option", { name: "Diagnostic Profile A" }).click();
+	await expect(page).toHaveURL(new RegExp(`${profileA}/knowledge/records$`));
+	return { profileA, profileB };
+}
+
+async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: string) {
+	await page.getByRole("button", { name: "Reasoning", exact: true }).click();
+	await page.getByRole("tab", { name: "Workbench", exact: true }).click();
+	await expect(
+		page.getByRole("heading", { name: "Prompt workbench", exact: true }),
+	).toBeVisible();
+	await page.getByLabel("Workbench name", { exact: true }).fill("Diagnostic lifecycle");
+	await page.getByRole("button", { name: "Create local workbench", exact: true }).click();
+	await page.getByLabel("Note intent", { exact: true }).fill("Manual note remains local");
+	await page.getByRole("button", { name: "Save local note", exact: true }).click();
+	await expect(
+		page.getByText("testing · Manual note remains local", { exact: true }),
+	).toBeVisible();
+	await page.evaluate(
+		({ profileA, profileB }) => {
+			Object.assign(globalThis, { isTauri: true });
+			let connectedAt = 101;
+			let handshakeInstance = "diagnostic-profile-a";
+			const profileSessions: Record<string, Record<string, unknown> | null> = {};
+			let deferReads = false;
+			const deferred: { command: string; resolve: (value: unknown) => void }[] = [];
+			const calls: string[] = [];
+			const service = (instance: string) => ({
+				implementation: "rrflow",
+				implementation_version: "1.0.0",
+				instance,
+				deployment_form: "single_node_server",
+				storage_profile: "rrflow_kv",
+				endpoint_presentation: "loopback_http_websocket",
+				installed_estate: null,
+				configuration_revision: 1,
+				configuration_sha256: "c".repeat(64),
+				capabilities: [],
+			});
+			const profileInstances: Record<string, string> = {
+				[profileA.split("/")[2]]: "diagnostic-profile-a",
+				[profileB.split("/")[2]]: "diagnostic-profile-b",
+			};
+			const makeSession = (profile: string, timestamp: number) => {
+				const instance = profileInstances[profile] ?? "diagnostic-profile-a";
+				return {
+					endpoint:
+						instance === "diagnostic-profile-b"
+							? "http://localhost:9478"
+							: "http://localhost:9477",
+					instance,
+					principal: "diagnostic-test",
+					connected_at_unix_ms: timestamp,
+					session: { idle_timeout_ms: 60000, absolute_timeout_ms: 3600000 },
+					service: service(instance),
+				};
+			};
+			Object.assign(window, {
+				__diagnosticCaptureTest: {
+					calls: () => calls,
+					setHandshakeInstance: (instance: string) => {
+						handshakeInstance = instance;
+					},
+					sessionTimestamp: (profile: string) =>
+						(profileSessions[profile]?.connected_at_unix_ms as number | undefined) ??
+						null,
+					sessionInstance: (profile: string) =>
+						(profileSessions[profile]?.instance as string | undefined) ?? null,
+					defer: () => {
+						calls.length = 0;
+						deferReads = true;
+					},
+					pending: () => deferred.length,
+					pendingCommands: () => deferred.map((item) => item.command),
+					resolve: async (prefix: string) => {
+						deferReads = false;
+						for (const item of deferred.splice(0)) {
+							if (item.command === "rrd_capabilities")
+								item.resolve({
+									...service(`${prefix}-instance`),
+									implementation: prefix,
+									configuration_revision: 99,
+								});
+							else if (item.command === "rrd_database")
+								item.resolve({
+									graph: {
+										nodes: Array.from({ length: 99 }),
+										edges: Array.from({ length: 98 }),
+									},
+								});
+							else if (item.command === "rrd_storage")
+								item.resolve({ runtime_cursor: 99, physical: { profile: prefix } });
+							else
+								item.resolve({
+									collections: Array.from({ length: 97 }, () => ({
+										vectors: [],
+									})),
+								});
+						}
+						await Promise.resolve();
+						await new Promise<void>((done) => requestAnimationFrame(() => done()));
+						await new Promise<void>((done) => requestAnimationFrame(() => done()));
+					},
+				},
+			});
+			Object.defineProperty(window, "__TAURI_INTERNALS__", {
+				configurable: true,
+				value: {
+					invoke: async (
+						command: string,
+						args: {
+							profile?: string;
+							request?: { instance?: string };
+							endpoint?: string;
+							path?: string;
+						},
+					) => {
+						const profile = args.profile ?? "";
+						calls.push(`${command}:${profile}`);
+						if (command === "rrd_session") {
+							if (!(profile in profileSessions))
+								profileSessions[profile] = makeSession(profile, connectedAt++);
+							return profileSessions[profile];
+						}
+						if (command === "rrd_disconnect") {
+							profileSessions[profile] = null;
+							return null;
+						}
+						if (command === "rrd_connect") {
+							const instance = args.request?.instance ?? "diagnostic-profile-a";
+							const endpoint =
+								instance === "diagnostic-profile-b"
+									? "http://localhost:9478"
+									: "http://localhost:9477";
+							profileSessions[profile] = {
+								...makeSession(instance, connectedAt++),
+								endpoint,
+								instance,
+								service: service(instance),
+							};
+							return profileSessions[profile];
+						}
+						if (command === "rrd_public_request") {
+							const path = args.path ?? "";
+							const instanceId = args.endpoint?.endsWith(":9478")
+								? "diagnostic-profile-b"
+								: handshakeInstance;
+							const payload =
+								path === "/v1/health/live"
+									? { observed_at_unix_ms: 1 }
+									: path === "/v1/health/ready"
+										? {
+												observed_at_unix_ms: 2,
+												claim_sequence: 3,
+												runtime_cursor: 4,
+												backend: "rrflow_kv",
+											}
+										: {
+												protocol: "rrd",
+												protocol_version: 1,
+												implementation: "rrflow",
+												implementation_version: "1.0.0",
+												deployment: {
+													contract_version: 1,
+													deployment_form: "single_node_server",
+													storage_profile: "rrflow_kv",
+													endpoint_presentation:
+														"loopback_http_websocket",
+												},
+												configuration: {
+													format_version: 1,
+													revision: 1,
+													configuration_sha256: "b".repeat(64),
+												},
+												instance: {
+													kind: "instance",
+													id: instanceId,
+												},
+												capabilities: [],
+												product_capabilities: {},
+											};
+							return {
+								protocol: "rrd",
+								protocol_version: 1,
+								request_id: `native-${path}`,
+								operation_id: `native-${path}`,
+								outcome: { status: "ok", payload },
+							};
+						}
+						if (
+							deferReads &&
+							[
+								"rrd_capabilities",
+								"rrd_database",
+								"rrd_storage",
+								"rrd_vector_collections",
+							].includes(command)
+						)
+							return new Promise((resolve) => deferred.push({ command, resolve }));
+						if (command === "rrd_capabilities") return service("diagnostic-profile-a");
+						if (command === "rrd_database")
+							return { graph: { nodes: [{ id: "stable-node" }], edges: [] } };
+						if (command === "rrd_storage")
+							return { runtime_cursor: 7, physical: { profile: "stable-profile" } };
+						if (command === "rrd_vector_collections") return { collections: [] };
+						if (command === "rrd_workbench_snapshot")
+							return {
+								scope: "session",
+								after_cursor: 0,
+								truncated: false,
+								flights: [],
+							};
+						throw new Error(`Unexpected command ${command}`);
+					},
+				},
+			});
+		},
+		{ profileA, profileB },
+	);
+	await page.getByRole("button", { name: "System", exact: true }).click();
+	await expect(page).toHaveURL(/\/system\/instance$/);
+	await expect(page.getByText("Session open", { exact: false })).toBeVisible();
+	await page.getByRole("button", { name: "Reasoning", exact: true }).click();
+	await page.getByRole("tab", { name: "Workbench", exact: true }).click();
+	await expect(page).toHaveURL(new RegExp(`${profileA}/reasoning/workbench$`));
+}
+
+test("diagnostic capture rejects a response completed after the same profile reconnects", async ({
+	page,
+}) => {
+	const { profileA, profileB } = await createDiagnosticProfiles(page);
+	await openDiagnosticWorkbench(page, profileA, profileB);
+	const capture = page.getByRole("button", { name: "Capture engine diagnostics", exact: true });
+	await expect(capture).toBeEnabled();
+	await capture.click();
+	await expect(
+		page.getByText("testing · Engine diagnostic snapshot", { exact: true }),
+	).toHaveCount(1);
+	await page.getByText("testing · Engine diagnostic snapshot", { exact: true }).click();
+	await expect(
+		page.getByText(
+			"Engine rrflow 1.0.0; configuration revision 1; records in returned graph 1; relationships in returned graph 0; storage cursor 7; storage profile stable-profile; vector collections in returned catalogue 0.",
+			{ exact: true },
+		),
+	).toBeVisible();
+	await page.getByLabel("Note intent", { exact: true }).fill("stale reconnect probe");
+	const profileId = profileA.split("/")[2];
+	const initialSessionTimestamp = await page.evaluate(
+		(profile) =>
+			(
+				window as unknown as {
+					__diagnosticCaptureTest: { sessionTimestamp: (id: string) => number | null };
+				}
+			).__diagnosticCaptureTest.sessionTimestamp(profile),
+		profileId,
+	);
+	await page.evaluate(() => {
+		(
+			window as unknown as {
+				__diagnosticCaptureTest: { defer: () => void };
+			}
+		).__diagnosticCaptureTest.defer();
+	});
+	await capture.click();
+	await expect
+		.poll(() =>
+			page.evaluate(() =>
+				(
+					window as unknown as {
+						__diagnosticCaptureTest: { pending: () => number };
+					}
+				).__diagnosticCaptureTest.pending(),
+			),
+		)
+		.toBe(4);
+	const captureCalls = await page.evaluate(() =>
+		(
+			window as unknown as {
+				__diagnosticCaptureTest: { calls: () => string[] };
+			}
+		).__diagnosticCaptureTest.calls(),
+	);
+	expect(captureCalls.slice().sort()).toEqual(
+		["rrd_capabilities", "rrd_database", "rrd_storage", "rrd_vector_collections"]
+			.map((command) => `${command}:${profileId}`)
+			.sort(),
+	);
+	await page.getByRole("button", { name: "System", exact: true }).click();
+	await expect(page).toHaveURL(/\/system\/instance$/);
+	await page.getByRole("button", { name: "Disconnect", exact: true }).click();
+	await expect(page.getByLabel("Operator credential file")).toBeVisible();
+	await page.getByLabel("Operator credential file").fill("controlled/mock-operator.json");
+	await page.getByRole("button", { name: "Open session", exact: true }).click();
+	await expect(page.getByText("Session open", { exact: false })).toBeVisible();
+	const callsAfterReconnect = await page.evaluate(() =>
+		(
+			window as unknown as {
+				__diagnosticCaptureTest: { calls: () => string[] };
+			}
+		).__diagnosticCaptureTest.calls(),
+	);
+	expect(callsAfterReconnect.map((call) => call.split(":")[0])).toContain("rrd_disconnect");
+	expect(callsAfterReconnect.map((call) => call.split(":")[0])).toContain("rrd_connect");
+	const reconnectedSessionTimestamp = await page.evaluate(
+		(profile) =>
+			(
+				window as unknown as {
+					__diagnosticCaptureTest: { sessionTimestamp: (id: string) => number | null };
+				}
+			).__diagnosticCaptureTest.sessionTimestamp(profile),
+		profileA.split("/")[2],
+	);
+	expect(reconnectedSessionTimestamp).not.toBe(initialSessionTimestamp);
+	await page.getByRole("button", { name: "Reasoning", exact: true }).click();
+	await page.getByRole("tab", { name: "Workbench", exact: true }).click();
+	await page.evaluate(async () => {
+		return await (
+			window as unknown as {
+				__diagnosticCaptureTest: { resolve: (prefix: string) => Promise<void> };
+			}
+		).__diagnosticCaptureTest.resolve("late-reconnect-A");
+	});
+	await expect(page.getByText("testing · stale reconnect probe", { exact: true })).toHaveCount(0);
+	await expect(page.getByText(/late-reconnect-A/)).toHaveCount(0);
+	await expect(
+		page.getByText("testing · Manual note remains local", { exact: true }),
+	).toBeVisible();
+	await expect(
+		page.getByText("testing · Engine diagnostic snapshot", { exact: true }),
+	).toHaveCount(1);
+});
+
+test("diagnostic capture is discarded after an in-place session and instance change", async ({
+	page,
+}) => {
+	const { profileA, profileB } = await createDiagnosticProfiles(page);
+	await openDiagnosticWorkbench(page, profileA, profileB);
+	await page.getByRole("button", { name: "System", exact: true }).click();
+	await expect(page).toHaveURL(/\/system\/instance$/);
+	await page.getByRole("button", { name: "Disconnect", exact: true }).click();
+	await expect(page.getByLabel("Operator credential file")).toBeVisible();
+	await page.getByLabel("Operator credential file").fill("controlled/mock-operator.json");
+	await page.getByRole("button", { name: "Open session", exact: true }).click();
+	await expect(page.getByText("Session open", { exact: false })).toBeVisible();
+	await page.getByRole("button", { name: "Reasoning", exact: true }).click();
+	await page.getByRole("tab", { name: "Workbench", exact: true }).click();
+	await expect(page).toHaveURL(new RegExp(`${profileA}/reasoning/workbench$`));
+	const profileId = profileA.split("/")[2];
+	const previousTimestamp = await page.evaluate(
+		(profile) =>
+			(
+				window as unknown as {
+					__diagnosticCaptureTest: { sessionTimestamp: (id: string) => number | null };
+				}
+			).__diagnosticCaptureTest.sessionTimestamp(profile),
+		profileId,
+	);
+	await page.getByLabel("Note intent", { exact: true }).fill("stale in-place session probe");
+	await page.evaluate(() => {
+		(
+			window as unknown as {
+				__diagnosticCaptureTest: { defer: () => void };
+			}
+		).__diagnosticCaptureTest.defer();
+	});
+	await page.getByRole("button", { name: "Capture engine diagnostics", exact: true }).click();
+	await expect
+		.poll(() =>
+			page.evaluate(() =>
+				(
+					window as unknown as {
+						__diagnosticCaptureTest: { pending: () => number };
+					}
+				).__diagnosticCaptureTest.pending(),
+			),
+		)
+		.toBe(4);
+	const captureCalls = await page.evaluate(() =>
+		(
+			window as unknown as {
+				__diagnosticCaptureTest: { calls: () => string[] };
+			}
+		).__diagnosticCaptureTest.calls(),
+	);
+	expect(captureCalls.slice().sort()).toEqual(
+		["rrd_capabilities", "rrd_database", "rrd_storage", "rrd_vector_collections"]
+			.map((command) => `${command}:${profileId}`)
+			.sort(),
+	);
+	const pageUrl = page.url();
+	await page.evaluate(
+		(instance) =>
+			(
+				window as unknown as {
+					__diagnosticCaptureTest: { setHandshakeInstance: (value: string) => void };
+				}
+			).__diagnosticCaptureTest.setHandshakeInstance(instance),
+		"diagnostic-profile-a-v2",
+	);
+	await page.getByRole("button", { name: "Reconnect", exact: true }).click();
+	await expect(page.getByText("diagnostic-profile-a-v2", { exact: true })).toBeVisible();
+	await expect(page.getByRole("button", { name: "Open session", exact: true })).toBeEnabled();
+	await page.getByRole("button", { name: "Open session", exact: true }).click();
+	await expect(page).toHaveURL(pageUrl);
+	await expect(
+		page.getByRole("heading", { name: "Prompt workbench", exact: true }),
+	).toBeVisible();
+	await expect(page.getByRole("button", { name: "Refresh flights", exact: true })).toBeEnabled();
+	const currentTimestamp = await page.evaluate(
+		(profile) =>
+			(
+				window as unknown as {
+					__diagnosticCaptureTest: { sessionTimestamp: (id: string) => number | null };
+				}
+			).__diagnosticCaptureTest.sessionTimestamp(profile),
+		profileId,
+	);
+	expect(currentTimestamp).not.toBe(previousTimestamp);
+	const currentInstance = await page.evaluate(
+		(profile) =>
+			(
+				window as unknown as {
+					__diagnosticCaptureTest: { sessionInstance: (id: string) => string | null };
+				}
+			).__diagnosticCaptureTest.sessionInstance(profile),
+		profileId,
+	);
+	expect(currentInstance).toBe("diagnostic-profile-a-v2");
+	const transitionCalls = await page.evaluate(() =>
+		(
+			window as unknown as {
+				__diagnosticCaptureTest: { calls: () => string[] };
+			}
+		).__diagnosticCaptureTest.calls(),
+	);
+	expect(transitionCalls.map((call) => call.split(":")[0])).toContain("rrd_disconnect");
+	expect(transitionCalls.map((call) => call.split(":")[0])).toContain("rrd_connect");
+	const stillPending = await page.evaluate(() =>
+		(
+			window as unknown as {
+				__diagnosticCaptureTest: { pendingCommands: () => string[] };
+			}
+		).__diagnosticCaptureTest.pendingCommands(),
+	);
+	expect(stillPending.slice(0, 4).sort()).toEqual([
+		"rrd_capabilities",
+		"rrd_database",
+		"rrd_storage",
+		"rrd_vector_collections",
+	]);
+	await page.evaluate(async () => {
+		return await (
+			window as unknown as {
+				__diagnosticCaptureTest: { resolve: (prefix: string) => Promise<void> };
+			}
+		).__diagnosticCaptureTest.resolve("late-in-place-session");
+	});
+	await expect(
+		page.getByText("testing · stale in-place session probe", { exact: true }),
+	).toHaveCount(0);
+	await expect(page.getByText(/late-in-place-session/)).toHaveCount(0);
+	await expect(
+		page.getByText("testing · Manual note remains local", { exact: true }),
+	).toBeVisible();
+});
+
+test("diagnostic capture is invalidated when the selected local workbench changes away and back", async ({
+	page,
+}) => {
+	const { profileA, profileB } = await createDiagnosticProfiles(page);
+	await openDiagnosticWorkbench(page, profileA, profileB);
+	await page.getByLabel("Workbench name", { exact: true }).fill("Alternate local workbench");
+	await page.getByRole("button", { name: "Create local workbench", exact: true }).click();
+	await page.getByLabel("Note intent", { exact: true }).fill("Alternate workbench note");
+	await page.getByRole("button", { name: "Save local note", exact: true }).click();
+	await expect(
+		page.getByText("testing · Alternate workbench note", { exact: true }),
+	).toBeVisible();
+	await page.getByRole("textbox", { name: "Local workbench", exact: true }).click();
+	await page.getByRole("option", { name: "Diagnostic lifecycle" }).click();
+	await page.getByLabel("Note intent", { exact: true }).fill("stale workbench-generation probe");
+	await page.evaluate(() => {
+		(
+			window as unknown as {
+				__diagnosticCaptureTest: { defer: () => void };
+			}
+		).__diagnosticCaptureTest.defer();
+	});
+	await page.getByRole("button", { name: "Capture engine diagnostics", exact: true }).click();
+	await expect
+		.poll(() =>
+			page.evaluate(() =>
+				(
+					window as unknown as {
+						__diagnosticCaptureTest: { pending: () => number };
+					}
+				).__diagnosticCaptureTest.pending(),
+			),
+		)
+		.toBe(4);
+	const pageUrl = page.url();
+	await page.getByRole("textbox", { name: "Local workbench", exact: true }).click();
+	await page.getByRole("option", { name: "Alternate local workbench" }).click();
+	await expect(page.getByRole("textbox", { name: "Local workbench", exact: true })).toHaveValue(
+		"Alternate local workbench",
+	);
+	await page.getByRole("textbox", { name: "Local workbench", exact: true }).click();
+	await page.getByRole("option", { name: "Diagnostic lifecycle" }).click();
+	await expect(page.getByRole("textbox", { name: "Local workbench", exact: true })).toHaveValue(
+		"Diagnostic lifecycle",
+	);
+	await expect(page).toHaveURL(pageUrl);
+	await expect(
+		page.getByRole("heading", { name: "Prompt workbench", exact: true }),
+	).toBeVisible();
+	const calls = await page.evaluate(() =>
+		(
+			window as unknown as {
+				__diagnosticCaptureTest: { calls: () => string[] };
+			}
+		).__diagnosticCaptureTest.calls(),
+	);
+	expect(calls.map((call) => call.split(":")[0]).sort()).toEqual([
+		"rrd_capabilities",
+		"rrd_database",
+		"rrd_storage",
+		"rrd_vector_collections",
+	]);
+	await expect
+		.poll(() =>
+			page.evaluate(() =>
+				(
+					window as unknown as {
+						__diagnosticCaptureTest: { pending: () => number };
+					}
+				).__diagnosticCaptureTest.pending(),
+			),
+		)
+		.toBe(4);
+	await page.evaluate(async () => {
+		return await (
+			window as unknown as {
+				__diagnosticCaptureTest: { resolve: (prefix: string) => Promise<void> };
+			}
+		).__diagnosticCaptureTest.resolve("late-workbench-A");
+	});
+	await expect(
+		page.getByText("testing · stale workbench-generation probe", { exact: true }),
+	).toHaveCount(0);
+	await expect(page.getByText(/late-workbench-A/)).toHaveCount(0);
+	await expect(
+		page.getByText("testing · Manual note remains local", { exact: true }),
+	).toBeVisible();
+	await expect(
+		page.getByText("testing · Alternate workbench note", { exact: true }),
+	).toBeVisible();
+});
+
+test("diagnostic capture does not write into either profile after switching projects", async ({
+	page,
+}) => {
+	const { profileA, profileB } = await createDiagnosticProfiles(page);
+	await openDiagnosticWorkbench(page, profileA, profileB);
+	await page.getByRole("textbox", { name: "Selected project", exact: true }).click();
+	await page.getByRole("option", { name: "Diagnostic Profile B" }).click();
+	await expect(page).toHaveURL(new RegExp(`${profileB}/reasoning/workbench$`));
+	await expect(page.getByText("diagnostic-profile-b", { exact: true })).toBeVisible();
+	await page.getByLabel("Workbench name", { exact: true }).fill("Profile B notes");
+	await page.getByRole("button", { name: "Create local workbench", exact: true }).click();
+	await page.getByLabel("Note intent", { exact: true }).fill("Profile B manual note");
+	await page.getByRole("button", { name: "Save local note", exact: true }).click();
+	await expect(page.getByText("testing · Profile B manual note", { exact: true })).toBeVisible();
+	await page.getByRole("textbox", { name: "Selected project", exact: true }).click();
+	await page.getByRole("option", { name: "Diagnostic Profile A" }).click();
+	await expect(page).toHaveURL(new RegExp(`${profileA}/reasoning/workbench$`));
+	await expect(page.getByText("diagnostic-profile-a", { exact: true })).toBeVisible();
+	await page.getByLabel("Note intent", { exact: true }).fill("stale profile-switch probe");
+	await page.evaluate(() => {
+		(
+			window as unknown as {
+				__diagnosticCaptureTest: { defer: () => void };
+			}
+		).__diagnosticCaptureTest.defer();
+	});
+	await page.getByRole("button", { name: "Capture engine diagnostics", exact: true }).click();
+	await expect
+		.poll(() =>
+			page.evaluate(() =>
+				(
+					window as unknown as {
+						__diagnosticCaptureTest: { pending: () => number };
+					}
+				).__diagnosticCaptureTest.pending(),
+			),
+		)
+		.toBe(4);
+	await page.getByRole("textbox", { name: "Selected project", exact: true }).click();
+	await page.getByRole("option", { name: "Diagnostic Profile B" }).click();
+	await expect(page).toHaveURL(new RegExp(`${profileB}/reasoning/workbench$`));
+	await page.evaluate(async () => {
+		return await (
+			window as unknown as {
+				__diagnosticCaptureTest: { resolve: (prefix: string) => Promise<void> };
+			}
+		).__diagnosticCaptureTest.resolve("late-profile-A");
+	});
+	await expect(page.getByText("testing · Profile B manual note", { exact: true })).toBeVisible();
+	await expect(
+		page.getByText("testing · stale profile-switch probe", { exact: true }),
+	).toHaveCount(0);
+	await expect(page.getByText(/late-profile-A/)).toHaveCount(0);
+	await page.getByRole("textbox", { name: "Selected project", exact: true }).click();
+	await page.getByRole("option", { name: "Diagnostic Profile A" }).click();
+	await expect(page).toHaveURL(new RegExp(`${profileA}/reasoning/workbench$`));
+	await expect(
+		page.getByText("testing · stale profile-switch probe", { exact: true }),
+	).toHaveCount(0);
+	await expect(page.getByText(/late-profile-A/)).toHaveCount(0);
+	await expect(
+		page.getByText("testing · Manual note remains local", { exact: true }),
+	).toBeVisible();
+});
 
 test("renders the Connectome overview from the production bundle", async ({ page }, testInfo) => {
 	const pageErrors: Error[] = [];

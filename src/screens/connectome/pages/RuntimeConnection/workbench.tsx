@@ -13,7 +13,7 @@ import {
 	Title,
 } from "@mantine/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { describeRrdError } from "~/rrflow/runtime";
 import type { RrdSessionClient } from "~/rrflow/session";
 import { newId } from "~/shared/util/helpers";
@@ -54,6 +54,32 @@ export function WorkbenchPanel({
 			state.connections.find((connection) => connection.id === connectionId)?.workbench,
 	);
 	const activeWorkbench = local?.activeWorkbenchId ?? local?.workbenches[0]?.id ?? null;
+	const captureLifecycle = useRef({
+		generation: 0,
+		connectionId,
+		sessionKey,
+		connected,
+		workbenchId: activeWorkbench,
+	});
+	useLayoutEffect(() => {
+		const generation = captureLifecycle.current.generation + 1;
+		captureLifecycle.current = {
+			generation,
+			connectionId,
+			sessionKey,
+			connected,
+			workbenchId: activeWorkbench,
+		};
+		return () => {
+			if (captureLifecycle.current.generation === generation) {
+				captureLifecycle.current = {
+					...captureLifecycle.current,
+					generation: generation + 1,
+					connected: false,
+				};
+			}
+		};
+	}, [connectionId, sessionKey, connected, activeWorkbench]);
 	const createWorkbench = () => {
 		const name = workbenchName.trim();
 		const store = useConfigStore.getState();
@@ -126,7 +152,12 @@ export function WorkbenchPanel({
 		});
 	};
 	const capture = useMutation({
-		mutationFn: async (workbenchId: string) => {
+		mutationFn: async (request: {
+			workbenchId: string;
+			connectionId: string;
+			sessionKey: string;
+			generation: number;
+		}) => {
 			const [capabilities, database, storage, vectors] = await Promise.all([
 				client.capabilities(),
 				client.database(),
@@ -134,8 +165,18 @@ export function WorkbenchPanel({
 				client.vectorCollections(),
 			]);
 			const diagnostics = `Engine ${capabilities.implementation} ${capabilities.implementation_version}; configuration revision ${capabilities.configuration_revision}; records in returned graph ${database.graph.nodes.length}; relationships in returned graph ${database.graph.edges.length}; storage cursor ${storage.runtime_cursor}; storage profile ${storage.physical.profile}; vector collections in returned catalogue ${vectors.collections.length}.`;
+			const current = captureLifecycle.current;
+			if (
+				!request.sessionKey ||
+				!current.connected ||
+				request.connectionId !== current.connectionId ||
+				request.sessionKey !== current.sessionKey ||
+				request.workbenchId !== current.workbenchId ||
+				request.generation !== current.generation
+			)
+				return;
 			saveNote(
-				workbenchId,
+				request.workbenchId,
 				noteIntent.trim() || "Engine diagnostic snapshot",
 				noteContext.trim(),
 				diagnostics,
@@ -442,20 +483,30 @@ export function WorkbenchPanel({
 						disabled={!connected || !activeWorkbench}
 						loading={capture.isPending}
 						onClick={() => {
-							if (activeWorkbench) capture.mutate(activeWorkbench);
+							if (activeWorkbench)
+								capture.mutate({
+									workbenchId: activeWorkbench,
+									connectionId,
+									sessionKey,
+									generation: captureLifecycle.current.generation,
+								});
 						}}
 					>
 						Capture engine diagnostics
 					</Button>
 				</Group>
-				{capture.isError && (
-					<Alert
-						color="red"
-						title="Diagnostics could not be read"
-					>
-						{describeRrdError(capture.error)}
-					</Alert>
-				)}
+				{capture.isError &&
+					capture.variables?.connectionId === connectionId &&
+					capture.variables?.sessionKey === sessionKey &&
+					capture.variables?.workbenchId === activeWorkbench &&
+					capture.variables?.generation === captureLifecycle.current.generation && (
+						<Alert
+							color="red"
+							title="Diagnostics could not be read"
+						>
+							{describeRrdError(capture.error)}
+						</Alert>
+					)}
 				{(local?.receipts ?? []).map((receipt) => (
 					<details key={receipt.id}>
 						<summary>

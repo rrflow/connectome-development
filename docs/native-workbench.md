@@ -56,9 +56,14 @@ the displayed page is not presented as a complete history. The prompt is
 persisted by the engine. This provider does not call LFG, SWAG or a language
 model. Users can create local workbenches, save notes, and explicitly capture
 engine diagnostic readings; these are labelled as desktop-profile notes rather
-than engine audit. Existing local notes remain readable. The native process tests cover a flight,
-pagination and session reconnect; they do not establish rendered desktop
-behavior or model quality.
+than engine audit. Capture reads capabilities, graph counts, storage details and
+vector catalogue details separately. Connectome discards the result if the
+observed profile, session, instance or local workbench changes while those reads
+are pending, including when the workbench view unmounts. This guard follows
+identity changes observed by the UI; it does not make the separate reads an
+atomic engine snapshot. Existing local notes remain readable. The native process
+tests cover a flight, pagination and session reconnect; they do not establish
+rendered desktop behavior or model quality.
 
 Remote source activation, training, provider billing and cloud synchronization
 require separately implemented and authorized integrations. Running projects
