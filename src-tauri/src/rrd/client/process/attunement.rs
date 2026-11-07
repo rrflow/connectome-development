@@ -4,6 +4,8 @@ mod lost_reply;
 use crate::rrd::client::attunement::{
     AttunementCommand as Command, AttunementReply as Reply, Control,
 };
+use crate::rrd::client::tasks::{TaskCommand, TaskReply};
+use sha2::Digest;
 
 async fn read(client: &NativeRrdClient, id: &str) -> Value {
     let Reply::Snapshot { snapshot } = client
@@ -360,5 +362,114 @@ fn project_plan_controls_discover_replan_and_recover_without_client_identity_der
             successor["status"]["job"]
         );
         reopened.close().await.unwrap();
+    });
+}
+
+#[test]
+#[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
+fn selected_source_query_projects_typed_inventory_from_installed_engine() {
+    let content = "Public typed source query fixture; not training data.\n";
+    let estate = Estate::install_and_serve();
+    tauri::async_runtime::block_on(async {
+        let client = NativeRrdClient::connect(estate.connect_request())
+            .await
+            .expect("connect to installed engine");
+        let Reply::Page { page } = client
+            .attunement_command(Command::List { after_job_id: None })
+            .await
+            .expect("list installed project job")
+        else {
+            panic!("job page")
+        };
+        let job_id = page["jobs"][0]["job_id"].as_str().expect("job id");
+        let initial = read(&client, job_id).await;
+        let (handle, _) = prepare(
+            &client,
+            &initial,
+            Control::Start {
+                lease_ms: "60000".into(),
+            },
+        )
+        .await;
+        let started = approve(&client, handle).await;
+        let (handle, _) = prepare(&client, &started, Control::Step).await;
+        let connected = approve(&client, handle).await;
+        assert_eq!(
+            connected["status"]["job"]["checkpoints"]
+                .as_array()
+                .expect("connect checkpoint")
+                .len(),
+            1
+        );
+
+        let source_path =
+            PathBuf::from(&estate.served.view.project).join("source-query-fixture.txt");
+        std::fs::write(&source_path, content).expect("temporary project source fixture");
+        let changed = read(&client, job_id).await;
+        let (handle, _) = prepare(&client, &changed, Control::Replan).await;
+        let successor = approve(&client, handle).await;
+        let successor_id = successor["status"]["job"]["id"]
+            .as_str()
+            .expect("replan successor ID");
+        assert_ne!(successor_id, job_id);
+        assert_ne!(
+            successor["plan"]["source_sha256"],
+            initial["plan"]["source_sha256"]
+        );
+        assert_eq!(successor["status"]["job"]["state"], "pending");
+
+        let (handle, _) = prepare(
+            &client,
+            &successor,
+            Control::Start {
+                lease_ms: "60000".into(),
+            },
+        )
+        .await;
+        let successor_started = approve(&client, handle).await;
+        let (handle, _) = prepare(&client, &successor_started, Control::Step).await;
+        let successor_connected = approve(&client, handle).await;
+        let (handle, _) = prepare(&client, &successor_connected, Control::Step).await;
+        let inventoried = approve(&client, handle).await;
+        assert_eq!(inventoried["status"]["job"]["state"], "running");
+        assert_eq!(
+            inventoried["status"]["job"]["checkpoints"]
+                .as_array()
+                .expect("source inventory checkpoint")
+                .len(),
+            2
+        );
+
+        let TaskReply::Task { task } = client
+            .task_command(TaskCommand::Open {
+                title: "Read typed source metadata".into(),
+                goal: "Verify the installed engine's public QueryExecute projection without dispatching a provider.".into(),
+            })
+            .await
+            .expect("open scoped task")
+        else {
+            panic!("task")
+        };
+        let TaskReply::Sources { inventory } = client
+            .task_command(TaskCommand::Sources { task_id: task.id })
+            .await
+            .expect("typed public source inventory query")
+        else {
+            panic!("source inventory")
+        };
+        let expected_sha256 = format!("{:x}", sha2::Sha256::digest(content.as_bytes()));
+        let selected = inventory
+            .entries
+            .iter()
+            .find(|entry| entry.path == "source-query-fixture.txt")
+            .expect("installed query returned the temporary source fixture");
+        assert_eq!(selected.content_sha256, expected_sha256);
+        assert_eq!(selected.bytes, content.len().to_string());
+        assert!(inventory.read_cursor.parse::<u64>().is_ok());
+        assert_eq!(inventory.read_manifest_sha256.len(), 64);
+        assert!(!inventory.truncated);
+        assert_eq!(inventory.incomplete_rows, 0);
+        assert_eq!(inventory.oversized_rows, 0);
+        client.close().await.expect("close native session");
     });
 }

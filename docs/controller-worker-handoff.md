@@ -1,5 +1,9 @@
 # Selected-worker handoff
 
+The current selected-file extension and its outstanding installed acceptance are
+described in [Selected project source](selected-project-source.md). The dated
+records below retain their original engine and UI identities.
+
 Status: active implementation; exact-source desktop trial and dependency landing pending.
 
 ## User flow and authority

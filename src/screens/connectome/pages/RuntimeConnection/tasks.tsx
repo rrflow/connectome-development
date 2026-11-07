@@ -2,9 +2,11 @@ import {
 	Alert,
 	Badge,
 	Button,
+	Checkbox,
 	Code,
 	Group,
 	Paper,
+	Select,
 	Stack,
 	Text,
 	Textarea,
@@ -15,11 +17,15 @@ import { useEffect, useRef, useState } from "react";
 import type { RrdSessionClient } from "~/rrflow/session";
 import {
 	readTaskRecovery,
+	type SourceCandidate,
+	type SourceInventory,
 	type TaskBudget,
 	type TaskProposal,
 	type TaskReply,
 	type TaskSummary,
+	type TaskWorkerSourceRequest,
 	type WorkerDraft,
+	WorkerDraftCache,
 	type WorkerReview,
 } from "~/rrflow/tasks";
 
@@ -179,7 +185,7 @@ export function TasksPanel({
 			</Paper>
 			{selected && (
 				<TaskDetail
-					key={selected.id}
+					key={`${client.profile}:${instance}:${selected.id}`}
 					task={selected}
 					client={client}
 					recoveryKey={recoveryKey}
@@ -204,6 +210,10 @@ function TaskDetail({
 	const [proposal, setProposal] = useState<TaskProposal | null>(null);
 	const [workerReview, setWorkerReview] = useState<WorkerReview | null>(null);
 	const [worker, setWorker] = useState<WorkerDraft | null>(null);
+	const [sourceInventory, setSourceInventory] = useState<SourceInventory | null>(null);
+	const [selectedSourceIdentity, setSelectedSourceIdentity] = useState<string | null>(null);
+	const [sourceExportApproved, setSourceExportApproved] = useState(false);
+	const [sourceError, setSourceError] = useState("");
 	const [attempt, setAttempt] = useState("");
 	const [attemptStatus, setAttemptStatus] = useState("");
 	const [needsReadback, setNeedsReadback] = useState(false);
@@ -215,6 +225,19 @@ function TaskDetail({
 	const [stepMs, setStepMs] = useState("");
 	const [runMs, setRunMs] = useState("");
 	const sending = useRef(false);
+	const workerDraftCache = useRef(new WorkerDraftCache());
+	useEffect(() => {
+		workerDraftCache.current.clear();
+		setWorker(null);
+		setWorkerReview(null);
+		setSourceInventory(null);
+		setSelectedSourceIdentity(null);
+		setSourceExportApproved(false);
+		setSourceError("");
+		return () => {
+			workerDraftCache.current.invalidate();
+		};
+	}, []);
 	useEffect(() => {
 		try {
 			const saved = readTaskRecovery(recoveryKey);
@@ -227,11 +250,14 @@ function TaskDetail({
 		}
 	}, [recoveryKey, task.id]);
 	async function refresh() {
+		const generation = workerDraftCache.current.begin(true);
 		setReading(true);
 		setError("");
+		setWorker(null);
 		try {
 			const result = await client.task({ action: "budget", task_id: task.id });
 			if (result.kind !== "budget") throw new Error("Unexpected budget response");
+			if (!workerDraftCache.current.isCurrent(generation)) return;
 			setBudget(result.budget);
 			setBudgetRead(true);
 			if (attempt) {
@@ -241,11 +267,16 @@ function TaskDetail({
 					attempt_id: attempt,
 				});
 				if (read.kind !== "attempt") throw new Error("Unexpected attempt response");
+				if (!workerDraftCache.current.isCurrent(generation)) return;
 				setAttemptStatus(
-					read.status ?? "No attempt is recorded; acceptance remains unconfirmed",
+					read.status === "accepted" && !read.worker
+						? "Attempt read; no worker output is available to this session."
+						: (read.status ?? "No attempt is recorded; acceptance remains unconfirmed"),
 				);
 				setProposal(read.proposal);
-				setWorker(read.worker);
+				if (workerDraftCache.current.commit(generation, read.worker)) {
+					setWorker(read.worker);
+				}
 				setWorkerReview(null);
 				setNeedsReadback(
 					!read.status ||
@@ -255,19 +286,32 @@ function TaskDetail({
 						),
 				);
 			} else {
+				if (!workerDraftCache.current.isCurrent(generation)) return;
 				setNeedsReadback(
 					Boolean(result.budget?.execution_may_continue || result.budget?.active_attempt),
 				);
 			}
 		} catch (e) {
-			setError(message(e));
+			if (workerDraftCache.current.isCurrent(generation)) {
+				setBudgetRead(false);
+				setNeedsReadback(true);
+				setWorker(null);
+				if (attempt) {
+					setAttemptStatus(
+						"Attempt access could not be confirmed; the result may not be authorized or available.",
+					);
+				}
+				setError(message(e));
+			}
 		} finally {
-			setReading(false);
+			if (workerDraftCache.current.isCurrent(generation)) setReading(false);
 		}
 	}
 	async function configure() {
 		setBusy(true);
 		setError("");
+		setWorkerReview(null);
+		setSourceExportApproved(false);
 		try {
 			const result = await client.task({
 				action: "configure",
@@ -310,6 +354,7 @@ function TaskDetail({
 		setProposal(null);
 		setWorker(null);
 		setWorkerReview(null);
+		setSourceExportApproved(false);
 		try {
 			const id = crypto.randomUUID();
 			// Persist coordinates before IPC. A storage failure prevents dispatch.
@@ -372,6 +417,7 @@ function TaskDetail({
 		setError("");
 		setPrepared(null);
 		setWorkerReview(null);
+		setSourceExportApproved(false);
 		setNeedsReadback(true);
 		try {
 			const result = await client.task({
@@ -396,26 +442,82 @@ function TaskDetail({
 	}
 	async function reviewWorker() {
 		if (!proposal || needsReadback || sending.current) return;
+		const generation = workerDraftCache.current.begin();
 		setBusy(true);
 		setError("");
 		setWorkerReview(null);
+		setSourceExportApproved(false);
 		try {
+			const selectedSource = sourceInventory?.entries.find(
+				(entry) => entry.entry_identity === selectedSourceIdentity,
+			);
+			const source: TaskWorkerSourceRequest | null = selectedSource
+				? {
+						contract_version: 1,
+						entry_identity: selectedSource.entry_identity,
+						expected_content_sha256: selectedSource.content_sha256,
+						maximum_input_bytes: Number(BigInt(selectedSource.bytes) || 1n),
+					}
+				: null;
 			const result = await client.task({
 				action: "prepare_worker",
 				task_id: task.id,
 				selection_attempt_id: proposal.attempt_id,
+				source,
 			});
 			if (result.kind !== "worker_prepared")
 				throw new Error("Unexpected worker review response");
+			if (!workerDraftCache.current.isCurrent(generation)) return;
+			if (source) {
+				const reviewed = result.review.source;
+				if (
+					!reviewed ||
+					reviewed.request.entry_identity !== source.entry_identity ||
+					reviewed.request.expected_content_sha256 !== source.expected_content_sha256 ||
+					reviewed.request.maximum_input_bytes !== source.maximum_input_bytes ||
+					reviewed.path !== selectedSource?.path ||
+					reviewed.bytes !== selectedSource?.bytes
+				) {
+					throw new Error("Native worker review changed the selected source fields");
+				}
+			}
+			if (!source && result.review.source) {
+				throw new Error("Native worker review added an unselected source");
+			}
 			setWorkerReview(result.review);
 		} catch (e) {
-			setError(message(e));
+			if (workerDraftCache.current.isCurrent(generation)) setError(message(e));
 		} finally {
-			setBusy(false);
+			if (workerDraftCache.current.isCurrent(generation)) setBusy(false);
+		}
+	}
+	async function readSources() {
+		const generation = workerDraftCache.current.begin(true);
+		setSourceError("");
+		setSourceInventory(null);
+		setSelectedSourceIdentity(null);
+		setSourceExportApproved(false);
+		setWorkerReview(null);
+		setWorker(null);
+		try {
+			const result = await client.task({ action: "sources", task_id: task.id });
+			if (result.kind !== "sources") throw new Error("Unexpected source inventory response");
+			if (workerDraftCache.current.isCurrent(generation))
+				setSourceInventory(result.inventory);
+		} catch (e) {
+			if (workerDraftCache.current.isCurrent(generation)) {
+				setSourceInventory(null);
+				setSourceError(message(e));
+			}
 		}
 	}
 	async function requestWorker() {
 		if (!workerReview || sending.current || needsReadback || reading) return;
+		if (workerReview.source && !sourceExportApproved) {
+			setError("Confirm the selected source export before requesting the worker draft.");
+			return;
+		}
+		const generation = workerDraftCache.current.begin(true);
 		sending.current = true;
 		setProposing(true);
 		setError("");
@@ -434,7 +536,9 @@ function TaskDetail({
 				expected_selection_sha256: workerReview.selection_sha256,
 				expected_task_sha256: workerReview.task_sha256,
 				expected_configuration_sha256: workerReview.configuration_sha256,
+				source: workerReview.source?.request ?? null,
 			});
+			if (!workerDraftCache.current.isCurrent(generation)) return;
 			if (result.kind === "not_dispatched") {
 				setAttemptStatus(`Not dispatched: ${result.reason}`);
 				setNeedsReadback(false);
@@ -444,19 +548,42 @@ function TaskDetail({
 				return;
 			}
 			if (result.kind !== "worker") throw new Error("Unexpected worker response");
+			const expectedSource = workerReview.source?.request;
+			const observedSource = result.worker.source;
+			if (
+				(expectedSource &&
+					(!observedSource ||
+						observedSource.entry_identity !== expectedSource.entry_identity ||
+						observedSource.content_sha256 !==
+							expectedSource.expected_content_sha256)) ||
+				(!expectedSource && observedSource)
+			) {
+				throw new Error("Worker result source provenance differs from the reviewed source");
+			}
 			setWorker(result.worker);
 			setAttemptStatus("Worker draft retained; read the budget and attempt to confirm state");
 		} catch (e) {
-			setError(
-				`${message(e)}. Read back this worker attempt and budget before any further call.`,
-			);
+			if (workerDraftCache.current.isCurrent(generation)) {
+				setWorker(null);
+				setError(
+					`${message(e)}. Read back this worker attempt and budget before any further call.`,
+				);
+			}
 		} finally {
 			sending.current = false;
+			// Refresh may supersede disclosure while the native worker request is
+			// still running. A stale result cannot restore text, but it must release
+			// this component's in-flight state after the call settles.
 			setProposing(false);
-			setWorkerReview(null);
-			setPrepared(null);
+			if (workerDraftCache.current.isCurrent(generation)) {
+				setWorkerReview(null);
+				setPrepared(null);
+			}
 		}
 	}
+	const selectedSource = sourceInventory?.entries.find(
+		(entry) => entry.entry_identity === selectedSourceIdentity,
+	);
 	return (
 		<Paper
 			withBorder
@@ -668,12 +795,92 @@ function TaskDetail({
 								model quality or reviewed training consent.
 							</Text>
 							{proposal.choice.kind === "select" && (
-								<Button
-									disabled={busy || proposing || reading || needsReadback}
-									onClick={() => void reviewWorker()}
-								>
-									Review selected worker
-								</Button>
+								<Stack gap="xs">
+									<Button
+										variant="light"
+										disabled={busy || proposing || reading || needsReadback}
+										onClick={() => void readSources()}
+									>
+										Read project source inventory
+									</Button>
+									{sourceError && (
+										<Alert
+											color="orange"
+											title="Project source unavailable"
+										>
+											{sourceError}. No source was selected. Older inventory
+											schemas may not publish this typed field.
+										</Alert>
+									)}
+									{sourceInventory && (
+										<>
+											<Text size="sm">
+												Stored inventory observation at read cursor{" "}
+												{sourceInventory.read_cursor}. it does not
+												authenticate the current accepted head, current
+												file, or export permission.
+											</Text>
+											<Code
+												block
+											>{`Read manifest: ${sourceInventory.read_manifest_sha256}\nIdentity version: ${sourceInventory.result_identity_version}`}</Code>
+											<Select
+												label="Optional project file"
+												placeholder="No project source"
+												data={[
+													{ value: "", label: "No project source" },
+													...sourceInventory.entries.map(
+														(entry: SourceCandidate) => ({
+															value: entry.entry_identity,
+															label: `${entry.path} · ${entry.bytes} bytes`,
+														}),
+													),
+												]}
+												value={selectedSourceIdentity ?? ""}
+												allowDeselect={false}
+												searchable
+												disabled={busy || proposing || reading}
+												onChange={(value) => {
+													workerDraftCache.current.clear();
+													setSelectedSourceIdentity(value || null);
+													setSourceExportApproved(false);
+													setWorkerReview(null);
+													setWorker(null);
+												}}
+											/>
+											{(sourceInventory.truncated ||
+												sourceInventory.incomplete_rows > 0 ||
+												sourceInventory.unavailable_rows > 0 ||
+												sourceInventory.oversized_rows > 0) && (
+												<Alert
+													color="orange"
+													title="Inventory view is incomplete"
+												>
+													{sourceInventory.truncated &&
+														"The query was truncated or reached its row cap; more entries may exist. "}
+													{sourceInventory.incomplete_rows > 0 &&
+														`${sourceInventory.incomplete_rows} malformed rows were omitted. `}
+													{sourceInventory.unavailable_rows > 0 &&
+														`${sourceInventory.unavailable_rows} rows lacked typed source metadata and were left unselectable; they may be older-schema, redacted, or non-file records. `}
+													{sourceInventory.oversized_rows > 0 &&
+														`${sourceInventory.oversized_rows} files exceed the route request cap and were omitted. `}
+													A shown file remains subject to the engine's
+													current dispatch checks.
+												</Alert>
+											)}
+										</>
+									)}
+									{selectedSource && (
+										<Code
+											block
+										>{`Selected path: ${selectedSource.path}\nEntry identity: ${selectedSource.entry_identity}\nContent SHA-256: ${selectedSource.content_sha256}\nObserved bytes: ${selectedSource.bytes}`}</Code>
+									)}
+									<Button
+										disabled={busy || proposing || reading || needsReadback}
+										onClick={() => void reviewWorker()}
+									>
+										Review worker and selected source
+									</Button>
+								</Stack>
 							)}
 						</Stack>
 					</Paper>
@@ -690,9 +897,36 @@ function TaskDetail({
 							</Text>
 							<Text>
 								This sends the task text for one draft under the current worker
-								policy. No additional repository context is selected. Files are not
-								changed.
+								policy. The selected source is sent only when shown in this review.
+								Files are not changed.
 							</Text>
+							{workerReview.source && (
+								<>
+									<Text>
+										Selected file: {workerReview.source.path}. The request is
+										capped at {workerReview.source.request.maximum_input_bytes}{" "}
+										bytes; the observed file contains{" "}
+										{workerReview.source.bytes} bytes.
+									</Text>
+									<Text size="sm">
+										This typed inventory read is a stored observation at cursor{" "}
+										{workerReview.source.read_cursor}, not a claim about
+										current-head membership or permission. RRFlow rechecks
+										current eligibility at dispatch.
+									</Text>
+									<Checkbox
+										checked={sourceExportApproved}
+										disabled={busy || proposing || reading}
+										onChange={(event) =>
+											setSourceExportApproved(event.currentTarget.checked)
+										}
+										label="I approve sending this selected file as worker context under the current RRFlow source-export policy."
+									/>
+									<Code
+										block
+									>{`Entry: ${workerReview.source.request.entry_identity}\nContent SHA-256: ${workerReview.source.request.expected_content_sha256}\nQuery read manifest: ${workerReview.source.read_manifest_sha256}\nQuery identity version: ${workerReview.source.result_identity_version}`}</Code>
+								</>
+							)}
 							<Code
 								block
 							>{`Selection: ${workerReview.selection_attempt_id}\nTask: ${workerReview.task_sha256}\nConfiguration: ${workerReview.configuration_sha256}`}</Code>
@@ -707,7 +941,8 @@ function TaskDetail({
 										budget.stopped ||
 											budget.active_attempt ||
 											budget.execution_may_continue,
-									)
+									) ||
+									Boolean(workerReview.source && !sourceExportApproved)
 								}
 								onClick={() => void requestWorker()}
 							>
@@ -739,6 +974,16 @@ function TaskDetail({
 							<Code
 								block
 							>{`Attempt: ${worker.attempt_id}\nSelection: ${worker.selection_attempt_id}\nContent: ${worker.content_sha256}\nResponse: ${worker.response_sha256}`}</Code>
+							{worker.source && (
+								<>
+									<Text size="sm">
+										Source provenance reports engine capture and completion
+										validation. The policy digest is historical snapshot
+										metadata, not current path authorization.
+									</Text>
+									<Code block>{JSON.stringify(worker.source, null, 2)}</Code>
+								</>
+							)}
 						</Stack>
 					</Paper>
 				)}
