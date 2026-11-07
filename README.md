@@ -111,7 +111,9 @@ RRFlow real-process suite. See the workbench guide for local commands.
 
 ## The bundled engine
 
-A packaged Connectome ships the RRFlow engine it is contracted to. `src-tauri/Cargo.lock` pins one RRFlow revision; `pnpm engine:stage` builds `rrflow` from exactly that revision (or `node scripts/engine/build-sidecar.mjs --from <binary>` takes one already built from it) and stages it as the Tauri sidecar under `src-tauri/binaries/` with a manifest of its revision, target, and SHA-256. The native build embeds that digest, and the desktop runs the bundled engine only while the file still hashes to it — a stale or altered sidecar is refused, never silently replaced. With nothing bundled, "Start serving" uses the executable configured in Settings → Serving, else `rrflow` on `PATH`, and says which one it used.
+A packaged Connectome ships the RRFlow engine it is contracted to. `src-tauri/Cargo.lock` pins one RRFlow revision; `pnpm engine:stage` builds `rrflow` with that checkout's canonical provenance builder (or `node scripts/engine/build-sidecar.mjs --from <binary>` accepts a matching binary) and stages it as the Tauri sidecar under `src-tauri/binaries/`. Staging checks the binary's reported source revision, clean flag, target and executable hash against the actual file bytes before writing a manifest. The native build embeds that digest, and the desktop runs the bundled engine only while the file still hashes to it — a stale or altered sidecar is refused, never silently replaced.
+
+These embedded coordinates and hashes provide consistency checks, not a signature, trusted build origin or remote attestation. CI also checks the canonical builder receipt against the executable on both fresh-build and cache paths. With nothing bundled, "Start serving" uses the executable configured in Settings → Serving, else `rrflow` on `PATH`, and says which one it used.
 
 ```bash
 pnpm engine:stage        # build and stage the pinned engine (or --from <binary>)

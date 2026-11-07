@@ -107,6 +107,7 @@ fn task_controls_preserve_engine_state_and_refuse_unconfigured_inference() {
             .task_command(TaskCommand::PrepareWorker {
                 task_id: id.clone(),
                 selection_attempt_id: attempt_id.clone(),
+                source: None,
             })
             .await
             .expect_err("missing selection cannot prepare a worker");
@@ -122,6 +123,7 @@ fn task_controls_preserve_engine_state_and_refuse_unconfigured_inference() {
                 expected_selection_sha256: task_sha256.clone(),
                 expected_task_sha256: task_sha256,
                 expected_configuration_sha256: configuration_sha256,
+                source: None,
             })
             .await
             .expect("worker preflight classification");

@@ -50,6 +50,7 @@ struct Estate {
     served: ServedEstate,
     address: SocketAddr,
     instance: String,
+    executable_sha256: String,
 }
 
 /// The serve sequence's boundaries, the engine's output and each lifecycle
@@ -146,11 +147,219 @@ impl Estate {
             .expect("the served estate names a loopback HTTP address");
         let instance = served.view.instance.clone();
 
+        let executable_sha256 = served
+            .view
+            .engine
+            .as_ref()
+            .expect("owned serve selected an engine")
+            .sha256
+            .clone();
         Self {
             served,
             address,
             instance,
+            executable_sha256,
         }
+    }
+
+    /// Creates a fresh, explicitly source-readable estate through the public
+    /// CLI, then serves its installed locator through Connectome's real
+    /// existing-project path. The CLI plan is retained outside the project.
+    fn install_source_read_and_serve() -> Self {
+        let fixture_id = Uuid::new_v4().simple().to_string();
+        let project =
+            std::env::temp_dir().join(format!("connectome-rrd-source-worker-{fixture_id}.project"));
+        std::fs::create_dir_all(&project).expect("isolated empty project");
+        let plan_path = std::env::temp_dir().join(format!(
+            "connectome-rrd-source-worker-{fixture_id}.plan.json"
+        ));
+        let executable = rrflow();
+        let project_arg = project.to_string_lossy().into_owned();
+
+        let version_output = std::process::Command::new(&executable)
+            .args(["--json", "version"])
+            .output()
+            .expect("read public RRFlow version identity");
+        assert!(
+            version_output.status.success(),
+            "public RRFlow version failed: {}",
+            String::from_utf8_lossy(&version_output.stderr)
+        );
+        let version: Value =
+            serde_json::from_slice(&version_output.stdout).expect("public version JSON");
+        let executable_sha256 = version["build"]["executable_sha256"]
+            .as_str()
+            .expect("public executable identity")
+            .to_owned();
+        assert_eq!(
+            version["build"]["provenance"]["source_commit"],
+            pinned_revision(),
+            "installed binary revision must match the canonical SDK lock pin"
+        );
+
+        let identity_output = std::process::Command::new(&executable)
+            .args(["install", "identity"])
+            .output()
+            .expect("run public install identity command");
+        assert!(
+            identity_output.status.success(),
+            "public install identity failed: {}",
+            String::from_utf8_lossy(&identity_output.stderr)
+        );
+        let identity: Value =
+            serde_json::from_slice(&identity_output.stdout).expect("public install identity JSON");
+        let identity = identity["installation_identity"]
+            .as_str()
+            .expect("installation identity")
+            .to_owned();
+
+        let plan_output = std::process::Command::new(&executable)
+            .args([
+                "install",
+                "plan",
+                "--identity",
+                &identity,
+                "--mode",
+                "fresh",
+                "--project",
+                &project_arg,
+                "--allow-project-source-read",
+            ])
+            .output()
+            .expect("run public source-read install plan");
+        assert!(
+            plan_output.status.success(),
+            "public source-read install plan failed: {}",
+            String::from_utf8_lossy(&plan_output.stderr)
+        );
+        let preview: Value =
+            serde_json::from_slice(&plan_output.stdout).expect("public install plan JSON");
+        assert_eq!(
+            preview["installation"]["executable_sha256"], executable_sha256,
+            "public plan binds the same executable as version"
+        );
+        assert!(preview["installation"]["initial_grants"]
+            .as_array()
+            .expect("initial grant list")
+            .iter()
+            .any(|grant| grant == "project_source_read"));
+        assert_eq!(preview["source_read_resource_scope"], "instance_prefix");
+        let plan_sha256 = preview["installation"]["plan_sha256"]
+            .as_str()
+            .expect("accepted install plan digest")
+            .to_owned();
+        std::fs::write(&plan_path, &plan_output.stdout).expect("save exact public install plan");
+        let plan_arg = plan_path.to_string_lossy().into_owned();
+
+        let apply_output = std::process::Command::new(&executable)
+            .args([
+                "--json",
+                "install",
+                "apply",
+                "--mode",
+                "fresh",
+                "--project",
+                &project_arg,
+                "--plan",
+                &plan_arg,
+                "--expect",
+                &plan_sha256,
+            ])
+            .output()
+            .expect("run exact public install apply");
+        assert!(
+            apply_output.status.success(),
+            "public install apply failed: {}",
+            String::from_utf8_lossy(&apply_output.stderr)
+        );
+        let applied: Value =
+            serde_json::from_slice(&apply_output.stdout).expect("public install apply JSON");
+        assert_eq!(applied["plan_sha256"], plan_sha256);
+        assert!(applied["attunement_job_id"].as_str().is_some());
+
+        let observer = Arc::new(RecordingObserver::default());
+        let served = serve_estate(
+            EstateServeRequest {
+                project: project_arg,
+                mode: InstallMode::Existing,
+                executable: executable.to_string_lossy().into_owned(),
+                accepted_plan_sha256: None,
+                installation_identity: None,
+                endpoint_credentials: None,
+            },
+            observer.clone(),
+        )
+        .unwrap_or_else(|error| {
+            panic!(
+                "the public installed locator could not be served: {error:?}\n{}",
+                observer.lines.lock().expect("observer").join("\n")
+            )
+        });
+        assert!(!served.view.installed, "existing locator must skip install");
+        let engine = served
+            .view
+            .engine
+            .as_ref()
+            .expect("selected engine binding");
+        assert_eq!(engine.sha256, executable_sha256);
+        let address: SocketAddr = served
+            .view
+            .endpoint
+            .strip_prefix("http://")
+            .and_then(|address| address.parse().ok())
+            .expect("served estate names a loopback HTTP address");
+        let instance = served.view.instance.clone();
+        let _ = std::fs::remove_file(&plan_path);
+
+        Self {
+            served,
+            address,
+            instance,
+            executable_sha256,
+        }
+    }
+
+    /// Restarts only this test's owned process against its existing locator.
+    fn stop_and_reopen(&mut self) {
+        self.served.server.kill().expect("stop owned test process");
+        self.served.server.wait().expect("reap owned test process");
+        let project = self.served.view.project.clone();
+        let observer = Arc::new(RecordingObserver::default());
+        self.served = serve_estate(
+            EstateServeRequest {
+                project,
+                mode: InstallMode::Existing,
+                executable: rrflow().to_string_lossy().into_owned(),
+                accepted_plan_sha256: None,
+                installation_identity: None,
+                endpoint_credentials: None,
+            },
+            observer.clone(),
+        )
+        .unwrap_or_else(|error| {
+            panic!(
+                "the installed locator could not reopen: {error:?}\n{}",
+                observer.lines.lock().expect("observer").join("\n")
+            )
+        });
+        assert!(!self.served.view.installed);
+        assert_eq!(self.served.view.instance, self.instance);
+        assert_eq!(
+            self.served
+                .view
+                .engine
+                .as_ref()
+                .expect("reopened serve selected an engine")
+                .sha256,
+            self.executable_sha256
+        );
+        self.address = self
+            .served
+            .view
+            .endpoint
+            .strip_prefix("http://")
+            .and_then(|address| address.parse().ok())
+            .expect("reopened estate names a loopback HTTP address");
     }
 
     fn connect_request(&self) -> RrdConnectRequest {
