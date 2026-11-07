@@ -821,6 +821,12 @@ fn the_lenses_read_a_live_estate() {
         let storage = client.storage().await.expect("storage view");
         assert_eq!(storage.physical.profile, "rrflow_kv");
         assert!(!storage.physical.groups.is_empty());
+        let physical = client
+            .physical_storage()
+            .await
+            .expect("physical storage view");
+        assert_eq!(physical.profile, "rrflow_kv");
+        assert!(!physical.groups.is_empty());
 
         // Vectors: the catalogue, the points, and an exact search by example.
         let catalogue = client.vector_collections().await.expect("collections");

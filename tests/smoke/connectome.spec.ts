@@ -325,8 +325,16 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 									clusters: [],
 								},
 							};
-						if (command === "rrd_storage" && failStorage)
+						if (command === "rrd_physical_storage" && failStorage)
 							throw new Error("Storage unavailable");
+						if (command === "rrd_physical_storage")
+							return {
+								profile: "stable-profile",
+								observed_at_unix_ms: 1,
+								evidence_level: "process-local",
+								headline: [],
+								groups: [],
+							};
 						if (command === "rrd_storage")
 							return {
 								runtime_cursor: 7,

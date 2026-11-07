@@ -919,10 +919,16 @@ try {
 		});
 		await graph.scrollIntoViewIfNeeded();
 		await page.getByText(/returned records and .*returned relationships/).waitFor();
-		await page.getByText("Choose a record using the keyboard", { exact: true }).waitFor();
+		const keyboardRecords = page.getByText("Choose a record using the keyboard", {
+			exact: true,
+		});
+		await keyboardRecords.waitFor();
+		await keyboardRecords.evaluate((element) => element.scrollIntoView({ block: "end" }));
+		await wait(500);
 		await shot("workbench-project-graph");
 		const storage = page.getByRole("heading", { name: "rrflowKV storage path", exact: true });
-		await storage.scrollIntoViewIfNeeded();
+		await storage.evaluate((element) => element.scrollIntoView({ block: "start" }));
+		await wait(500);
 		await page
 			.getByText("Process-local measurements, independent of the graph cursor.")
 			.waitFor();

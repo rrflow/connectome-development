@@ -32,7 +32,7 @@
 	background: color-mix(in srgb, var(--mantine-color-body) 92%, transparent);
 }
 
-/* Each item is a returned event, in engine order; connectors are visual ordering. */
+/* Each card is a returned event, in engine order. */
 .eventFlow {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));

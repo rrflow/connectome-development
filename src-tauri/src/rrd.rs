@@ -33,9 +33,10 @@ use view::quantization::{
     QuantizationAppliedView, QuantizationProposalView, QuantizationsView, VectorCompareView,
 };
 use view::{
-    ConnectionView, DatabaseView, PromptFlightDetailView, PromptFlightLaunchView, QueryView,
-    ServiceView, StorageView, VectorCollectionsView, VectorMapProgressView, VectorMapView,
-    VectorPointsView, VectorSearchView, WorkbenchSnapshotView,
+    ConnectionView, DatabaseView, PhysicalStorageView, PromptFlightDetailView,
+    PromptFlightLaunchView, QueryView, ServiceView, StorageView, VectorCollectionsView,
+    VectorMapProgressView, VectorMapView, VectorPointsView, VectorSearchView,
+    WorkbenchSnapshotView,
 };
 
 const MAX_RRD_RESPONSE_BYTES: u64 = 1024 * 1024;
@@ -198,6 +199,14 @@ pub async fn rrd_storage(
     state: State<'_, RrdClientState>,
 ) -> Result<StorageView, RrdError> {
     state.client(&profile).await?.storage().await
+}
+
+#[tauri::command]
+pub async fn rrd_physical_storage(
+    profile: String,
+    state: State<'_, RrdClientState>,
+) -> Result<PhysicalStorageView, RrdError> {
+    state.client(&profile).await?.physical_storage().await
 }
 
 #[tauri::command]

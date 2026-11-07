@@ -939,6 +939,11 @@ export class RrdSessionClient {
 		return this.call<RrdStorageView>("rrd_storage");
 	}
 
+	async physicalStorage(): Promise<RrdPhysicalStorageView> {
+		this.requireNative();
+		return this.call<RrdPhysicalStorageView>("rrd_physical_storage");
+	}
+
 	async query(query: string): Promise<RrdQueryView> {
 		this.requireNative();
 		return this.call<RrdQueryView>("rrd_query", { request: { query } });

@@ -929,7 +929,7 @@ fn binary_size(bytes: u64) -> String {
         .unwrap_or_else(|| format!("{} bytes", grouped(bytes)))
 }
 
-fn physical(storage: &DiagnosticStorageSnapshot) -> PhysicalStorageView {
+pub(super) fn physical(storage: &DiagnosticStorageSnapshot) -> PhysicalStorageView {
     let (headline, mut groups) = storage
         .rrflow_kv
         .as_ref()

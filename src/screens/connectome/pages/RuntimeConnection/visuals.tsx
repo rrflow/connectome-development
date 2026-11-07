@@ -18,6 +18,7 @@ import type { RrdPromptFlightDetailView, RrdSessionClient } from "~/rrflow/sessi
 import { formatCount, formatTime } from "./format";
 import { GraphCanvas } from "./graph";
 import { grouping } from "./groups";
+import { ReadNotice } from "./notice";
 import { StoragePipeline } from "./pipeline";
 import { databaseQuery } from "./queries";
 import classes from "./style.module.scss";
@@ -44,8 +45,8 @@ export function ProjectVisuals({
 	const [limit, setLimit] = useState("40");
 	const database = useQuery({ ...databaseQuery(client, sessionKey), enabled: connected });
 	const storage = useQuery({
-		queryKey: ["rrd-storage", sessionKey],
-		queryFn: () => client.storage(),
+		queryKey: ["rrd-physical-storage", sessionKey],
+		queryFn: () => client.physicalStorage(),
 		enabled: connected,
 		retry: false,
 	});
@@ -138,10 +139,14 @@ export function ProjectVisuals({
 									{describeRrdError(database.error)}
 								</Alert>
 							)}
+							<ReadNotice
+								query={database}
+								observedAt={database.data?.observed_at_unix_ms}
+							/>
 							{!preview ? (
 								<Text size="sm">
 									{database.isFetching
-										? "Reading project graph…"
+										? "Reading project graph… You can continue using the rest of the workbench."
 										: "No graph observation is available."}
 								</Text>
 							) : (
@@ -251,7 +256,7 @@ export function ProjectVisuals({
 							>
 								<Box>
 									<Title order={5}>
-										{storage.data?.physical.profile === "rrflow_kv"
+										{storage.data?.profile === "rrflow_kv"
 											? "rrflowKV storage path"
 											: "Storage path"}
 									</Title>
@@ -281,13 +286,12 @@ export function ProjectVisuals({
 							{storage.data ? (
 								<>
 									<Text size="sm">
-										Observed{" "}
-										{formatTime(storage.data.physical.observed_at_unix_ms)} ·{" "}
-										{storage.data.physical.evidence_level}
+										Observed {formatTime(storage.data.observed_at_unix_ms)} ·{" "}
+										{storage.data.evidence_level}
 									</Text>
 									<ScrollArea>
 										<Box miw={720}>
-											<StoragePipeline view={storage.data.physical} />
+											<StoragePipeline view={storage.data} />
 										</Box>
 									</ScrollArea>
 								</>
