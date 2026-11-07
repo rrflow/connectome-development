@@ -65,6 +65,15 @@ atomic engine snapshot. Existing local notes remain readable. The native process
 tests cover a flight, pagination and session reconnect; they do not establish
 rendered desktop behavior or model quality.
 
+The workbench also presents the returned event sequence, a bounded project graph
+and the rrflowKV storage path together. Graph labels and relationships come from
+the engine read; positions and colors are presentation. Choose a preview limit or
+open the graph lens, and use the keyboard record list to inspect a record. The
+storage observation has its own timestamp and is not atomic with the graph read.
+Event order does not establish MCP hops or unreported model decisions. The
+[visual implementation plan](workbench-visual-observability-2026-11-07.md)
+records remaining indexing, provider, learning and performance dependencies.
+
 Remote source activation, training, provider billing and cloud synchronization
 require separately implemented and authorized integrations. Running projects
 in parallel does not itself authorize context sharing or training.

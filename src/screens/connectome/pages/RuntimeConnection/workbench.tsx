@@ -20,6 +20,7 @@ import { newId } from "~/shared/util/helpers";
 import { useConfigStore } from "~/shell/stores/config";
 import type { WorkbenchRunKind } from "~/types";
 import { formatTime } from "./format";
+import { FlightEventMap, ProjectVisuals } from "./visuals";
 
 /** Engine flight readback is the source of the timeline; local notes are separate. */
 export function WorkbenchPanel({
@@ -27,11 +28,17 @@ export function WorkbenchPanel({
 	connectionId,
 	sessionKey,
 	connected,
+	onOpenGraph,
+	onOpenStorage,
+	onSelectRecord,
 }: {
 	client: RrdSessionClient;
 	connectionId: string;
 	sessionKey: string;
 	connected: boolean;
+	onOpenGraph: () => void;
+	onOpenStorage: () => void;
+	onSelectRecord: (record: string) => void;
 }) {
 	const [prompt, setPrompt] = useState("");
 	const [contextMode, setContextMode] = useState<"fresh" | "pruned">("pruned");
@@ -354,6 +361,7 @@ export function WorkbenchPanel({
 					p="md"
 				>
 					<Stack>
+						<FlightEventMap flight={detail.data} />
 						<Group>
 							<Title order={4}>Recorded events</Title>
 							<Badge>{detail.data.status}</Badge>
@@ -395,6 +403,14 @@ export function WorkbenchPanel({
 					</Stack>
 				</Paper>
 			)}
+			<ProjectVisuals
+				client={client}
+				sessionKey={sessionKey}
+				connected={connected}
+				onOpenGraph={onOpenGraph}
+				onOpenStorage={onOpenStorage}
+				onSelectRecord={onSelectRecord}
+			/>
 			<Paper
 				withBorder
 				p="md"

@@ -32,6 +32,15 @@
 	background: color-mix(in srgb, var(--mantine-color-body) 92%, transparent);
 }
 
+/* Each item is a returned event, in engine order; connectors are visual ordering. */
+.eventFlow {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+	gap: var(--mantine-spacing-sm);
+	padding: 0;
+	list-style: none;
+}
+
 .row {
 	display: block;
 	width: 100%;
