@@ -1,5 +1,9 @@
 # Engine-owned project plan controls
 
+[Current reconciliation and validation](project-plan-reconciliation.md) records
+the protected dependency landing and current workspace integration. The original
+source identities and historical validation below remain unchanged.
+
 ## Pre-implementation brief, 31 October 2026
 
 Connectome currently exposes tasks but cannot discover an installed project's
@@ -28,11 +32,13 @@ protected dependency merges pass, this is an engineering candidate, not a releas
 
 ## Operator workflow
 
-Open **Project plan** in a connected project's workbench and choose **Discover
+Open **Reasoning → Project plan** in a connected project's workbench and choose **Discover
 jobs**. Pages follow the engine's lineage from the initial job toward successors;
 use **Next job page** when present. Each page is a separate stored observation.
 Select a job to read its exact plan, phase order, revision, checkpoints and lease.
 Neither discovery nor **Refresh stored job** inspects the current filesystem.
+The previous `/plan` project bookmark redirects to `/reasoning/plan`; Tasks remains
+available beside Project plan. Opening either tab does not approve engine work.
 
 After editing project source, choose **Preview source replan**. Compare the
 observed source digest and proposed plan with the displayed predecessor. Choose
@@ -41,6 +47,11 @@ the predecessor and creates a pending successor; it does not run that successor.
 A further edit between preview and acceptance is rejected. Refresh and prepare
 again against the new source observation; ordinary edits do not require deleting
 or reinstalling the project. Source observation is not an atomic filesystem snapshot.
+
+Before approval, **Exact engine command** shows the **Receipt request key** for
+correlating the eventual receipt with that job. Save it before approving if you
+need independent readback; successful approval clears the prepared view. This
+identifier grants no access: receipt reads still require an authorized session.
 
 Lifecycle controls are explicit prepare/approve operations. Start and Resume
 require a requested lease duration; the engine enforces its limits. Next step

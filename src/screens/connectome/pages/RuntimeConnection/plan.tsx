@@ -446,6 +446,8 @@ export function ProjectPlanPanel({
 						)}
 						<details>
 							<summary>Exact engine command</summary>
+							<Text size="sm">Receipt request key</Text>
+							<Code block>{prepared.idempotency_key}</Code>
 							<Code block>{JSON.stringify(prepared.command, null, 2)}</Code>
 						</details>
 						<Group>

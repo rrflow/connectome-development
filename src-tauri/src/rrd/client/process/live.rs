@@ -128,6 +128,7 @@ fn live_changes_arrive_in_order_across_renewal_and_replacement() {
                 RrdLiveOpenRequest {
                     stream: RrdLiveStream::Changes,
                     after_cursor: None,
+                    result_identity_version: None,
                 },
                 sink,
             )
@@ -202,6 +203,7 @@ fn a_live_query_reports_the_rows_it_adds_updates_and_removes() {
                         query: query.into(),
                     },
                     after_cursor: None,
+                    result_identity_version: None,
                 },
                 sink,
             )
@@ -211,6 +213,57 @@ fn a_live_query_reports_the_rows_it_adds_updates_and_removes() {
         let first = live.first.as_ref().expect("the first result");
         assert_eq!(first.returned_rows, DOCUMENTS as u64);
         assert_eq!(live.after_cursor, first.known_at_cursor);
+        assert_eq!(subscribed(&mut events).await, LiveAttachment::Opened);
+
+        let version = live
+            .result_identity_version
+            .expect("observed query identity version");
+        // Corrupt only the continuation identity; these are protocol denial probes.
+        for (cursor, supplied) in [
+            (live.after_cursor, None),
+            (0, None),
+            (live.after_cursor, Some(version.wrapping_add(1).max(1))),
+        ] {
+            let (sink, _) = listener();
+            client
+                .open_live(
+                    RrdLiveOpenRequest {
+                        stream: RrdLiveStream::Query {
+                            query: query.into(),
+                        },
+                        after_cursor: Some(cursor),
+                        result_identity_version: supplied,
+                    },
+                    sink,
+                )
+                .await
+                .expect_err("missing or stale query baseline identity must not resume");
+        }
+        client
+            .close_live(&live.handle)
+            .await
+            .expect("close initial query");
+        let (sink, resumed_events) = listener();
+        let resumed = client
+            .open_live(
+                RrdLiveOpenRequest {
+                    stream: RrdLiveStream::Query {
+                        query: query.into(),
+                    },
+                    after_cursor: Some(live.after_cursor),
+                    result_identity_version: Some(version),
+                },
+                sink,
+            )
+            .await
+            .expect("resume the exact observed query baseline");
+        assert!(
+            resumed.first.is_none(),
+            "continuation must not replace the baseline"
+        );
+        assert_eq!(resumed.after_cursor, live.after_cursor);
+        assert_eq!(resumed.result_identity_version, Some(version));
+        events = resumed_events;
         assert_eq!(subscribed(&mut events).await, LiveAttachment::Opened);
 
         let rows = |event: &LiveEventView| match event {
@@ -300,6 +353,7 @@ fn live_results_end_across_a_restart_and_resume_from_their_cursor() {
                 RrdLiveOpenRequest {
                     stream: RrdLiveStream::Changes,
                     after_cursor: None,
+                    result_identity_version: None,
                 },
                 sink,
             )
@@ -335,6 +389,7 @@ fn live_results_end_across_a_restart_and_resume_from_their_cursor() {
                 RrdLiveOpenRequest {
                     stream: RrdLiveStream::Changes,
                     after_cursor: Some(delivered),
+                    result_identity_version: None,
                 },
                 sink,
             )
@@ -362,6 +417,7 @@ fn live_subscriptions_are_bounded_and_refusals_end_them() {
         let changes = || RrdLiveOpenRequest {
             stream: RrdLiveStream::Changes,
             after_cursor: None,
+            result_identity_version: None,
         };
 
         // A cursor past the head is refused when the subscription opens.
@@ -371,6 +427,7 @@ fn live_subscriptions_are_bounded_and_refusals_end_them() {
                 RrdLiveOpenRequest {
                     stream: RrdLiveStream::Changes,
                     after_cursor: Some(u64::MAX / 2),
+                    result_identity_version: None,
                 },
                 sink,
             )
@@ -388,6 +445,7 @@ fn live_subscriptions_are_bounded_and_refusals_end_them() {
                 RrdLiveOpenRequest {
                     stream: invalid(),
                     after_cursor: None,
+                    result_identity_version: None,
                 },
                 sink,
             )
@@ -396,20 +454,31 @@ fn live_subscriptions_are_bounded_and_refusals_end_them() {
         // With a cursor of its own it is not run first, and the engine parses
         // a live query only when a change arrives: the subscription opens and
         // ends with the engine's reason at the next change.
-        let head = client
-            .changes(RrdChangesRequest {
-                after_cursor: 0,
-                limit: 1,
+        let baseline_query = execute_query(
+            "FROM record:document AT VALID 100 KNOWN HEAD PROJECT id",
+            client.scope(),
+            &client.query_budget,
+        )
+        .expect("baseline query");
+        let baseline = client
+            .send(false, |session, options| {
+                let client = &client;
+                async move {
+                    client
+                        .client
+                        .execute_query(&session, baseline_query, options)
+                        .await
+                }
             })
             .await
-            .expect("head")
-            .head_cursor;
+            .expect("actual engine baseline identity");
         let (sink, mut refused) = listener();
         client
             .open_live(
                 RrdLiveOpenRequest {
                     stream: invalid(),
-                    after_cursor: Some(head),
+                    after_cursor: Some(baseline.known_at_cursor),
+                    result_identity_version: Some(baseline.result_identity_version),
                 },
                 sink,
             )

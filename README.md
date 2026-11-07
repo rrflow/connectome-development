@@ -31,6 +31,8 @@ RRFlow**, then explore **Data models**, **Records & relations**, **Vectors** and
 **Storage engine** under the selected project. **Manage project engines** runs
 up to four independent local projects; **Advanced details** exposes engine
 identity and evidence. Project sections preserve their URL across navigation.
+**Guides** on a project's home walk through real views on that project's records.
+A step ends when you do the real action, and you can leave a guide at any time.
 Learning, knowledge-path setup and cloud services are labelled unavailable until
 their engine contracts are implemented. The home screen's **How RRFlow fits together** guide explains
 rrflowDB, rrflowQL and rrflowKV. [Native workbench instructions](docs/native-workbench.md)

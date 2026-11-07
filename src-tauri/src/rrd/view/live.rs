@@ -19,6 +19,8 @@ pub struct LiveView {
     pub stream: &'static str,
     /// The cursor the subscription delivers after.
     pub after_cursor: u64,
+    /// Engine-observed version required when continuing this query baseline.
+    pub result_identity_version: Option<u16>,
     /// A live query's first result, read at `after_cursor`, when it was
     /// opened without a cursor of its own.
     pub first: Option<QueryView>,
