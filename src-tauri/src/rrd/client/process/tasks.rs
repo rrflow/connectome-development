@@ -162,7 +162,7 @@ fn task_controls_preserve_engine_state_and_refuse_unconfigured_inference() {
             Duration::from_secs(10),
             client.task_command(TaskCommand::Stop {
                 task_id: id.clone(),
-                expected_budget_sha256: budget.sha256,
+                expected_budget_sha256: budget.sha256.clone(),
             }),
         )
         .await
@@ -199,11 +199,60 @@ fn task_controls_preserve_engine_state_and_refuse_unconfigured_inference() {
             panic!("read budget")
         };
         assert_eq!(read.sha256, stopped.sha256);
-        let task = reopened
+        let resumed = reopened
+            .task_command(TaskCommand::Resume {
+                task_id: id.clone(),
+                expected_budget_sha256: read.sha256.clone(),
+            })
+            .await
+            .expect("explicit resume through the native bridge");
+        let TaskReply::Budget {
+            budget: Some(resumed),
+        } = resumed
+        else {
+            panic!("resumed budget")
+        };
+        assert_ne!(resumed.sha256, stopped.sha256);
+        assert_eq!(resumed.max_steps, stopped.max_steps);
+        assert_eq!(resumed.max_step_elapsed_ms, stopped.max_step_elapsed_ms);
+        assert_eq!(resumed.max_run_elapsed_ms, stopped.max_run_elapsed_ms);
+        assert_eq!(resumed.reserved_steps, stopped.reserved_steps);
+        assert_eq!(resumed.charged_elapsed_ms, stopped.charged_elapsed_ms);
+        assert_eq!(resumed.started_at_unix_ms, stopped.started_at_unix_ms);
+        assert_eq!(resumed.deadline_unix_ms, stopped.deadline_unix_ms);
+        assert_eq!(resumed.active_attempt, None);
+        assert!(!resumed.execution_may_continue);
+        assert_eq!(resumed.stopped, None);
+        reopened
+            .task_command(TaskCommand::Resume {
+                task_id: id.clone(),
+                expected_budget_sha256: read.sha256,
+            })
+            .await
+            .expect_err("stale resume cannot replay");
+        reopened
+            .task_command(TaskCommand::Stop {
+                task_id: id.clone(),
+                expected_budget_sha256: budget.sha256,
+            })
+            .await
+            .expect_err("old Stop cannot stop resumed work");
+        reopened.close().await.expect("close after resume");
+        let recovered = NativeRrdClient::connect(estate.connect_request())
+            .await
+            .expect("reconnect after resume");
+        let retained = recovered
+            .task_command(TaskCommand::Budget {
+                task_id: id.clone(),
+            })
+            .await
+            .expect("read resumed budget after denial and reconnect");
+        assert!(matches!(retained, TaskReply::Budget { budget: Some(b) } if b == resumed));
+        let task = recovered
             .task_command(TaskCommand::Read { task_id: id })
             .await
             .expect("read task");
         assert!(matches!(task, TaskReply::Task { .. }));
-        reopened.close().await.expect("close reopened session");
+        recovered.close().await.expect("close recovered session");
     });
 }

@@ -92,13 +92,28 @@ A lost reply must not trigger another inference. A local **Not dispatched** resu
 allows renewed input review; unresolved remote state remains visibly uncertain.
 No credentials, authoritative result cache or training consent enter local storage.
 
-The current [selected-worker handoff](controller-worker-handoff.md) extends this
-workspace with explicit review and one engine-admitted draft request, using the
-SDK pinned to engine PR229 `a5dbb754`. The current reconciliation passes the
-installed native process suite; a fresh desktop model trial and dependency
-landing remain pending. Source-edit successor planning, project
-effects, RROFLOW delivery and model qualification remain open. Recorded native
-process checks are distinct from a live BF16 desktop journey and release evidence.
+The [selected-worker handoff](controller-worker-handoff.md) extends this workspace
+with explicit review and one engine-admitted draft request. The current
+[reconciliation](controller-task-recovery-reconciliation.md) pins both SDKs and the bundled-engine source to native PR230
+`f4530539`, retaining the landed worker and observation integration. Earlier
+[worker desktop evidence](controller-worker-desktop-live.md) keeps its original
+engine identity; fresh validation of this reconciled UI is still required.
+
+The [task recovery increment](controller-task-recovery.md) adds explicit resume.
+After **Read budget and attempt**, **Resume task budget** is available for
+known-completed cancelled or failed work. It keeps the original deadline, limits
+and spent effort and does not invoke a model. Review current inputs before
+requesting new work. The engine denies expired/exhausted budgets and stale
+authority; unknown execution cannot resume. If the reply is lost, read the budget
+again before another change. Existing attempts remain available through public
+engine readback.
+
+The [earlier desktop recovery trial](controller-task-recovery-desktop.md) proves
+proposal, Stop/resume, worker draft and reload/readback on its recorded source.
+A fresh trial on this reconciliation and dependency/candidate/protected acceptance
+remain required. Source-edit successor planning, project effects, the complete
+RROFLOW workflow and model qualification remain open. Native process checks are
+distinct from a live BF16 desktop journey and release evidence.
 
 ## Learn and navigate
 
