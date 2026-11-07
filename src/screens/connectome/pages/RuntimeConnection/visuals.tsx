@@ -18,6 +18,7 @@ import type { RrdPromptFlightDetailView, RrdSessionClient } from "~/rrflow/sessi
 import { formatCount, formatTime } from "./format";
 import { GraphCanvas } from "./graph";
 import { grouping } from "./groups";
+import { InventoryNeighborhood } from "./inventory-neighborhood-view";
 import { ReadNotice } from "./notice";
 import { StoragePipeline } from "./pipeline";
 import { databaseQuery } from "./queries";
@@ -43,7 +44,9 @@ export function ProjectVisuals({
 	onSelectRecord: (record: string) => void;
 }) {
 	const [limit, setLimit] = useState("40");
-	const database = useQuery({ ...databaseQuery(client, sessionKey), enabled: connected });
+	const [diagnosticSession, setDiagnosticSession] = useState<string | null>(null);
+	const showDatabase = connected && diagnosticSession === sessionKey;
+	const database = useQuery({ ...databaseQuery(client, sessionKey), enabled: showDatabase });
 	const storage = useQuery({
 		queryKey: ["rrd-physical-storage", sessionKey],
 		queryFn: () => client.physicalStorage(),
@@ -51,7 +54,7 @@ export function ProjectVisuals({
 		retry: false,
 	});
 	const preview = useMemo(() => {
-		const graph = database.data?.graph;
+		const graph = showDatabase ? database.data?.graph : undefined;
 		if (!graph) return null;
 		const nodes = graph.nodes.slice(0, Number(limit));
 		const ids = new Set(nodes.map((node) => node.id));
@@ -67,7 +70,7 @@ export function ProjectVisuals({
 			eligible: eligible.length,
 			groups: grouping(shown, "kind"),
 		};
-	}, [database.data, limit]);
+	}, [database.data, limit, showDatabase]);
 
 	return (
 		<Stack
@@ -91,7 +94,7 @@ export function ProjectVisuals({
 					variant="light"
 					disabled={!connected}
 					onClick={() => {
-						void database.refetch();
+						if (showDatabase) void database.refetch();
 						void storage.refetch();
 					}}
 				>
@@ -104,6 +107,11 @@ export function ProjectVisuals({
 				</Alert>
 			) : (
 				<>
+					<InventoryNeighborhood
+						client={client}
+						sessionKey={sessionKey}
+						connected={connected}
+					/>
 					<Paper
 						withBorder
 						p="md"
@@ -131,7 +139,25 @@ export function ProjectVisuals({
 									Open full graph
 								</Button>
 							</Group>
-							{database.isError && (
+							{!showDatabase && (
+								<Group>
+									<Button
+										variant="light"
+										size="xs"
+										onClick={() => setDiagnosticSession(sessionKey)}
+									>
+										Read all-model graph
+									</Button>
+									<Text
+										size="sm"
+										c="dimmed"
+									>
+										This full diagnostic may exceed the configured response
+										limit on large projects.
+									</Text>
+								</Group>
+							)}
+							{showDatabase && database.isError && (
 								<Alert
 									color="red"
 									title="Graph read failed"
@@ -139,10 +165,12 @@ export function ProjectVisuals({
 									{describeRrdError(database.error)}
 								</Alert>
 							)}
-							<ReadNotice
-								query={database}
-								observedAt={database.data?.observed_at_unix_ms}
-							/>
+							{showDatabase && (
+								<ReadNotice
+									query={database}
+									observedAt={database.data?.observed_at_unix_ms}
+								/>
+							)}
 							{!preview ? (
 								<Text size="sm">
 									{database.isFetching

@@ -153,7 +153,7 @@ export function RuntimeConnectionPage({
 	// The lens cards read the same cached snapshots the lenses render.
 	const database = useQuery({
 		...databaseQuery(sessionClient, sessionKey),
-		enabled: Boolean(session),
+		enabled: Boolean(session) && route === "overview",
 	});
 	const catalogue = useQuery({
 		queryKey: ["rrd-vector-collections", sessionKey],

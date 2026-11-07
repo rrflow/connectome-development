@@ -20,7 +20,7 @@
 		"dev": "vite",
 		"preview": "vite preview",
 		"test:smoke": "playwright test",
-		"check": "biome check . && node scripts/check-retired-identities.mjs && node scripts/check-rrflow-isolation.mjs && node --experimental-strip-types scripts/check-api-examples.mjs && node --experimental-strip-types scripts/check-value-model.mjs && node --experimental-strip-types scripts/check-rrflowql.mjs && node --experimental-strip-types scripts/check-worker-disclosure.mjs && node scripts/check-guides.mjs && node scripts/check-dependency-authority.mjs && node scripts/version.mjs --check && tsc --noEmit",
+		"check": "biome check . && node scripts/check-retired-identities.mjs && node scripts/check-rrflow-isolation.mjs && node --experimental-strip-types scripts/check-api-examples.mjs && node --experimental-strip-types scripts/check-value-model.mjs && node --experimental-strip-types scripts/check-rrflowql.mjs && node --experimental-strip-types scripts/check-worker-disclosure.mjs && node --experimental-strip-types scripts/check-inventory-neighborhood.mjs && node scripts/check-guides.mjs && node scripts/check-dependency-authority.mjs && node scripts/version.mjs --check && tsc --noEmit",
 		"check:guides": "node scripts/check-guides.mjs",
 		"check:identity": "node scripts/check-retired-identities.mjs",
 		"check:isolation": "node scripts/check-rrflow-isolation.mjs",
