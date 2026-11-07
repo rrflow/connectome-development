@@ -226,8 +226,9 @@ something the engine did not return.
 
 ## The plan against the code
 
-Status: PROPOSED, 2026-11-02. It waits on the owner's decisions in
-[parking lot 007](../parking-lot/007-guided-workspace-against-code.md).
+Status: PARTLY DECIDED, 2026-11-03. The owner decided 3, 4, 5 and 7 in
+[parking lot 007](../parking-lot/007-guided-workspace-against-code.md). Decisions 1, 2 and 6 are open, and
+[parking lot 008](../parking-lot/008-views-and-knowledge-surfaces.md) waits on review.
 
 Written against Connectome `998c058f`, engine pin `15f36a87` and RRFlow `development/main` `e6f3632b`.
 Paths use parking lot 007's prefixes. Lines are re-checked when each pull request opens, because earlier
@@ -254,14 +255,14 @@ Step 5 keeps its number and lands when its dependencies do.
 |---|---|---|---|
 | — | Graph labels, Connectome #35 | 8 | The owner's word |
 | F1 | Move the engine pin to `development/main` | 8 | Decision 1 |
-| F2 | A hover explanation on every control | 8 | Decision 4 |
+| F2 | A hover explanation on every control | 8 | Review of parking lot 008 |
 | 6a | History › Stream and the read point | 9 | Decision 2 |
-| 6b | History › Signals and Activity | 11 | Decision 3 |
+| 6b | History › Signals and Activity | 11 | Review of parking lot 008 |
 | 6c | Graph at a chosen moment | 11 | |
 | 7a | Reasoning › Flights; retire the old diagnostics page | 12 | |
 | 7b | Reasoning › Claims; the run view inside Tasks | 13 | |
 | 8a | Knowledge › Knowledge paths | 14 | |
-| 8b | Ask › Context and the top-bar search | 15 | Decision 7 |
+| 8b | Ask › Context and the top-bar search | 15 | Review of parking lot 008 |
 | 8c | The shared layer, and the Designer graph inside Knowledge › Schema, read-only | 15 | Decision 6 |
 | 8d | Knowledge › Records, read-only | 16 | |
 | 8e | Ask › Query | 17 | |
@@ -269,12 +270,15 @@ Step 5 keeps its number and lands when its dependencies do.
 | 9a | System › Instances, including the Stop fix | 17 | |
 | 9b | System › Capabilities and Estate | 19 | A run proving the estate read |
 | 9c | System › Backups | 20 | |
-| L1 | Learning › SWAG, read-only | 21 | Decision 5 |
+| L1 | Learning › SWAG, read-only | 21 | |
 | L2 | Learning › LFG | 22 | LFG's status contract |
 | 5 | Turnkey start | | Other sessions |
 | 7c | Reasoning › Plans | | Connectome #30 |
 | 7d | Reasoning › Runs as its own tab | | Stage records in the engine |
 | 10 | Traces, Search, Cluster | | New public operations |
+
+Every row after F1 also waits on decision 1, because each pull request lands before the next opens.
+Parking lot 008 proposes K1, K2 and K3 between these rows, once reviewed.
 
 Full UI prototype counts the 20 tabs through 9c. The two Learning tabs sit outside that count, since they
 are optional and absent unless configured.
@@ -297,11 +301,12 @@ Every tab that adds an operation follows the same path, so none skips a layer:
 ### Tab map
 
 "Whole" means the August view returns with the same information or better, apart from anything the row
-names. "Smaller" means parking lot 007's decision 3 applies.
+names. "Replaced" means parking lot 007's decision 3 applies: the tab shows what the engine serves today,
+and grows when the engine does.
 
 | Tab | August source | Existing code to re-author or reuse | Missing today | Returns |
 |---|---|---|---|---|
-| Start › Home | `wb/static/app.js:162-188` | `RC/index.tsx:334-395`, `RC/workspace.tsx` | Tiles and recent changes; `session.ts` has the reads | Smaller: no run timeline |
+| Start › Home | `wb/static/app.js:162-188` | `RC/index.tsx:334-395`, `RC/workspace.tsx` | Tiles and recent changes; `session.ts` has the reads | Replaced: no run timeline |
 | Knowledge › Graph | `wb/static/app.js:1286-1389` | `RC/tabs/records.tsx`, `RC/graph.tsx` | Time arguments at `src-tauri/src/rrd/client.rs:646-657` | Whole |
 | Knowledge › Schema | `wb/static/app.js:436-469`, `wb/static/app.js:1054-1100` | `RC/tabs/models.tsx`, `src/screens/connectome/views/designer/` | Whole registry at `src-tauri/src/rrd.rs:129-146`; shared layer | Whole; unbacked drawer sections wait |
 | Knowledge › Vectors | | `RC/tabs/vectors.tsx`, `RC/tabs/quantization.tsx` | Nothing | Built |
@@ -310,15 +315,15 @@ names. "Smaller" means parking lot 007's decision 3 applies.
 | Ask › Query | `wb/static/app.js:1102-1136` | `src/screens/connectome/views/query/`, console at `RC/tabs/records.tsx:875-1030` | Parameters, plan, manifest, read proof, typed cells | Whole minus the operator pipeline |
 | Ask › Context | | `src/screens/connectome/pages/RuntimeConnection/pipeline.tsx` as a pattern | Native, `session.ts`, React; SDK at `sdk/operation.rs:803` | New |
 | Ask › Search | `wb/static/app.js:1403-1429` | | A public operation | Waits |
-| Reasoning › Flights | `wb/static/app.js:506-825` | Replaces `src/rrflow/diagnostics.ts:184-192` and `src/screens/connectome/pages/RuntimeDiagnostics/index.tsx` | Native, `session.ts`, React; SDK at `sdk/operation.rs:823`, `sdk/operation.rs:836`, `sdk/operation.rs:856` | Smaller |
+| Reasoning › Flights | `wb/static/app.js:506-825` | Replaces `src/rrflow/diagnostics.ts:184-192` and `src/screens/connectome/pages/RuntimeDiagnostics/index.tsx` | Native, `session.ts`, React; SDK at `sdk/operation.rs:823`, `sdk/operation.rs:836`, `sdk/operation.rs:856` | Replaced |
 | Reasoning › Claims | `wb/static/app.js:1397-1401` | `client.query` at `src/rrflow/session.ts:843` | React only; capture seed has no claims | Whole, though rrflowQL rows lack confidence and signature |
 | Reasoning › Tasks | | `RC/tasks.tsx` | Stripped fields at `src-tauri/src/rrd/client/tasks.rs:57-102` | Built |
-| Reasoning › Runs | `wb/static/app.js:1391-1395` | The Tasks inspector until then | Attempt listing, stage records | Smaller, inside Tasks |
+| Reasoning › Runs | `wb/static/app.js:1391-1395` | The Tasks inspector until then | Attempt listing, stage records | Replaced, inside Tasks |
 | Reasoning › Plans | | Connectome #30 | That PR pins off-main `8d475008` | Another session's |
 | Reasoning › Traces | `wb/static/app.js:844-936` | | A public operation | Waits |
 | History › Stream | `wb/static/app.js:938-1052` | `changes`, `followChanges` at `src/rrflow/session.ts:948-966` | React; fields at `src-tauri/src/rrd/view/history.rs:79-108` | Whole, minus the audit join |
-| History › Signals | `wb/static/app.js:471-497` | As Stream | React | Smaller: no routing lane |
-| History › Activity | `wb/static/app.js:1431-1435` | `audit`, `exportAudit`, `saveArtifact` at `src/rrflow/session.ts:968-989` | React; the pin move | Smaller |
+| History › Signals | `wb/static/app.js:471-497` | As Stream | React | Replaced: no routing lane |
+| History › Activity | `wb/static/app.js:1431-1435` | `audit`, `exportAudit`, `saveArtifact` at `src/rrflow/session.ts:968-989` | React; the pin move | Replaced |
 | System › Instances | `wb/static/app.js:190-270` | `RC/session.tsx`, `src/components/ActionBar/projects.tsx`, `src-tauri/src/rrd/estate/lifecycle.rs` | The Stop fix at `src-tauri/src/rrd/estate/lifecycle.rs:580` | Whole |
 | System › Estate | `wb/static/app.js:338-376` | | Native, `session.ts`, React; SDK at `sdk/operation.rs:675` | Whole, if a run proves the read answers on an ordinary install |
 | System › Capabilities | `wb/static/app.js:272-324` | Full document at `src/rrflow/runtime.ts:120`; badges at `RC/index.tsx:503-531` | React | Whole |
@@ -326,7 +331,7 @@ names. "Smaller" means parking lot 007's decision 3 applies.
 | System › API reference | | `RC/api/index.tsx` | Nothing | Built |
 | System › Backups | | `backups`, `createBackup`, `restoreBackup` at `src/rrflow/session.ts:994-1007` | React | New |
 | System › Cluster | `wb/static/app.js:1138-1253` | | The engine says it stays absent in alpha | Waits |
-| Top bar | `wb/static/app.js:1515-1534` | `src/providers/Commands/commands.tsx` | Depends on Ask › Context | Smaller: keys return, search changes |
+| Top bar | `wb/static/app.js:1515-1534` | `src/providers/Commands/commands.tsx` | Depends on Ask › Context | Replaced: keys return, search changes |
 | Inspector | `wb/static/app.js:1454-1474` | `RC/inspector.tsx` | Adoption in each new tab | Better: links onward |
 
 ### PR F1: move the engine pin
@@ -489,7 +494,8 @@ shows the same one. It fails if the view shows a change the engine did not retur
   swap on `expected_revision`, keeping the draft on conflict. External paths show as configuration only, as
   `connectome.md:709-716` requires. PR #10's file is the reference, not copied code.
 - **8b.** `src-tauri/src/rrd/client/context.rs`, `RC/tabs/context.tsx`, showing the engine's five stages, ranked items
-  and evidence. The top-bar search and keys reuse it.
+  and evidence. The top-bar search and keys reuse it, and its settings are configurable (decision 7 and
+  parking lot 008).
 - **8c.** The shared layer, each part separately provable:
   - A workspace scope for views, separate from what `src/shell/components/App/hooks/connection.tsx:9-13` watches.
   - A fill mode in `RC/shell.tsx:97-117`, with no `ScrollArea` for a pane that scrolls itself.

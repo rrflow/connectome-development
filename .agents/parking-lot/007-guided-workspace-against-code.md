@@ -1,8 +1,9 @@
 # Guided workspace checked against the code
 
-Status: OPEN, 2026-11-02. The repository owner asked for the plan to be checked against
-the existing code before more is built. Nothing here is committed until the owner decides.
-Until then, parking lot 006 and sprint 016 stand as written.
+Status: PARTLY DECIDED, 2026-11-03. The repository owner asked for the plan to be checked against
+the existing code before more is built. The owner decided 3, 4, 5 and 7 on 2026-11-03, and decisions 1
+and 2 are read from the owner's words below. Decision 6 is open, and parking lot 006 and sprint 016
+stand as written on that point.
 
 Paths are at Connectome `998c058f`. `RC/` is `src/screens/connectome/pages/RuntimeConnection/`.
 `wb/` is `crates/connectome-ui/` at RRFlow `6448a4f6`, the August Workbench. `contract/` and
@@ -44,6 +45,10 @@ order, so moving past step 5 needs the owner's word.
 | **A. Build on (recommended)** | Move to the foundations and History now. Return to step 5 when its dependencies land. | Most of the remaining views need nothing from those sessions. | A new project keeps showing little until step 5 lands. | Sprint 016 order | None |
 | B. Hold | Wait for the dependencies. | Keeps the strict order. | Blocks every view on work this sprint does not control. | None | None |
 
+**Read as decided 2026-11-03: option A.** The owner's words: "restore all of my UI from augiust while
+authoring it to be properly grouped tooltips and popup modals". The owner did not name this decision,
+so this is a reading, and the owner may correct it. Step 5 returns when its dependencies land.
+
 ## Decision 2: what the read point means
 
 **What.** Decision 5 of parking lot 006 says "One moving read point drives every view, and the top
@@ -60,6 +65,11 @@ read is also written to the audit journal, so it adds rows to Activity.
 |---|---|---|---|---|---|
 | **A. Narrow it (recommended)** | The read point drives the views that can obey it: Stream, Signals, Graph, Claims, Query and Records reads. Every other view states its own real coordinate, such as "live counters" or "revision 12". The top bar always says which moment each view shows. | Truthful, and it still delivers the bi-temporal view the owner wants: scrub history, then see the graph as it stood then. | Not every view moves. | Amends decision 5 | Medium |
 | B. Keep decision 5 and ask the engine | RRFlow adds historical reads to every family, plus a time-to-cursor operation. | Matches the original words. | Blocks the control on engine work across many owners. | RRFlow roadmap | Large |
+
+**Read as decided 2026-11-03: option A.** The owner's words: "we want ease of use and clear UI favored
+and yes we want th engine to do the work build the files and connectome be the ui". The owner did not
+name this decision, and option A is the clearer one for a person, so this is a reading the owner may
+correct.
 
 ## Decision 3: August views the engine can no longer feed
 
@@ -95,6 +105,12 @@ Cluster is different. RRFlow's contract says `clustered_server` "must remain abs
 runtime capability values" and is not an alpha requirement, so that tab returns only when clustering
 becomes a supported capability.
 
+**Decided 2026-11-03: option A, with an addition.** The owner's words: "we replace with what it can
+serve and have it built with minimal defined schema for establishing naming and patterns that lend
+itself to grow and be easy to edit. we want to have components that can be triggered and provide dynamic
+a2ui passivek and direct knowledge for the operator to learn". [Parking lot 008](008-views-and-knowledge-surfaces.md)
+proposes the design for review.
+
 ## Decision 4: what "proper mouse-over popups" means
 
 **What.** The owner asked for proper mouse-over popups. Neither sprint 016 nor parking lot 006 mentions
@@ -111,6 +127,8 @@ August.
 | **A. A rule for every tab (recommended)** | Every button says what it will do, including any effect. Every technical word explains itself. Every mark on a graph or timeline shows what it is. Truncated text shows in full. Icons carry a label. The same text opens on keyboard focus. Text states real behaviour and never implies a result that has not happened. A check fails the build if a button under `RC/` has no explanation. | Teaches at the pointer, and suits the layman direction. New tabs cannot skip it. | 56 explanations to write and verify now. | Every tab | Medium |
 | B. Only where confusing | Add popups case by case. | Less work. | It drifts, and no check can hold it. | Some tabs | Small |
 
+**Decided 2026-11-03: option A.**
+
 ## Decision 5: how LFG and SWAG reach Connectome
 
 **What.** The owner wants extended tabs for LFG and SWAG. Parking lot 006 says "Learning becomes an area
@@ -126,6 +144,9 @@ works through a real RRFlow adapter, and that adapter is draft RRFlow #249.
 | **A. Read-only adapters now, effects through the engine (recommended)** | A Learning area with a SWAG tab that reads `swag.dev-status/v1` from an explicitly configured loopback endpoint, in the native process. It is absent unless configured and labelled as SWAG's own report, never as engine evidence. An LFG tab follows once LFG has a versioned status contract. Launching or selecting anything goes only through Gate G's engine path. | The owner sees real training and model state soon. Default RRFlow readiness is unaffected. | Amends decision 3 of parking lot 006. It also relies on my reading that a labelled, separate read is not the hidden connection `connectome.md` forbids, so the owner should rule on that. | `areas.ts`, native layer | Small to medium |
 | B. Engine only | No tab until Gate G projects these records through the engine. | The cleanest reading of the contract. | No LFG or SWAG tab until Gate G lands. | None | None now |
 | C. Embed their web pages | Show SWAG's `dev.html` and LFG's Inspector in a tab. | Fast. | A second visual, which decision 2 rules out. SWAG's host and origin checks refuse cross-origin use. | Security review | Small |
+
+**Decided 2026-11-03: option A.** The owner accepted it as written, which includes the reading that a
+separate, labelled, explicitly configured read is not the hidden connection `connectome.md` forbids.
 
 ## Decision 6: rulings the inherited views need
 
@@ -157,7 +178,29 @@ ran source routing (`wb/static/app.js:1515-1522`), which no longer exists at the
 | **A. Search through context assembly (recommended)** | `/` opens one search box that calls `context-assemble` with the text. Results are the engine's ranked records, each opening in the inspector. The keyboard shortcuts return, fixed so they ignore modifier keys. | A real answer from the engine, using no model. `connectome.md:499` forbids a client-side scan. | Its ranking is the engine's recall, not a file route. | Top bar, native layer | Small once Ask › Context exists |
 | B. Keep it for source routes | No search until the engine serves routes. | Matches August's behaviour. | No search for a long time. | None | None |
 
+**Decided 2026-11-03: option A, with an addition.** The owner's words: "and is configurable to improve and
+experiment". [Parking lot 008](008-views-and-knowledge-surfaces.md) proposes how. This adds an eighth engine
+item to decision 3's list: public controls over context ranking, since `AssembleContext` takes only budgets,
+seeds and valid time.
+
+## Later direction, 2026-11-03
+
+The owner, reviewing the Evaluate design: "it also needs to actually align with the visuals of
+connectome style tokens and we should have it be dark teal and burnt orange instead of purple and we
+should ensure the icon is connectome and we have enhanced layman friend visuals for graphs". So
+"today's visual" in parking lot 006 now means Connectome's tokens with dark teal and burnt orange in
+place of violet and cyan, applied by changing token values and the mark's gradient, with no change
+to the mark's shape. Earlier on the same page: "needs to be grouped better it is flat and overwhelming
+no layman will even approach this likely". Asked where the Workbench was: "where is the workbench
+shouldnt that be under overview since it is separte". So the testing and comparison Workbench is its
+own space under Overview, beside a project's workspace and not inside it. Parking lot 006's Evaluate
+area, if any is added to a project's rail, should not be built that way.
+
+The same message sets who owns the work: the engine does it and builds the files, and Connectome is the
+UI. The Workbench's screens call public engine operations, and no view keeps its own copy of that work.
+
 ## Commit
 
-When the owner decides, this file records the outcome and the status, and parking lot 006 and sprint 016
-take the changes. Saying "go" accepts every recommendation above.
+Decisions 3, 4, 5 and 7 are recorded above, and parking lot 006 and sprint 016 took the changes. When the
+owner decides the rest, this file records the outcome. Saying "go" accepts the recommendations in decisions
+1, 2 and 6.
