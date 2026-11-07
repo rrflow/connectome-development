@@ -3,7 +3,8 @@
 Status: candidate implementation in [PR39](https://github.com/rrflow/connectome-development/pull/39).
 The installed-process adapter journey passes against native candidate
 `91b6c6789e2e7d217e0873cff532bd53aa937581`. Native protected CI/landing and the
-independent desktop journey remain pending.
+UI candidate/protected CI remain pending. The actual desktop source-packet
+journey described below passed against those candidate revisions.
 
 ## Review one file
 
@@ -80,8 +81,37 @@ changes in `process/attunement.rs`; prior review covered the rest of that test
 module. The separate pin/lock and canonical fixture diffs were also reviewed
 and limited to the 91b6 SDK references and fixture revision updates. The local
 ignored sidecar check passed but is not a committed source change. Native
-protected checks/landing and the parent's actual desktop run are still required
-before treating the joined source-aware journey as accepted. Browser smoke
+protected checks/landing and UI candidate/protected CI are still required
+before treating the joined source-aware journey as landed. Browser smoke
 responses are controlled fixtures, not installed authorization or live-provider
 evidence. Live BF16, generic binary/score/choice assessments, assessment cycles,
 file effects, and learning require their own evidence.
+
+## Actual desktop observation
+
+On 7 November 2026, the desktop built from UI source
+`0b40317a1d63862d2c6573bb3e73847725e8b878` used the native candidate above.
+Its executable SHA-256 was
+`2445aa2f9e7c91bb8933515c40cddcaf0a02254db6b0e08fe0cc3bafb636e714`.
+The public install CLI enabled source read for a new, isolated project.
+
+After an ordinary project edit, the desktop previewed and accepted a successor
+plan and inventoried it. The operator then created a task, obtained and read back
+one selection, reviewed the source digest and byte bound, and explicitly approved
+export of the actual 8,767-byte SWAG decision-modes document. The controlled
+loopback endpoint received exactly one selector request and one worker request.
+Independent checks matched the source bytes and path digest, packet, request,
+response and returned-content hashes to RRFlow's protected attempt readback.
+
+Disabling source export through public configuration preview/apply withheld the
+retained output and cleared the desktop draft. Restoring export recovered the
+identical attempt. Stopping and starting that project through the desktop opened
+the same estate at a new address; **Recover last attempt**, followed by
+**Read budget and attempt**, displayed the same result and provenance. A separate
+public API session verified exact attempt and budget equality after restoration
+and restart: two steps reserved, 76 ms charged, and the original deadline.
+No additional provider request occurred during these reads.
+
+This establishes the controlled source-handling and recovery journey. The
+fixture reports received bytes only; it is not a model assessment, reviewed
+training outcome, file-editing worker, or proof of complete project fulfillment.
