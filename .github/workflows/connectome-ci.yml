@@ -111,6 +111,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # The canonical RRFlow builder uses the Python 3.11+ stdlib tomllib.
+      # Match the Python toolchain already exercised by the pinned engine CI.
+      - name: Setup Python for canonical engine tooling
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: 3.15.0
+
       - name: Resolve the pinned RRFlow revision
         id: rrflow
         run: |
