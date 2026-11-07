@@ -55,12 +55,20 @@ whitespace check reports inherited archival formatting; the change relative to
 the protected landing is clean. Build warnings about inherited WASM resolution,
 externalization, mixed imports and large chunks remain unresolved.
 
+## Current desktop observation
+
+A clean Windows developer preview built from
+`f9512d0beec19b8d1ea385ef3f31191fcd4c1657` completed the ordinary-edit,
+stale-preview denial, fresh approval and receipt/reconnect journey. The
+[desktop evidence](project-plan-desktop-recovery.md) records the exact binary
+identities, source projection, independent reads and limits. This observation
+supersedes the earlier pending desktop check, without changing the identity of
+the working-tree checks above.
+
 ## Remaining acceptance
 
 The historical [project-plan evidence](project-plan-controls.md) remains under
-its original identity. A clean current desktop build and actual ordinary-edit,
-stale-preview denial, fresh approval and correlated receipt/reconnect journey are
-still required. A controlled source projection will establish that bounded UI
-journey, not a completed development task. Successor execution, source-grounded
+its original identity. The current controlled source projection establishes
+the bounded replanning UI journey, not a completed development task. Successor execution, source-grounded
 worker context, project-file effects, reviewed learning and binary/score/choice
 assessment cycles remain separate work. This candidate is not release-qualified.
