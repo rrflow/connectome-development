@@ -1,0 +1,911 @@
+{
+	"revision": "dark teal and burnt orange",
+	"application": "Connectome desktop preview build (VITE_CONNECTOME_PREVIEW=true, tauri build --debug --no-bundle)",
+	"engine": {
+		"revision": "15f36a8758e32b33c930a20da836def3e5cc3207",
+		"source": "the rrflow binary built from the pinned revision, copied so it is not hard-linked, on PATH"
+	},
+	"estate": "installed fresh by the capture in a scratch project folder, then seeded by seed_served_estate_for_visual_capture",
+	"purpose": "every screen after the palette moved from violet and cyan to dark teal and burnt orange; the before is baseline/window/step-2 to step-4",
+	"runs": "1366x768 dark and 1440x900 light, 56 captures each with no failed step",
+	"determinism": "the same masks as the native baseline: run-varying characters painted magenta",
+	"format": "WebP quality 82, converted from the PNG captures",
+	"images": [
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-api-reference-python",
+			"file": "1366x768/dark/native-api-reference-python.webp",
+			"bytes": 90614,
+			"sha256": "9ee603b024bacf4ab0bd66a425e33100bab0cdf418f827429370d6737a36d301"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-api-reference-query",
+			"file": "1366x768/dark/native-api-reference-query.webp",
+			"bytes": 111472,
+			"sha256": "3afd17ab3d05b4786ba567d059f5995a677b00eeb8759aeecd90c14e5d1800d9"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-guide-control-hidden",
+			"file": "1366x768/dark/native-guide-control-hidden.webp",
+			"bytes": 45992,
+			"sha256": "c563055ec755be1fa9f0361925a5450956d040dd4be31d2dfe6f13d4a9f837e7"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-guide-on-another-tab",
+			"file": "1366x768/dark/native-guide-on-another-tab.webp",
+			"bytes": 59898,
+			"sha256": "95cfb031e842ca88a4138ec510a7502b85d85a9916bb10cccbc151d1304c06fb"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-guide-step-1",
+			"file": "1366x768/dark/native-guide-step-1.webp",
+			"bytes": 49782,
+			"sha256": "4cc229ee33106687014fe6573ff3c629deb4d42754dde95cb3cab98aeaf607a1"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-guide-step-2",
+			"file": "1366x768/dark/native-guide-step-2.webp",
+			"bytes": 43020,
+			"sha256": "c7fe28a430cbefbf2dc5b88a91b4b56bdfbd626a012feac982d3053da58febd8"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-guide-step-3",
+			"file": "1366x768/dark/native-guide-step-3.webp",
+			"bytes": 43578,
+			"sha256": "04ac3790ba92ec29d8d3b13cb4ce663452b87c6ecfe545292354bdae9eab0a15"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-guide-step-4",
+			"file": "1366x768/dark/native-guide-step-4.webp",
+			"bytes": 38332,
+			"sha256": "8f5ff9c1aed459cb7faeef5d7986cf0824f1b9058e4f39d65880f4f17608b5c0"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-guide-step-5",
+			"file": "1366x768/dark/native-guide-step-5.webp",
+			"bytes": 39792,
+			"sha256": "df10cf48b09a2274edb9f965ed0c0f9241f743ce5cc4b053f673857cfdecbb33"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-inspector-closed",
+			"file": "1366x768/dark/native-inspector-closed.webp",
+			"bytes": 39352,
+			"sha256": "5634ee4c578b5c97242660153e58d16d0a92d20c321ca8797539431863691213"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-inspector-details",
+			"file": "1366x768/dark/native-inspector-details.webp",
+			"bytes": 52236,
+			"sha256": "f0914de6920effa28d864d0bdcb53344e6564f86c4023e1289353d1ec895d9f2"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-inspector-raw",
+			"file": "1366x768/dark/native-inspector-raw.webp",
+			"bytes": 60520,
+			"sha256": "bbaecd46a61a776ea889906ef98c1c10c1c3d7c29a2e26bf7176f40be25c6389"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-installation-preview",
+			"file": "1366x768/dark/native-installation-preview.webp",
+			"bytes": 41386,
+			"sha256": "82c38adae4e8ffd05fecea8d235cfd276c88a3953dd77cc7ec329de569e89044"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-lens-data-models",
+			"file": "1366x768/dark/native-lens-data-models.webp",
+			"bytes": 55742,
+			"sha256": "c2d32086b8920eac745858e2bc62303bb7d12af84413922b96bae72507498a20"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-lens-records-relations",
+			"file": "1366x768/dark/native-lens-records-relations.webp",
+			"bytes": 56366,
+			"sha256": "b00681d5e26fd417c2669bbbaa895fa86531d702c2c4c1c2f597799fd260ec34"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-lens-storage-engine",
+			"file": "1366x768/dark/native-lens-storage-engine.webp",
+			"bytes": 76238,
+			"sha256": "15ab10e09edd86531081c622e440c2abd391b8a1d5c6dc4dd19adf578db75482"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-lens-vectors",
+			"file": "1366x768/dark/native-lens-vectors.webp",
+			"bytes": 59234,
+			"sha256": "5ec698ffb90332d779bbf15520d71231a344e7adfae278eace08ce790681d03d"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-models-document-rows",
+			"file": "1366x768/dark/native-models-document-rows.webp",
+			"bytes": 53462,
+			"sha256": "7890ff0fa51ac59f9cad3ee753e8748a82986393b3d0e7794aaa6312573f5baf"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-overview",
+			"file": "1366x768/dark/native-overview.webp",
+			"bytes": 28332,
+			"sha256": "0b56f624f8e01250458dcfce8e26223caf05f4270520e35954ea1457343f124d"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-panel-advanced-details",
+			"file": "1366x768/dark/native-panel-advanced-details.webp",
+			"bytes": 58106,
+			"sha256": "975ad3af04b0edd926c4d2ff9d97ee28768a874ff02296118afb8912b99130bc"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-panel-explore-project-knowledge",
+			"file": "1366x768/dark/native-panel-explore-project-knowledge.webp",
+			"bytes": 60344,
+			"sha256": "54da21b7d6efdeff41b3edc10bd33bea5745784e902dca7b6548dbd765dfe8b8"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-panel-manage-project-engines",
+			"file": "1366x768/dark/native-panel-manage-project-engines.webp",
+			"bytes": 43466,
+			"sha256": "968c71ac2a9bd66522475743533491e8c1ca928e88cf8a551dcdcce140a870d6"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-panel-what-do-these-words-mean",
+			"file": "1366x768/dark/native-panel-what-do-these-words-mean.webp",
+			"bytes": 63612,
+			"sha256": "0065498e335028bdecedb3557ed1c8efdb80b0f238f7d1b131f3e659a714363d"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-project-engines-restarted",
+			"file": "1366x768/dark/native-project-engines-restarted.webp",
+			"bytes": 44600,
+			"sha256": "1524bee0f2eae21c864eb82d50674ccfa1a48e4356516e5e225d5a14c15409a0"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-project-engines-stopped",
+			"file": "1366x768/dark/native-project-engines-stopped.webp",
+			"bytes": 47970,
+			"sha256": "02db5f912826cf64491fe0e692714dc45d83c83b75abec013e823710ddd7a237"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-project-engines",
+			"file": "1366x768/dark/native-project-engines.webp",
+			"bytes": 34816,
+			"sha256": "7d168ba97e57c45ec4487e52abce6b0a2b7caef2154eff36fdce92e6d175b6a5"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-records-around-selection",
+			"file": "1366x768/dark/native-records-around-selection.webp",
+			"bytes": 54828,
+			"sha256": "719ce704953eb8f76ce473126f965a431c2e673b7f77afb384b8b375433a2a4f"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-records-color-kind",
+			"file": "1366x768/dark/native-records-color-kind.webp",
+			"bytes": 56568,
+			"sha256": "815c393c334a6ef441d75424b6a81b0cf57b4c26cbec9b23f8fa6df4ebaf8ae0"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-records-query",
+			"file": "1366x768/dark/native-records-query.webp",
+			"bytes": 61260,
+			"sha256": "1f800964486a7ae9384d56328ef314e609674cd26d5228ffcd58b29ba959e9e6"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-records-refused",
+			"file": "1366x768/dark/native-records-refused.webp",
+			"bytes": 54002,
+			"sha256": "2577c877752e4712de1cb843c219da64828a8a86ff5b19109303e3eaaf913720"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-records-selected",
+			"file": "1366x768/dark/native-records-selected.webp",
+			"bytes": 54828,
+			"sha256": "e38dc0fcfa96340f76fd524ae5d83eb0bf9817b28c50d48fc937d9cea452021f"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-records-traverse",
+			"file": "1366x768/dark/native-records-traverse.webp",
+			"bytes": 69150,
+			"sha256": "82afd44b08a776d09a402074c1719fdf9d87afd10ce8e4c7f1cfa033ec23f087"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-served",
+			"file": "1366x768/dark/native-served.webp",
+			"bytes": 68976,
+			"sha256": "c48d5cfd86ec54aad9bc4583893016fe99d544e14ab0f6a6fa87af338028aa2b"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-serving-stages",
+			"file": "1366x768/dark/native-serving-stages.webp",
+			"bytes": 65922,
+			"sha256": "e690103a3684f1a4c6742c7c9530877fe0fcbe29646b4a12f0504aae98f9e26a"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-settings-about",
+			"file": "1366x768/dark/native-settings-about.webp",
+			"bytes": 26508,
+			"sha256": "5730cbbf478e0fa99f340f5b49da346d5f5325d97faaf3f4809b40953810a4d6"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-settings-backup-restore",
+			"file": "1366x768/dark/native-settings-backup-restore.webp",
+			"bytes": 32492,
+			"sha256": "752e83897c39bf13155421088cf24d68833c418aceef35232ecf386d93305128"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-settings-database-serving",
+			"file": "1366x768/dark/native-settings-database-serving.webp",
+			"bytes": 44422,
+			"sha256": "54bb600bc00ef6d583d61dc6b8259877fd01f67fef9fe48c502346033ca2ab2e"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-settings-keybindings",
+			"file": "1366x768/dark/native-settings-keybindings.webp",
+			"bytes": 25706,
+			"sha256": "43b1fd32cc618dff66b53054e269235a26741da13a44dee8a4e94e17e2a6c6a3"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-settings-oss-licenses",
+			"file": "1366x768/dark/native-settings-oss-licenses.webp",
+			"bytes": 58574,
+			"sha256": "b9cc16a1de3bd929c460a28b53756a9d1ffe2e76d0ab1141152f3e98f87d67d1"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-settings-preferences",
+			"file": "1366x768/dark/native-settings-preferences.webp",
+			"bytes": 25860,
+			"sha256": "72a3b6a2a45b558b7d23aef7081d926ed4d3a69b2c7910fd820d812a848c2011"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-settings-templates",
+			"file": "1366x768/dark/native-settings-templates.webp",
+			"bytes": 21244,
+			"sha256": "d2ca2e0b89f3d39536b95e3981e100efc898947d1366abe1cdb1d4ca090345f1"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-storage-counters",
+			"file": "1366x768/dark/native-storage-counters.webp",
+			"bytes": 74976,
+			"sha256": "5071f808581ad62a87ee588c86d2c135935f8fdf73dc2cf231ff0c68593c99c3"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-storage-history",
+			"file": "1366x768/dark/native-storage-history.webp",
+			"bytes": 51382,
+			"sha256": "9485a58f7472f3ac710c4fe2f739e11707a1b6c726d481f1145eb3f1bbc44caf"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-vectors-activate-request",
+			"file": "1366x768/dark/native-vectors-activate-request.webp",
+			"bytes": 52990,
+			"sha256": "b8b84bf7eb4fd93fca3d7efa37ac42545389e72a9d8a415ec746e8de44053200"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-vectors-build-applied",
+			"file": "1366x768/dark/native-vectors-build-applied.webp",
+			"bytes": 46262,
+			"sha256": "660e71c12aeed3d7372a238cec904cdaf0a989174b12d9dca77f81ecefd5e5d9"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-vectors-build-form",
+			"file": "1366x768/dark/native-vectors-build-form.webp",
+			"bytes": 51388,
+			"sha256": "59246517f26234c30428c44f34e48d7e9dd68a8e47b9c568f7b15e9046882c34"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-vectors-build-request",
+			"file": "1366x768/dark/native-vectors-build-request.webp",
+			"bytes": 49690,
+			"sha256": "c50e563588ff2d9b768e2ba45db0d0189f2f27c5ceec2d0b4fae514dc3acadf0"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-vectors-compare",
+			"file": "1366x768/dark/native-vectors-compare.webp",
+			"bytes": 70828,
+			"sha256": "e78642eb0cf7085fc486eb507e580facd913e94103f58396d5c6200c72801aa8"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-vectors-generation-details",
+			"file": "1366x768/dark/native-vectors-generation-details.webp",
+			"bytes": 75220,
+			"sha256": "ea548af717c1611c9d1665c08561f87514b83aa30047447dc711ce0310a3545a"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-vectors-generations-empty",
+			"file": "1366x768/dark/native-vectors-generations-empty.webp",
+			"bytes": 63812,
+			"sha256": "dfc57c53e1d8c6fd314af7afbf78d70a87173ad4ba5327591bd4ec85f1e82ad7"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-vectors-nearest",
+			"file": "1366x768/dark/native-vectors-nearest.webp",
+			"bytes": 71340,
+			"sha256": "0032095382d74efcda3f2334a5b8553ac2f084fa25dd9c212ebbc3de8a594ee1"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-vectors-points",
+			"file": "1366x768/dark/native-vectors-points.webp",
+			"bytes": 68864,
+			"sha256": "8a8998b4355d60e28de180ff282f630242ae8d0dc67b2313286caf98b6c40d85"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-workbench-api-reference",
+			"file": "1366x768/dark/native-workbench-api-reference.webp",
+			"bytes": 83258,
+			"sha256": "d48783032681ace687c9e58b13157ba199a84ff4e401f798fbd2ca75d45aa612"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-workbench-knowledge",
+			"file": "1366x768/dark/native-workbench-knowledge.webp",
+			"bytes": 56366,
+			"sha256": "b00681d5e26fd417c2669bbbaa895fa86531d702c2c4c1c2f597799fd260ec34"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-workbench-overview",
+			"file": "1366x768/dark/native-workbench-overview.webp",
+			"bytes": 68922,
+			"sha256": "4e5334ae5fb4dccaaf75c41a90dc8fd0c2ac8cbaf5022d74f045c9280e98db03"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-workbench-tasks",
+			"file": "1366x768/dark/native-workbench-tasks.webp",
+			"bytes": 26756,
+			"sha256": "3316d966cf8df76e7618bdc54ea4fb2de63e32c2ba1a66cfe0441bb5dacdff9d"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-api-reference-python",
+			"file": "1440x900/light/native-api-reference-python.webp",
+			"bytes": 132730,
+			"sha256": "37b3b9a2e3dc32ef6ec0bc3b9f55f7be147dd192aa7fcc70f2d0c3a68e809533"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-api-reference-query",
+			"file": "1440x900/light/native-api-reference-query.webp",
+			"bytes": 136806,
+			"sha256": "1b455cbf4d8ca12f5e19a607f83cb0d7633f602fb17fae4481ef7342a61b6e7d"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-guide-control-hidden",
+			"file": "1440x900/light/native-guide-control-hidden.webp",
+			"bytes": 49158,
+			"sha256": "454b0fd630465ed59937f13dce918c4b3a4c030caee56257df428faf1db4b72c"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-guide-on-another-tab",
+			"file": "1440x900/light/native-guide-on-another-tab.webp",
+			"bytes": 60392,
+			"sha256": "1c3fbe51278785e44bc4113b3d58a4477d35430276ee416d8ef7fc784967362d"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-guide-step-1",
+			"file": "1440x900/light/native-guide-step-1.webp",
+			"bytes": 54066,
+			"sha256": "ec3116a031b7db10a8029770c30c0887a6f04407cd90e3929734bb60a222cef0"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-guide-step-2",
+			"file": "1440x900/light/native-guide-step-2.webp",
+			"bytes": 45518,
+			"sha256": "29c44991bf19253c80a9e5db69fa26465209c5cfc528f1dd92d9c802c4ab67f5"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-guide-step-3",
+			"file": "1440x900/light/native-guide-step-3.webp",
+			"bytes": 45056,
+			"sha256": "3188ded19345aa231995891043339abe490bb29e5605bf4cbae388a64b1ef536"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-guide-step-4",
+			"file": "1440x900/light/native-guide-step-4.webp",
+			"bytes": 39062,
+			"sha256": "9d5bdf0f16f0ffb333f3a6447d6fe39180f04e839377cc82d05086e7660a24aa"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-guide-step-5",
+			"file": "1440x900/light/native-guide-step-5.webp",
+			"bytes": 42644,
+			"sha256": "83a4d0026639f8d7af7777691b365484ab9e43d69e3d7d67bbf6357a015c191c"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-inspector-closed",
+			"file": "1440x900/light/native-inspector-closed.webp",
+			"bytes": 41230,
+			"sha256": "2377603ff06c463f89b5c95eaff003c464107928f526b6e5b2f6b5c116a092fc"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-inspector-details",
+			"file": "1440x900/light/native-inspector-details.webp",
+			"bytes": 54194,
+			"sha256": "b2f197aab0f848541b86833b6d41844328469115713b76162cea2a4e8b046baf"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-inspector-raw",
+			"file": "1440x900/light/native-inspector-raw.webp",
+			"bytes": 69652,
+			"sha256": "92152b9786aae67a56d1048ff7faabcdc0cdca65312772b060fe838f03ef671d"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-installation-preview",
+			"file": "1440x900/light/native-installation-preview.webp",
+			"bytes": 50942,
+			"sha256": "96a2a42d7ed86ca0899c5a6615f05392d8981c5b184012f3a095d3318a6a8a82"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-lens-data-models",
+			"file": "1440x900/light/native-lens-data-models.webp",
+			"bytes": 56370,
+			"sha256": "149cdfbbcbf569617af8a233e13fa8d964fc9b4fca4905b93fb215162b1658f7"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-lens-records-relations",
+			"file": "1440x900/light/native-lens-records-relations.webp",
+			"bytes": 59836,
+			"sha256": "e3b9a5670547a0e08a771e4617af54d1ed14ee9dd2d8e520cbe7e396de1ad692"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-lens-storage-engine",
+			"file": "1440x900/light/native-lens-storage-engine.webp",
+			"bytes": 81060,
+			"sha256": "2b3a330f8267cc3efdb985fab4d8c8c448766d7d35f119b51043034fc3363fa5"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-lens-vectors",
+			"file": "1440x900/light/native-lens-vectors.webp",
+			"bytes": 63172,
+			"sha256": "4a68318179148525f2fc0a7576f3a7b1b1f005346dbb901ec91879e269f4ee25"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-models-document-rows",
+			"file": "1440x900/light/native-models-document-rows.webp",
+			"bytes": 62644,
+			"sha256": "d75ac42303e36031fdf92d850af5f07df30931258d78000f0961512139e74d14"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-overview",
+			"file": "1440x900/light/native-overview.webp",
+			"bytes": 39440,
+			"sha256": "956a71b506e7af94b1cac915b149e5017479c8ec6cafc621d8a12874481e1ecd"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-panel-advanced-details",
+			"file": "1440x900/light/native-panel-advanced-details.webp",
+			"bytes": 53138,
+			"sha256": "fbd11c2487b8e6a5efb942cc934b91532ebf19c4cdcb949edcc9fcd72e0bba7a"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-panel-explore-project-knowledge",
+			"file": "1440x900/light/native-panel-explore-project-knowledge.webp",
+			"bytes": 63496,
+			"sha256": "efaf5d9ae6c125bb418c254cff2464673eb926b9919530375a51c9962b12af1b"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-panel-manage-project-engines",
+			"file": "1440x900/light/native-panel-manage-project-engines.webp",
+			"bytes": 48442,
+			"sha256": "08f4b298b9e09d99b34d8a4ca65d74536fdedfb55f8e18f8f20f8a1a95b806cc"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-panel-what-do-these-words-mean",
+			"file": "1440x900/light/native-panel-what-do-these-words-mean.webp",
+			"bytes": 90930,
+			"sha256": "9ed63af3be3ce23da0dfe6ffb20bd1beb357ad469022aa8cec9d8b398b44a973"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-project-engines-restarted",
+			"file": "1440x900/light/native-project-engines-restarted.webp",
+			"bytes": 57386,
+			"sha256": "89c5cf1f665e66f4060ad8b9f751d11d2580b0224ffc3629478ec17aebbc87e0"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-project-engines-stopped",
+			"file": "1440x900/light/native-project-engines-stopped.webp",
+			"bytes": 60516,
+			"sha256": "53e0986fc824e9a17bc30e7e36de218d0b760e7a9f8dc1ce147ec8ae1a7146b9"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-project-engines",
+			"file": "1440x900/light/native-project-engines.webp",
+			"bytes": 42366,
+			"sha256": "dd50cb39c90477e350c76afaa5863ac885ed00b7c546d84668a77d0541a5d13b"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-records-around-selection",
+			"file": "1440x900/light/native-records-around-selection.webp",
+			"bytes": 57142,
+			"sha256": "8d91f6385144b0d06e77972db7d586c7dbcedda292d210d22c050c386a7f69c0"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-records-color-kind",
+			"file": "1440x900/light/native-records-color-kind.webp",
+			"bytes": 58682,
+			"sha256": "dcfebd412aebef195a2a77d0cb169fc2cfd623ef2ccfe48af4fdbb65619929dc"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-records-query",
+			"file": "1440x900/light/native-records-query.webp",
+			"bytes": 62048,
+			"sha256": "934a66c84e15742e7d1fc43cb4f3c558a57c6cd9327642fb76d927431ab611fb"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-records-refused",
+			"file": "1440x900/light/native-records-refused.webp",
+			"bytes": 54800,
+			"sha256": "9b0d38505720033e4459f800f830b88562836cfd7fdf27ee341b05a0a2715f02"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-records-selected",
+			"file": "1440x900/light/native-records-selected.webp",
+			"bytes": 56892,
+			"sha256": "04c07e1928547192224de1d6cd933e464896a020de063eb4525c49a4572317a8"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-records-traverse",
+			"file": "1440x900/light/native-records-traverse.webp",
+			"bytes": 71382,
+			"sha256": "f6cc33bc626f7d8db4a212209cce7499d28d39aa73126b274b7d7b5220ebd9a9"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-served",
+			"file": "1440x900/light/native-served.webp",
+			"bytes": 73946,
+			"sha256": "79642487b6103aad8b6aa7a8129dd19c30ca3c819183543d1c313f53efa7e586"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-serving-stages",
+			"file": "1440x900/light/native-serving-stages.webp",
+			"bytes": 73946,
+			"sha256": "79642487b6103aad8b6aa7a8129dd19c30ca3c819183543d1c313f53efa7e586"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-settings-about",
+			"file": "1440x900/light/native-settings-about.webp",
+			"bytes": 27668,
+			"sha256": "9b9cba57d0b7e67f91fb78c7668611acdcd4b74cdf12156584ec9f840202c8d9"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-settings-backup-restore",
+			"file": "1440x900/light/native-settings-backup-restore.webp",
+			"bytes": 33614,
+			"sha256": "10f08549ad638bfa126089aa2818597e4192840b7451d3a55e57418e68004c67"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-settings-database-serving",
+			"file": "1440x900/light/native-settings-database-serving.webp",
+			"bytes": 48448,
+			"sha256": "a8d62e2e71c07c6bdd8a442c52f42dfed128b9bb369b0797d82467701a1ae1b8"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-settings-keybindings",
+			"file": "1440x900/light/native-settings-keybindings.webp",
+			"bytes": 28694,
+			"sha256": "5188c41ba52a15015e1ade8aad9999897275e3760e1c54f6a3eab66b67750d75"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-settings-oss-licenses",
+			"file": "1440x900/light/native-settings-oss-licenses.webp",
+			"bytes": 72074,
+			"sha256": "d066c8f8b869107cf0b0bae01e7cc864eb6aacb08dc8e3f2eeaeaab343342185"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-settings-preferences",
+			"file": "1440x900/light/native-settings-preferences.webp",
+			"bytes": 30268,
+			"sha256": "e47199c72c1be9123327883e786c00ea21378caf1a5ce419138ed2c0e848ab3f"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-settings-templates",
+			"file": "1440x900/light/native-settings-templates.webp",
+			"bytes": 22410,
+			"sha256": "810302c9436f60ab0fa7691bef1890db6bb53d21185c8a8ac3a74f0b62bc13dd"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-storage-counters",
+			"file": "1440x900/light/native-storage-counters.webp",
+			"bytes": 91938,
+			"sha256": "01caa1093f7754e995b6a94a435ac52c102ea6bb1faf8283daa25415e7772d7e"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-storage-history",
+			"file": "1440x900/light/native-storage-history.webp",
+			"bytes": 65282,
+			"sha256": "f879264b8517dde2116e02f833f84dd2e893f9e8a8f274047c7903a96b654852"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-vectors-activate-request",
+			"file": "1440x900/light/native-vectors-activate-request.webp",
+			"bytes": 55740,
+			"sha256": "035715714309d4fa0e4f0840c986ab0216eb5d68e41938ad66b9737fe7eab3de"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-vectors-build-applied",
+			"file": "1440x900/light/native-vectors-build-applied.webp",
+			"bytes": 50844,
+			"sha256": "9098cccca8b03eb4339c158e3066fb70dcac09282be1b1346374d4b954e732d8"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-vectors-build-form",
+			"file": "1440x900/light/native-vectors-build-form.webp",
+			"bytes": 56778,
+			"sha256": "5b13ecd543d54cd519a53770f918d85c193b4bc1bd169b8c938184130bf9f3bb"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-vectors-build-request",
+			"file": "1440x900/light/native-vectors-build-request.webp",
+			"bytes": 61188,
+			"sha256": "900a05589e22f6e5d8768c95833b0d73227720378892360ce88ba1e971f1b6f2"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-vectors-compare",
+			"file": "1440x900/light/native-vectors-compare.webp",
+			"bytes": 77394,
+			"sha256": "307583d3747f63a1aa4c84521084c43f5fb921d34bcd81f8fef6c96637a1698a"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-vectors-generation-details",
+			"file": "1440x900/light/native-vectors-generation-details.webp",
+			"bytes": 93428,
+			"sha256": "241ba0d191f1f6b86339c267a53c9977479f3f23db87765be94fe7ae9072bcfc"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-vectors-generations-empty",
+			"file": "1440x900/light/native-vectors-generations-empty.webp",
+			"bytes": 72052,
+			"sha256": "3aa13adc5396d124d4e941abf9ff6d590b53f0c5f216ee1c0c6c378fa1b8b6bd"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-vectors-nearest",
+			"file": "1440x900/light/native-vectors-nearest.webp",
+			"bytes": 88410,
+			"sha256": "68c1e4d1280e34ce3f5b371f44cc967379898be9003ef5615b5058d56c622036"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-vectors-points",
+			"file": "1440x900/light/native-vectors-points.webp",
+			"bytes": 74886,
+			"sha256": "b1598189389f3512a9543dcfc39e2b1f7cb16deb68d03946c6e632f7988d7893"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-workbench-api-reference",
+			"file": "1440x900/light/native-workbench-api-reference.webp",
+			"bytes": 125054,
+			"sha256": "d42f13a48206a7c306c096c71fa9876810c7409b19a627c970fd52917eac6553"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-workbench-knowledge",
+			"file": "1440x900/light/native-workbench-knowledge.webp",
+			"bytes": 59836,
+			"sha256": "e3b9a5670547a0e08a771e4617af54d1ed14ee9dd2d8e520cbe7e396de1ad692"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-workbench-overview",
+			"file": "1440x900/light/native-workbench-overview.webp",
+			"bytes": 73824,
+			"sha256": "034dbfbf5a6f6bfed50c5f33a2b0d0079c083b6533bbad2390717e83f52c111d"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-workbench-tasks",
+			"file": "1440x900/light/native-workbench-tasks.webp",
+			"bytes": 27030,
+			"sha256": "8f51ba25182ff6449449bb9a92360e5dbb7c1e1c624b938657876eb2b52e9b8c"
+		}
+	]
+}

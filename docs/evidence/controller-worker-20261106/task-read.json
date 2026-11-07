@@ -1,0 +1,62 @@
+{
+	"task": {
+		"format_version": 1,
+		"task_id": "task-ed886df6db4b2c949185fcb2e41d89a91f47c24aba6f66db1566ea67f951dcee",
+		"scope": "instance:instance-49f097824c98ab1ed3e49a6f",
+		"title": "Add engine-owned selected-worker handoff to Connectome",
+		"goal": "Review the real selected-worker handoff integration in https://github.com/rrflow/connectome-development/pull/28 at 9651939c8dc1a40843f0a5b0061caa7a549ab0fa. Produce a draft of remaining implementation, verification and unresolved questions. Scope: current SDK compatibility, real model request and reload/readback. Task text alone is available; do not claim code inspection, edited files, passed checks or task completion. The source PR body is retained in the trial evidence; it is not supplied as model context.",
+		"status": "open",
+		"opened_at_unix_ms": 1794006179986,
+		"idempotency_key": "connectome-3377d728a9bb40c8a322b080f81b75e0-key-4",
+		"operation_sha256": "3e1fbdc20be8b619be13a47da40ad5b2148639535e11cc61216039bf359a4327",
+		"task_cursor": 4,
+		"known_at_cursor": 4
+	},
+	"read": {
+		"runtime_manifest_sha256": "de7facd925ac8ec8a5830a9b1f32a93ab99d4e1528bfd6bf9f8cacadd3a5c481",
+		"runtime_cursor": 10,
+		"schema_revision": 3,
+		"catalogue_revision": 0
+	},
+	"selected_versions": 1,
+	"read_evidence": {
+		"contract_version": 1,
+		"key_budget": 10000,
+		"point_reads": 10,
+		"range_scans": 1,
+		"keys_examined": 11,
+		"values_decoded": 11,
+		"decoded_bytes": 4484,
+		"stamp_validation": {
+			"method": "authenticated_current_head",
+			"change_reads": 0,
+			"proof_nodes": 0
+		},
+		"paths": [
+			{
+				"path": "read_stamp",
+				"point_reads": 5,
+				"range_scans": 0,
+				"keys_examined": 5,
+				"values_decoded": 5,
+				"decoded_bytes": 2547
+			},
+			{
+				"path": "record_versions",
+				"point_reads": 0,
+				"range_scans": 1,
+				"keys_examined": 1,
+				"values_decoded": 1,
+				"decoded_bytes": 1617
+			},
+			{
+				"path": "accumulator_proof",
+				"point_reads": 5,
+				"range_scans": 0,
+				"keys_examined": 5,
+				"values_decoded": 5,
+				"decoded_bytes": 320
+			}
+		]
+	}
+}

@@ -15,3 +15,5 @@ Each sprint contains:
 - [Workbench README correction](011a-workbench-readme-correction.md)
 
 - [Project workspaces and parallel engines](012-project-workspaces.md)
+
+- [Guided workspace](016-guided-workspace.md)

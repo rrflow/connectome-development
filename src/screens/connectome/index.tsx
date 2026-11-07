@@ -1,7 +1,7 @@
 import { Box, Drawer, Flex, Group, Stack } from "@mantine/core";
 import { type FC, memo, Suspense, useLayoutEffect } from "react";
 import { createHtmlPortalNode, HtmlPortalNode, InPortal, OutPortal } from "react-reverse-portal";
-import { Redirect, Route, Switch } from "wouter";
+import { Redirect, Route, Switch, useLocation } from "wouter";
 import { adapter, isDesktop } from "~/adapter";
 import { TopGlow } from "~/components/TopGlow";
 import { useSetting } from "~/hooks/config";
@@ -82,6 +82,7 @@ export function ConnectomeScreen() {
 	});
 
 	const glowOffset = useGlowOffset();
+	const [location] = useLocation();
 	const sidebarOffset = 25 + (sidebarMode === "wide" ? 190 : 49);
 
 	useLayoutEffect(() => {
@@ -136,6 +137,7 @@ export function ConnectomeScreen() {
 							align="center"
 							wrap="nowrap"
 							className={classes.toolbar}
+							data-workspace={location.startsWith("/runtime/") || undefined}
 						>
 							<ConnectomeToolbar />
 						</Group>

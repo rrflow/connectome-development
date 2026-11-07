@@ -1,0 +1,39 @@
+{
+	"devspace": "swag-local-validation",
+	"events": [
+		{
+			"agent": "rrflow",
+			"capture_id": "2249eb4d-6d41-8da0-a255-b6088430ec3b",
+			"engine": {
+				"attempt_id": "196c2ccd-cb3f-4bde-986b-cd5bcd59f690",
+				"configuration_sha256": "7865a8bb95598af4019ccdb75d4543fdf1ef4c1e7f1fc5f2e21aaf657dfcaf1c",
+				"instance_id": "instance-38c9e31abb311dbe4e726551",
+				"job_id": null,
+				"operation": "task-attempt-read",
+				"plan_sha256": null,
+				"response_sha256": "86a6111270169656d691fb62e025296190262b5cedfee0a8cd87603da45ad615",
+				"scope": "instance:instance-38c9e31abb311dbe4e726551",
+				"source_sha256": null,
+				"task_id": "task-b9e7b5e2006b5ed84179fc9925600fddfd06e421038b707c56f1de711024f4f7",
+				"version": 1
+			},
+			"event_id": "880141f6-294d-8536-a26b-936f5424c7c8",
+			"exit_code": null,
+			"kind": "engine.observed",
+			"model": null,
+			"native_id": null,
+			"native_status": null,
+			"native_type": null,
+			"observed_at": "2026-11-06T23:13:19.967Z",
+			"operation_id": "desktop-worker-196c2ccd-cb3f-4bde-986b-cd5bcd59f690",
+			"parent_native_id": null,
+			"parent_operation_id": null,
+			"payload": null,
+			"schema": "rroflow.capture/v1",
+			"sequence": 0,
+			"session_id": "2249eb4d-6d41-8da0-a255-b6088430ec3b",
+			"tool_name": null,
+			"usage": null
+		}
+	]
+}

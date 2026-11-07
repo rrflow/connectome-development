@@ -10,7 +10,12 @@ import { chromium } from "@playwright/test";
  * runtime workbench lens on a seeded estate.
  *
  *   node tests/visual/capture-native.mjs --root <worktree> --exe <connectome.exe> \
- *     --engine-dir <dir holding rrflow.exe> --out <dir> [--theme dark|light] [--port 9333]
+ *     --engine-dir <dir holding rrflow.exe> --out <dir> [--theme dark|light] [--port 9333] \
+ *     [--window 1440x1800]
+ *
+ * The default window is tall enough that each lens fits in one image. Pass a
+ * real window size, such as 1440x900 or 1366x768, to capture what a person sees
+ * without scrolling: sprint 016 judges every screen at a real window size.
  *
  * Build the desktop with `VITE_CONNECTOME_PREVIEW=true pnpm tauri build --debug
  * --no-bundle`: a preview build keeps its data in `RRFlow/ConnectomePreview`,
@@ -36,6 +41,7 @@ const engineDir = resolve(args["engine-dir"]);
 const out = resolve(args.out ?? "visual-native");
 const port = Number(args.port ?? 9333);
 const theme = args.theme ?? "dark";
+const [windowWidth, windowHeight] = (args.window ?? "1440x1800").split("x").map(Number);
 mkdirSync(out, { recursive: true });
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -86,8 +92,9 @@ const VARIABLE_TEXT = [
 	new RegExp(literal(out)),
 ].map((pattern) => pattern.source);
 // Paints magenta, which the compare ignores, over exactly the characters that
-// match, in text and inside text fields, so the words around them stay in
-// the image. A match scrolled out of its container is clipped to what shows.
+// match, in text, in code editor lines and inside text fields, so the words
+// around them stay in the image. A match scrolled out of its container is
+// clipped to what shows.
 const paintMasks = () =>
 	page.evaluate((sources) => {
 		const patterns = sources.map((source) => new RegExp(source, "g"));
@@ -119,11 +126,35 @@ const paintMasks = () =>
 		};
 		const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
 		for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+			if (node.parentElement?.closest(".cm-line")) {
+				continue;
+			}
 			for (const [start, end] of matches(node.nodeValue)) {
 				const range = document.createRange();
 				range.setStart(node, start);
 				range.setEnd(node, end);
 				add(range.getClientRects(), node.parentElement);
+			}
+		}
+		// A code editor splits a line into one text node per token, so a match
+		// is found in the whole line and painted across the nodes it spans.
+		for (const line of document.querySelectorAll(".cm-line")) {
+			const nodes = [];
+			let text = "";
+			const inLine = document.createTreeWalker(line, NodeFilter.SHOW_TEXT);
+			for (let node = inLine.nextNode(); node; node = inLine.nextNode()) {
+				nodes.push({ node, from: text.length });
+				text += node.nodeValue;
+			}
+			const at = (offset, end) => {
+				const found = nodes.findLast(({ from }) => (end ? from < offset : from <= offset));
+				return [found.node, offset - found.from];
+			};
+			for (const [start, end] of matches(text)) {
+				const range = document.createRange();
+				range.setStart(...at(start, false));
+				range.setEnd(...at(end, true));
+				add(range.getClientRects(), line);
 			}
 		}
 		// A field's value has no text node, so a hidden copy laid out like the
@@ -197,7 +228,7 @@ const paintMasks = () =>
 		return boxes.length;
 	}, VARIABLE_TEXT);
 const shot = async (name) => {
-	await page.mouse.move(1439, 1799);
+	await page.mouse.move(windowWidth - 1, windowHeight - 1);
 	await wait(800);
 	log.masks = { ...(log.masks ?? {}), [name]: await paintMasks() };
 	try {
@@ -238,6 +269,16 @@ const step = async (name, fn) => {
 };
 const invoke = (command, payload) =>
 	page.evaluate(([c, p]) => window.__TAURI_INTERNALS__.invoke(c, p), [command, payload ?? {}]);
+// The served estates, from either status shape: a list of served estates
+// before step F4a, then every tracked instance with its lifecycle.
+const servedEstates = async () => {
+	const status = await invoke("rrd_estate_status", { request: { projects: [], executable: "" } });
+	return Array.isArray(status)
+		? status
+		: (status?.instances ?? [])
+				.filter((instance) => instance.state === "ready")
+				.map((instance) => instance.estate);
+};
 
 try {
 	let ready = false;
@@ -256,11 +297,16 @@ try {
 		page = context.pages()[0];
 		await wait(250);
 	}
-	// Tall enough that each lens, its graph and its map fit in one image.
-	await page.setViewportSize({ width: 1440, height: 1800 });
+	await page.setViewportSize({ width: windowWidth, height: windowHeight });
 	// Times render in UTC, so a masked time is the same width on any machine.
 	const cdp = await context.newCDPSession(page);
 	await cdp.send("Emulation.setTimezoneOverride", { timezoneId: "UTC" });
+	// The first launch after a build can paint late, so the overview's own
+	// content, not the fixed wait alone, says the window is ready.
+	await page
+		.getByRole("button", { name: "Start local RRFlow" })
+		.first()
+		.waitFor({ timeout: 60_000 });
 	await wait(4000);
 	if (theme === "light") {
 		await step("set-light-theme", async () => {
@@ -304,7 +350,7 @@ try {
 		await wait(3000);
 		await shot("serving-stages");
 		for (let i = 0; i < 90; i++) {
-			const served = await invoke("rrd_estate_status");
+			const served = await servedEstates();
 			if (Array.isArray(served) && served.length > 0) {
 				log.served = served.map((s) => ({
 					endpoint: s.endpoint,
@@ -319,7 +365,7 @@ try {
 		await shot("served");
 	});
 	await step("seed", async () => {
-		const [served] = await invoke("rrd_estate_status");
+		const [served] = await servedEstates();
 		const seed = spawnSync(
 			"cargo",
 			[
@@ -350,7 +396,10 @@ try {
 		}
 	});
 	await step("workbench", async () => {
-		await page.reload({ waitUntil: "domcontentloaded" });
+		// Serving a project opens its address; a stray click must not move this start point.
+		await page.goto(page.url().replace(/(\/runtime\/[^/]+).*/, "$1/overview"), {
+			waitUntil: "domcontentloaded",
+		});
 		await wait(6000);
 		await shot("workbench-overview");
 	});
@@ -359,21 +408,30 @@ try {
 		await page.goto(workbench, { waitUntil: "domcontentloaded" });
 		await wait(4000);
 	};
-	for (const tab of ["Knowledge", "Activity", "Learning", "Services", "API reference"]) {
-		await step(`tab ${tab}`, async () => {
+	// An area on the rail, then a tab inside it.
+	const open = async (area, tab) => {
+		await page
+			.getByRole("navigation", { name: "Project areas" })
+			.getByRole("button", { name: area })
+			.click();
+		await wait(800);
+		if (tab) await page.getByRole("tab", { name: tab, exact: true }).click();
+	};
+	for (const [name, area, tab] of [
+		["knowledge", "Knowledge"],
+		["tasks", "Reasoning", "Tasks"],
+		["api-reference", "System", "API reference"],
+	]) {
+		await step(`tab ${name}`, async () => {
 			await back();
-			await page
-				.getByRole("tab", { name: tab })
-				.or(page.getByRole("button", { name: tab, exact: true }))
-				.first()
-				.click();
+			await open(area, tab);
 			await wait(3000);
-			await shot(`workbench-${slug(tab)}`);
+			await shot(`workbench-${name}`);
 		});
 	}
 	await step("api-reference-states", async () => {
 		await back();
-		await page.getByRole("button", { name: "API reference", exact: true }).first().click();
+		await open("System", "API reference");
 		await wait(4000);
 		// The topic list jumps to an operation and follows the article in view.
 		const topics = page.getByRole("navigation", { name: "API topics" });
@@ -403,7 +461,7 @@ try {
 		await page.getByRole("option", { name: "CLI", exact: true }).first().click();
 		await wait(800);
 		// Scrolling by hand moves the active topic to an article in view.
-		await page.mouse.move(1000, 1200);
+		await page.mouse.move(windowWidth * 0.7, windowHeight * 0.7);
 		await page.mouse.wheel(0, 4000);
 		await wait(1500);
 		// Both the article and its topic are in view.
@@ -429,10 +487,15 @@ try {
 		}
 		log.apiReferenceScrolledTo = scrolledTo;
 	});
-	for (const card of ["Data models", "Records & relations", "Vectors", "Storage engine"]) {
+	for (const [card, area, tab] of [
+		["Data models", "Knowledge", "Schema"],
+		["Records & relations", "Knowledge", "Graph"],
+		["Vectors", "Knowledge", "Vectors"],
+		["Storage engine", "System", "Storage"],
+	]) {
 		await step(`lens ${card}`, async () => {
 			await back();
-			await page.getByText(card, { exact: true }).first().click();
+			await open(area, tab);
 			await wait(4000);
 			await shot(`lens-${slug(card)}`);
 			log.lensUrls = { ...(log.lensUrls ?? {}), [card]: page.url() };
@@ -448,6 +511,28 @@ try {
 		await page.getByRole("option").first().click();
 		await wait(3000);
 		await shot("records-selected");
+		// One object at three depths, with its links in view at each.
+		for (const depth of ["Details", "Raw", "Plain words"]) {
+			await page
+				.getByRole("complementary", { name: "Details" })
+				.getByText(depth, { exact: true })
+				.click();
+			await wait(600);
+			if (
+				!(await page
+					.getByText(/^Links to/)
+					.first()
+					.isVisible())
+			) {
+				throw new Error(`the inspector lost its links at depth ${depth}`);
+			}
+			if (depth !== "Plain words") await shot(`inspector-${slug(depth)}`);
+		}
+		await page.getByRole("button", { name: "Close details" }).first().click();
+		await wait(800);
+		await shot("inspector-closed");
+		await page.getByRole("button", { name: "Show details" }).first().click();
+		await wait(800);
 		await page.getByText("Around the selection", { exact: true }).first().click();
 		await wait(3000);
 		await shot("records-around-selection");
@@ -490,6 +575,16 @@ try {
 		await wait(3000);
 		await into(page.getByRole("button", { name: "Run query" }).first());
 		await shot("records-traverse");
+		// A query the engine refuses, typed where the console takes text (a
+		// text area or a code editor) and run: what the engine said, and where.
+		// An autosizing text area keeps a hidden copy, so only shown fields count.
+		await page.locator("textarea:visible, .cm-content:visible").last().click();
+		await page.keyboard.press("Control+A");
+		await page.keyboard.type("FROM record:document AT VALID 1 KNOWN");
+		await page.getByRole("button", { name: "Run query" }).first().click();
+		await wait(3000);
+		await into(page.getByRole("button", { name: "Run query" }).first());
+		await shot("records-refused");
 	});
 	await step("vectors-points", async () => {
 		await lens("Vectors");
@@ -497,9 +592,14 @@ try {
 		await wait(2500);
 		await into(page.getByRole("button", { name: "Hide points" }).first());
 		await shot("vectors-points");
-		await page.locator("table button").first().click();
+		await page
+			.locator("table")
+			.filter({ hasText: "First numbers" })
+			.locator("button")
+			.first()
+			.click();
 		await wait(4000);
-		await into(page.getByText("Selected record", { exact: true }).first());
+		await into(page.getByText("Most similar records", { exact: true }).first());
 		await shot("vectors-nearest");
 	});
 	await step("storage-details", async () => {
@@ -529,11 +629,178 @@ try {
 		await into(page.getByRole("button", { name: "Browse up to 50 rows" }).first());
 		await shot(`models-${slug(pick.split(" - ")[0])}-rows`);
 	});
+	// TurboQuant in the Vectors lens (step T1): the empty search generations
+	// section, the build form and the request it holds, the built generation,
+	// its activation, then exact beside TurboQuant for a selected record and the
+	// generation's details. These steps write to the estate, so they follow
+	// every lens capture that reads it. A build without the section logs them
+	// as failed.
+	const dialog = () => page.getByRole("dialog");
+	await step("vectors-generations", async () => {
+		await lens("Vectors");
+		await into(page.getByRole("button", { name: "Build a generation" }).first());
+		await shot("vectors-generations-empty");
+		await page.getByRole("button", { name: "Build a generation" }).first().click();
+		await wait(1200);
+		await shot("vectors-build-form");
+		await dialog().getByRole("button", { name: "Review the request" }).click();
+		await wait(2000);
+		await shot("vectors-build-request");
+		await dialog().getByRole("button", { name: "Build", exact: true }).click();
+		await wait(3000);
+		await shot("vectors-build-applied");
+		await dialog().getByRole("button", { name: "Done" }).click();
+		await wait(1500);
+		await page.getByRole("button", { name: "Activate", exact: true }).first().click();
+		await wait(2000);
+		await shot("vectors-activate-request");
+		await dialog().getByRole("button", { name: "Activate", exact: true }).click();
+		await wait(3000);
+		await dialog().getByRole("button", { name: "Done" }).click();
+		await wait(1500);
+	});
+	await step("vectors-compare", async () => {
+		await lens("Vectors");
+		await page.getByRole("button", { name: "Browse points" }).first().click();
+		await wait(2500);
+		await page
+			.locator("table")
+			.filter({ hasText: "First numbers" })
+			.locator("button")
+			.first()
+			.click();
+		await wait(4000);
+		// The comparison is taller than the space below the map, so it is
+		// brought to the top of the window to show its lists and evidence.
+		await page
+			.getByText("Exact and approximate, side by side", { exact: true })
+			.first()
+			.evaluate((element) => element.scrollIntoView({ block: "start" }));
+		await wait(1200);
+		await shot("vectors-compare");
+		await page.getByTitle("Show its digests").first().click();
+		await wait(1000);
+		await into(page.getByTitle("Show its digests").first());
+		await shot("vectors-generation-details");
+	});
+	// A guide ends each step on the real action, so doing the action is the test.
+	const guideCallout = page.getByRole("status", { name: "Explore what your project knows" });
+	const details = page.getByRole("complementary", { name: "Details" });
+	const atGuideStep = async (number, name) => {
+		await wait(1500);
+		const shown = await guideCallout.innerText();
+		if (!shown.includes(`Step ${number} of 5`)) {
+			throw new Error(`expected guide step ${number}, the callout shows: ${shown}`);
+		}
+		if (name) await shot(name);
+	};
+	// A row in the details panel. The panel's heading also names the record's cluster.
+	const recordRow = (title) =>
+		details.getByRole("button", { name: new RegExp(`^${title}\\b`) }).first();
+	const startGuide = () => page.getByRole("button", { name: "Start guide", exact: true }).click();
+	const leaveGuide = async () => {
+		await page.getByRole("button", { name: "Leave guide", exact: true }).click();
+		await wait(500);
+		if ((await guideCallout.count()) > 0) throw new Error("the guide stayed open after Leave");
+	};
+	await step("guide-explore-graph", async () => {
+		await back();
+		await startGuide();
+		await atGuideStep(1, "guide-step-1");
+		await recordRow("Document a1").click();
+		await atGuideStep(2, "guide-step-2");
+		await details.getByText("Details", { exact: true }).click();
+		await atGuideStep(3, "guide-step-3");
+		await recordRow("Document a2").click();
+		await atGuideStep(4, "guide-step-4");
+		await details.getByRole("button", { name: "Show what is around it" }).click();
+		await atGuideStep(5, "guide-step-5");
+		await page.getByRole("button", { name: "Finish", exact: true }).click();
+		await wait(500);
+		if ((await guideCallout.count()) > 0) throw new Error("the guide stayed open after Finish");
+	});
+	await step("guide-ahead-of-its-steps", async () => {
+		await back();
+		await open("Knowledge", "Graph");
+		await wait(1500);
+		await recordRow("Document a1").click();
+		await wait(800);
+		// The rail keeps the selection, so the guide opens the tab with a record already picked.
+		await open("Start");
+		await wait(800);
+		await startGuide();
+		await atGuideStep(1);
+		await details.getByText("Details", { exact: true }).click();
+		await atGuideStep(1);
+		// Details is already open, so the pick passes step 2 as well.
+		await recordRow("Document a2").click();
+		await atGuideStep(3);
+		await details.getByRole("button", { name: "Show what is around it" }).click();
+		await atGuideStep(3);
+		// What is around it is already showing, so the pick passes step 4 as well.
+		await recordRow("Document a1").click();
+		await atGuideStep(5);
+		await leaveGuide();
+		// Leaving changes nothing the person did.
+		await details
+			.getByRole("button", { name: "Back to whole estate" })
+			.waitFor({ timeout: 3000 });
+	});
+	await step("guide-away-and-back", async () => {
+		await back();
+		await startGuide();
+		await atGuideStep(1);
+		await recordRow("Document a1").click();
+		await atGuideStep(2);
+		await page.getByRole("button", { name: "Close details" }).click();
+		await wait(800);
+		await guideCallout.getByText("press Show details").waitFor({ timeout: 3000 });
+		await shot("guide-control-hidden");
+		await page.getByRole("button", { name: "Show details" }).click();
+		await wait(800);
+		if ((await guideCallout.getByText("press Show details").count()) > 0) {
+			throw new Error("the guide still says its control is hidden");
+		}
+		await page.getByRole("tab", { name: "Schema", exact: true }).click();
+		await wait(1000);
+		await shot("guide-on-another-tab");
+		await guideCallout.getByRole("button", { name: "Back to this step" }).click();
+		await wait(1500);
+		await page.getByRole("tab", { name: "Graph", exact: true, selected: true }).waitFor({
+			timeout: 3000,
+		});
+		await atGuideStep(2);
+		await leaveGuide();
+	});
+	await step("guide-reduced-motion", async () => {
+		await page.emulateMedia({ reducedMotion: "reduce" });
+		try {
+			await back();
+			await startGuide();
+			await atGuideStep(1);
+			const motion = await page.locator("[data-guide-spot]").evaluate((spot) => {
+				const style = getComputedStyle(spot);
+				return { animation: style.animationName, transition: style.transitionDuration };
+			});
+			if (motion.animation !== "none" || motion.transition !== "0s") {
+				throw new Error(`the guide still moves: ${JSON.stringify(motion)}`);
+			}
+			await recordRow("Document a1").click();
+			await atGuideStep(2);
+			await leaveGuide();
+		} finally {
+			await page.emulateMedia({ reducedMotion: "no-preference" });
+		}
+	});
+	await step("system-instance", async () => {
+		await back();
+		await open("System", "Instance");
+		await wait(3000);
+		await shot("panel-advanced-details");
+	});
 	for (const panel of [
 		"What do these words mean?",
-		"Advanced details",
 		"Explore project knowledge",
-		"Knowledge paths",
 		"Manage project engines",
 	]) {
 		await step(`panel ${panel}`, async () => {
@@ -567,6 +834,34 @@ try {
 			await wait(1000);
 			await shot(`settings-${slug(t)}`);
 		}
+		await page.keyboard.press("Escape");
+	});
+	// The project's instance through a stop and a start (step F4a): the panel
+	// shows the stopped project, then the instance it started again. A build
+	// without per-project rows has no Start, and that step is logged as failed.
+	const openEngines = async () => {
+		await page.getByRole("button", { name: "Manage project engines" }).first().click();
+		await wait(2000);
+	};
+	await step("project-engines-stopped", async () => {
+		await back();
+		await openEngines();
+		await page.getByRole("button", { name: "Stop this engine" }).first().click();
+		await wait(5000);
+		await shot("project-engines-stopped");
+	});
+	await step("project-engines-restarted", async () => {
+		await page
+			.getByRole("dialog")
+			.getByRole("button", { name: "Start", exact: true })
+			.first()
+			.click();
+		for (let i = 0; i < 90 && (await servedEstates()).length === 0; i++) {
+			await wait(1000);
+		}
+		await wait(4000);
+		await openEngines();
+		await shot("project-engines-restarted");
 		await page.keyboard.press("Escape");
 	});
 } finally {

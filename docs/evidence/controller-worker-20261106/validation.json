@@ -1,0 +1,72 @@
+{
+	"uiSourceCommit": "9651939c8dc1a40843f0a5b0061caa7a549ab0fa",
+	"uiSourceTree": "8723f97a3ad37018f323e5ff164fdc9b03bd8196",
+	"uiSourceDirty": false,
+	"buildCommand": "CARGO_BUILD_JOBS=1 VITE_CONNECTOME_PREVIEW=true pnpm tauri build --debug --no-bundle --config src-tauri/tauri.bundle.conf.json",
+	"qualification": "Unsigned unoptimized development build; no model or distribution qualification",
+	"artifacts": {
+		"connectome.exe": {
+			"sha256": "09ad51711478a5c14e99d7d764f9d35fa4242c7ef42b25c2ead1850ab08e8070",
+			"bytes": 58861568
+		},
+		"rrflow.exe": {
+			"sha256": "94989c49bf6cae7b04d273103336c158e87539dc22f9222eb3edc29dca7cc395",
+			"bytes": 174679040
+		}
+	},
+	"engineSourceCommit": "a5dbb754f78f3d3d877d2ac9bb42df04a47648bf",
+	"trial": {
+		"taskSource": "https://github.com/rrflow/connectome-development/pull/28",
+		"taskSourceRevision": "9651939c8dc1a40843f0a5b0061caa7a549ab0fa",
+		"actualProviderCalls": 2,
+		"participants": "One operator-configured experimental BF16 endpoint; model alias is not weight attestation.",
+		"independentReadbackPhases": [
+			"before-reload",
+			"after-reload-before-ui-recovery",
+			"after-ui-recovery"
+		],
+		"rendererErrors": [],
+		"taskStatus": "open",
+		"projectEffects": false,
+		"qualityReviewed": false,
+		"trainingConsent": false,
+		"privateEvidence": "Original operator configuration, raw HTTP readbacks, setup and desktop logs remain private; public payloads below are unchanged projections, not complete session logs."
+	},
+	"localLogs": {
+		"connectome-worker-current-all-tests.log": {
+			"sha256": "5f8f4d4a2223e5bdcbe7830df83183bad72a512d3a8feb19b227f72f89047ef8"
+		},
+		"connectome-worker-current-clippy.log": {
+			"sha256": "67e3fc376508a5d9b9c63c9f6a59c24a8ffc8d2004146009b2bd3ea633f0c396"
+		},
+		"connectome-worker-final-frontend-build.log": {
+			"sha256": "1c77b82e31f4033fe24436d351bfa1ce0ff072dcc29d11029f5dddaebe489f28"
+		},
+		"connectome-worker-final-smoke.log": {
+			"sha256": "cd6e6e1588eb809594421dcfefe24bafbf5edf222da3692f75fd34c87ff88ede"
+		},
+		"connectome-worker-desktop-current-build.log": {
+			"sha256": "fcb4acac01a53fb5e45859e990392307a975d29b939d39f6b767a2fcbd7c4b3a"
+		}
+	},
+	"rawEvidenceSha256": {
+		"before-reload/task-attempt-read.json": "206c73b243e28024f5d1c7a82bbe1377020c8c4489e3a2d75a253a99d88d29a4",
+		"before-reload/task-budget-read.json": "93fe0a28a9e40045b6ebb84b258b8acb6493e0b9a8e785c037d118e53f7e3202",
+		"before-reload/task-read.json": "cf75eb83c47652195a76aeb5142b9eac75eb82236c8944d84eed16e8bd20badb",
+		"after-reload-before-ui-recovery/task-attempt-read.json": "f8d4123141ba676f7040adae7ecfbd9182727a8d25acbac93aeb052e6760aad5",
+		"after-reload-before-ui-recovery/task-budget-read.json": "9f0a0208f77369b551d60291f259798e0ebe18f3ac37de5196b83d8be64b48af",
+		"after-reload-before-ui-recovery/task-read.json": "96d0ecf2b85d103f2c388b088b89944a6a539b239fdade1f93c928fbb57e80a3",
+		"after-ui-recovery/task-attempt-read.json": "3b8eb8a64ff3fff5a2549dc03e7d67a0a3af6ad3dbf3d97a738a66c203d19364",
+		"after-ui-recovery/task-budget-read.json": "3228ddd83fb3314ecad735829cfe03f51cd31b5f6b8bab8e1f561bd5b01c2edf",
+		"after-ui-recovery/task-read.json": "be1601fbe71fd3518da319f83ab946dbc80347049b07a6a3708de1bcd879d3d7"
+	},
+	"publicArtifactsSha256BeforeFormatting": {
+		"recovery-comparison.json": "8dc4e2e0272ec12885819d2888f52e77aa8989adc6d3d43556c2042753cf1128",
+		"task-attempt-read.json": "257d8e33b88aee8b0cd5cb369bb5e17c125d2a867f7f9dd0110178f6ef05add7",
+		"task-budget-read.json": "7da6acaa75939ffd78319e0c6794beda1ac739d1d0e399b1d5219ff50ee208b8",
+		"task-input.json": "53280ca56da8008d7ff8a1df9d4dd34522fb37b471ea4ae38772d1ab01586b91",
+		"task-read.json": "3a09e42e008aee89b7917a1e36d54841521ac8f86c0cdce5bcdaddbc6cbd4ba0",
+		"worker-accepted.png": "c42e1815ef193a87139e09ad9349d5479566b235e3679491cb42306abd55643c",
+		"worker-recovered.png": "8e09e1b16f5c78e13395f11622bab4de8e82796890fb62d5565b2b8db8aba905"
+	}
+}

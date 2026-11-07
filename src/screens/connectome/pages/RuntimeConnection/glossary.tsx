@@ -25,6 +25,10 @@ export type GlossaryTerm =
 	| "similarity"
 	| "exact"
 	| "neighbours"
+	| "generation"
+	| "turboquant"
+	| "rerank"
+	| "recall"
 	| "rrflowKV"
 	| "wal"
 	| "memtable"
@@ -122,6 +126,26 @@ export const GLOSSARY: Record<GlossaryTerm, GlossaryEntry> = {
 		meaning:
 			"The stored vectors most similar to a given one, as the engine's search returns them.",
 	},
+	generation: {
+		term: "Search generation",
+		meaning:
+			"A compressed copy of a named vector's points, built at one cursor. Once active, the engine searches it to pick candidates, then scores them against the full vectors. Building one never changes the stored vectors.",
+	},
+	turboquant: {
+		term: "TurboQuant",
+		meaning:
+			"A compression method that rotates each vector with a seeded transform, keeps a few bits per number, and corrects for its length. At 4 bits per number it is 8 times smaller than the full vector.",
+	},
+	rerank: {
+		term: "Exact rerank",
+		meaning:
+			"The candidates a compressed search picked, scored again with their full vectors. Every score an approximate search returns comes from this step, so it is exact.",
+	},
+	recall: {
+		term: "Recall@k",
+		meaning:
+			"Of the k nearest records exact search finds, the share the approximate search found too. 1 means it found all of them.",
+	},
 	rrflowKV: {
 		term: "rrflowKV",
 		meaning:
@@ -180,7 +204,19 @@ const SECTIONS: { title: string; terms: GlossaryTerm[] }[] = [
 	},
 	{
 		title: "Vectors",
-		terms: ["vector", "collection", "point", "embedding", "similarity", "exact", "neighbours"],
+		terms: [
+			"vector",
+			"collection",
+			"point",
+			"embedding",
+			"similarity",
+			"exact",
+			"neighbours",
+			"generation",
+			"turboquant",
+			"rerank",
+			"recall",
+		],
 	},
 	{
 		title: "Storage engine",

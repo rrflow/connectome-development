@@ -35,9 +35,9 @@ const html = `<!doctype html>
 		position: relative;
 		overflow: hidden;
 		background:
-			radial-gradient(ellipse 420px 260px at 60% 52%, rgba(124, 92, 246, 0.22), transparent 70%),
-			radial-gradient(ellipse 360px 220px at 30% 60%, rgba(6, 182, 212, 0.10), transparent 70%),
-			linear-gradient(160deg, #15121f, #0e0c14);
+			radial-gradient(ellipse 420px 260px at 60% 52%, rgba(15, 92, 99, 0.42), transparent 70%),
+			radial-gradient(ellipse 360px 220px at 30% 60%, rgba(204, 85, 0, 0.1), transparent 70%),
+			linear-gradient(160deg, #0e1e22, #081417);
 		font-family: "Inter Variable", sans-serif;
 	}
 	.brand {
@@ -47,7 +47,7 @@ const html = `<!doctype html>
 	.brand svg { width: 46px; height: 46px; }
 	.wordmark {
 		font-size: 22px; font-weight: 750; line-height: 1; letter-spacing: 0.12em;
-		background: linear-gradient(100deg, #f5f0ff 10%, #b891ff 55%, #66d9ff 100%);
+		background: linear-gradient(100deg, #f3f7f7 10%, #f79c62 55%, #5fc4cb 100%);
 		background-clip: text; -webkit-background-clip: text;
 		-webkit-text-fill-color: transparent;
 	}
