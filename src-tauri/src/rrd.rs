@@ -7,9 +7,10 @@ use tauri::{ipc::Channel, State};
 
 mod client;
 mod cluster;
+#[path = "rrd/estate.rs"]
+pub mod engram;
 pub mod engine;
 mod error;
-pub mod engram;
 mod transport;
 mod view;
 

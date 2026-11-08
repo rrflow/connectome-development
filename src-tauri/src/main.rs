@@ -8,7 +8,7 @@ use std::{env, sync::OnceLock};
 
 use log::info;
 use paths::get_logs_directory;
-use rrd::::State;
+use rrd::engram::engramState;
 use rrd::RrdClientState;
 use tauri::{AppHandle, Manager, RunEvent};
 use tauri_plugin_log::{Target, TargetKind};
@@ -96,8 +96,8 @@ fn main() {
                 ])
                 .build(),
         )
-        .manage(open::OpenResourc(Default::default()))
-        .manage(State::default())
+        .manage(open::OpenResourcengram(Default::default()))
+        .manage(engramState::default())
         .manage(RrdClientState::default())
         .invoke_handler(tauri::generate_handler![
             config::load_config,
@@ -105,10 +105,10 @@ fn main() {
             config::backup_config,
             config::has_config_backup,
             config::restore_config_backup,
-            rrd::::rrd__preview,
-            rrd::::rrd__serve,
-            rrd::::rrd__status,
-            rrd::::rrd__stop,
+            rrd::engram::rrd_engram_preview,
+            rrd::engram::rrd_engram_serve,
+            rrd::engram::rrd_engram_status,
+            rrd::engram::rrd_engram_stop,
             diagnostics::runtime_diagnostics_request,
             rrd::rrd_public_request,
             rrd::rrd_connect,
@@ -161,11 +161,11 @@ fn main() {
         RunEvent::Opened { urls } => {
             info!("Opened resources: {:?}", urls);
 
-            *app.state::<open::OpenResourc>().0.lock().unwrap() = urls;
+            *app.state::<open::OpenResourcengram>().0.lock().unwrap() = urls;
             window::emit_last(app, "open-resource", ());
         }
         RunEvent::Exit => {
-            rrd::::stop_on_exit(&app.state::<State>());
+            rrd::engram::stop_on_exit(&app.state::<engramState>());
         }
         _ => (),
     })

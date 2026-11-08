@@ -182,7 +182,7 @@ export function ExplorerView() {
 									code: `
 										-- Declare a new table
 										DEFINE TABLE person;
-										
+
 										-- Fetch table records
 										SELECT * FROM person;
 									`,

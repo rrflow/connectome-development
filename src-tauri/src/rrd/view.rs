@@ -36,16 +36,16 @@ pub struct ServiceView {
     pub deployment_form: String,
     pub storage_profile: String,
     pub endpoint_presentation: String,
-    pub installed_: Option<InstalledView>,
+    pub installed_engram: Option<InstalledengramView>,
     pub configuration_revision: u64,
     pub configuration_sha256: String,
     pub capabilities: Vec<CapabilityView>,
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub struct InstalledView {
+pub struct InstalledengramView {
     pub project_id: String,
-    pub _id: String,
+    pub engram_id: String,
     pub instance_id: String,
 }
 
@@ -170,7 +170,7 @@ pub struct GraphView {
     pub known_at_cursor: u64,
     pub nodes: Vec<NodeView>,
     pub edges: Vec<EdgeView>,
-    /// Connectome-computed clusters, largest first; not  data.
+    /// Connectome-computed clusters, largest first; not engram data.
     pub clusters: Vec<ClusterView>,
 }
 
@@ -521,11 +521,11 @@ pub fn service(capabilities: &ServiceCapabilities) -> ServiceView {
         deployment_form: label(&capabilities.deployment.deployment_form),
         storage_profile: label(&capabilities.deployment.storage_profile),
         endpoint_presentation: label(&capabilities.deployment.endpoint_presentation),
-        installed_: capabilities.installed_.as_ref().map(|| {
-            InstalledView {
-                project_id: .project_id.as_str().into(),
-                _id: ._id.as_str().into(),
-                instance_id: .instance_id.as_str().into(),
+        installed_engram: capabilities.installed_engram.as_ref().map(|engram| {
+            InstalledengramView {
+                project_id: engram.project_id.as_str().into(),
+                engram_id: engram.engram_id.as_str().into(),
+                instance_id: engram.instance_id.as_str().into(),
             }
         }),
         configuration_revision: capabilities.configuration.revision,

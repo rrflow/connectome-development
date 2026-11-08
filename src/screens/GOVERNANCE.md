@@ -43,7 +43,7 @@ Deleted 2026-10-18: `dashboard` and `monitor` (the vendor's hosted-instance dash
 | Page | Purpose |
 |------|---------|
 | ControlPlane | Optional enterprise control-plane profile |
-| CreateConnection | New runtime profile or served  |
+| CreateConnection | New runtime profile or served engram |
 | NewEmbed | Mini embed generator |
 | Overview | Hero, runtime profiles, resources |
 | Placeholder | Empty-state placeholder |

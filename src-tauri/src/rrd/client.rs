@@ -270,7 +270,7 @@ pub struct NativeRrdClient {
     api_key: Secret,
     connected_at_unix_ms: u64,
     service: ServiceView,
-    /// The 's configured query budget, read from its capability document.
+    /// The engram's configured query budget, read from its capability document.
     query_budget: QueryBudget,
     /// The session policy the engine granted when the connection opened.
     limits: SessionLimits,

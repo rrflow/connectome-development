@@ -101,7 +101,7 @@ rest are engineering decisions recorded here for review.
    DBA) is not put in a legal notice before it is filed; when it is, the line
    becomes "AngryVibes LLC (d/b/a <name>)" in one commit.
 7. The Tauri bundle identifier is `dev.rrflow.connectome`. It names the
-   application-data directory that holds Connectome's default , so it is
+   application-data directory that holds Connectome's default engram, so it is
    set before anyone installs and not changed afterwards.
 8. Versioning is contracted. `package.json` owns `version` and
    `connectome.channel`; `src-tauri/Cargo.toml`, the `connectome` entry of
@@ -138,7 +138,7 @@ Work:
    `LICENSE`, `Cargo.toml` authors, `package.json` authors, `index.html` and
    the About tab from the owner's answer.
 4. Set the Tauri bundle identifier from the owner's answer (it names the
-   application's data directory; changing it later orphans installed s).
+   application's data directory; changing it later orphans installed engrams).
 5. Delete `bun.lock`, the vendor logos, and the inherited changelogs.
 6. Extend the identity gate (decision 3) and prove it against synthetic
    violations: prose, a path, a seam file that hides its vendor.
@@ -169,7 +169,7 @@ Files: `src/vendor/`, the 76 importers, the views that run on them,
 `package.json`, `vite.config.ts`.
 
 Work: each inherited view either moves onto `@rrflow/rrd-client` and RRD
-operations (s and graph drill-down first, then prompt → frontier AI →
+operations (engrams and graph drill-down first, then prompt → frontier AI →
 rrflowKV memory, per the owner's staircase) or is deleted. `src/vendor/` is
 deleted with the last importer, together with `surrealdb`, `@surrealdb/wasm`,
 `@surrealdb/ql-wasm-v2`, `@surrealdb/ql-wasm-v3`, `@surrealdb/codemirror` and

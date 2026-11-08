@@ -32,9 +32,9 @@ export interface RrdCapabilityView {
 	limitation: string | null;
 }
 
-export interface RrdInstalledengramView {
+export interface RrdInstalledEstateView {
 	project_id: string;
-	engram_id: string;
+	estate_id: string;
 	instance_id: string;
 }
 
@@ -45,7 +45,7 @@ export interface RrdServiceView {
 	deployment_form: string;
 	storage_profile: string;
 	endpoint_presentation: string;
-	installed_engram: RrdInstalledengramView | null;
+	installed_estate: RrdInstalledEstateView | null;
 	configuration_revision: number;
 	configuration_sha256: string;
 	capabilities: RrdCapabilityView[];
