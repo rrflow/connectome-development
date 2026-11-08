@@ -36,16 +36,16 @@ pub struct ServiceView {
     pub deployment_form: String,
     pub storage_profile: String,
     pub endpoint_presentation: String,
-    pub installed_engram: Option<InstalledengramView>,
+    pub installed_estate: Option<InstalledEstateView>,
     pub configuration_revision: u64,
     pub configuration_sha256: String,
     pub capabilities: Vec<CapabilityView>,
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub struct InstalledengramView {
+pub struct InstalledEstateView {
     pub project_id: String,
-    pub engram_id: String,
+    pub estate_id: String,
     pub instance_id: String,
 }
 
@@ -521,10 +521,10 @@ pub fn service(capabilities: &ServiceCapabilities) -> ServiceView {
         deployment_form: label(&capabilities.deployment.deployment_form),
         storage_profile: label(&capabilities.deployment.storage_profile),
         endpoint_presentation: label(&capabilities.deployment.endpoint_presentation),
-        installed_engram: capabilities.installed_engram.as_ref().map(|engram| {
-            InstalledengramView {
+        installed_estate: capabilities.installed_estate.as_ref().map(|engram| {
+            InstalledEstateView {
                 project_id: engram.project_id.as_str().into(),
-                engram_id: engram.engram_id.as_str().into(),
+                estate_id: engram.estate_id.as_str().into(),
                 instance_id: engram.instance_id.as_str().into(),
             }
         }),

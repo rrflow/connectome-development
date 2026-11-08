@@ -3,7 +3,7 @@ use std::path::Path;
 use std::sync::Mutex;
 
 use log::info;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager, State, Window};
 use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_dialog::FilePath;
@@ -165,5 +165,50 @@ pub async fn open_in_explorer(path: String) {
 
     if whitelist.contains(&path) {
         showfile::show_path_in_file_manager(Path::new(&path));
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ExternalPathProbeRequest {
+    pub path: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct ExternalPathProbeView {
+    pub path: String,
+    pub connected: bool,
+    pub is_directory: Option<bool>,
+    pub size_bytes: Option<u64>,
+    pub modified_at_unix_ms: Option<u64>,
+    pub message: Option<String>,
+}
+
+#[tauri::command]
+pub fn probe_external_path(request: ExternalPathProbeRequest) -> ExternalPathProbeView {
+    let path = Path::new(request.path.as_str());
+    match fs::metadata(path) {
+        Ok(metadata) => {
+            let modified_at_unix_ms = metadata
+                .modified()
+                .ok()
+                .and_then(|modified| modified.duration_since(std::time::UNIX_EPOCH).ok())
+                .and_then(|duration| u64::try_from(duration.as_millis()).ok());
+            ExternalPathProbeView {
+                path: request.path,
+                connected: true,
+                is_directory: Some(metadata.is_dir()),
+                size_bytes: Some(metadata.len()),
+                modified_at_unix_ms,
+                message: None,
+            }
+        }
+        Err(error) => ExternalPathProbeView {
+            path: request.path,
+            connected: false,
+            is_directory: None,
+            size_bytes: None,
+            modified_at_unix_ms: None,
+            message: Some(error.to_string()),
+        },
     }
 }

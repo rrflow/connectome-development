@@ -135,6 +135,7 @@ fn main() {
             open::prune_allowed_files,
             open::open_query_file,
             open::open_in_explorer,
+            open::probe_external_path,
         ])
         .setup(|app| {
             info!("Launch args: {:?}", env::args());

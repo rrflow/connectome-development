@@ -446,6 +446,19 @@ export interface RrdReadPromptFlightRequest {
 	flight_id: string;
 }
 
+export interface RrdExternalPathProbeRequest {
+	path: string;
+}
+
+export interface RrdExternalPathProbeView {
+	path: string;
+	connected: boolean;
+	is_directory: boolean | null;
+	size_bytes: number | null;
+	modified_at_unix_ms: number | null;
+	message: string | null;
+}
+
 /**
  * A failed native RRD command. `retryable` is the engine's own classification:
  * it marks a transient storage conflict retryable, such as a diagnostic read
@@ -477,6 +490,22 @@ async function call<T>(command: string, args?: InvokeArgs): Promise<T> {
 		}
 		throw error instanceof Error ? error : new Error(String(error));
 	}
+}
+
+export async function probeExternalPath(
+	request: RrdExternalPathProbeRequest,
+): Promise<RrdExternalPathProbeView> {
+	if (!isTauri()) {
+		return {
+			path: request.path,
+			connected: false,
+			is_directory: null,
+			size_bytes: null,
+			modified_at_unix_ms: null,
+			message: "Path probing requires native Connectome",
+		};
+	}
+	return call<RrdExternalPathProbeView>("probe_external_path", { request });
 }
 
 /** One authenticated RRD session held by Connectome's native process. */
