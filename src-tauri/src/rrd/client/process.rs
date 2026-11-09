@@ -20,6 +20,7 @@ use serde_json::{json, Value};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
+mod attunement;
 mod effects;
 mod elsewhere;
 mod language;
@@ -49,6 +50,7 @@ struct Estate {
     served: ServedEstate,
     address: SocketAddr,
     instance: String,
+    executable_sha256: String,
 }
 
 /// The serve sequence's boundaries, the engine's output and each lifecycle
@@ -145,11 +147,219 @@ impl Estate {
             .expect("the served estate names a loopback HTTP address");
         let instance = served.view.instance.clone();
 
+        let executable_sha256 = served
+            .view
+            .engine
+            .as_ref()
+            .expect("owned serve selected an engine")
+            .sha256
+            .clone();
         Self {
             served,
             address,
             instance,
+            executable_sha256,
         }
+    }
+
+    /// Creates a fresh, explicitly source-readable estate through the public
+    /// CLI, then serves its installed locator through Connectome's real
+    /// existing-project path. The CLI plan is retained outside the project.
+    fn install_source_read_and_serve() -> Self {
+        let fixture_id = Uuid::new_v4().simple().to_string();
+        let project =
+            std::env::temp_dir().join(format!("connectome-rrd-source-worker-{fixture_id}.project"));
+        std::fs::create_dir_all(&project).expect("isolated empty project");
+        let plan_path = std::env::temp_dir().join(format!(
+            "connectome-rrd-source-worker-{fixture_id}.plan.json"
+        ));
+        let executable = rrflow();
+        let project_arg = project.to_string_lossy().into_owned();
+
+        let version_output = std::process::Command::new(&executable)
+            .args(["--json", "version"])
+            .output()
+            .expect("read public RRFlow version identity");
+        assert!(
+            version_output.status.success(),
+            "public RRFlow version failed: {}",
+            String::from_utf8_lossy(&version_output.stderr)
+        );
+        let version: Value =
+            serde_json::from_slice(&version_output.stdout).expect("public version JSON");
+        let executable_sha256 = version["build"]["executable_sha256"]
+            .as_str()
+            .expect("public executable identity")
+            .to_owned();
+        assert_eq!(
+            version["build"]["provenance"]["source_commit"],
+            pinned_revision(),
+            "installed binary revision must match the canonical SDK lock pin"
+        );
+
+        let identity_output = std::process::Command::new(&executable)
+            .args(["install", "identity"])
+            .output()
+            .expect("run public install identity command");
+        assert!(
+            identity_output.status.success(),
+            "public install identity failed: {}",
+            String::from_utf8_lossy(&identity_output.stderr)
+        );
+        let identity: Value =
+            serde_json::from_slice(&identity_output.stdout).expect("public install identity JSON");
+        let identity = identity["installation_identity"]
+            .as_str()
+            .expect("installation identity")
+            .to_owned();
+
+        let plan_output = std::process::Command::new(&executable)
+            .args([
+                "install",
+                "plan",
+                "--identity",
+                &identity,
+                "--mode",
+                "fresh",
+                "--project",
+                &project_arg,
+                "--allow-project-source-read",
+            ])
+            .output()
+            .expect("run public source-read install plan");
+        assert!(
+            plan_output.status.success(),
+            "public source-read install plan failed: {}",
+            String::from_utf8_lossy(&plan_output.stderr)
+        );
+        let preview: Value =
+            serde_json::from_slice(&plan_output.stdout).expect("public install plan JSON");
+        assert_eq!(
+            preview["installation"]["executable_sha256"], executable_sha256,
+            "public plan binds the same executable as version"
+        );
+        assert!(preview["installation"]["initial_grants"]
+            .as_array()
+            .expect("initial grant list")
+            .iter()
+            .any(|grant| grant == "project_source_read"));
+        assert_eq!(preview["source_read_resource_scope"], "instance_prefix");
+        let plan_sha256 = preview["installation"]["plan_sha256"]
+            .as_str()
+            .expect("accepted install plan digest")
+            .to_owned();
+        std::fs::write(&plan_path, &plan_output.stdout).expect("save exact public install plan");
+        let plan_arg = plan_path.to_string_lossy().into_owned();
+
+        let apply_output = std::process::Command::new(&executable)
+            .args([
+                "--json",
+                "install",
+                "apply",
+                "--mode",
+                "fresh",
+                "--project",
+                &project_arg,
+                "--plan",
+                &plan_arg,
+                "--expect",
+                &plan_sha256,
+            ])
+            .output()
+            .expect("run exact public install apply");
+        assert!(
+            apply_output.status.success(),
+            "public install apply failed: {}",
+            String::from_utf8_lossy(&apply_output.stderr)
+        );
+        let applied: Value =
+            serde_json::from_slice(&apply_output.stdout).expect("public install apply JSON");
+        assert_eq!(applied["plan_sha256"], plan_sha256);
+        assert!(applied["attunement_job_id"].as_str().is_some());
+
+        let observer = Arc::new(RecordingObserver::default());
+        let served = serve_estate(
+            EstateServeRequest {
+                project: project_arg,
+                mode: InstallMode::Existing,
+                executable: executable.to_string_lossy().into_owned(),
+                accepted_plan_sha256: None,
+                installation_identity: None,
+                endpoint_credentials: None,
+            },
+            observer.clone(),
+        )
+        .unwrap_or_else(|error| {
+            panic!(
+                "the public installed locator could not be served: {error:?}\n{}",
+                observer.lines.lock().expect("observer").join("\n")
+            )
+        });
+        assert!(!served.view.installed, "existing locator must skip install");
+        let engine = served
+            .view
+            .engine
+            .as_ref()
+            .expect("selected engine binding");
+        assert_eq!(engine.sha256, executable_sha256);
+        let address: SocketAddr = served
+            .view
+            .endpoint
+            .strip_prefix("http://")
+            .and_then(|address| address.parse().ok())
+            .expect("served estate names a loopback HTTP address");
+        let instance = served.view.instance.clone();
+        let _ = std::fs::remove_file(&plan_path);
+
+        Self {
+            served,
+            address,
+            instance,
+            executable_sha256,
+        }
+    }
+
+    /// Restarts only this test's owned process against its existing locator.
+    fn stop_and_reopen(&mut self) {
+        self.served.server.kill().expect("stop owned test process");
+        self.served.server.wait().expect("reap owned test process");
+        let project = self.served.view.project.clone();
+        let observer = Arc::new(RecordingObserver::default());
+        self.served = serve_estate(
+            EstateServeRequest {
+                project,
+                mode: InstallMode::Existing,
+                executable: rrflow().to_string_lossy().into_owned(),
+                accepted_plan_sha256: None,
+                installation_identity: None,
+                endpoint_credentials: None,
+            },
+            observer.clone(),
+        )
+        .unwrap_or_else(|error| {
+            panic!(
+                "the installed locator could not reopen: {error:?}\n{}",
+                observer.lines.lock().expect("observer").join("\n")
+            )
+        });
+        assert!(!self.served.view.installed);
+        assert_eq!(self.served.view.instance, self.instance);
+        assert_eq!(
+            self.served
+                .view
+                .engine
+                .as_ref()
+                .expect("reopened serve selected an engine")
+                .sha256,
+            self.executable_sha256
+        );
+        self.address = self
+            .served
+            .view
+            .endpoint
+            .strip_prefix("http://")
+            .and_then(|address| address.parse().ok())
+            .expect("reopened estate names a loopback HTTP address");
     }
 
     fn connect_request(&self) -> RrdConnectRequest {
@@ -440,6 +650,86 @@ fn a_second_connection_never_replays_the_first_session() {
 
 #[test]
 #[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
+fn observe_flight_is_read_back_after_reconnecting() {
+    let estate = Estate::install_and_serve();
+    tauri::async_runtime::block_on(async {
+        load_fixture(&estate).await;
+        let client = NativeRrdClient::connect(estate.connect_request())
+            .await
+            .expect("native connection");
+        let launched = client
+            .launch_observe_flight(RrdLaunchObserveFlightRequest {
+                prompt: "Inspect the loaded project documents and relationships".into(),
+                context_mode: Some("pruned".into()),
+                acceptance_marker: None,
+            })
+            .await
+            .expect("observe flight launch");
+        let before = client
+            .read_prompt_flight(RrdReadPromptFlightRequest {
+                flight_id: launched.flight_id.clone(),
+            })
+            .await
+            .expect("read launched flight");
+        assert_eq!(before.flight_id, launched.flight_id);
+        assert_eq!(before.provider, "observe");
+        assert_eq!(before.event_count as usize, before.events.len());
+        assert!(!before.events.is_empty());
+        for index in 0..8 {
+            client
+                .launch_observe_flight(RrdLaunchObserveFlightRequest {
+                    prompt: format!("Inspect project context {index}"),
+                    context_mode: Some("pruned".into()),
+                    acceptance_marker: None,
+                })
+                .await
+                .expect("additional flight for cursor pagination");
+        }
+        let first_page = client
+            .workbench_snapshot(0)
+            .await
+            .expect("first flight page");
+        assert_eq!(first_page.flights.len(), 8);
+        assert!(first_page.truncated);
+        let last_cursor = first_page
+            .flights
+            .last()
+            .expect("first page has a cursor")
+            .flight_cursor;
+        let next_page = client
+            .workbench_snapshot(last_cursor)
+            .await
+            .expect("next flight page");
+        assert_eq!(next_page.flights.len(), 1);
+        assert!(!next_page.truncated);
+        assert!(next_page.flights[0].flight_cursor > last_cursor);
+        client.close().await.expect("close first session");
+
+        let reopened = NativeRrdClient::connect(estate.connect_request())
+            .await
+            .expect("reconnect to same instance");
+        let after = reopened
+            .read_prompt_flight(RrdReadPromptFlightRequest {
+                flight_id: launched.flight_id.clone(),
+            })
+            .await
+            .expect("read flight after reconnect");
+        assert_eq!(after.flight_id, before.flight_id);
+        assert_eq!(after.event_count, before.event_count);
+        assert_eq!(after.known_at_cursor, before.known_at_cursor);
+        assert!(reopened
+            .workbench_snapshot(0)
+            .await
+            .expect("flight list")
+            .flights
+            .iter()
+            .any(|flight| flight.flight_id == launched.flight_id));
+        reopened.close().await.expect("close reconnected session");
+    });
+}
+
+#[test]
+#[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
 fn the_lenses_read_a_live_estate() {
     let estate = Estate::install_and_serve();
     tauri::async_runtime::block_on(async {
@@ -531,6 +821,12 @@ fn the_lenses_read_a_live_estate() {
         let storage = client.storage().await.expect("storage view");
         assert_eq!(storage.physical.profile, "rrflow_kv");
         assert!(!storage.physical.groups.is_empty());
+        let physical = client
+            .physical_storage()
+            .await
+            .expect("physical storage view");
+        assert_eq!(physical.profile, "rrflow_kv");
+        assert!(!physical.groups.is_empty());
 
         // Vectors: the catalogue, the points, and an exact search by example.
         let catalogue = client.vector_collections().await.expect("collections");

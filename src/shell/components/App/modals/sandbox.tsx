@@ -43,7 +43,7 @@ export function SandboxModal() {
 				py={34}
 				style={{
 					background:
-						"radial-gradient(circle at 82% 18%, rgba(102, 217, 255, 0.34), transparent 34%), linear-gradient(135deg, rgba(116, 47, 232, 0.95), rgba(32, 15, 69, 0.95))",
+						"radial-gradient(circle at 82% 18%, rgba(95, 196, 203, 0.34), transparent 34%), linear-gradient(135deg, rgba(15, 92, 99, 0.95), rgba(8, 20, 23, 0.95))",
 				}}
 			>
 				<Text

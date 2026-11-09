@@ -2,7 +2,7 @@ import type { RrdGraphView, RrdNodeView } from "~/rrflow/session";
 
 /*
  * Color groups for the record graph and the similarity map. A grouping is
- * computed over the whole estate snapshot, so a record keeps its color in
+ * computed over the whole engram snapshot, so a record keeps its color in
  * every subgraph and in both maps.
  */
 
@@ -44,7 +44,7 @@ export interface ColorGroup {
 	label: string;
 	/** Mantine palette name; `null` draws the neutral swatch. */
 	palette: string | null;
-	/** Records in the group across the whole estate. */
+	/** Records in the group across the whole engram. */
 	total: number;
 }
 
@@ -55,7 +55,7 @@ export interface Grouping {
 	groups: ColorGroup[];
 }
 
-/** The ways the current estate can be colored, best first. */
+/** The ways the current engram can be colored, best first. */
 export function colorOptions(graph: RrdGraphView): ColorOption[] {
 	const options: ColorOption[] = [];
 	if (graph.clusters.length > 1) {
@@ -169,7 +169,7 @@ function rawGroups(graph: RrdGraphView, option: string): RawGroup[] {
 /**
  * Assigns every record a color group for `option`. The largest groups get the
  * palette; the remainder merge into one "Other" group so the legend stays
- * readable at any estate size.
+ * readable at any engram size.
  */
 export function grouping(graph: RrdGraphView, option: string): Grouping {
 	const groupOf = new Map<string, string>();

@@ -33,6 +33,7 @@ import { workspaceRoute } from "./areas";
 import { formatCount } from "./format";
 import { GlossaryDrawer, Term } from "./glossary";
 import { GuideCards } from "./guides/cards";
+import { ProjectPlanPanel } from "./plan";
 import { databaseQuery } from "./queries";
 import { SessionPanel, sessionQueryKey } from "./session";
 import { WorkspaceShell } from "./shell";
@@ -43,6 +44,7 @@ import { StorageTab } from "./tabs/storage";
 import { VectorsTab } from "./tabs/vectors";
 import { TasksPanel } from "./tasks";
 import type { RuntimeLens } from "./types";
+import { WorkbenchPanel } from "./workbench";
 import { ProjectOverview } from "./workspace";
 
 interface LensCardProps {
@@ -151,7 +153,7 @@ export function RuntimeConnectionPage({
 	// The lens cards read the same cached snapshots the lenses render.
 	const database = useQuery({
 		...databaseQuery(sessionClient, sessionKey),
-		enabled: Boolean(session),
+		enabled: Boolean(session) && route === "overview",
 	});
 	const catalogue = useQuery({
 		queryKey: ["rrd-vector-collections", sessionKey],
@@ -254,7 +256,7 @@ export function RuntimeConnectionPage({
 								fz="sm"
 								c="slate"
 							>
-								Estate
+								Engram
 							</Text>
 							<Text
 								ff="monospace"
@@ -334,7 +336,7 @@ export function RuntimeConnectionPage({
 					<>
 						<PrimaryTitle fz={26}>{connection.name}</PrimaryTitle>
 						<Text>
-							One <Term id="estate">estate</Term>, one database: RRFlow keeps the
+							One <Term id="engram">engram</Term>, one database: RRFlow keeps the
 							records, the relations between them, and their vectors together in
 							rrflowDB, and stores all of it with <Term id="rrflowKV">rrflowKV</Term>.
 							The views below are different ways into the same data.
@@ -350,7 +352,7 @@ export function RuntimeConnectionPage({
 							<LensCard
 								icon={iconRelation}
 								title="Records & relations"
-								purpose="What the estate knows and how it links together."
+								purpose="What the engram knows and how it links together."
 								reading={
 									graph
 										? `${formatCount(graph.nodes.length)} records in view · ${formatCount(graph.edges.length)} relations`
@@ -423,6 +425,29 @@ export function RuntimeConnectionPage({
 					/>
 				)}
 
+				{route === "reasoning/workbench" && (
+					<WorkbenchPanel
+						key={id}
+						client={sessionClient}
+						connectionId={id}
+						sessionKey={sessionKey}
+						connected={Boolean(session)}
+						onOpenGraph={() => setLens("records")}
+						onOpenStorage={() => setLens("storage")}
+						onSelectRecord={(record) => {
+							setSelected(record);
+							setLens("records");
+						}}
+					/>
+				)}
+				{route === "reasoning/plan" && (
+					<ProjectPlanPanel
+						key={sessionKey}
+						client={sessionClient}
+						instance={session?.instance ?? ""}
+						connected={Boolean(session)}
+					/>
+				)}
 				{route === "reasoning/tasks" && (
 					<TasksPanel
 						key={sessionKey}

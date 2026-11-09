@@ -1,124 +1,76 @@
-export type EndpointSource = "direct" | "mesh";
+import type { RequestPayload, SuccessPayload } from "@rrflow/rrd-client";
 
-export interface RuntimeEndpointResolution {
-	source: EndpointSource;
-	origin: string;
-	provider?: string;
-	devspace_id?: string;
-	device_id?: string;
-	attestation_ref?: string;
+/** The native boundary projects every contract integer as decimal text. */
+type Decimal<T> = T extends number
+	? string
+	: T extends (infer V)[]
+		? Decimal<V>[]
+		: T extends object
+			? { [K in keyof T]: Decimal<T[K]> }
+			: T;
+export type PlanSnapshot = Decimal<SuccessPayload<"attunement-read">>;
+export type PlanPage = Decimal<SuccessPayload<"attunement-job-list">>;
+export type Control =
+	| { kind: "start" | "resume"; lease_ms: string }
+	| { kind: "step" | "pause" | "recover_expired" | "replan" }
+	| { kind: "cancel"; reason: string };
+type PreparedCommand =
+	| { kind: "start"; request: Decimal<RequestPayload<"attunement-start">> }
+	| { kind: "step"; request: Decimal<RequestPayload<"attunement-step">> }
+	| { kind: "pause"; request: Decimal<RequestPayload<"attunement-pause">> }
+	| { kind: "resume"; request: Decimal<RequestPayload<"attunement-resume">> }
+	| { kind: "recover_expired"; request: Decimal<RequestPayload<"attunement-recover-expired">> }
+	| { kind: "cancel"; request: Decimal<RequestPayload<"attunement-cancel">> }
+	| { kind: "replan"; request: Decimal<RequestPayload<"attunement-replan-accept">> };
+export interface PlanRecovery {
+	job_id: string;
+	idempotency_key: string;
+	replan: boolean;
 }
-
-export type AttunementPhaseId =
-	| "connect"
-	| "inventory"
-	| "parse"
-	| "normalize"
-	| "entity-link"
-	| "lexical-index"
-	| "embed"
-	| "vector-index"
-	| "graph"
-	| "ground"
-	| "verify";
-
-export interface AttunementPhaseView {
-	id: AttunementPhaseId;
-	label: string;
-	description: string;
-	state: "implemented" | "contract-pending";
+export interface PreparedPlan extends PlanRecovery {
+	kind: "prepared";
+	handle: string;
+	snapshot: PlanSnapshot;
+	command: PreparedCommand;
 }
+export type AttunementCommand =
+	| { action: "pending" }
+	| { action: "list"; after_job_id: string | null }
+	| { action: "read"; job_id: string }
+	| {
+			action: "prepare";
+			job_id: string;
+			expected_revision: string;
+			plan_sha256: string;
+			command: Control;
+	  }
+	| { action: "approve" | "discard"; handle: string }
+	| ({ action: "receipt" } & PlanRecovery);
+export type AttunementReply =
+	| { kind: "pending"; prepared: PreparedPlan | null }
+	| { kind: "page"; page: PlanPage }
+	| { kind: "snapshot" | "applied"; snapshot: PlanSnapshot }
+	| PreparedPlan
+	| { kind: "receipt"; snapshot: PlanSnapshot | null }
+	| { kind: "discarded" }
+	| { kind: "uncertain" | "denied"; message: string };
 
-export const ATTUNEMENT_ESTIMATE_MINUTES = { minimum: 30, maximum: 45 } as const;
-
-export const ATTUNEMENT_PHASES: readonly AttunementPhaseView[] = [
-	{
-		id: "connect",
-		label: "Connect",
-		description:
-			"Resolve the endpoint and verify RRD transport, readiness, protocol, and identity.",
-		state: "implemented",
-	},
-	{
-		id: "inventory",
-		label: "Inventory",
-		description: "Discover project files and metadata without mutating engine state.",
-		state: "contract-pending",
-	},
-	{
-		id: "parse",
-		label: "Parse",
-		description: "Extract syntax and structure with language-aware parsers.",
-		state: "contract-pending",
-	},
-	{
-		id: "normalize",
-		label: "Normalize",
-		description:
-			"Plan canonical records, claims, and relations for one engine transaction stream.",
-		state: "contract-pending",
-	},
-	{
-		id: "entity-link",
-		label: "Entity link",
-		description: "Resolve durable identities and temporal relationships before indexing.",
-		state: "contract-pending",
-	},
-	{
-		id: "lexical-index",
-		label: "Lexical index",
-		description: "Checkpoint persistent BM25 work against the canonical runtime cursor.",
-		state: "contract-pending",
-	},
-	{
-		id: "embed",
-		label: "Embed",
-		description: "Schedule permitted embedding work through engine-owned model contracts.",
-		state: "contract-pending",
-	},
-	{
-		id: "vector-index",
-		label: "Vector index",
-		description: "Build or update ANN candidates with authoritative exact reranking retained.",
-		state: "contract-pending",
-	},
-	{
-		id: "graph",
-		label: "Graph",
-		description: "Materialize typed relations into the same temporal snapshot boundary.",
-		state: "contract-pending",
-	},
-	{
-		id: "ground",
-		label: "Ground",
-		description: "Bind source evidence and stable warp points to canonical records.",
-		state: "contract-pending",
-	},
-	{
-		id: "verify",
-		label: "Verify",
-		description:
-			"Run reopen, retrieval, graph, and evidence checks before declaring attunement ready.",
-		state: "contract-pending",
-	},
-];
-
-export const AUTOMATION_PRIMITIVES = [
-	{
-		name: "Trigger",
-		contract: "A versioned condition over canonical engine events.",
-	},
-	{
-		name: "Routine",
-		contract: "A resumable sequence of authorized RrdEngine operations.",
-	},
-	{
-		name: "Hook adapter",
-		contract: "A host boundary that submits typed events; it never owns recall or lifecycle.",
-	},
-	{
-		name: "Skill",
-		contract:
-			"A versioned instruction/resource reference resolved into engine-governed context.",
-	},
-] as const;
+export function readPlanRecovery(key: string): PlanRecovery | null {
+	const raw = localStorage.getItem(key);
+	if (!raw) return null;
+	const value: unknown = JSON.parse(raw);
+	if (
+		!value ||
+		typeof value !== "object" ||
+		!("job_id" in value) ||
+		!("idempotency_key" in value) ||
+		!("replan" in value) ||
+		typeof value.job_id !== "string" ||
+		typeof value.idempotency_key !== "string" ||
+		typeof value.replan !== "boolean"
+	)
+		throw new Error(
+			"Stored project-plan recovery coordinates are invalid; preserve them for inspection",
+		);
+	return { job_id: value.job_id, idempotency_key: value.idempotency_key, replan: value.replan };
+}

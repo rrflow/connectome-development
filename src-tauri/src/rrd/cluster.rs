@@ -1,11 +1,11 @@
-//! Deterministic clusters for the estate graph.
+//! Deterministic clusters for the engram graph.
 //!
 //! The Database lens can color records by cluster: groups of records that are
-//! linked to each other more densely than to the rest of the estate. Clusters
+//! linked to each other more densely than to the rest of the engram. Clusters
 //! are a Connectome presentation aid computed from the engine's relations with
 //! Louvain modularity optimisation (Blondel, Guillaume, Lambiotte, and
 //! Lefebvre, "Fast unfolding of communities in large networks", 2008). They
-//! are not estate data. Nodes are visited in index order and ties keep the
+//! are not persisted engram data. Nodes are visited in index order and ties keep the
 //! earlier community, so one graph snapshot always yields one clustering.
 
 use std::collections::BTreeMap;

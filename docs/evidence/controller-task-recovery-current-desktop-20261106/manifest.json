@@ -1,0 +1,82 @@
+{
+	"schema_version": "connectome.current-desktop-manifest.v1",
+	"source": {
+		"ui_commit": "5973afa132cbc5168d738d04c47543f7aa6a2d41",
+		"native_candidate_commit": "f45305394dbe391786c7d618645a5fc0b1b2bbee",
+		"native_tree": "49299102bd52a28081e2dffafa7dc9c65f4e4873",
+		"desktop_binary_sha256": "7b200ac3b12375812eeb24017fe9948174b594c95acc89ca07bfef2434787850",
+		"engine_binary_sha256": "086c42cec160de19104a67976f7608f74e61d86000f66e4c2c310a2ffd9a8af3",
+		"frozen_native_receipt_sha256": "e1bee26e073f545e838f057d56ad603be7a9e7b34c23de0319de65a93a294080",
+		"ui_build_exit": 0
+	},
+	"task_input": {
+		"public_source": "https://github.com/rrflow/connectome-development/pull/29",
+		"title": "Add explicit task budget recovery to Connectome",
+		"source_head": "5973afa132cbc5168d738d04c47543f7aa6a2d41",
+		"body_bytes_utf8": 3755,
+		"normalization": "CRLF to LF only; no truncation",
+		"normalized_body_sha256": "454d1ffcf6824f05d337b127d315afbb243bbc79a28998fdb063f113b2cb85a8",
+		"matched_observed_goal": true
+	},
+	"raw_capture_digests": [
+		{
+			"file": "final-review.json",
+			"sha256": "8f2769d21c7c70b171c484acfc7b632eb4c1eecb961ff9b1f15a5cb18b15e015"
+		},
+		{
+			"file": "journey-comparison.json",
+			"sha256": "6a614f74056d4754e760f10187cc1bec38770e2ad38f6958aa901a37c6f7428b"
+		},
+		{
+			"file": "comparison-failure.json",
+			"sha256": "43185c43e844f1615c51edb1b7c2d6e638fc176a2c97b7161a71603661a749eb"
+		},
+		{
+			"file": "provider-preflight.json",
+			"sha256": "6205316bc7853f7ea1fe681dfb0480c694ac887ba54596de3220034f5b070187"
+		},
+		{
+			"file": "task-source-identity.json",
+			"sha256": "bfc485273d82a8f1966cedbeb9933b36f7890d20c3ea2d2748e1f0fcce4a752d"
+		},
+		{
+			"file": "task-input-equality.json",
+			"sha256": "74dbe792b3adbb978055e04bd0504237c8d43b44e60b0a4faabf895dbf1305b1"
+		},
+		{
+			"file": "cleanup.json",
+			"sha256": "ce3faf40f3cd56ff7684eb2e63ea337e8329aa09d8f4b0783ab3fe5ca914a468"
+		},
+		{
+			"file": "cleanup-final.json",
+			"sha256": "c6e9f4718a2b220b06f45d5544564e91ac52ba6ecabf370960eeffe07f9fd726"
+		},
+		{
+			"file": "app-config-final-preservation.json",
+			"sha256": "0926f0924410cc5b2b4cb3be2c10d8f592fd7f134e6326a6b95a56302eb3f9af"
+		},
+		{
+			"file": "ui-worker-result.json",
+			"sha256": "82e7dc05725194d30ae561d9b60bec23d9299baad4e2ebcd4d79424a51c366ca"
+		},
+		{
+			"file": "ui-reloaded-readback.json",
+			"sha256": "8d6ad0107b80698189453ca5cdb2461fcfe748bb7416e43cff83b700bdc2766b"
+		}
+	],
+	"independent_review": {
+		"file": "final-review.json",
+		"sha256": "8f2769d21c7c70b171c484acfc7b632eb4c1eecb961ff9b1f15a5cb18b15e015",
+		"journey_input_digests_verified": 34,
+		"review_evidence_hash_mismatches": 0
+	},
+	"public_projection_digests": {
+		"readback.json": {
+			"sha256": "8a094940a7601b325b71c03c7bfcf760176e6accbeb69fb1013a64bce996eef2",
+			"basis": "exact UTF-8 bytes after formatter"
+		}
+	},
+	"omitted": [
+		"Raw task body beyond the public title, worker content, full accessibility trees, screenshots, logs, profiles, credentials, private paths and host details."
+	]
+}

@@ -673,7 +673,7 @@ function Comparison({
 							fz="xs"
 							c="orange"
 						>
-							The estate changed between the two searches (cursor{" "}
+							The engram changed between the two searches (cursor{" "}
 							{formatCount(view.exact.search.known_at_cursor)}, then{" "}
 							{formatCount(approximate.search.known_at_cursor)}), so the lists compare
 							two states. Run again to compare one.

@@ -78,8 +78,8 @@ fn task_controls_preserve_engine_state_and_refuse_unconfigured_inference() {
             .task_command(TaskCommand::Propose {
                 task_id: id.clone(),
                 attempt_id: attempt_id.clone(),
-                expected_task_sha256: task_sha256,
-                expected_configuration_sha256: configuration_sha256,
+                expected_task_sha256: task_sha256.clone(),
+                expected_configuration_sha256: configuration_sha256.clone(),
             })
             .await
             .expect("native preflight classification");
@@ -90,7 +90,7 @@ fn task_controls_preserve_engine_state_and_refuse_unconfigured_inference() {
         let attempt = client
             .task_command(TaskCommand::Attempt {
                 task_id: id.clone(),
-                attempt_id,
+                attempt_id: attempt_id.clone(),
             })
             .await
             .expect("attempt readback");
@@ -98,7 +98,60 @@ fn task_controls_preserve_engine_state_and_refuse_unconfigured_inference() {
             attempt,
             TaskReply::Attempt {
                 status: None,
-                proposal: None
+                proposal: None,
+                worker: None,
+            }
+        ));
+
+        let error = client
+            .task_command(TaskCommand::PrepareWorker {
+                task_id: id.clone(),
+                selection_attempt_id: attempt_id.clone(),
+                source: None,
+            })
+            .await
+            .expect_err("missing selection cannot prepare a worker");
+        assert!(error.message.contains("No selection attempt is recorded"));
+        let worker_id = Uuid::new_v4().to_string();
+        let refused = client
+            .task_command(TaskCommand::Work {
+                task_id: id.clone(),
+                attempt_id: worker_id.clone(),
+                selection_attempt_id: attempt_id,
+                // Deliberately invalid selection expectation: reuse an observed digest.
+                // This is a denial probe, not a fabricated selection or model output.
+                expected_selection_sha256: task_sha256.clone(),
+                expected_task_sha256: task_sha256,
+                expected_configuration_sha256: configuration_sha256,
+                source: None,
+            })
+            .await
+            .expect("worker preflight classification");
+        assert!(matches!(refused, TaskReply::NotDispatched { reason }
+            if reason.contains("No selection attempt is recorded")));
+        let unchanged = client
+            .task_command(TaskCommand::Budget {
+                task_id: id.clone(),
+            })
+            .await
+            .expect("budget after denied worker");
+        assert!(
+            matches!(unchanged, TaskReply::Budget { budget: Some(ref b) }
+            if b.sha256 == budget.sha256 && b.reserved_steps == "0")
+        );
+        let missing = client
+            .task_command(TaskCommand::Attempt {
+                task_id: id.clone(),
+                attempt_id: worker_id,
+            })
+            .await
+            .expect("denied worker readback");
+        assert!(matches!(
+            missing,
+            TaskReply::Attempt {
+                status: None,
+                proposal: None,
+                worker: None
             }
         ));
 
@@ -111,7 +164,7 @@ fn task_controls_preserve_engine_state_and_refuse_unconfigured_inference() {
             Duration::from_secs(10),
             client.task_command(TaskCommand::Stop {
                 task_id: id.clone(),
-                expected_budget_sha256: budget.sha256,
+                expected_budget_sha256: budget.sha256.clone(),
             }),
         )
         .await
@@ -148,11 +201,60 @@ fn task_controls_preserve_engine_state_and_refuse_unconfigured_inference() {
             panic!("read budget")
         };
         assert_eq!(read.sha256, stopped.sha256);
-        let task = reopened
+        let resumed = reopened
+            .task_command(TaskCommand::Resume {
+                task_id: id.clone(),
+                expected_budget_sha256: read.sha256.clone(),
+            })
+            .await
+            .expect("explicit resume through the native bridge");
+        let TaskReply::Budget {
+            budget: Some(resumed),
+        } = resumed
+        else {
+            panic!("resumed budget")
+        };
+        assert_ne!(resumed.sha256, stopped.sha256);
+        assert_eq!(resumed.max_steps, stopped.max_steps);
+        assert_eq!(resumed.max_step_elapsed_ms, stopped.max_step_elapsed_ms);
+        assert_eq!(resumed.max_run_elapsed_ms, stopped.max_run_elapsed_ms);
+        assert_eq!(resumed.reserved_steps, stopped.reserved_steps);
+        assert_eq!(resumed.charged_elapsed_ms, stopped.charged_elapsed_ms);
+        assert_eq!(resumed.started_at_unix_ms, stopped.started_at_unix_ms);
+        assert_eq!(resumed.deadline_unix_ms, stopped.deadline_unix_ms);
+        assert_eq!(resumed.active_attempt, None);
+        assert!(!resumed.execution_may_continue);
+        assert_eq!(resumed.stopped, None);
+        reopened
+            .task_command(TaskCommand::Resume {
+                task_id: id.clone(),
+                expected_budget_sha256: read.sha256,
+            })
+            .await
+            .expect_err("stale resume cannot replay");
+        reopened
+            .task_command(TaskCommand::Stop {
+                task_id: id.clone(),
+                expected_budget_sha256: budget.sha256,
+            })
+            .await
+            .expect_err("old Stop cannot stop resumed work");
+        reopened.close().await.expect("close after resume");
+        let recovered = NativeRrdClient::connect(estate.connect_request())
+            .await
+            .expect("reconnect after resume");
+        let retained = recovered
+            .task_command(TaskCommand::Budget {
+                task_id: id.clone(),
+            })
+            .await
+            .expect("read resumed budget after denial and reconnect");
+        assert!(matches!(retained, TaskReply::Budget { budget: Some(b) } if b == resumed));
+        let task = recovered
             .task_command(TaskCommand::Read { task_id: id })
             .await
             .expect("read task");
         assert!(matches!(task, TaskReply::Task { .. }));
-        reopened.close().await.expect("close reopened session");
+        recovered.close().await.expect("close recovered session");
     });
 }

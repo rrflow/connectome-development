@@ -536,6 +536,22 @@ try {
 		await page.getByText("Around the selection", { exact: true }).first().click();
 		await wait(3000);
 		await shot("records-around-selection");
+		// The selected record's label is on the hover layer, so this counts the others'.
+		const labelled = await page
+			.locator("canvas.sigma-labels")
+			.first()
+			.evaluate((canvas) => {
+				const { width, height } = canvas;
+				const pixels = canvas.getContext("2d").getImageData(0, 0, width, height).data;
+				let painted = 0;
+				for (let alpha = 3; alpha < pixels.length; alpha += 4) {
+					if (pixels[alpha] > 0) painted += 1;
+				}
+				return painted;
+			});
+		if (labelled === 0) {
+			throw new Error("Around the selection names only the selected record");
+		}
 		await page.getByLabel("Color by").first().click();
 		await wait(600);
 		const options = (await page.getByRole("option").allInnerTexts())
@@ -743,7 +759,7 @@ try {
 		await leaveGuide();
 		// Leaving changes nothing the person did.
 		await details
-			.getByRole("button", { name: "Back to whole estate" })
+			.getByRole("button", { name: "Back to whole engram" })
 			.waitFor({ timeout: 3000 });
 	});
 	await step("guide-away-and-back", async () => {
@@ -847,7 +863,13 @@ try {
 		await back();
 		await openEngines();
 		await page.getByRole("button", { name: "Stop this engine" }).first().click();
-		await wait(5000);
+		// The record the engine leaves behind is proved first; the row settles once that fails.
+		await page
+			.getByRole("dialog")
+			.getByText("did not prove itself")
+			.first()
+			.waitFor({ timeout: 60000 });
+		await wait(500);
 		await shot("project-engines-stopped");
 	});
 	await step("project-engines-restarted", async () => {
@@ -864,6 +886,54 @@ try {
 		await shot("project-engines-restarted");
 		await page.keyboard.press("Escape");
 	});
+	await step("prompt-flight-timeline", async () => {
+		await page.goto(workbench.replace(/(\/runtime\/[^/]+).*/, "$1/reasoning/workbench"), {
+			waitUntil: "domcontentloaded",
+		});
+		await page.getByRole("heading", { name: "Prompt workbench", exact: true }).waitFor();
+		const prompt = page.getByLabel("Prompt", { exact: true });
+		const text = "Inspect the temporary project's documents and relationships.";
+		await prompt.fill(text);
+		await page
+			.getByRole("button", { name: "Launch observe flight", exact: true })
+			.click({ timeout: 60_000 });
+		if ((await prompt.inputValue()) !== text)
+			throw new Error("prompt was lost during session initialization");
+		const timeline = page.getByRole("heading", { name: "Recorded events", exact: true });
+		await timeline.waitFor({ timeout: 60_000 });
+		await timeline.scrollIntoViewIfNeeded();
+		await shot("prompt-flight-timeline");
+		const flow = page.getByRole("heading", { name: "Recorded event flow", exact: true });
+		await flow.scrollIntoViewIfNeeded();
+		if (
+			(await page
+				.getByRole("list", { name: "Recorded flight event sequence" })
+				.locator("li")
+				.count()) === 0
+		)
+			throw new Error("The observed flight did not render its returned events");
+		await shot("workbench-event-flow");
+		const graph = page.getByRole("heading", {
+			name: "Documents and relationships",
+			exact: true,
+		});
+		await graph.scrollIntoViewIfNeeded();
+		await page.getByText(/returned records and .*returned relationships/).waitFor();
+		const keyboardRecords = page.getByText("Choose a record using the keyboard", {
+			exact: true,
+		});
+		await keyboardRecords.waitFor();
+		await keyboardRecords.evaluate((element) => element.scrollIntoView({ block: "end" }));
+		await wait(500);
+		await shot("workbench-project-graph");
+		const storage = page.getByRole("heading", { name: "rrflowKV storage path", exact: true });
+		await storage.evaluate((element) => element.scrollIntoView({ block: "start" }));
+		await wait(500);
+		await page
+			.getByText("Process-local measurements, independent of the graph cursor.")
+			.waitFor();
+		await shot("workbench-storage-path");
+	});
 } finally {
 	writeFileSync(join(out, "native-capture-log.json"), JSON.stringify(log, null, 1));
 	console.log(
@@ -875,4 +945,4 @@ try {
 	);
 	stopApp();
 }
-process.exit(0);
+process.exit(log.failed.length ? 1 : 0);

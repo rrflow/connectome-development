@@ -1,4 +1,5 @@
 import { Channel, type InvokeArgs, invoke, isTauri } from "@tauri-apps/api/core";
+import type { AttunementCommand, AttunementReply } from "~/rrflow/attunement";
 import type { TaskCommand, TaskReply } from "~/rrflow/tasks";
 import type { VectorQuantizationMethod } from "./model";
 
@@ -57,6 +58,68 @@ export interface RrdServiceView {
 	capabilities: RrdCapabilityView[];
 }
 
+export interface RrdTaskSummaryView {
+	task_id: string;
+	title: string;
+	status: string;
+	task_cursor: number;
+	known_at_cursor: number;
+}
+
+export interface RrdPromptFlightSummaryView {
+	flight_id: string;
+	status: string;
+	provider: string;
+	context_mode: string;
+	flight_cursor: number;
+	known_at_cursor: number;
+}
+
+export interface RrdWorkbenchSnapshotView {
+	scope: string;
+	after_cursor: number;
+	truncated: boolean;
+	flights: RrdPromptFlightSummaryView[];
+}
+
+export interface RrdPromptFlightLaunchView {
+	flight_id: string;
+	status: string;
+	provider: string;
+	context_mode: string;
+	flight_cursor: number;
+	known_at_cursor: number;
+	event_count: number;
+	idempotent_replay: boolean;
+}
+
+export interface RrdPromptFlightEventView {
+	ordinal: number;
+	at_unix_ms: number;
+	elapsed_ms: number;
+	stage: string;
+	label: string;
+	detail: string;
+}
+
+export interface RrdPromptFlightDetailView {
+	flight_id: string;
+	status: string;
+	provider: string;
+	context_mode: string;
+	prompt: string;
+	acceptance_marker: string | null;
+	cohort_sha256: string;
+	created_at_unix_ms: number;
+	flight_cursor: number;
+	known_at_cursor: number;
+	event_count: number;
+	context_items: number;
+	context_output_bytes: number;
+	elapsed_ms: number;
+	events: RrdPromptFlightEventView[];
+}
+
 export interface RrdConnectionView {
 	endpoint: string;
 	instance: string;
@@ -107,8 +170,8 @@ export interface RrdNodeView {
 
 /**
  * A group of records linked more densely to each other than to the rest of
- * the estate. Connectome computes clusters from the relations to color the
- * graph; they are not estate data.
+ * the engram. Connectome computes clusters from the relations to color the
+ * graph; they are not engram data.
  */
 export interface RrdClusterView {
 	id: number;
@@ -651,6 +714,8 @@ export interface RrdLiveView {
 	stream: "changes" | "query";
 	/** The cursor the subscription delivers after. */
 	after_cursor: number;
+	/** Engine-observed identity version to retain with a query continuation cursor. */
+	result_identity_version: number | null;
 	/** A live query's first result, read at `after_cursor`, when opened without a cursor. */
 	first: RrdQueryView | null;
 }
@@ -718,6 +783,16 @@ export interface RrdVectorSearchRequest {
 	vector_name: string;
 	example: RrdReference;
 	top_k: number;
+}
+
+export interface RrdLaunchObserveFlightRequest {
+	prompt: string;
+	context_mode?: "fresh" | "pruned";
+	acceptance_marker?: string;
+}
+
+export interface RrdReadPromptFlightRequest {
+	flight_id: string;
 }
 
 export interface RrdVectorCompareRequest {
@@ -815,6 +890,11 @@ export class RrdSessionClient {
 		return this.call<RrdConnectionView | null>("rrd_session");
 	}
 
+	async attunement(request: AttunementCommand): Promise<AttunementReply> {
+		this.requireNative();
+		return this.call<AttunementReply>("rrd_attunement", { request });
+	}
+
 	async task(request: TaskCommand): Promise<TaskReply> {
 		this.requireNative();
 		return this.call<TaskReply>("rrd_task", { request });
@@ -823,6 +903,25 @@ export class RrdSessionClient {
 	async capabilities(): Promise<RrdServiceView> {
 		this.requireNative();
 		return this.call<RrdServiceView>("rrd_capabilities");
+	}
+
+	async workbenchSnapshot(afterCursor: number): Promise<RrdWorkbenchSnapshotView> {
+		this.requireNative();
+		return this.call<RrdWorkbenchSnapshotView>("rrd_workbench_snapshot", { afterCursor });
+	}
+
+	async launchObserveFlight(
+		request: RrdLaunchObserveFlightRequest,
+	): Promise<RrdPromptFlightLaunchView> {
+		this.requireNative();
+		return this.call<RrdPromptFlightLaunchView>("rrd_launch_observe_flight", { request });
+	}
+
+	async readPromptFlight(
+		request: RrdReadPromptFlightRequest,
+	): Promise<RrdPromptFlightDetailView> {
+		this.requireNative();
+		return this.call<RrdPromptFlightDetailView>("rrd_read_prompt_flight", { request });
 	}
 
 	async schema(): Promise<RrdSchemaView> {
@@ -838,6 +937,11 @@ export class RrdSessionClient {
 	async storage(): Promise<RrdStorageView> {
 		this.requireNative();
 		return this.call<RrdStorageView>("rrd_storage");
+	}
+
+	async physicalStorage(): Promise<RrdPhysicalStorageView> {
+		this.requireNative();
+		return this.call<RrdPhysicalStorageView>("rrd_physical_storage");
 	}
 
 	async query(query: string): Promise<RrdQueryView> {
@@ -1015,17 +1119,23 @@ export class RrdSessionClient {
 	 * Opens a live subscription; `onEvent` hears its events until it is closed
 	 * or ends. Without `afterCursor`, changes start at the estate's head and a
 	 * live query runs once first, its result returned as `first`.
+	 * Query continuation also requires the identity version observed with that cursor.
 	 */
 	async openLive(
 		stream: RrdLiveStream,
 		onEvent: (event: RrdLiveEventView) => void,
 		afterCursor?: number,
+		resultIdentityVersion?: number,
 	): Promise<RrdLiveView> {
 		this.requireNative();
 		const events = new Channel<RrdLiveEventView>();
 		events.onmessage = onEvent;
 		return this.call<RrdLiveView>("rrd_live_open", {
-			request: { stream, after_cursor: afterCursor },
+			request: {
+				stream,
+				after_cursor: afterCursor,
+				result_identity_version: resultIdentityVersion,
+			},
 			onEvent: events,
 		});
 	}

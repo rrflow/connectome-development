@@ -20,6 +20,12 @@ V6 into this order. Sprint 009 keeps its record and its decisions.
 - A step that adds a view also adds or extends its guide, once the guide engine
   exists.
 
+## The visual
+
+The owner, 2026-11-03: "dark teal and burnt orange instead of purple". "Today's visual" in this sprint
+means Connectome's tokens with those values, and the mark in the same shape with the same gradient
+moved to them.
+
 ## Ordered steps
 
 1. **Preserve.** Commit the 2026-09-16 plans, the Workbench captures, the Workbench
@@ -207,11 +213,18 @@ anchor, a stale signal, a removed emitter and a malformed step.
 The reason shown for a project with no records is not reached by a test: the capture seeds its estate
 before the Home screen is read. Step 5 owns the empty project and its sample estate, and tests it.
 
-### Found while reviewing, not fixed here
+### Found while reviewing
 
-**Around the selection** names only the selected dot, so the others need a hover to read. The guide ends
-on this screen. It is older than this sprint: `baseline/native/83804c3` shows the same. It gets its own
-fix before step 5, with its cause and a capture that fails without the fix.
+**Around the selection named only the selected dot.** It is older than this sprint:
+`baseline/native/83804c3` shows the same. sigma draws its first frame while it is constructed, before
+`graph.tsx` binds the label layer's frame handlers, so that frame's labels stayed queued. First mount hid
+this with a separate refresh, but changing scope rebuilds sigma without one. Fixed in its own pull
+request, and the capture now fails if the labels are missing.
+
+**Stopping an engine reads as a failure.** Not fixed yet; step 9 owns it. After **Stop this engine**, the
+endpoint record left behind is proved as if another process had written it. The row says "Another process
+recorded an endpoint for this project", then settles on "did not prove itself" and a connection error, for
+the engine the person just stopped on purpose. `baseline/window/around-labels` shows the settled row.
 
 ### Stop conditions
 

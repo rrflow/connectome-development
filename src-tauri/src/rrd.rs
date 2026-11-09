@@ -16,10 +16,10 @@ mod view;
 use client::{
     NativeRrdClient, RrdAuditExportRequest, RrdAuditRequest, RrdBackupCreateRequest,
     RrdBackupRestoreRequest, RrdBackupsRequest, RrdChangeCommitRequest, RrdChangePreviewRequest,
-    RrdChangesFollowRequest, RrdChangesRequest, RrdConnectRequest, RrdLiveOpenRequest,
-    RrdQuantizationApplyRequest, RrdQuantizationProposeRequest, RrdQuantizationsRequest,
-    RrdQueryExportRequest, RrdQueryRequest, RrdVectorCompareRequest, RrdVectorMapRequest,
-    RrdVectorPointsRequest, RrdVectorSearchRequest,
+    RrdChangesFollowRequest, RrdChangesRequest, RrdConnectRequest, RrdLaunchObserveFlightRequest,
+    RrdLiveOpenRequest, RrdQuantizationApplyRequest, RrdQuantizationProposeRequest,
+    RrdQuantizationsRequest, RrdQueryExportRequest, RrdQueryRequest, RrdReadPromptFlightRequest,
+    RrdVectorCompareRequest, RrdVectorMapRequest, RrdVectorPointsRequest, RrdVectorSearchRequest,
 };
 use error::RrdError;
 use transport::public_rrd_url;
@@ -33,8 +33,10 @@ use view::quantization::{
     QuantizationAppliedView, QuantizationProposalView, QuantizationsView, VectorCompareView,
 };
 use view::{
-    ConnectionView, DatabaseView, QueryView, ServiceView, StorageView, VectorCollectionsView,
+    ConnectionView, DatabaseView, PhysicalStorageView, PromptFlightDetailView,
+    PromptFlightLaunchView, QueryView, ServiceView, StorageView, VectorCollectionsView,
     VectorMapProgressView, VectorMapView, VectorPointsView, VectorSearchView,
+    WorkbenchSnapshotView,
 };
 
 const MAX_RRD_RESPONSE_BYTES: u64 = 1024 * 1024;
@@ -126,6 +128,45 @@ pub async fn rrd_capabilities(
 }
 
 #[tauri::command]
+pub async fn rrd_workbench_snapshot(
+    profile: String,
+    after_cursor: u64,
+    state: State<'_, RrdClientState>,
+) -> Result<WorkbenchSnapshotView, RrdError> {
+    state
+        .client(&profile)
+        .await?
+        .workbench_snapshot(after_cursor)
+        .await
+}
+
+#[tauri::command]
+pub async fn rrd_launch_observe_flight(
+    profile: String,
+    request: RrdLaunchObserveFlightRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<PromptFlightLaunchView, RrdError> {
+    state
+        .client(&profile)
+        .await?
+        .launch_observe_flight(request)
+        .await
+}
+
+#[tauri::command]
+pub async fn rrd_read_prompt_flight(
+    profile: String,
+    request: RrdReadPromptFlightRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<PromptFlightDetailView, RrdError> {
+    state
+        .client(&profile)
+        .await?
+        .read_prompt_flight(request)
+        .await
+}
+
+#[tauri::command]
 pub async fn rrd_schema(
     profile: String,
     state: State<'_, RrdClientState>,
@@ -158,6 +199,14 @@ pub async fn rrd_storage(
     state: State<'_, RrdClientState>,
 ) -> Result<StorageView, RrdError> {
     state.client(&profile).await?.storage().await
+}
+
+#[tauri::command]
+pub async fn rrd_physical_storage(
+    profile: String,
+    state: State<'_, RrdClientState>,
+) -> Result<PhysicalStorageView, RrdError> {
+    state.client(&profile).await?.physical_storage().await
 }
 
 #[tauri::command]
@@ -520,4 +569,17 @@ pub async fn rrd_task(
     state: State<'_, RrdClientState>,
 ) -> Result<client::tasks::TaskReply, RrdError> {
     state.client(&profile).await?.task_command(request).await
+}
+
+#[tauri::command]
+pub async fn rrd_attunement(
+    profile: String,
+    request: client::attunement::AttunementCommand,
+    state: State<'_, RrdClientState>,
+) -> Result<client::attunement::AttunementReply, RrdError> {
+    state
+        .client(&profile)
+        .await?
+        .attunement_command(request)
+        .await
 }
