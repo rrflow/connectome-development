@@ -212,3 +212,22 @@ pub fn probe_external_path(request: ExternalPathProbeRequest) -> ExternalPathPro
         },
     }
 }
+
+#[derive(Debug, Deserialize)]
+pub struct WriteExternalTextFileRequest {
+    pub path: String,
+    pub content: String,
+    pub create_parent_dirs: bool,
+}
+
+#[tauri::command]
+pub fn write_external_text_file(request: WriteExternalTextFileRequest) -> Result<(), String> {
+    let path = Path::new(request.path.as_str());
+    if request.create_parent_dirs {
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent)
+                .map_err(|error| format!("cannot create parent directories: {error}"))?;
+        }
+    }
+    fs::write(path, request.content).map_err(|error| format!("cannot write file: {error}"))
+}

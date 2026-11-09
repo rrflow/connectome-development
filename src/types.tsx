@@ -148,10 +148,7 @@ export interface WorkbenchTemplateStep {
 	linkedPathId?: string;
 }
 
-export type WorkbenchLearningEventKind =
-	| "did-you-know"
-	| "knowledge-drop"
-	| "factoid";
+export type WorkbenchLearningEventKind = "did-you-know" | "knowledge-drop" | "factoid";
 
 export type WorkbenchLearningEventMode = "passive" | "interactive";
 
@@ -201,6 +198,8 @@ export interface WorkbenchDatasetTemplate {
 	name: string;
 	description: string;
 	schema: string;
+	skills: string[];
+	researchReferences: string[];
 	minimumRequirements: string[];
 	filePatterns: string[];
 	folderPatterns: string[];
@@ -228,12 +227,30 @@ export interface WorkbenchLinkedPath {
 	message?: string;
 }
 
+export type WorkbenchRemoteSourceProvider = "google-drive" | "google-docs-relay";
+
+export type WorkbenchRemoteSourceMode = "import" | "rag" | "tests" | "mixed";
+
+export interface WorkbenchRemoteSource {
+	id: string;
+	label: string;
+	provider: WorkbenchRemoteSourceProvider;
+	mode: WorkbenchRemoteSourceMode;
+	url: string;
+	relayUrl?: string;
+	note?: string;
+	status: "configured" | "needs-auth" | "offline";
+	createdAtUnixMs: number;
+	updatedAtUnixMs: number;
+}
+
 export interface ConnectionWorkbenchState {
 	workbenches: WorkbenchDefinition[];
 	activeWorkbenchId?: string;
 	receipts: WorkbenchReceipt[];
 	templates: WorkbenchDatasetTemplate[];
 	linkedPaths: WorkbenchLinkedPath[];
+	remoteSources?: WorkbenchRemoteSource[];
 }
 
 export interface Connection {

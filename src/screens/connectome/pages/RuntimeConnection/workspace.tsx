@@ -13,21 +13,21 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
+import { useQuery } from "@tanstack/react-query";
 import { isTauri } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
-import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useRef, usengram } from "react";
 import type { ChangeEvent } from "react";
+import { useCallback, useEffect, useMemo, usengram, useRef } from "react";
 import type {
 	RrdMetricView,
-	RrdPromptFlightEventView,
 	RrdPromptFlightDetailView,
+	RrdPromptFlightEventView,
 	RrdPromptFlightSummaryView,
 	RrdSessionClient,
 	RrdStorageView,
 	RrdWorkbenchSnapshotView,
 } from "~/rrflow/session";
-import { probeExternalPath } from "~/rrflow/session";
+import { probeExternalPath, writeExternalTextFile } from "~/rrflow/session";
 import { newId } from "~/shared/util/helpers";
 import { useConfigStore } from "~/shell/stores/config";
 import type {
@@ -41,9 +41,23 @@ import type {
 	WorkbenchLearningTrigger,
 	WorkbenchLearningTriggerKind,
 	WorkbenchLinkedPath,
+	WorkbenchRemoteSource,
+	WorkbenchRemoteSourceMode,
+	WorkbenchRemoteSourceProvider,
 	WorkbenchRunKind,
 	WorkbenchTemplateStep,
 } from "~/types";
+import {
+	benchmarkWorkloadProfiles,
+	buildDatasetArtifacts,
+	type DatasetBuildArtifact,
+	type DatasetBuildResult,
+} from "./workbenchDataset";
+import { WorkbenchDatasetPanel } from "./workbenchDatasetPanel";
+import { WorkbenchLinkedCloudPanel } from "./workbenchLinkedCloudPanel";
+import { WorkbenchMcplLanePanel } from "./workbenchMcplLanePanel";
+import { WorkbenchTemplateAuthoringPanel } from "./workbenchTemplateAuthoringPanel";
+import { WorkbenchTemplateLibraryPanel } from "./workbenchTemplateLibraryPanel";
 
 const prerequisites = {
 	paths: [
@@ -137,7 +151,36 @@ const learningTriggerOptions: { value: WorkbenchLearningTriggerKind; label: stri
 	{ value: "governed-flights-available", label: "Governed flights available" },
 ];
 
+const remoteSourceProviderOptions: {
+	value: WorkbenchRemoteSourceProvider;
+	label: string;
+}[] = [
+	{ value: "google-drive", label: "Google Drive" },
+	{ value: "google-docs-relay", label: "Google Docs relay" },
+];
+
+const remoteSourceModeOptions: { value: WorkbenchRemoteSourceMode; label: string }[] = [
+	{ value: "import", label: "Import files" },
+	{ value: "rag", label: "RAG source" },
+	{ value: "tests", label: "Tests and workloads" },
+	{ value: "mixed", label: "Mixed usage" },
+];
+
 type WorkbenchSubsystem = "rrflowDB" | "rrflowQL" | "rrflowLSM" | "rrflowCLD";
+type WorkbenchLane =
+	| "runtime-control"
+	| "dataset-authoring"
+	| "mcpl-learning"
+	| "cloud-docs"
+	| "receipts";
+
+const workbenchLaneOptions: { value: WorkbenchLane; label: string }[] = [
+	{ value: "runtime-control", label: "Runtime control" },
+	{ value: "dataset-authoring", label: "Dataset authoring" },
+	{ value: "mcpl-learning", label: "MCPL learning" },
+	{ value: "cloud-docs", label: "Cloud + docs" },
+	{ value: "receipts", label: "Receipts + evidence" },
+];
 
 interface WorkbenchActionDefinition {
 	id: string;
@@ -329,6 +372,14 @@ function inferPathLabel(path: string) {
 	return parts[parts.length - 1] ?? path;
 }
 
+function relayUrlForGoogleDocs(url: string) {
+	const match = url.match(/\/document\/d\/([^/]+)/);
+	if (!match) {
+		return null;
+	}
+	return `https://docs.google.com/document/d/${match[1]}/export?format=txt`;
+}
+
 interface TemplateExportPayload {
 	version: number;
 	exportedAtUnixMs: number;
@@ -363,8 +414,7 @@ function parseTemplateImport(
 			continue;
 		}
 		const template = templateValue as Record<string, unknown>;
-		const name =
-			typeof template.name === "string" ? template.name.trim() : "";
+		const name = typeof template.name === "string" ? template.name.trim() : "";
 		if (!name) {
 			continue;
 		}
@@ -378,8 +428,7 @@ function parseTemplateImport(
 						? (stepValue as Record<string, unknown>)
 						: {};
 				const linkedPathId =
-					typeof step.linkedPathId === "string" &&
-					linkedPathIds.has(step.linkedPathId)
+					typeof step.linkedPathId === "string" && linkedPathIds.has(step.linkedPathId)
 						? step.linkedPathId
 						: undefined;
 				return {
@@ -421,9 +470,7 @@ function parseTemplateImport(
 						? event.component
 						: "card";
 				const route =
-					typeof event.route === "string" && event.route.trim()
-						? event.route
-						: undefined;
+					typeof event.route === "string" && event.route.trim() ? event.route : undefined;
 				const importedActions = Array.isArray(event.actions) ? event.actions : [];
 				const actions: WorkbenchLearningAction[] = importedActions
 					.filter(
@@ -509,17 +556,15 @@ function parseTemplateImport(
 			id: newId(),
 			name,
 			description:
-				typeof template.description === "string"
-					? template.description.trim()
-					: "",
+				typeof template.description === "string" ? template.description.trim() : "",
 			schema: typeof template.schema === "string" ? template.schema.trim() : "",
+			skills: toStringArray(template.skills),
+			researchReferences: toStringArray(template.researchReferences),
 			minimumRequirements: toStringArray(template.minimumRequirements),
 			filePatterns: toStringArray(template.filePatterns),
 			folderPatterns: toStringArray(template.folderPatterns),
 			createdAtUnixMs:
-				typeof template.createdAtUnixMs === "number"
-					? template.createdAtUnixMs
-					: now,
+				typeof template.createdAtUnixMs === "number" ? template.createdAtUnixMs : now,
 			updatedAtUnixMs: now,
 			steps,
 			learningEvents,
@@ -633,8 +678,15 @@ const routines: Routine[] = [
 	{
 		id: "release-readiness-loop",
 		title: "Release readiness loop",
-		description: "Run baseline route, launch governed observe flight, record receipt, and verify storage counters.",
-		stepRoutes: ["knowledge/models", "knowledge/records", "knowledge/vectors", "knowledge/storage", "workbench"],
+		description:
+			"Run baseline route, launch governed observe flight, record receipt, and verify storage counters.",
+		stepRoutes: [
+			"knowledge/models",
+			"knowledge/records",
+			"knowledge/vectors",
+			"knowledge/storage",
+			"workbench",
+		],
 	},
 	{
 		id: "cold-trigger-triage",
@@ -647,6 +699,8 @@ const routines: Routine[] = [
 function normalizeWorkbench(state: ConnectionWorkbenchState | undefined): ConnectionWorkbenchState {
 	const templates = (state?.templates ?? []).map((template) => ({
 		...template,
+		skills: template.skills ?? [],
+		researchReferences: template.researchReferences ?? [],
 		learningEvents: (template.learningEvents ?? []).map((event) => ({
 			...event,
 			requiresOperatorSignoff:
@@ -665,6 +719,7 @@ function normalizeWorkbench(state: ConnectionWorkbenchState | undefined): Connec
 		receipts: state?.receipts ?? [],
 		templates,
 		linkedPaths: state?.linkedPaths ?? [],
+		remoteSources: state?.remoteSources ?? [],
 	};
 }
 
@@ -720,6 +775,7 @@ export function ProjectSection({
 		() => normalizeWorkbench(connection?.workbench),
 		[connection?.workbench],
 	);
+	const remoteSources = workbench.remoteSources ?? [];
 	const activeWorkbenchId = workbench.activeWorkbenchId ?? workbench.workbenches[0]?.id;
 	const activeWorkbench =
 		workbench.workbenches.find((candidate) => candidate.id === activeWorkbenchId) ?? null;
@@ -753,17 +809,16 @@ export function ProjectSection({
 	const [templateName, setTemplateName] = usengram("");
 	const [templateDescription, setTemplateDescription] = usengram("");
 	const [templateSchema, setTemplateSchema] = usengram("");
+	const [templateSkills, setTemplateSkills] = usengram("");
+	const [templateResearchReferences, setTemplateResearchReferences] = usengram("");
 	const [templateRequirements, setTemplateRequirements] = usengram("");
 	const [templateFilePatterns, setTemplateFilePatterns] = usengram("");
 	const [templateFolderPatterns, setTemplateFolderPatterns] = usengram("");
 	const [templateStepCount, setTemplateStepCount] = usengram("3");
 	const [templateImportError, setTemplateImportError] = usengram<string | null>(null);
-	const [learningKind, setLearningKind] =
-		usengram<WorkbenchLearningEventKind>("did-you-know");
-	const [learningMode, setLearningMode] =
-		usengram<WorkbenchLearningEventMode>("passive");
-	const [learningComponent, setLearningComponent] =
-		usengram<"card" | "alert" | "badge">("card");
+	const [learningKind, setLearningKind] = usengram<WorkbenchLearningEventKind>("did-you-know");
+	const [learningMode, setLearningMode] = usengram<WorkbenchLearningEventMode>("passive");
+	const [learningComponent, setLearningComponent] = usengram<"card" | "alert" | "badge">("card");
 	const [learningRequiresSignoff, setLearningRequiresSignoff] = usengram(true);
 	const [learningTitle, setLearningTitle] = usengram("");
 	const [learningBody, setLearningBody] = usengram("");
@@ -780,9 +835,9 @@ export function ProjectSection({
 	const [learningTriggers, setLearningTriggers] = usengram<WorkbenchLearningTrigger[]>([
 		{ id: newId(), kind: "manual", description: "Run on operator command." },
 	]);
-	const [templateLearningEvents, setTemplateLearningEvents] = usengram<
-		WorkbenchLearningEvent[]
-	>([]);
+	const [templateLearningEvents, setTemplateLearningEvents] = usengram<WorkbenchLearningEvent[]>(
+		[],
+	);
 	const [templateSteps, setTemplateSteps] = usengram<WorkbenchTemplateStep[]>(
 		buildTemplateSteps(3, undefined),
 	);
@@ -797,6 +852,27 @@ export function ProjectSection({
 	const [trackTools, setTrackTools] = usengram(true);
 	const [trackTime, setTrackTime] = usengram(true);
 	const [executionLog, setExecutionLog] = usengram<WorkbenchExecutionLog[]>([]);
+	const [workbenchLane, setWorkbenchLane] = usengram<WorkbenchLane>("runtime-control");
+	const [datasetBuildTemplateId, setDatasetBuildTemplateId] = usengram<string | null>(null);
+	const [datasetWorkloadProfileId, setDatasetWorkloadProfileId] = usengram<string>(
+		benchmarkWorkloadProfiles[0].id,
+	);
+	const [datasetBuildRunLabel, setDatasetBuildRunLabel] = usengram("");
+	const [datasetBuildFolderLinkId, setDatasetBuildFolderLinkId] = usengram<string | null>(null);
+	const [datasetBuildError, setDatasetBuildError] = usengram<string | null>(null);
+	const [datasetBuildResults, setDatasetBuildResults] = usengram<DatasetBuildResult[]>([]);
+	const [remoteSourceProvider, setRemoteSourceProvider] =
+		usengram<WorkbenchRemoteSourceProvider>("google-drive");
+	const [remoteSourceMode, setRemoteSourceMode] = usengram<WorkbenchRemoteSourceMode>("import");
+	const [remoteSourceLabel, setRemoteSourceLabel] = usengram("");
+	const [remoteSourceUrl, setRemoteSourceUrl] = usengram("");
+	const [remoteSourceNote, setRemoteSourceNote] = usengram("");
+	const [remoteSourceError, setRemoteSourceError] = usengram<string | null>(null);
+	const [selectedDocSourceId, setSelectedDocSourceId] = usengram<string | null>(null);
+	const [docWorkspaceTitle, setDocWorkspaceTitle] = usengram("");
+	const [docWorkspaceContent, setDocWorkspaceContent] = usengram("");
+	const [docWorkspaceError, setDocWorkspaceError] = usengram<string | null>(null);
+	const [docWorkspaceBusy, setDocWorkspaceBusy] = usengram(false);
 	const importInputRef = useRef<HTMLInputElement | null>(null);
 
 	const storageSignals = useQuery<RrdStorageView>({
@@ -815,20 +891,31 @@ export function ProjectSection({
 	const selectedRoutine =
 		routines.find((candidate) => candidate.id === selectedRoutineId) ?? routines[0];
 	const headlineSignals = storageSignals.data?.physical.headline ?? [];
-	const coldSignals = headlineSignals.filter((metric) =>
-		metric.id.includes("cold") || metric.id.includes("cache"),
+	const coldSignals = headlineSignals.filter(
+		(metric) => metric.id.includes("cold") || metric.id.includes("cache"),
 	);
 
-	const saveWorkbench = (next: ConnectionWorkbenchState) => {
-		if (!connection) {
-			return;
-		}
+	const saveWorkbench = useCallback(
+		(next: ConnectionWorkbenchState) => {
+			if (!connection) {
+				return;
+			}
+			const merged: ConnectionWorkbenchState = {
+				workbenches: next.workbenches,
+				activeWorkbenchId: next.activeWorkbenchId,
+				receipts: next.receipts,
+				templates: next.templates,
+				linkedPaths: next.linkedPaths,
+				remoteSources: next.remoteSources ?? remoteSources,
+			};
 
-		updateConnection({
-			id: connection.id,
-			workbench: next,
-		});
-	};
+			updateConnection({
+				id: connection.id,
+				workbench: merged,
+			});
+		},
+		[connection, remoteSources, updateConnection],
+	);
 
 	const updateTemplateStep = (
 		index: number,
@@ -953,91 +1040,103 @@ export function ProjectSection({
 		);
 	};
 
-	const isTriggerActive = (trigger: WorkbenchLearningTrigger) => {
-		if (trigger.kind === "manual") {
-			return true;
-		}
-		if (trigger.kind === "cold-signal") {
-			return coldSignals.length > 0;
-		}
-		if (trigger.kind === "linked-path-missing") {
-			return workbench.linkedPaths.some((path) => path.status !== "available");
-		}
-		if (trigger.kind === "governed-flights-available") {
-			return (workbenchSnapshot?.flight_count ?? 0) > 0;
-		}
-		return false;
-	};
+	const isTriggerActive = useCallback(
+		(trigger: WorkbenchLearningTrigger) => {
+			if (trigger.kind === "manual") {
+				return true;
+			}
+			if (trigger.kind === "cold-signal") {
+				return coldSignals.length > 0;
+			}
+			if (trigger.kind === "linked-path-missing") {
+				return workbench.linkedPaths.some((path) => path.status !== "available");
+			}
+			if (trigger.kind === "governed-flights-available") {
+				return (workbenchSnapshot?.flight_count ?? 0) > 0;
+			}
+			return false;
+		},
+		[coldSignals.length, workbench.linkedPaths, workbenchSnapshot?.flight_count],
+	);
 
-	const runLearningAction = async (action: WorkbenchLearningAction) => {
-		if (action.name === "navigate-route") {
-			const route = action.payload?.trim() || "workbench";
-			onOpen(route);
-			return;
-		}
-		if (action.name === "open-workbench") {
-			onOpen("workbench");
-			return;
-		}
-		if (action.name === "refresh-storage-signals") {
-			await storageSignals.refetch();
-			return;
-		}
-		if (action.name === "refresh-governed-flights") {
-			await refreshWorkbenchSnapshot();
-			return;
-		}
-		if (action.name === "capture-runtime-receipt") {
-			await captureRuntimeReceipt();
-		}
-	};
-
-	const runLearningEvent = async (templateName: string, event: WorkbenchLearningEvent) => {
-		setEventExecutionError(null);
-		setRunningEventIds((current: string[]) => [...current, event.id]);
+	const runGroupedAction = async (definition: WorkbenchActionDefinition) => {
+		const startedAt = Date.now();
+		let status: "ok" | "error" = "ok";
+		let message = "ok";
+		let hops = 0;
+		let actions = 0;
+		let tools = 0;
 		try {
-			if (event.actions.length === 0) {
-				throw new Error("Scripted event has no actions to execute.");
-			}
-			for (const action of event.actions) {
-				await runLearningAction(action);
-			}
-			if (activeWorkbench) {
-				const now = Date.now();
-				saveWorkbench({
-					workbenches: workbench.workbenches.map((candidate) =>
-						candidate.id === activeWorkbench.id
-							? { ...candidate, updatedAtUnixMs: now }
-							: candidate,
-					),
-					activeWorkbenchId: activeWorkbench.id,
-					receipts: [
-						{
-							id: newId(),
-							workbenchId: activeWorkbench.id,
-							kind: "testing",
-							intent: `MCPL event executed: ${event.title}`,
-							context: `template=${templateName}; kind=${event.kind}; mode=${event.mode}; component=${event.component}`,
-							diagnostics: `actions=${event.actions
-								.map((action) => action.name)
-								.join(",")}; triggers=${event.triggers
-								.map((trigger) => trigger.kind)
-								.join(",")}; catamorphism=${event.catamorphismTarget}`,
-							recordedAtUnixMs: now,
-						},
-						...workbench.receipts,
-					],
-					templates: workbench.templates,
-					linkedPaths: workbench.linkedPaths,
+			if (definition.invoke === "open-route") {
+				onOpen(definition.route ?? "workbench");
+				hops = 1;
+				actions = 1;
+			} else if (definition.invoke === "refresh-storage") {
+				await storageSignals.refetch();
+				hops = 1;
+				actions = 1;
+				tools = 1;
+			} else if (definition.invoke === "refresh-flights") {
+				await refreshWorkbenchSnapshot();
+				hops = 1;
+				actions = 1;
+				tools = 1;
+			} else if (definition.invoke === "capture-receipt") {
+				await captureRuntimeReceipt();
+				hops = 1;
+				actions = 1;
+				tools = 1;
+			} else if (definition.invoke === "schema-snapshot") {
+				if (!sessionClient || !connected) {
+					throw new Error("Session unavailable for schema snapshot.");
+				}
+				await sessionClient.schema();
+				hops = 2;
+				actions = 1;
+				tools = 1;
+			} else if (definition.invoke === "database-snapshot") {
+				if (!sessionClient || !connected) {
+					throw new Error("Session unavailable for database snapshot.");
+				}
+				await sessionClient.database();
+				hops = 2;
+				actions = 1;
+				tools = 1;
+			} else if (definition.invoke === "launch-observe") {
+				if (!sessionClient || !connected) {
+					throw new Error("Session unavailable for observe flight.");
+				}
+				const prompt = `Workbench action ${definition.id}: runtime cold-path check.`;
+				await sessionClient.launchObserveFlight({
+					prompt,
+					context_mode: "pruned",
 				});
+				await refreshWorkbenchSnapshot();
+				hops = 3;
+				actions = 2;
+				tools = 2;
 			}
 		} catch (error) {
-			setEventExecutionError(error instanceof Error ? error.message : String(error));
-		} finally {
-			setRunningEventIds((current: string[]) =>
-				current.filter((runningId) => runningId !== event.id),
-			);
+			status = "error";
+			message = error instanceof Error ? error.message : String(error);
 		}
+		const durationMs = Date.now() - startedAt;
+		setExecutionLog((current: WorkbenchExecutionLog[]) => [
+			{
+				id: newId(),
+				atUnixMs: Date.now(),
+				actionId: definition.id,
+				subsystem: definition.subsystem,
+				actionLabel: definition.label,
+				durationMs: trackTime ? durationMs : 0,
+				hops: trackHops ? hops : 0,
+				actions: trackActions ? actions : 0,
+				tools: trackTools ? tools : 0,
+				status,
+				message,
+			},
+			...current,
+		]);
 	};
 
 	const createTemplate = () => {
@@ -1057,6 +1156,14 @@ export function ProjectSection({
 			.split(/\r?\n/)
 			.map((entry: string) => entry.trim())
 			.filter((entry: string) => entry.length > 0);
+		const skills = templateSkills
+			.split(/\r?\n/)
+			.map((entry: string) => entry.trim())
+			.filter((entry: string) => entry.length > 0);
+		const researchReferences = templateResearchReferences
+			.split(/\r?\n/)
+			.map((entry: string) => entry.trim())
+			.filter((entry: string) => entry.length > 0);
 		const filePatterns = templateFilePatterns
 			.split(/\r?\n/)
 			.map((entry: string) => entry.trim())
@@ -1070,6 +1177,8 @@ export function ProjectSection({
 			name,
 			description: templateDescription.trim(),
 			schema: templateSchema.trim(),
+			skills,
+			researchReferences,
 			minimumRequirements,
 			filePatterns,
 			folderPatterns,
@@ -1088,6 +1197,8 @@ export function ProjectSection({
 		setTemplateName("");
 		setTemplateDescription("");
 		setTemplateSchema("");
+		setTemplateSkills("");
+		setTemplateResearchReferences("");
 		setTemplateRequirements("");
 		setTemplateFilePatterns("");
 		setTemplateFolderPatterns("");
@@ -1136,9 +1247,7 @@ export function ProjectSection({
 			const parsed = JSON.parse(await file.text()) as unknown;
 			const imported = parseTemplateImport(parsed, workbench.linkedPaths);
 			if (imported.length === 0) {
-				setTemplateImportError(
-					"The selected file contains no valid dataset templates.",
-				);
+				setTemplateImportError("The selected file contains no valid dataset templates.");
 				return;
 			}
 			saveWorkbench({
@@ -1158,25 +1267,21 @@ export function ProjectSection({
 			workbenches: workbench.workbenches,
 			activeWorkbenchId: workbench.activeWorkbenchId,
 			receipts: workbench.receipts,
-			templates: workbench.templates.filter(
-				(template) => template.id !== templateId,
-			),
+			templates: workbench.templates.filter((template) => template.id !== templateId),
 			linkedPaths: workbench.linkedPaths,
 		});
 	};
 
-	const probeAndStoreLinkedPath = async (linkedPath: WorkbenchLinkedPath) => {
+	const probeAndStoreLinkedPath = useCallback(async (linkedPath: WorkbenchLinkedPath) => {
 		const probe = await probeExternalPath({ path: linkedPath.path });
 		return {
 			...linkedPath,
 			status: probe.connected ? "available" : "missing",
 			lastCheckedAtUnixMs: Date.now(),
-			lastConnectedAtUnixMs: probe.connected
-				? Date.now()
-				: linkedPath.lastConnectedAtUnixMs,
+			lastConnectedAtUnixMs: probe.connected ? Date.now() : linkedPath.lastConnectedAtUnixMs,
 			message: probe.message ?? undefined,
 		} satisfies WorkbenchLinkedPath;
-	};
+	}, []);
 
 	const refreshLinkedPaths = useCallback(async () => {
 		if (!isTauri() || section !== "workbench") {
@@ -1193,9 +1298,7 @@ export function ProjectSection({
 			return;
 		}
 		const refreshed = await Promise.all(
-			latestWorkbench.linkedPaths.map((linkedPath) =>
-				probeAndStoreLinkedPath(linkedPath),
-			),
+			latestWorkbench.linkedPaths.map((linkedPath) => probeAndStoreLinkedPath(linkedPath)),
 		);
 		const changed = refreshed.some((entry, index) => {
 			const previous = latestWorkbench.linkedPaths[index];
@@ -1215,7 +1318,7 @@ export function ProjectSection({
 			templates: latestWorkbench.templates,
 			linkedPaths: refreshed,
 		});
-	}, [section, connectionId]);
+	}, [section, connectionId, probeAndStoreLinkedPath, saveWorkbench]);
 
 	const addLinkedPath = async (kind: "file" | "directory") => {
 		if (!isTauri()) {
@@ -1284,6 +1387,127 @@ export function ProjectSection({
 		});
 	};
 
+	const removeLinkedPath = (linkedPathId: string) => {
+		saveWorkbench({
+			workbenches: workbench.workbenches,
+			activeWorkbenchId: workbench.activeWorkbenchId,
+			receipts: workbench.receipts,
+			templates: workbench.templates.map((template) => ({
+				...template,
+				steps: template.steps.map((step) =>
+					step.linkedPathId === linkedPathId
+						? { ...step, linkedPathId: undefined }
+						: step,
+				),
+			})),
+			linkedPaths: workbench.linkedPaths.filter((candidate) => candidate.id !== linkedPathId),
+		});
+	};
+
+	const addRemoteSource = () => {
+		setRemoteSourceError(null);
+		const url = remoteSourceUrl.trim();
+		if (!url) {
+			setRemoteSourceError("Remote source URL is required.");
+			return;
+		}
+		let relayUrl: string | undefined;
+		if (remoteSourceProvider === "google-docs-relay") {
+			relayUrl = relayUrlForGoogleDocs(url) ?? undefined;
+			if (!relayUrl) {
+				setRemoteSourceError("Provide a valid Google Docs document URL for relay setup.");
+				return;
+			}
+		}
+		const now = Date.now();
+		const source: WorkbenchRemoteSource = {
+			id: newId(),
+			label: remoteSourceLabel.trim() || inferPathLabel(url),
+			provider: remoteSourceProvider,
+			mode: remoteSourceMode,
+			url,
+			relayUrl,
+			note: remoteSourceNote.trim() || undefined,
+			status: "configured",
+			createdAtUnixMs: now,
+			updatedAtUnixMs: now,
+		};
+		saveWorkbench({
+			workbenches: workbench.workbenches,
+			activeWorkbenchId: workbench.activeWorkbenchId,
+			receipts: workbench.receipts,
+			templates: workbench.templates,
+			linkedPaths: workbench.linkedPaths,
+			remoteSources: [source, ...remoteSources],
+		});
+		setRemoteSourceLabel("");
+		setRemoteSourceUrl("");
+		setRemoteSourceNote("");
+	};
+
+	const removeRemoteSource = (sourceId: string) => {
+		saveWorkbench({
+			workbenches: workbench.workbenches,
+			activeWorkbenchId: workbench.activeWorkbenchId,
+			receipts: workbench.receipts,
+			templates: workbench.templates,
+			linkedPaths: workbench.linkedPaths,
+			remoteSources: remoteSources.filter((source) => source.id !== sourceId),
+		});
+	};
+
+	const loadDocIntoWorkspace = async (source: WorkbenchRemoteSource) => {
+		setDocWorkspaceError(null);
+		setDocWorkspaceBusy(true);
+		try {
+			const target = source.relayUrl ?? source.url;
+			const response = await fetch(target);
+			if (!response.ok) {
+				throw new Error(`Remote read failed: ${response.status}`);
+			}
+			const content = await response.text();
+			setSelectedDocSourceId(source.id);
+			setDocWorkspaceTitle(source.label);
+			setDocWorkspaceContent(content);
+		} catch (error) {
+			setDocWorkspaceError(error instanceof Error ? error.message : String(error));
+		} finally {
+			setDocWorkspaceBusy(false);
+		}
+	};
+
+	const copyDocWorkspace = async () => {
+		setDocWorkspaceError(null);
+		try {
+			await navigator.clipboard.writeText(docWorkspaceContent);
+		} catch (error) {
+			setDocWorkspaceError(error instanceof Error ? error.message : String(error));
+		}
+	};
+
+	const saveDocWorkspaceToLinkedFolder = async () => {
+		setDocWorkspaceError(null);
+		if (!linkedOutputFolder) {
+			setDocWorkspaceError("Select an available linked output folder first.");
+			return;
+		}
+		const fileNameBase = (docWorkspaceTitle.trim() || "doc-workspace")
+			.replace(/[^a-zA-Z0-9-_]+/g, "-")
+			.replace(/-+/g, "-")
+			.replace(/^-|-$/g, "")
+			.toLowerCase();
+		const fileName = `${fileNameBase || "doc-workspace"}.txt`;
+		try {
+			await writeExternalTextFile({
+				path: joinPath(linkedOutputFolder.path, fileName),
+				content: docWorkspaceContent,
+				create_parent_dirs: true,
+			});
+		} catch (error) {
+			setDocWorkspaceError(error instanceof Error ? error.message : String(error));
+		}
+	};
+
 	const createWorkbench = () => {
 		const name = newWorkbenchName.trim();
 		if (!name) {
@@ -1344,7 +1568,7 @@ export function ProjectSection({
 		setReceiptDiagnostics("");
 	};
 
-	const captureRuntimeReceipt = async () => {
+	const captureRuntimeReceipt = useCallback(async () => {
 		if (!activeWorkbench || !sessionClient || !connected) {
 			return;
 		}
@@ -1458,7 +1682,25 @@ export function ProjectSection({
 		} finally {
 			setCapturingReceipt(false);
 		}
-	};
+	}, [
+		activeWorkbench,
+		sessionClient,
+		connected,
+		setCapturingReceipt,
+		setReceiptCaptureError,
+		receiptIntent,
+		receiptContext,
+		receiptDiagnostics,
+		receiptKind,
+		saveWorkbench,
+		workbench.workbenches,
+		workbench.receipts,
+		workbench.templates,
+		workbench.linkedPaths,
+		setReceiptIntent,
+		setReceiptContext,
+		setReceiptDiagnostics,
+	]);
 
 	const launchObserveFlight = async () => {
 		if (!activeWorkbench || !sessionClient || !connected) {
@@ -1528,7 +1770,7 @@ export function ProjectSection({
 		} finally {
 			setLoadingSnapshot(false);
 		}
-	}, [sessionClient, connected]);
+	}, [sessionClient, connected, setLoadingSnapshot, setSnapshotError, setWorkbenchSnapshot]);
 
 	const loadPromptFlightDetail = useCallback(
 		async (flightId: string) => {
@@ -1551,7 +1793,101 @@ export function ProjectSection({
 				setLoadingFlightDetail(false);
 			}
 		},
-		[sessionClient, connected],
+		[
+			sessionClient,
+			connected,
+			setLoadingFlightDetail,
+			setFlightDetailError,
+			setSelectedFlightId,
+			setSelectedFlightDetail,
+		],
+	);
+
+	const runLearningAction = useCallback(
+		async (action: WorkbenchLearningAction) => {
+			if (action.name === "navigate-route") {
+				const route = action.payload?.trim() || "workbench";
+				onOpen(route);
+				return;
+			}
+			if (action.name === "open-workbench") {
+				onOpen("workbench");
+				return;
+			}
+			if (action.name === "refresh-storage-signals") {
+				await storageSignals.refetch();
+				return;
+			}
+			if (action.name === "refresh-governed-flights") {
+				await refreshWorkbenchSnapshot();
+				return;
+			}
+			if (action.name === "capture-runtime-receipt") {
+				await captureRuntimeReceipt();
+			}
+		},
+		[onOpen, storageSignals, refreshWorkbenchSnapshot, captureRuntimeReceipt],
+	);
+
+	const runLearningEvent = useCallback(
+		async (templateName: string, event: WorkbenchLearningEvent) => {
+			setEventExecutionError(null);
+			setRunningEventIds((current: string[]) => [...current, event.id]);
+			try {
+				if (event.actions.length === 0) {
+					throw new Error("Scripted event has no actions to execute.");
+				}
+				for (const action of event.actions) {
+					await runLearningAction(action);
+				}
+				if (activeWorkbench) {
+					const now = Date.now();
+					saveWorkbench({
+						workbenches: workbench.workbenches.map((candidate) =>
+							candidate.id === activeWorkbench.id
+								? { ...candidate, updatedAtUnixMs: now }
+								: candidate,
+						),
+						activeWorkbenchId: activeWorkbench.id,
+						receipts: [
+							{
+								id: newId(),
+								workbenchId: activeWorkbench.id,
+								kind: "testing",
+								intent: `MCPL event executed: ${event.title}`,
+								context: `template=${templateName}; kind=${event.kind}; mode=${event.mode}; component=${event.component}`,
+								diagnostics: `actions=${event.actions
+									.map((action) => action.name)
+									.join(",")}; triggers=${event.triggers
+									.map((trigger) => trigger.kind)
+									.join(",")}; catamorphism=${event.catamorphismTarget}`,
+								recordedAtUnixMs: now,
+							},
+							...workbench.receipts,
+						],
+						templates: workbench.templates,
+						linkedPaths: workbench.linkedPaths,
+					});
+				}
+			} catch (error) {
+				setEventExecutionError(error instanceof Error ? error.message : String(error));
+			} finally {
+				setRunningEventIds((current: string[]) =>
+					current.filter((runningId) => runningId !== event.id),
+				);
+			}
+		},
+		[
+			runLearningAction,
+			activeWorkbench,
+			saveWorkbench,
+			workbench.workbenches,
+			workbench.receipts,
+			workbench.templates,
+			workbench.linkedPaths,
+			setEventExecutionError,
+			setRunningEventIds,
+		],
 	);
 
 	useEffect(() => {
@@ -1591,7 +1927,14 @@ export function ProjectSection({
 				void runLearningEvent(template.name, event);
 			}
 		}
-	}, [section, workbench.templates, autoTriggeredEventKeys, coldSignals.length, workbench.linkedPaths.length, workbenchSnapshot?.flight_count]);
+	}, [
+		section,
+		workbench.templates,
+		autoTriggeredEventKeys,
+		isTriggerActive,
+		setAutoTriggeredEventKeys,
+		runLearningEvent,
+	]);
 
 	const receipts = useMemo(() => {
 		if (!activeWorkbench) {
@@ -1610,7 +1953,7 @@ export function ProjectSection({
 
 		const filtered = workbenchSnapshot.recent_flights.filter(
 			(flight: RrdPromptFlightSummaryView) => {
-			return flightFilter === "all" || flight.context_mode === flightFilter;
+				return flightFilter === "all" || flight.context_mode === flightFilter;
 			},
 		);
 
@@ -1620,6 +1963,317 @@ export function ProjectSection({
 			return flightSort === "newest" ? rightRank - leftRank : leftRank - rightRank;
 		});
 	}, [flightFilter, flightSort, workbenchSnapshot]);
+	const selectedDatasetTemplate =
+		workbench.templates.find((template) => template.id === datasetBuildTemplateId) ??
+		workbench.templates[0] ??
+		null;
+	const learningEvents = useMemo(
+		() =>
+			workbench.templates.flatMap((template) =>
+				template.learningEvents.map((event) => ({
+					templateId: template.id,
+					templateName: template.name,
+					event,
+				})),
+			),
+		[workbench.templates],
+	);
+	const showRuntimeLane = workbenchLane === "runtime-control";
+	const showDatasetLane = workbenchLane === "dataset-authoring";
+	const showMcplLane = workbenchLane === "mcpl-learning";
+	const showCloudLane = workbenchLane === "cloud-docs";
+	const showReceiptsLane = workbenchLane === "receipts";
+	const selectedWorkloadProfile =
+		benchmarkWorkloadProfiles.find((profile) => profile.id === datasetWorkloadProfileId) ??
+		benchmarkWorkloadProfiles[0];
+	const datasetFlowReadiness = useMemo(
+		() => [
+			{
+				id: "template",
+				label: "Template selected",
+				ready: Boolean(selectedDatasetTemplate),
+			},
+			{
+				id: "steps",
+				label: "0–5 step contract defined",
+				ready:
+					Boolean(selectedDatasetTemplate) &&
+					(selectedDatasetTemplate?.steps.length ?? 0) <= 5,
+			},
+			{
+				id: "cloud",
+				label: "Cloud source requirement",
+				ready: !selectedWorkloadProfile.requiresRemoteSource || remoteSources.length > 0,
+			},
+			{
+				id: "folder",
+				label: "Output path strategy",
+				ready:
+					Boolean(datasetBuildFolderLinkId) ||
+					!selectedWorkloadProfile.requiresRemoteSource,
+			},
+		],
+		[
+			selectedDatasetTemplate,
+			selectedWorkloadProfile,
+			remoteSources.length,
+			datasetBuildFolderLinkId,
+		],
+	);
+	const latestDatasetBuildResult = datasetBuildResults[0] ?? null;
+	const datasetOutputFolderOptions = useMemo(
+		() =>
+			workbench.linkedPaths
+				.filter((path) => path.kind === "directory")
+				.map((path) => ({
+					value: path.id,
+					label: `${path.label} (${path.status})`,
+				})),
+		[workbench.linkedPaths],
+	);
+	const datasetCompareReadiness = useMemo(
+		() => [
+			{
+				id: "bundle",
+				label: "Benchmark bundle generated",
+				ready: Boolean(latestDatasetBuildResult),
+			},
+			{
+				id: "session",
+				label: "Connected runtime session",
+				ready: connected && Boolean(sessionClient),
+			},
+			{
+				id: "workbench",
+				label: "Active workbench selected",
+				ready: Boolean(activeWorkbench),
+			},
+			{
+				id: "snapshot",
+				label: "Governed snapshot available",
+				ready: Boolean(workbenchSnapshot),
+			},
+		],
+		[latestDatasetBuildResult, connected, sessionClient, activeWorkbench, workbenchSnapshot],
+	);
+	const linkedOutputFolder =
+		workbench.linkedPaths.find(
+			(path) =>
+				path.id === datasetBuildFolderLinkId &&
+				path.kind === "directory" &&
+				path.status === "available",
+		) ?? null;
+
+	const subsystemStatus: Array<{
+		id: WorkbenchSubsystem;
+		label: string;
+		color: string;
+		status: string;
+		detail: string;
+	}> = [
+		{
+			id: "rrflowDB",
+			label: "rrflowDB",
+			color: "blue",
+			status: connected ? "connected" : "session required",
+			detail: connected
+				? "Schema and record graph surfaces are available."
+				: "Authenticate native session for canonical record access.",
+		},
+		{
+			id: "rrflowQL",
+			label: "rrflowQL",
+			color: "indigo",
+			status: (workbenchSnapshot?.task_count ?? 0) > 0 ? "active tasks" : "idle",
+			detail: "Traversal, query-routing, and relation-hop analysis controlled via Workbench actions.",
+		},
+		{
+			id: "rrflowLSM",
+			label: "rrflowLSM",
+			color: "violet",
+			status: storageSignals.data ? "telemetry online" : "waiting",
+			detail: storageSignals.data
+				? `runtimeCursor=${storageSignals.data.runtime_cursor}; profile=${storageSignals.data.storage_profile}`
+				: "Poll storage telemetry to expose hot-path state.",
+		},
+		{
+			id: "rrflowCLD",
+			label: "rrflowCLD",
+			color: "orange",
+			status: coldSignals.length > 0 ? "cold signal active" : "no cold signal",
+			detail: "Cold-served vector reads should trigger RRFlowCLD workflows and observable receipts.",
+		},
+	];
+
+	const joinPath = (folder: string, name: string) => {
+		const base = folder.endsWith("\\") || folder.endsWith("/") ? folder.slice(0, -1) : folder;
+		return `${base}\\${name}`;
+	};
+
+	const downloadArtifact = (artifact: DatasetBuildArtifact) => {
+		const blob = new Blob([artifact.content], { type: "application/json" });
+		const href = URL.createObjectURL(blob);
+		const link = document.createElement("a");
+		link.href = href;
+		link.download = artifact.fileName;
+		link.click();
+		URL.revokeObjectURL(href);
+	};
+
+	const generateDatasetFiles = async () => {
+		setDatasetBuildError(null);
+		if (!selectedDatasetTemplate) {
+			setDatasetBuildError("Select a dataset template first.");
+			return;
+		}
+		if (selectedWorkloadProfile.requiresRemoteSource && remoteSources.length === 0) {
+			setDatasetBuildError(
+				`Workload "${selectedWorkloadProfile.label}" requires at least one configured cloud source.`,
+			);
+			return;
+		}
+		const runLabel = datasetBuildRunLabel.trim() || `dataset-run-${Date.now()}`;
+		const runSlug = runLabel.replace(/[^a-zA-Z0-9-_]+/g, "-").replace(/-+/g, "-");
+		const runFolder = runSlug.length > 0 ? runSlug : `dataset-run-${Date.now()}`;
+		const artifacts = buildDatasetArtifacts({
+			template: selectedDatasetTemplate,
+			runLabel,
+			workloadProfile: selectedWorkloadProfile,
+			remoteSources,
+			telemetry: {
+				profile: telemetryProfile,
+				hops: trackHops,
+				actions: trackActions,
+				tools: trackTools,
+				time: trackTime,
+			},
+		}).map((artifact) => ({
+			...artifact,
+			fileName: `${runFolder}-${artifact.fileName}`,
+		}));
+		try {
+			const createdAtUnixMs = Date.now();
+			let outputMode: DatasetBuildResult["outputMode"] = "download";
+			let outputPath: string | null = null;
+			if (linkedOutputFolder) {
+				const outputFolder = joinPath(linkedOutputFolder.path, runFolder);
+				for (const artifact of artifacts) {
+					await writeExternalTextFile({
+						path: joinPath(outputFolder, artifact.fileName),
+						content: artifact.content,
+						create_parent_dirs: true,
+					});
+				}
+				outputMode = "linked-folder";
+				outputPath = outputFolder;
+			} else {
+				for (const artifact of artifacts) {
+					downloadArtifact(artifact);
+				}
+			}
+			setDatasetBuildResults((current: DatasetBuildResult[]) => [
+				{
+					id: newId(),
+					templateId: selectedDatasetTemplate.id,
+					templateName: selectedDatasetTemplate.name,
+					workloadProfileId: selectedWorkloadProfile.id,
+					workloadProfileLabel: selectedWorkloadProfile.label,
+					runLabel,
+					createdAtUnixMs,
+					outputMode,
+					outputPath,
+					artifactCount: artifacts.length,
+				},
+				...current,
+			]);
+			if (activeWorkbench) {
+				const diagnostics = `profile=${selectedWorkloadProfile.id}; artifacts=${artifacts.length}; outputMode=${outputMode}; outputPath=${outputPath ?? "download"}`;
+				saveWorkbench({
+					workbenches: workbench.workbenches.map((candidate) =>
+						candidate.id === activeWorkbench.id
+							? { ...candidate, updatedAtUnixMs: createdAtUnixMs }
+							: candidate,
+					),
+					activeWorkbenchId: activeWorkbench.id,
+					receipts: [
+						{
+							id: newId(),
+							workbenchId: activeWorkbench.id,
+							kind: "testing",
+							intent: `Generated benchmark workload bundle (${selectedWorkloadProfile.label})`,
+							context: `template=${selectedDatasetTemplate.name}; runLabel=${runLabel}`,
+							diagnostics,
+							recordedAtUnixMs: createdAtUnixMs,
+						},
+						...workbench.receipts,
+					],
+					templates: workbench.templates,
+					linkedPaths: workbench.linkedPaths,
+				});
+			}
+		} catch (error) {
+			setDatasetBuildError(error instanceof Error ? error.message : String(error));
+		}
+	};
+
+	const prepareDatasetCompareFlight = () => {
+		if (!latestDatasetBuildResult) {
+			setDatasetBuildError("Generate a benchmark dataset bundle before compare setup.");
+			return;
+		}
+		const comparePrompt = [
+			`Run benchmark compare for ${latestDatasetBuildResult.templateName}.`,
+			`Workload profile: ${latestDatasetBuildResult.workloadProfileLabel}.`,
+			`Run label: ${latestDatasetBuildResult.runLabel}.`,
+			"Use prompt parity against RRFlow, SurrealDB, and ArangoDB.",
+			"Validate index completeness, retrieval accuracy, and comparable latency.",
+		].join(" ");
+		setFlightPrompt(comparePrompt);
+		setFlightAcceptanceMarker(`benchmark-compare-${latestDatasetBuildResult.id.slice(0, 8)}`);
+		setFlightContextMode("pruned");
+		setReceiptKind("testing");
+		setWorkbenchLane("runtime-control");
+	};
+
+	const recordDatasetCompareReceipt = () => {
+		if (!activeWorkbench || !latestDatasetBuildResult) {
+			setDatasetBuildError(
+				"Select a workbench and generate a bundle before recording receipt.",
+			);
+			return;
+		}
+		const now = Date.now();
+		const diagnostics = [
+			`profile=${latestDatasetBuildResult.workloadProfileId}`,
+			`outputMode=${latestDatasetBuildResult.outputMode}`,
+			`artifacts=${latestDatasetBuildResult.artifactCount}`,
+			`outputPath=${latestDatasetBuildResult.outputPath ?? "download"}`,
+			`flightCount=${workbenchSnapshot?.flight_count ?? 0}`,
+			`taskCount=${workbenchSnapshot?.task_count ?? 0}`,
+		].join("; ");
+		saveWorkbench({
+			workbenches: workbench.workbenches.map((candidate) =>
+				candidate.id === activeWorkbench.id
+					? { ...candidate, updatedAtUnixMs: now }
+					: candidate,
+			),
+			activeWorkbenchId: activeWorkbench.id,
+			receipts: [
+				{
+					id: newId(),
+					workbenchId: activeWorkbench.id,
+					kind: "testing",
+					intent: `Benchmark compare staged (${latestDatasetBuildResult.workloadProfileLabel})`,
+					context: `template=${latestDatasetBuildResult.templateName}; run=${latestDatasetBuildResult.runLabel}`,
+					diagnostics,
+					recordedAtUnixMs: now,
+				},
+				...workbench.receipts,
+			],
+			templates: workbench.templates,
+			linkedPaths: workbench.linkedPaths,
+		});
+	};
 
 	if (section === "overview")
 		return (
@@ -1732,696 +2386,47 @@ export function ProjectSection({
 				</Alert>
 				<Paper
 					withBorder
-					p="lg"
+					p="md"
 				>
-					<Stack>
-						<Group justify="space-between">
-							<Title order={4}>Guided routes</Title>
-							<Badge
-								color={coldSignals.length > 0 ? "orange" : "blue"}
-								variant="light"
-							>
-								{coldSignals.length > 0
-									? "Cold-path signals detected"
-									: "No cold-path signals"}
-							</Badge>
-						</Group>
-						<Text size="sm">
-							Follow an explicit route so model/schema, retrieval, vector, and storage
-							evidence stay in one consistent session flow.
-						</Text>
+					<Stack gap="xs">
 						<Select
-							label="Route plan"
-							value={selectedRoute.id}
-							data={routePlans.map((route) => ({
-								value: route.id,
-								label: route.title,
-							}))}
-							onChange={(next) => setSelectedRouteId(next ?? routePlans[0].id)}
+							label="Workbench lane"
+							value={workbenchLane}
+							data={workbenchLaneOptions}
+							onChange={(next) =>
+								setWorkbenchLane(
+									(next as WorkbenchLane | null) ?? "runtime-control",
+								)
+							}
 						/>
-						<Text size="sm">{selectedRoute.purpose}</Text>
-						<Stack gap="xs">
-							{selectedRoute.steps.map((step, index) => (
-								<Paper
-									key={step.id}
-									withBorder
-									p="sm"
-								>
-									<Group justify="space-between">
-										<Box>
-											<Text fw={650}>
-												Step {index + 1}: {step.title}
-											</Text>
-											<Text
-												size="sm"
-												c="slate"
-											>
-												{step.detail}
-											</Text>
-										</Box>
-										<Button
-											size="xs"
-											variant="light"
-											onClick={() => onOpen(step.route)}
-										>
-											Open step
-										</Button>
-									</Group>
-								</Paper>
-							))}
-						</Stack>
+						<Text size="xs">
+							Focus one lane at a time: runtime control, dataset authoring, MCPL
+							learning, cloud/doc integration, or receipts and evidence.
+						</Text>
 					</Stack>
 				</Paper>
 				<SimpleGrid cols={{ base: 1, md: 2 }}>
-					<Paper
-						withBorder
-						p="lg"
-					>
-						<Stack>
-							<Title order={4}>Workskills</Title>
-							<Text size="sm">
-								Each workskill routes to one focused lens and one expected evidence
-								outcome.
-							</Text>
-							{workskills.map((skill) => (
-								<Paper
-									key={skill.id}
-									withBorder
-									p="sm"
-								>
-									<Group justify="space-between">
-										<Box>
-											<Text fw={650}>{skill.title}</Text>
-											<Text
-												size="sm"
-												c="slate"
-											>
-												{skill.outcome}
-											</Text>
-										</Box>
-										<Button
-											size="xs"
-											variant="subtle"
-											onClick={() => onOpen(skill.route)}
-										>
-											Run skill
-										</Button>
-									</Group>
-								</Paper>
-							))}
-						</Stack>
-					</Paper>
-					<Paper
-						withBorder
-						p="lg"
-					>
-						<Stack>
-							<Title order={4}>Routines</Title>
-							<Text size="sm">
-								Routines are repeatable multi-step loops. Start one, then execute each
-								step in order.
-							</Text>
-							<Select
-								label="Routine"
-								value={selectedRoutine.id}
-								data={routines.map((routine) => ({
-									value: routine.id,
-									label: routine.title,
-								}))}
-								onChange={(next) => setSelectedRoutineId(next ?? routines[0].id)}
-							/>
-							<Text size="sm">{selectedRoutine.description}</Text>
-							<Group gap="xs">
-								<Button
-									size="xs"
-									variant="light"
-									onClick={() => onOpen(selectedRoutine.stepRoutes[0] ?? "workbench")}
-								>
-									Start routine
-								</Button>
-								<Button
-									size="xs"
-									variant="subtle"
-									onClick={() => onOpen("workbench")}
-								>
-									Record outcome
-								</Button>
-							</Group>
-						</Stack>
-					</Paper>
-				</SimpleGrid>
-				<Paper
-					withBorder
-					p="lg"
-				>
-					<Stack>
-						<Title order={4}>Live storage signal</Title>
-						{storageSignals.isLoading && (
-							<Text size="sm">Reading storage diagnostics…</Text>
-						)}
-						{storageSignals.isError && (
-							<Alert
-								color="red"
-								title="Storage signal unavailable"
-							>
-								{storageSignals.error instanceof Error
-									? storageSignals.error.message
-									: "Storage diagnostics could not be read."}
-							</Alert>
-						)}
-						{storageSignals.data && (
-							<Stack gap="xs">
-								<Group gap="xs">
-									{(coldSignals.length > 0 ? coldSignals : headlineSignals)
-										.slice(0, 6)
-										.map((metric) => (
-											<Badge
-												key={metric.id}
-												variant="light"
-											>
-												{metric.label}: {formatMetric(metric)}
-											</Badge>
-										))}
-								</Group>
-								<Text
-									size="xs"
-									c="slate"
-								>
-									Observed at {formatWhen(storageSignals.data.physical.observed_at_unix_ms)}
+					{showRuntimeLane && (
+						<Paper
+							withBorder
+							p="lg"
+						>
+							<Stack>
+								<Title order={4}>Unified multimodal database dashboard</Title>
+								<Text size="sm">
+									Operate rrflowDB, rrflowQL, rrflowLSM, and rrflowCLD as one
+									controller-visible system with explicit labels and action lanes.
 								</Text>
-							</Stack>
-						)}
-					</Stack>
-				</Paper>
-				<SimpleGrid cols={{ base: 1, md: 2 }}>
-					<Paper
-						withBorder
-						p="lg"
-					>
-						<Stack>
-							<Title order={4}>Dataset templates (0–5 steps)</Title>
-							<Text size="sm">
-								Define reusable, configurable templates with schema and minimum
-								requirements for reasoning-engine tests and experiments.
-							</Text>
-							<Group>
-								<Button
-									variant="light"
-									onClick={exportTemplates}
-									disabled={workbench.templates.length === 0}
-								>
-									Export templates
-								</Button>
-								<Button
-									variant="light"
-									onClick={openTemplateImport}
-								>
-									Import templates
-								</Button>
-								<input
-									ref={importInputRef}
-									type="file"
-									accept="application/json,.json"
-									style={{ display: "none" }}
-									onChange={(event) => void importTemplates(event)}
-								/>
-							</Group>
-							{templateImportError && (
-								<Alert
-									color="red"
-									title="Template import failed"
-								>
-									{templateImportError}
-								</Alert>
-							)}
-							<TextInput
-								label="Template name"
-								placeholder="Real project retrieval benchmark"
-								value={templateName}
-								onChange={(event) => setTemplateName(event.currentTarget.value)}
-							/>
-							<Textarea
-								label="Template description"
-								placeholder="What this dataset workflow validates"
-								minRows={2}
-								value={templateDescription}
-								onChange={(event) =>
-									setTemplateDescription(event.currentTarget.value)
-								}
-							/>
-							<TextInput
-								label="Schema"
-								placeholder="rrflow.workbench.dataset.v1"
-								value={templateSchema}
-								onChange={(event) => setTemplateSchema(event.currentTarget.value)}
-							/>
-							<Textarea
-								label="Minimum requirements (one per line)"
-								placeholder="Data source authorized&#10;Prompt set hash captured&#10;Comparator parity verified"
-								minRows={3}
-								value={templateRequirements}
-								onChange={(event) =>
-									setTemplateRequirements(event.currentTarget.value)
-								}
-							/>
-							<Textarea
-								label="File patterns (one per line)"
-								placeholder="**/*.md&#10;**/*.rs&#10;eval/inputs/**/*.json"
-								minRows={2}
-								value={templateFilePatterns}
-								onChange={(event) =>
-									setTemplateFilePatterns(event.currentTarget.value)
-								}
-							/>
-							<Textarea
-								label="Folder patterns (one per line)"
-								placeholder="docs/**&#10;crates/**&#10;eval/**"
-								minRows={2}
-								value={templateFolderPatterns}
-								onChange={(event) =>
-									setTemplateFolderPatterns(event.currentTarget.value)
-								}
-							/>
-							<Paper
-								withBorder
-								p="sm"
-							>
-								<Stack>
-									<Title order={5}>MCPL Learning scripted events</Title>
-									<Text size="xs">
-										Build Did You Know, Knowledge Drop, and Factoid events as
-										A2UI components for passive or interactive flows, then
-										catamorphize back to Clyffy.
-									</Text>
-									<Group grow>
-										<Select
-											label="Event kind"
-											value={learningKind}
-											data={learningKindOptions}
-											onChange={(next) =>
-												setLearningKind(
-													(next as WorkbenchLearningEventKind | null) ??
-														"did-you-know",
-												)
-											}
-										/>
-										<Select
-											label="Mode"
-											value={learningMode}
-											data={learningModeOptions}
-											onChange={(next) =>
-												setLearningMode(
-													(next as WorkbenchLearningEventMode | null) ??
-														"passive",
-												)
-											}
-										/>
-										<Select
-											label="A2UI component"
-											value={learningComponent}
-											data={[
-												{ value: "card", label: "Card" },
-												{ value: "alert", label: "Alert" },
-												{ value: "badge", label: "Badge" },
-											]}
-											onChange={(next) =>
-												setLearningComponent(
-													(next as "card" | "alert" | "badge" | null) ??
-														"card",
-												)
-											}
-										/>
-									</Group>
-									<TextInput
-										label="Title"
-										value={learningTitle}
-										onChange={(event) =>
-											setLearningTitle(event.currentTarget.value)
-										}
-									/>
-									<Textarea
-										label="Body"
-										minRows={2}
-										value={learningBody}
-										onChange={(event) =>
-											setLearningBody(event.currentTarget.value)
-										}
-									/>
-									<Select
-										label="Interactive route"
-										value={learningRoute}
-										data={workbenchRouteOptions}
-										disabled={learningMode !== "interactive"}
-										onChange={(next) =>
-											setLearningRoute(next ?? "workbench")
-										}
-									/>
-									<Select
-										label="Requires operator sign-off"
-										value={learningRequiresSignoff ? "yes" : "no"}
-										data={[
-											{ value: "yes", label: "Yes" },
-											{ value: "no", label: "No" },
-										]}
-										onChange={(next) =>
-											setLearningRequiresSignoff((next ?? "yes") === "yes")
-										}
-									/>
-									<TextInput
-										label="Catamorphism note to Clyffy"
-										placeholder="How this event maps back into Clyffy routines"
-										value={learningCatamorphismNote}
-										onChange={(event) =>
-											setLearningCatamorphismNote(
-												event.currentTarget.value,
-											)
-										}
-									/>
+								{subsystemStatus.map((entry) => (
 									<Paper
+										key={entry.id}
 										withBorder
-										p="xs"
+										p="sm"
 									>
-										<Stack>
-											<Title order={6}>Scripted actions</Title>
-											<Group grow>
-												<Select
-													label="Action"
-													value={learningActionName}
-													data={learningActionOptions}
-													onChange={(next) =>
-														setLearningActionName(
-															(next as WorkbenchLearningActionName | null) ??
-																"navigate-route",
-														)
-													}
-												/>
-												<TextInput
-													label="Action label"
-													value={learningActionLabel}
-													onChange={(event) =>
-														setLearningActionLabel(
-															event.currentTarget.value,
-														)
-													}
-												/>
-												<TextInput
-													label="Payload (optional)"
-													placeholder="route name or free text payload"
-													value={learningActionPayload}
-													onChange={(event) =>
-														setLearningActionPayload(
-															event.currentTarget.value,
-														)
-													}
-												/>
-											</Group>
-											<Group justify="space-between">
-												<Text size="xs">
-													Actions queued: {learningActions.length}
-												</Text>
-												<Button
-													size="xs"
-													variant="subtle"
-													onClick={addLearningAction}
-												>
-													Add action
-												</Button>
-											</Group>
-											{learningActions.map((action: WorkbenchLearningAction) => (
-												<Group
-													key={action.id}
-													justify="space-between"
-												>
-													<Text size="xs">
-														{action.name} · {action.label}
-														{action.payload ? ` · ${action.payload}` : ""}
-													</Text>
-													<Button
-														size="xs"
-														variant="subtle"
-														color="red"
-														onClick={() => removeLearningAction(action.id)}
-													>
-														Remove
-													</Button>
-												</Group>
-											))}
-										</Stack>
-									</Paper>
-									<Paper
-										withBorder
-										p="xs"
-									>
-										<Stack>
-											<Title order={6}>Signal triggers</Title>
-											<Group grow>
-												<Select
-													label="Trigger"
-													value={learningTriggerKind}
-													data={learningTriggerOptions}
-													onChange={(next) =>
-														setLearningTriggerKind(
-															(next as WorkbenchLearningTriggerKind | null) ??
-																"manual",
-														)
-													}
-												/>
-												<TextInput
-													label="Trigger note"
-													placeholder="Optional rationale or threshold note"
-													value={learningTriggerDescription}
-													onChange={(event) =>
-														setLearningTriggerDescription(
-															event.currentTarget.value,
-														)
-													}
-												/>
-											</Group>
-											<Group justify="space-between">
-												<Text size="xs">
-													Triggers queued: {learningTriggers.length}
-												</Text>
-												<Button
-													size="xs"
-													variant="subtle"
-													onClick={addLearningTrigger}
-												>
-													Add trigger
-												</Button>
-											</Group>
-											{learningTriggers.map((trigger: WorkbenchLearningTrigger) => (
-												<Group
-													key={trigger.id}
-													justify="space-between"
-												>
-													<Text size="xs">
-														{trigger.kind}
-														{trigger.description
-															? ` · ${trigger.description}`
-															: ""}
-													</Text>
-													<Button
-														size="xs"
-														variant="subtle"
-														color="red"
-														onClick={() => removeLearningTrigger(trigger.id)}
-													>
-														Remove
-													</Button>
-												</Group>
-											))}
-										</Stack>
-									</Paper>
-									<Group justify="space-between">
-										<Text size="xs">
-											Queued events: {templateLearningEvents.length}
-										</Text>
-										<Button
-											size="xs"
-											variant="light"
-											onClick={addLearningEvent}
-											disabled={learningTitle.trim().length === 0}
-										>
-											Add learning event
-										</Button>
-									</Group>
-									{templateLearningEvents.map((event: WorkbenchLearningEvent) => (
-										<Paper
-											key={event.id}
-											withBorder
-											p="xs"
-										>
-											<Group justify="space-between">
-												<Text size="sm">
-													{event.kind} · {event.mode} · {event.component}
-												</Text>
-												<Button
-													size="xs"
-													variant="subtle"
-													color="red"
-													onClick={() => removeLearningEvent(event.id)}
-												>
-													Remove
-												</Button>
-											</Group>
-											<Text size="sm">{event.title}</Text>
-											{event.body && (
-												<Text
-													size="xs"
-													c="slate"
-												>
-													{event.body}
-												</Text>
-											)}
-										</Paper>
-									))}
-								</Stack>
-							</Paper>
-							<Select
-								label="Step count"
-								value={templateStepCount}
-								data={datasetStepCountOptions}
-								onChange={(next) => updateTemplateStepCount(next)}
-							/>
-							{templateSteps.map((step: WorkbenchTemplateStep, index: number) => (
-								<Paper
-									key={step.id}
-									withBorder
-									p="sm"
-								>
-									<Stack>
-										<Text fw={650}>Step {index + 1}</Text>
-										<TextInput
-											label="Title"
-											value={step.title}
-											onChange={(event) =>
-												updateTemplateStep(
-													index,
-													"title",
-													event.currentTarget.value,
-												)
-											}
-										/>
-										<TextInput
-											label="Detail"
-											value={step.detail}
-											onChange={(event) =>
-												updateTemplateStep(
-													index,
-													"detail",
-													event.currentTarget.value,
-												)
-											}
-										/>
-										<Select
-											label="Route"
-											value={step.route}
-											data={workbenchRouteOptions}
-											onChange={(next) =>
-												updateTemplateStep(index, "route", next ?? "workbench")
-											}
-										/>
-										<Select
-											label="Linked path (optional)"
-											value={step.linkedPathId ?? null}
-											data={workbench.linkedPaths.map((entry) => ({
-												value: entry.id,
-												label: `${entry.label} (${entry.status})`,
-											}))}
-											placeholder="No path link"
-											onChange={(next) =>
-												updateTemplateStep(
-													index,
-													"linkedPathId",
-													next ?? undefined,
-												)
-											}
-										/>
-									</Stack>
-								</Paper>
-							))}
-							<Group justify="flex-end">
-								<Button
-									onClick={createTemplate}
-									disabled={!connection || templateName.trim().length === 0}
-								>
-									Save template
-								</Button>
-							</Group>
-						</Stack>
-					</Paper>
-					<Paper
-						withBorder
-						p="lg"
-					>
-						<Stack>
-							<Title order={4}>Linked external files and folders</Title>
-							<Text size="sm">
-								Link external datasets once, then let Workbench auto-check
-								availability and reconnect paths when a drive disconnects.
-							</Text>
-							<TextInput
-								label="Link label (optional)"
-								placeholder="USB benchmark pack"
-								value={linkLabelDraft}
-								onChange={(event) => setLinkLabelDraft(event.currentTarget.value)}
-							/>
-							<Group>
-								<Button
-									variant="light"
-									onClick={() => void addLinkedPath("file")}
-									disabled={!connection}
-								>
-									Link file
-								</Button>
-								<Button
-									variant="light"
-									onClick={() => void addLinkedPath("directory")}
-									disabled={!connection}
-								>
-									Link folder
-								</Button>
-								<Button
-									variant="subtle"
-									onClick={() => void refreshLinkedPaths()}
-									disabled={!connection}
-								>
-									Refresh links
-								</Button>
-							</Group>
-							{linkError && (
-								<Alert
-									color="red"
-									title="External path link failed"
-								>
-									{linkError}
-								</Alert>
-							)}
-							{workbench.linkedPaths.length === 0 && (
-								<Text
-									size="sm"
-									c="slate"
-								>
-									No external links yet.
-								</Text>
-							)}
-							{workbench.linkedPaths.map((entry) => (
-								<Paper
-									key={entry.id}
-									withBorder
-									p="sm"
-								>
-									<Stack gap="xs">
 										<Group justify="space-between">
 											<Text fw={650}>{entry.label}</Text>
 											<Badge
-												color={
-													entry.status === "available"
-														? "green"
-														: entry.status === "missing"
-															? "red"
-															: "gray"
-												}
+												color={entry.color}
 												variant="light"
 											>
 												{entry.status}
@@ -2429,288 +2434,599 @@ export function ProjectSection({
 										</Group>
 										<Text
 											size="xs"
-											ff="monospace"
-										>
-											{entry.path}
-										</Text>
-										<Text
-											size="xs"
 											c="slate"
 										>
-											Last checked: {formatWhen(entry.lastCheckedAtUnixMs)} · Last connected:{" "}
-											{formatWhen(entry.lastConnectedAtUnixMs)}
+											{entry.detail}
 										</Text>
-										{entry.message && (
-											<Text
-												size="xs"
-												c="orange"
-											>
-												{entry.message}
-											</Text>
-										)}
-										<Group>
-											{entry.status !== "available" && (
-												<Button
-													size="xs"
-													variant="light"
-													onClick={() => void reconnectLinkedPath(entry.id)}
-												>
-													Reconnect
-												</Button>
-											)}
-											<Button
-												size="xs"
-												variant="subtle"
-												color="red"
-												onClick={() =>
-													saveWorkbench({
-														workbenches: workbench.workbenches,
-														activeWorkbenchId: workbench.activeWorkbenchId,
-														receipts: workbench.receipts,
-														templates: workbench.templates.map((template) => ({
-															...template,
-															steps: template.steps.map((step) =>
-																step.linkedPathId === entry.id
-																	? { ...step, linkedPathId: undefined }
-																	: step,
-															),
-														})),
-														linkedPaths: workbench.linkedPaths.filter(
-															(candidate) => candidate.id !== entry.id,
-														),
-													})
-												}
-											>
-												Remove link
-											</Button>
-										</Group>
-									</Stack>
-								</Paper>
-							))}
-							<Title order={5}>Saved templates</Title>
-							{eventExecutionError && (
+									</Paper>
+								))}
+							</Stack>
+						</Paper>
+					)}
+					{showDatasetLane && (
+						<WorkbenchDatasetPanel
+							templates={workbench.templates}
+							selectedDatasetTemplateId={selectedDatasetTemplate?.id ?? null}
+							onSelectTemplate={setDatasetBuildTemplateId}
+							workloadProfiles={benchmarkWorkloadProfiles}
+							selectedWorkloadProfile={selectedWorkloadProfile}
+							onSelectWorkloadProfile={(id) =>
+								setDatasetWorkloadProfileId(id ?? benchmarkWorkloadProfiles[0].id)
+							}
+							datasetBuildRunLabel={datasetBuildRunLabel}
+							onChangeRunLabel={setDatasetBuildRunLabel}
+							datasetOutputFolderOptions={datasetOutputFolderOptions}
+							datasetBuildFolderLinkId={datasetBuildFolderLinkId}
+							onSelectOutputFolder={setDatasetBuildFolderLinkId}
+							datasetFlowReadiness={datasetFlowReadiness}
+							datasetBuildError={datasetBuildError}
+							onGenerateDatasetFiles={() => void generateDatasetFiles()}
+							datasetBuildResults={datasetBuildResults}
+							formatWhen={formatWhen}
+							datasetCompareReadiness={datasetCompareReadiness}
+							latestDatasetBuildResult={latestDatasetBuildResult}
+							onRefreshSnapshot={() => void refreshWorkbenchSnapshot()}
+							canRefreshSnapshot={connected && Boolean(sessionClient)}
+							onPrepareCompareFlight={prepareDatasetCompareFlight}
+							onRecordCompareReceipt={recordDatasetCompareReceipt}
+							canRecordCompareReceipt={
+								Boolean(latestDatasetBuildResult) && Boolean(activeWorkbench)
+							}
+						/>
+					)}
+					{showRuntimeLane && (
+						<Paper
+							withBorder
+							p="lg"
+						>
+							<Stack>
+								<Title order={4}>Controller contract (explicit)</Title>
+								<Text size="sm">
+									Classifier → Decision Router/System → Reasoning Engine. Keep
+									this as a contract boundary, never hidden only in UI behavior.
+								</Text>
+								<Group gap="xs">
+									<Badge color="teal">1. Classifier</Badge>
+									<Badge color="cyan">2. Decision Router</Badge>
+									<Badge color="grape">3. Reasoning Engine</Badge>
+								</Group>
 								<Alert
-									color="red"
-									title="Scripted event execution failed"
+									color="orange"
+									title="Trigger invariant"
 								>
-									{eventExecutionError}
+									Cold-served vector read must emit RRFlowCLD trigger, start
+									cold-period workflow, and create bounded observable receipts.
 								</Alert>
-							)}
-							{workbench.templates.length === 0 && (
+								<Text size="xs">
+									Fork readiness: keep cold-path logic behind RRFlow interfaces
+									with swap-clean backend boundaries and measurable constraints.
+								</Text>
+							</Stack>
+						</Paper>
+					)}
+				</SimpleGrid>
+				{showRuntimeLane && (
+					<Paper
+						withBorder
+						p="lg"
+					>
+						<Stack>
+							<Title order={4}>Grouped actions and telemetry controls</Title>
+							<Text size="sm">
+								Every Workbench action is grouped by subsystem and can be executed
+								here with hops/actions/tools/time telemetry.
+							</Text>
+							<Group grow>
+								<TextInput
+									label="Telemetry profile"
+									value={telemetryProfile}
+									onChange={(event) =>
+										setTelemetryProfile(event.currentTarget.value)
+									}
+								/>
+								<Select
+									label="Track hops"
+									value={trackHops ? "yes" : "no"}
+									data={[
+										{ value: "yes", label: "Yes" },
+										{ value: "no", label: "No" },
+									]}
+									onChange={(next) => setTrackHops((next ?? "yes") === "yes")}
+								/>
+								<Select
+									label="Track actions/tools"
+									value={trackActions ? "yes" : "no"}
+									data={[
+										{ value: "yes", label: "Yes" },
+										{ value: "no", label: "No" },
+									]}
+									onChange={(next) => {
+										const enabled = (next ?? "yes") === "yes";
+										setTrackActions(enabled);
+										setTrackTools(enabled);
+									}}
+								/>
+								<Select
+									label="Track timing"
+									value={trackTime ? "yes" : "no"}
+									data={[
+										{ value: "yes", label: "Yes" },
+										{ value: "no", label: "No" },
+									]}
+									onChange={(next) => setTrackTime((next ?? "yes") === "yes")}
+								/>
+							</Group>
+							<SimpleGrid cols={{ base: 1, md: 2 }}>
+								{groupedActions.map((group) => (
+									<Paper
+										key={group.id}
+										withBorder
+										p="sm"
+									>
+										<Stack>
+											<Group justify="space-between">
+												<Text fw={650}>{group.label}</Text>
+												<Badge
+													color={group.color}
+													variant="light"
+												>
+													{group.actions.length} actions
+												</Badge>
+											</Group>
+											{group.actions.map((action) => (
+												<Group
+													key={action.id}
+													justify="space-between"
+												>
+													<Box>
+														<Text size="sm">{action.label}</Text>
+														<Text
+															size="xs"
+															c="slate"
+														>
+															{action.description}
+														</Text>
+													</Box>
+													<Button
+														size="xs"
+														variant="light"
+														onClick={() =>
+															void runGroupedAction(action)
+														}
+													>
+														Run
+													</Button>
+												</Group>
+											))}
+										</Stack>
+									</Paper>
+								))}
+							</SimpleGrid>
+							<Title order={5}>Execution telemetry</Title>
+							{executionLog.length === 0 && (
 								<Text
 									size="sm"
 									c="slate"
 								>
-									No dataset templates saved yet.
+									No grouped actions executed yet.
 								</Text>
 							)}
-							{workbench.templates.map((template) => (
+							{executionLog.map((entry: WorkbenchExecutionLog) => (
 								<Paper
-									key={template.id}
+									key={entry.id}
 									withBorder
-									p="sm"
+									p="xs"
 								>
-									<Stack gap="xs">
-										<Group justify="space-between">
-											<Text fw={650}>{template.name}</Text>
-											<Group gap="xs">
-												<Badge variant="light">
-													{template.steps.length} step
-													{template.steps.length === 1 ? "" : "s"}
-												</Badge>
-												<Button
-													size="xs"
-													variant="subtle"
-													color="red"
-													onClick={() => removeTemplate(template.id)}
-												>
-													Remove
-												</Button>
-											</Group>
-										</Group>
-										<Text size="sm">{template.description}</Text>
+									<Group justify="space-between">
+										<Text size="sm">
+											{entry.subsystem} · {entry.actionLabel}
+										</Text>
+										<Badge
+											color={entry.status === "ok" ? "green" : "red"}
+											variant="light"
+										>
+											{entry.status}
+										</Badge>
+									</Group>
+									<Text
+										size="xs"
+										c="slate"
+									>
+										profile={telemetryProfile}; hops={entry.hops}; actions=
+										{entry.actions}; tools={entry.tools}; timeMs=
+										{entry.durationMs}
+									</Text>
+									{entry.message !== "ok" && (
 										<Text
 											size="xs"
-											ff="monospace"
+											c="red"
 										>
-											schema={template.schema || "unset"}
+											{entry.message}
 										</Text>
-										<Text size="xs">
-											Requirements:{" "}
-											{template.minimumRequirements.length > 0
-												? template.minimumRequirements.join(" • ")
-												: "none"}
-										</Text>
-										<Text size="xs">
-											File patterns:{" "}
-											{template.filePatterns.length > 0
-												? template.filePatterns.join(", ")
-												: "none"}
-										</Text>
-										<Text size="xs">
-											Folder patterns:{" "}
-											{template.folderPatterns.length > 0
-												? template.folderPatterns.join(", ")
-												: "none"}
-										</Text>
-										{template.steps.map((step, index) => {
-											const linked = step.linkedPathId
-												? workbench.linkedPaths.find(
-														(entry) => entry.id === step.linkedPathId,
-													)
-												: undefined;
-											return (
-												<Group
-													key={step.id}
-													justify="space-between"
-												>
-													<Text
-														size="xs"
-														c="slate"
-													>
-														{index + 1}. {step.title} → {step.route}
-														{linked
-															? ` · link=${linked.label} (${linked.status})`
-															: ""}
-													</Text>
-													<Button
-														size="xs"
-														variant="subtle"
-														onClick={() => onOpen(step.route)}
-													>
-														Open
-													</Button>
-												</Group>
-											);
-										})}
-										{template.learningEvents.length > 0 && (
-											<Stack gap="xs">
-												<Text
-													size="xs"
-													fw={650}
-												>
-													MCPL Learning events
-												</Text>
-												{template.learningEvents.map((event: WorkbenchLearningEvent) => (
-													<Paper
-														key={event.id}
-														withBorder
-														p="xs"
-													>
-														<Stack gap="xs">
-															<Group justify="space-between">
-																<Badge variant="light">
-																	{event.kind}
-																</Badge>
-																<Text size="xs">
-																	{event.mode} · {event.component}
-																</Text>
-															</Group>
-															{event.component === "alert" ? (
-																<Alert title={event.title}>
-																	{event.body || "No body provided."}
-																</Alert>
-															) : event.component === "badge" ? (
-																<Group>
-																	<Badge>{event.title}</Badge>
-																	<Text size="xs">
-																		{event.body}
-																	</Text>
-																</Group>
-															) : (
-																<>
-																	<Text size="sm">{event.title}</Text>
-																	{event.body && (
-																		<Text
-																			size="xs"
-																			c="slate"
-																		>
-																			{event.body}
-																		</Text>
-																	)}
-																</>
-															)}
-															<Text
-																size="xs"
-																c="slate"
-															>
-																catamorphism → {event.catamorphismTarget}
-																{event.catamorphismNote
-																	? ` (${event.catamorphismNote})`
-																	: ""}
-															</Text>
-															{event.triggers.length > 0 && (
-																<Text size="xs">
-																	signals:{" "}
-																	{event.triggers
-																		.map((trigger) => trigger.kind)
-																		.join(", ")}
-																</Text>
-															)}
-															{event.actions.length > 0 && (
-																<Text size="xs">
-																	actions:{" "}
-																	{event.actions
-																		.map((action) => action.name)
-																		.join(", ")}
-																</Text>
-															)}
-															{event.triggers.some((trigger) =>
-																isTriggerActive(trigger),
-															) && (
-																<Badge
-																	size="sm"
-																	color="orange"
-																	variant="light"
-																>
-																	Signal active
-																</Badge>
-															)}
-															{event.mode === "interactive" &&
-																event.route && (
-																	<Button
-																		size="xs"
-																		variant="light"
-																		onClick={() =>
-																			onOpen(event.route ?? "workbench")
-																		}
-																	>
-																		Interact
-																	</Button>
-																)}
-															<Group>
-																<Button
-																	size="xs"
-																	variant={
-																		event.requiresOperatorSignoff
-																			? "light"
-																			: "subtle"
-																	}
-																	onClick={() =>
-																		void runLearningEvent(
-																			template.name,
-																			event,
-																		)
-																	}
-																	loading={runningEventIds.includes(event.id)}
-																>
-																	{event.requiresOperatorSignoff
-																		? "Approve and run"
-																		: "Run scripted event"}
-																</Button>
-															</Group>
-														</Stack>
-													</Paper>
-												))}
-											</Stack>
-										)}
-									</Stack>
+									)}
 								</Paper>
 							))}
 						</Stack>
 					</Paper>
-				</SimpleGrid>
-				{!connection && (
+				)}
+				{showRuntimeLane && (
+					<Paper
+						withBorder
+						p="lg"
+					>
+						<Stack>
+							<Group justify="space-between">
+								<Title order={4}>Guided routes</Title>
+								<Badge
+									color={coldSignals.length > 0 ? "orange" : "blue"}
+									variant="light"
+								>
+									{coldSignals.length > 0
+										? "Cold-path signals detected"
+										: "No cold-path signals"}
+								</Badge>
+							</Group>
+							<Text size="sm">
+								Follow an explicit route so model/schema, retrieval, vector, and
+								storage evidence stay in one consistent session flow.
+							</Text>
+							<Select
+								label="Route plan"
+								value={selectedRoute.id}
+								data={routePlans.map((route) => ({
+									value: route.id,
+									label: route.title,
+								}))}
+								onChange={(next) => setSelectedRouteId(next ?? routePlans[0].id)}
+							/>
+							<Text size="sm">{selectedRoute.purpose}</Text>
+							<Stack gap="xs">
+								{selectedRoute.steps.map((step, index) => (
+									<Paper
+										key={step.id}
+										withBorder
+										p="sm"
+									>
+										<Group justify="space-between">
+											<Box>
+												<Text fw={650}>
+													Step {index + 1}: {step.title}
+												</Text>
+												<Text
+													size="sm"
+													c="slate"
+												>
+													{step.detail}
+												</Text>
+											</Box>
+											<Button
+												size="xs"
+												variant="light"
+												onClick={() => onOpen(step.route)}
+											>
+												Open step
+											</Button>
+										</Group>
+									</Paper>
+								))}
+							</Stack>
+						</Stack>
+					</Paper>
+				)}
+				{showRuntimeLane && (
+					<SimpleGrid cols={{ base: 1, md: 2 }}>
+						<Paper
+							withBorder
+							p="lg"
+						>
+							<Stack>
+								<Title order={4}>Workskills</Title>
+								<Text size="sm">
+									Each workskill routes to one focused lens and one expected
+									evidence outcome.
+								</Text>
+								{workskills.map((skill) => (
+									<Paper
+										key={skill.id}
+										withBorder
+										p="sm"
+									>
+										<Group justify="space-between">
+											<Box>
+												<Text fw={650}>{skill.title}</Text>
+												<Text
+													size="sm"
+													c="slate"
+												>
+													{skill.outcome}
+												</Text>
+											</Box>
+											<Button
+												size="xs"
+												variant="subtle"
+												onClick={() => onOpen(skill.route)}
+											>
+												Run skill
+											</Button>
+										</Group>
+									</Paper>
+								))}
+							</Stack>
+						</Paper>
+						<Paper
+							withBorder
+							p="lg"
+						>
+							<Stack>
+								<Title order={4}>Routines</Title>
+								<Text size="sm">
+									Routines are repeatable multi-step loops. Start one, then
+									execute each step in order.
+								</Text>
+								<Select
+									label="Routine"
+									value={selectedRoutine.id}
+									data={routines.map((routine) => ({
+										value: routine.id,
+										label: routine.title,
+									}))}
+									onChange={(next) =>
+										setSelectedRoutineId(next ?? routines[0].id)
+									}
+								/>
+								<Text size="sm">{selectedRoutine.description}</Text>
+								<Group gap="xs">
+									<Button
+										size="xs"
+										variant="light"
+										onClick={() =>
+											onOpen(selectedRoutine.stepRoutes[0] ?? "workbench")
+										}
+									>
+										Start routine
+									</Button>
+									<Button
+										size="xs"
+										variant="subtle"
+										onClick={() => onOpen("workbench")}
+									>
+										Record outcome
+									</Button>
+								</Group>
+							</Stack>
+						</Paper>
+					</SimpleGrid>
+				)}
+				{showRuntimeLane && (
+					<Paper
+						withBorder
+						p="lg"
+					>
+						<Stack>
+							<Title order={4}>Live storage signal</Title>
+							{storageSignals.isLoading && (
+								<Text size="sm">Reading storage diagnostics…</Text>
+							)}
+							{storageSignals.isError && (
+								<Alert
+									color="red"
+									title="Storage signal unavailable"
+								>
+									{storageSignals.error instanceof Error
+										? storageSignals.error.message
+										: "Storage diagnostics could not be read."}
+								</Alert>
+							)}
+							{storageSignals.data && (
+								<Stack gap="xs">
+									<Group gap="xs">
+										{(coldSignals.length > 0 ? coldSignals : headlineSignals)
+											.slice(0, 6)
+											.map((metric) => (
+												<Badge
+													key={metric.id}
+													variant="light"
+												>
+													{metric.label}: {formatMetric(metric)}
+												</Badge>
+											))}
+									</Group>
+									<Text
+										size="xs"
+										c="slate"
+									>
+										Observed at{" "}
+										{formatWhen(
+											storageSignals.data.physical.observed_at_unix_ms,
+										)}
+									</Text>
+								</Stack>
+							)}
+						</Stack>
+					</Paper>
+				)}
+				{(showDatasetLane || showMcplLane || showCloudLane) && (
+					<SimpleGrid cols={{ base: 1, md: 2 }}>
+						{(showDatasetLane || showMcplLane) && (
+							<WorkbenchTemplateAuthoringPanel
+								connectionAvailable={Boolean(connection)}
+								templatesCount={workbench.templates.length}
+								onExportTemplates={exportTemplates}
+								onOpenTemplateImport={openTemplateImport}
+								importInputRef={importInputRef}
+								onImportTemplates={(event) => void importTemplates(event)}
+								templateImportError={templateImportError}
+								templateName={templateName}
+								onChangeTemplateName={setTemplateName}
+								templateDescription={templateDescription}
+								onChangeTemplateDescription={setTemplateDescription}
+								templateSchema={templateSchema}
+								onChangeTemplateSchema={setTemplateSchema}
+								templateSkills={templateSkills}
+								onChangeTemplateSkills={setTemplateSkills}
+								templateResearchReferences={templateResearchReferences}
+								onChangeTemplateResearchReferences={setTemplateResearchReferences}
+								templateRequirements={templateRequirements}
+								onChangeTemplateRequirements={setTemplateRequirements}
+								templateFilePatterns={templateFilePatterns}
+								onChangeTemplateFilePatterns={setTemplateFilePatterns}
+								templateFolderPatterns={templateFolderPatterns}
+								onChangeTemplateFolderPatterns={setTemplateFolderPatterns}
+								learningKind={learningKind}
+								learningKindOptions={learningKindOptions}
+								onChangeLearningKind={(next) =>
+									setLearningKind(
+										(next as WorkbenchLearningEventKind | null) ??
+											"did-you-know",
+									)
+								}
+								learningMode={learningMode}
+								learningModeOptions={learningModeOptions}
+								onChangeLearningMode={(next) =>
+									setLearningMode(
+										(next as WorkbenchLearningEventMode | null) ?? "passive",
+									)
+								}
+								learningComponent={learningComponent}
+								onChangeLearningComponent={(next) =>
+									setLearningComponent(
+										(next as "card" | "alert" | "badge" | null) ?? "card",
+									)
+								}
+								learningTitle={learningTitle}
+								onChangeLearningTitle={setLearningTitle}
+								learningBody={learningBody}
+								onChangeLearningBody={setLearningBody}
+								learningRoute={learningRoute}
+								workbenchRouteOptions={workbenchRouteOptions}
+								onChangeLearningRoute={(next) =>
+									setLearningRoute(next ?? "workbench")
+								}
+								learningRequiresSignoff={learningRequiresSignoff}
+								onChangeLearningRequiresSignoff={(next) =>
+									setLearningRequiresSignoff((next ?? "yes") === "yes")
+								}
+								learningCatamorphismNote={learningCatamorphismNote}
+								onChangeLearningCatamorphismNote={setLearningCatamorphismNote}
+								learningActionName={learningActionName}
+								learningActionOptions={learningActionOptions}
+								onChangeLearningActionName={(next) =>
+									setLearningActionName(
+										(next as WorkbenchLearningActionName | null) ??
+											"navigate-route",
+									)
+								}
+								learningActionLabel={learningActionLabel}
+								onChangeLearningActionLabel={setLearningActionLabel}
+								learningActionPayload={learningActionPayload}
+								onChangeLearningActionPayload={setLearningActionPayload}
+								learningActions={learningActions}
+								onAddLearningAction={addLearningAction}
+								onRemoveLearningAction={removeLearningAction}
+								learningTriggerKind={learningTriggerKind}
+								learningTriggerOptions={learningTriggerOptions}
+								onChangeLearningTriggerKind={(next) =>
+									setLearningTriggerKind(
+										(next as WorkbenchLearningTriggerKind | null) ?? "manual",
+									)
+								}
+								learningTriggerDescription={learningTriggerDescription}
+								onChangeLearningTriggerDescription={setLearningTriggerDescription}
+								learningTriggers={learningTriggers}
+								onAddLearningTrigger={addLearningTrigger}
+								onRemoveLearningTrigger={removeLearningTrigger}
+								templateLearningEvents={templateLearningEvents}
+								onAddLearningEvent={addLearningEvent}
+								onRemoveLearningEvent={removeLearningEvent}
+								templateStepCount={templateStepCount}
+								datasetStepCountOptions={datasetStepCountOptions}
+								onChangeTemplateStepCount={updateTemplateStepCount}
+								templateSteps={templateSteps}
+								onUpdateTemplateStep={updateTemplateStep}
+								linkedPathOptions={workbench.linkedPaths.map((entry) => ({
+									value: entry.id,
+									label: `${entry.label} (${entry.status})`,
+								}))}
+								onCreateTemplate={createTemplate}
+							/>
+						)}
+						{(showDatasetLane || showCloudLane) && (
+							<>
+								<WorkbenchLinkedCloudPanel
+									connectionAvailable={Boolean(connection)}
+									linkLabelDraft={linkLabelDraft}
+									onChangeLinkLabelDraft={setLinkLabelDraft}
+									onAddLinkedFile={() => void addLinkedPath("file")}
+									onAddLinkedFolder={() => void addLinkedPath("directory")}
+									onRefreshLinks={() => void refreshLinkedPaths()}
+									linkError={linkError}
+									linkedPaths={workbench.linkedPaths}
+									formatWhen={formatWhen}
+									onReconnectLinkedPath={(linkedPathId) =>
+										void reconnectLinkedPath(linkedPathId)
+									}
+									onRemoveLinkedPath={removeLinkedPath}
+									remoteSourceProvider={remoteSourceProvider}
+									remoteSourceProviderOptions={remoteSourceProviderOptions}
+									onChangeRemoteSourceProvider={setRemoteSourceProvider}
+									remoteSourceMode={remoteSourceMode}
+									remoteSourceModeOptions={remoteSourceModeOptions}
+									onChangeRemoteSourceMode={setRemoteSourceMode}
+									remoteSourceLabel={remoteSourceLabel}
+									onChangeRemoteSourceLabel={setRemoteSourceLabel}
+									remoteSourceUrl={remoteSourceUrl}
+									onChangeRemoteSourceUrl={setRemoteSourceUrl}
+									remoteSourceNote={remoteSourceNote}
+									onChangeRemoteSourceNote={setRemoteSourceNote}
+									remoteSourceError={remoteSourceError}
+									onAddRemoteSource={addRemoteSource}
+									remoteSources={remoteSources}
+									onLoadDocIntoWorkspace={(source) =>
+										void loadDocIntoWorkspace(source)
+									}
+									onRemoveRemoteSource={removeRemoteSource}
+									docWorkspaceBusy={docWorkspaceBusy}
+									docWorkspaceTitle={docWorkspaceTitle}
+									onChangeDocWorkspaceTitle={setDocWorkspaceTitle}
+									docWorkspaceContent={docWorkspaceContent}
+									onChangeDocWorkspaceContent={setDocWorkspaceContent}
+									docWorkspaceError={docWorkspaceError}
+									onCopyDocWorkspace={() => void copyDocWorkspace()}
+									onSaveDocWorkspaceToLinkedFolder={() =>
+										void saveDocWorkspaceToLinkedFolder()
+									}
+									canSaveDocWorkspaceToLinkedFolder={
+										docWorkspaceContent.length > 0 &&
+										Boolean(linkedOutputFolder)
+									}
+									selectedDocSourceId={selectedDocSourceId}
+								/>
+								<WorkbenchTemplateLibraryPanel
+									eventExecutionError={eventExecutionError}
+									templates={workbench.templates}
+									linkedPaths={workbench.linkedPaths}
+									onRemoveTemplate={removeTemplate}
+									onOpenRoute={onOpen}
+									isTriggerActive={isTriggerActive}
+									onRunLearningEvent={(templateName, event) =>
+										void runLearningEvent(templateName, event)
+									}
+									runningEventIds={runningEventIds}
+								/>
+							</>
+						)}
+					</SimpleGrid>
+				)}
+				{showMcplLane && (
+					<WorkbenchMcplLanePanel
+						learningEvents={learningEvents}
+						runningEventIds={runningEventIds}
+						onRunLearningEvent={(templateName, event) =>
+							void runLearningEvent(templateName, event)
+						}
+					/>
+				)}
+				{(showDatasetLane || showCloudLane || showReceiptsLane) && !connection && (
 					<Alert
 						color="red"
 						title="Connection unavailable"
@@ -2718,399 +3034,422 @@ export function ProjectSection({
 						This workbench can only be edited when its project profile is available.
 					</Alert>
 				)}
-				<Paper
-					withBorder
-					p="lg"
-				>
-					<Stack>
-						<Title order={4}>Create workbench</Title>
-						<TextInput
-							label="Workbench name"
-							placeholder="Dogfood readiness"
-							value={newWorkbenchName}
-							onChange={(event) => setNewWorkbenchName(event.currentTarget.value)}
-						/>
-						<Textarea
-							label="Scope"
-							placeholder="What this workbench is validating"
-							minRows={2}
-							value={newWorkbenchDescription}
-							onChange={(event) =>
-								setNewWorkbenchDescription(event.currentTarget.value)
-							}
-						/>
-						<Group justify="flex-end">
-							<Button
-								onClick={createWorkbench}
-								disabled={!connection || newWorkbenchName.trim().length === 0}
-							>
-								Create workbench
-							</Button>
-						</Group>
-					</Stack>
-				</Paper>
-				<Paper
-					withBorder
-					p="lg"
-				>
-					<Stack>
-						<Title order={4}>Launch observe flight</Title>
-						<Textarea
-							label="Prompt"
-							placeholder="Describe the project intent for this flight"
-							minRows={3}
-							value={flightPrompt}
-							onChange={(event) => setFlightPrompt(event.currentTarget.value)}
-						/>
-						<Select
-							label="Context mode"
-							value={flightContextMode}
-							data={flightContextModeOptions.map((entry) => ({
-								value: entry.value,
-								label: entry.label,
-							}))}
-							onChange={(next) =>
-								setFlightContextMode(
-									(next as "fresh" | "pruned" | null) ?? "pruned",
-								)
-							}
-						/>
-						<TextInput
-							label="Acceptance marker (optional)"
-							placeholder="dogfood-workbench-01"
-							value={flightAcceptanceMarker}
-							onChange={(event) =>
-								setFlightAcceptanceMarker(event.currentTarget.value)
-							}
-						/>
-						{launchFlightError && (
-							<Alert
-								color="red"
-								title="Observe flight launch failed"
-							>
-								{launchFlightError}
-							</Alert>
-						)}
-						<Group justify="flex-end">
-							<Button
-								variant="light"
-								onClick={() => void refreshWorkbenchSnapshot()}
-								loading={loadingSnapshot}
-								disabled={!connection || !connected}
-							>
-								Refresh governed flights
-							</Button>
-							<Button
-								variant="light"
-								onClick={launchObserveFlight}
-								loading={launchingFlight}
-								disabled={!connection || !activeWorkbench || !connected}
-							>
-								Launch observe flight
-							</Button>
-						</Group>
-						{snapshotError && (
-							<Alert
-								color="red"
-								title="Workbench snapshot failed"
-							>
-								{snapshotError}
-							</Alert>
-						)}
-						{workbenchSnapshot && (
-							<Paper
-								withBorder
-								p="sm"
-							>
-								<Stack gap="xs">
-									<Text size="sm">
-										Scope:{" "}
-										<Text
-											span
-											ff="monospace"
-										>
-											{workbenchSnapshot.scope}
-										</Text>
-									</Text>
-									<Text size="sm">
-										Recent flights in snapshot: {workbenchSnapshot.flight_count}
-									</Text>
-									<Group>
-										<Select
-											label="Filter"
-											value={flightFilter}
-											data={[
-												{ value: "all", label: "All" },
-												{ value: "fresh", label: "Fresh" },
-												{ value: "pruned", label: "Pruned" },
-											]}
-											onChange={(next) =>
-												setFlightFilter(
-													(next as "all" | "fresh" | "pruned" | null) ??
-														"all",
-												)
-											}
-										/>
-										<Select
-											label="Sort"
-											value={flightSort}
-											data={[
-												{ value: "newest", label: "Newest first" },
-												{ value: "oldest", label: "Oldest first" },
-											]}
-											onChange={(next) =>
-												setFlightSort(
-													(next as "newest" | "oldest" | null) ??
-														"newest",
-												)
-											}
-										/>
-									</Group>
-									{recentFlights.length > 0 ? (
-										recentFlights.map((flight: RrdPromptFlightSummaryView) => (
-											<Paper
-												key={flight.flight_id}
-												withBorder
-												p="xs"
+				{showReceiptsLane && (
+					<Paper
+						withBorder
+						p="lg"
+					>
+						<Stack>
+							<Title order={4}>Create workbench</Title>
+							<TextInput
+								label="Workbench name"
+								placeholder="Dogfood readiness"
+								value={newWorkbenchName}
+								onChange={(event) => setNewWorkbenchName(event.currentTarget.value)}
+							/>
+							<Textarea
+								label="Scope"
+								placeholder="What this workbench is validating"
+								minRows={2}
+								value={newWorkbenchDescription}
+								onChange={(event) =>
+									setNewWorkbenchDescription(event.currentTarget.value)
+								}
+							/>
+							<Group justify="flex-end">
+								<Button
+									onClick={createWorkbench}
+									disabled={!connection || newWorkbenchName.trim().length === 0}
+								>
+									Create workbench
+								</Button>
+							</Group>
+						</Stack>
+					</Paper>
+				)}
+				{showRuntimeLane && (
+					<Paper
+						withBorder
+						p="lg"
+					>
+						<Stack>
+							<Title order={4}>Launch observe flight</Title>
+							<Textarea
+								label="Prompt"
+								placeholder="Describe the project intent for this flight"
+								minRows={3}
+								value={flightPrompt}
+								onChange={(event) => setFlightPrompt(event.currentTarget.value)}
+							/>
+							<Select
+								label="Context mode"
+								value={flightContextMode}
+								data={flightContextModeOptions.map((entry) => ({
+									value: entry.value,
+									label: entry.label,
+								}))}
+								onChange={(next) =>
+									setFlightContextMode(
+										(next as "fresh" | "pruned" | null) ?? "pruned",
+									)
+								}
+							/>
+							<TextInput
+								label="Acceptance marker (optional)"
+								placeholder="dogfood-workbench-01"
+								value={flightAcceptanceMarker}
+								onChange={(event) =>
+									setFlightAcceptanceMarker(event.currentTarget.value)
+								}
+							/>
+							{launchFlightError && (
+								<Alert
+									color="red"
+									title="Observe flight launch failed"
+								>
+									{launchFlightError}
+								</Alert>
+							)}
+							<Group justify="flex-end">
+								<Button
+									variant="light"
+									onClick={() => void refreshWorkbenchSnapshot()}
+									loading={loadingSnapshot}
+									disabled={!connection || !connected}
+								>
+									Refresh governed flights
+								</Button>
+								<Button
+									variant="light"
+									onClick={launchObserveFlight}
+									loading={launchingFlight}
+									disabled={!connection || !activeWorkbench || !connected}
+								>
+									Launch observe flight
+								</Button>
+							</Group>
+							{snapshotError && (
+								<Alert
+									color="red"
+									title="Workbench snapshot failed"
+								>
+									{snapshotError}
+								</Alert>
+							)}
+							{workbenchSnapshot && (
+								<Paper
+									withBorder
+									p="sm"
+								>
+									<Stack gap="xs">
+										<Text size="sm">
+											Scope:{" "}
+											<Text
+												span
+												ff="monospace"
 											>
-												<Group justify="space-between">
+												{workbenchSnapshot.scope}
+											</Text>
+										</Text>
+										<Text size="sm">
+											Recent flights in snapshot:{" "}
+											{workbenchSnapshot.flight_count}
+										</Text>
+										<Group>
+											<Select
+												label="Filter"
+												value={flightFilter}
+												data={[
+													{ value: "all", label: "All" },
+													{ value: "fresh", label: "Fresh" },
+													{ value: "pruned", label: "Pruned" },
+												]}
+												onChange={(next) =>
+													setFlightFilter(
+														(next as
+															| "all"
+															| "fresh"
+															| "pruned"
+															| null) ?? "all",
+													)
+												}
+											/>
+											<Select
+												label="Sort"
+												value={flightSort}
+												data={[
+													{ value: "newest", label: "Newest first" },
+													{ value: "oldest", label: "Oldest first" },
+												]}
+												onChange={(next) =>
+													setFlightSort(
+														(next as "newest" | "oldest" | null) ??
+															"newest",
+													)
+												}
+											/>
+										</Group>
+										{recentFlights.length > 0 ? (
+											recentFlights.map(
+												(flight: RrdPromptFlightSummaryView) => (
+													<Paper
+														key={flight.flight_id}
+														withBorder
+														p="xs"
+													>
+														<Group justify="space-between">
+															<Text
+																size="sm"
+																ff="monospace"
+															>
+																{flight.flight_id}
+															</Text>
+															<Group gap="xs">
+																<Text size="sm">
+																	{flight.status} ·{" "}
+																	{flight.provider} ·{" "}
+																	{flight.context_mode}
+																</Text>
+																<Button
+																	size="xs"
+																	variant={
+																		selectedFlightId ===
+																		flight.flight_id
+																			? "filled"
+																			: "subtle"
+																	}
+																	onClick={() =>
+																		void loadPromptFlightDetail(
+																			flight.flight_id,
+																		)
+																	}
+																>
+																	Inspect
+																</Button>
+															</Group>
+														</Group>
+													</Paper>
+												),
+											)
+										) : (
+											<Text
+												size="sm"
+												c="slate"
+											>
+												No governed flights match the selected filter.
+											</Text>
+										)}
+										{loadingFlightDetail && (
+											<Text size="sm">
+												Loading selected flight details...
+											</Text>
+										)}
+										{flightDetailError && (
+											<Alert
+												color="red"
+												title="Flight detail read failed"
+											>
+												{flightDetailError}
+											</Alert>
+										)}
+										{selectedFlightDetail && (
+											<Paper
+												withBorder
+												p="sm"
+											>
+												<Stack gap="xs">
+													<Text
+														size="sm"
+														fw={650}
+													>
+														Selected flight
+													</Text>
+													<Text size="sm">
+														ID:{" "}
+														<Text
+															span
+															ff="monospace"
+														>
+															{selectedFlightDetail.flight_id}
+														</Text>
+													</Text>
+													<Text size="sm">
+														{selectedFlightDetail.status} ·{" "}
+														{selectedFlightDetail.provider} ·{" "}
+														{selectedFlightDetail.context_mode}
+													</Text>
+													<Text size="sm">
+														{`events=${selectedFlightDetail.event_count}; contextItems=${selectedFlightDetail.context_items}; contextBytes=${selectedFlightDetail.context_output_bytes}; elapsedMs=${selectedFlightDetail.elapsed_ms}`}
+													</Text>
 													<Text
 														size="sm"
 														ff="monospace"
 													>
-														{flight.flight_id}
+														cohort={selectedFlightDetail.cohort_sha256}
 													</Text>
-													<Group gap="xs">
-														<Text size="sm">
-															{flight.status} · {flight.provider} ·{" "}
-															{flight.context_mode}
-														</Text>
-														<Button
-															size="xs"
-															variant={
-																selectedFlightId ===
-																flight.flight_id
-																	? "filled"
-																	: "subtle"
-															}
-															onClick={() =>
-																void loadPromptFlightDetail(
-																	flight.flight_id,
-																)
-															}
-														>
-															Inspect
-														</Button>
-													</Group>
-												</Group>
+													<Text size="sm">
+														{selectedFlightDetail.prompt}
+													</Text>
+													<Title order={6}>Events</Title>
+													{selectedFlightDetail.events.map(
+														(event: RrdPromptFlightEventView) => (
+															<Paper
+																key={`${selectedFlightDetail.flight_id}-${event.ordinal}`}
+																withBorder
+																p="xs"
+															>
+																<Text size="sm">
+																	#{event.ordinal} · {event.stage}{" "}
+																	· {event.label}
+																</Text>
+																<Text
+																	size="sm"
+																	c="slate"
+																>
+																	at={event.at_unix_ms} elapsed=
+																	{event.elapsed_ms}ms
+																</Text>
+																<Text size="sm">
+																	{event.detail}
+																</Text>
+															</Paper>
+														),
+													)}
+												</Stack>
 											</Paper>
-										))
-									) : (
-										<Text
-											size="sm"
-											c="slate"
-										>
-											No governed flights match the selected filter.
-										</Text>
-									)}
-									{loadingFlightDetail && (
-										<Text size="sm">Loading selected flight details...</Text>
-									)}
-									{flightDetailError && (
-										<Alert
-											color="red"
-											title="Flight detail read failed"
-										>
-											{flightDetailError}
-										</Alert>
-									)}
-									{selectedFlightDetail && (
-										<Paper
-											withBorder
-											p="sm"
-										>
-											<Stack gap="xs">
-												<Text
-													size="sm"
-													fw={650}
-												>
-													Selected flight
-												</Text>
-												<Text size="sm">
-													ID:{" "}
-													<Text
-														span
-														ff="monospace"
-													>
-														{selectedFlightDetail.flight_id}
-													</Text>
-												</Text>
-												<Text size="sm">
-													{selectedFlightDetail.status} ·{" "}
-													{selectedFlightDetail.provider} ·{" "}
-													{selectedFlightDetail.context_mode}
-												</Text>
-												<Text size="sm">
-													{`events=${selectedFlightDetail.event_count}; contextItems=${selectedFlightDetail.context_items}; contextBytes=${selectedFlightDetail.context_output_bytes}; elapsedMs=${selectedFlightDetail.elapsed_ms}`}
-												</Text>
-												<Text
-													size="sm"
-													ff="monospace"
-												>
-													cohort={selectedFlightDetail.cohort_sha256}
-												</Text>
-												<Text size="sm">{selectedFlightDetail.prompt}</Text>
-												<Title order={6}>Events</Title>
-												{selectedFlightDetail.events.map(
-													(event: RrdPromptFlightEventView) => (
-													<Paper
-														key={`${selectedFlightDetail.flight_id}-${event.ordinal}`}
-														withBorder
-														p="xs"
-													>
-														<Text size="sm">
-															#{event.ordinal} · {event.stage} ·{" "}
-															{event.label}
-														</Text>
-														<Text
-															size="sm"
-															c="slate"
-														>
-															at={event.at_unix_ms} elapsed=
-															{event.elapsed_ms}ms
-														</Text>
-														<Text size="sm">{event.detail}</Text>
-													</Paper>
-													),
-												)}
-											</Stack>
-										</Paper>
-									)}
-								</Stack>
-							</Paper>
-						)}
-					</Stack>
-				</Paper>
-				<Paper
-					withBorder
-					p="lg"
-				>
-					<Stack>
-						<Title order={4}>Record work item</Title>
-						<Select
-							label="Workbench"
-							value={activeWorkbench?.id ?? null}
-							data={workbench.workbenches.map((entry) => ({
-								value: entry.id,
-								label: entry.name,
-							}))}
-							placeholder="Create a workbench first"
-							onChange={(next) =>
-								saveWorkbench({
-									workbenches: workbench.workbenches,
-									activeWorkbenchId: next ?? undefined,
-									receipts: workbench.receipts,
-									templates: workbench.templates,
-									linkedPaths: workbench.linkedPaths,
-								})
-							}
-						/>
-						<Select
-							label="Work type"
-							value={receiptKind}
-							data={workbenchKindOptions}
-							onChange={(next) =>
-								setReceiptKind((next as WorkbenchRunKind | null) ?? "testing")
-							}
-						/>
-						<TextInput
-							label="Intent"
-							placeholder="Validate routing narrowing on real project tasks"
-							value={receiptIntent}
-							onChange={(event) => setReceiptIntent(event.currentTarget.value)}
-						/>
-						<Textarea
-							label="Context"
-							placeholder="Prompt/context identity, scope, dependencies, expected oracles"
-							minRows={2}
-							value={receiptContext}
-							onChange={(event) => setReceiptContext(event.currentTarget.value)}
-						/>
-						<Textarea
-							label="Diagnostics"
-							placeholder="Command output, CI links, failures, or notes"
-							minRows={2}
-							value={receiptDiagnostics}
-							onChange={(event) => setReceiptDiagnostics(event.currentTarget.value)}
-						/>
-						{receiptCaptureError && (
-							<Alert
-								color="red"
-								title="Runtime receipt capture failed"
-							>
-								{receiptCaptureError}
-							</Alert>
-						)}
-						<Group justify="flex-end">
-							<Button
-								variant="light"
-								onClick={captureRuntimeReceipt}
-								loading={capturingReceipt}
-								disabled={!connection || !activeWorkbench || !connected}
-							>
-								Capture runtime receipt
-							</Button>
-							<Button
-								onClick={recordReceipt}
-								disabled={
-									!connection ||
-									!activeWorkbench ||
-									receiptIntent.trim().length === 0
-								}
-							>
-								Record receipt
-							</Button>
-						</Group>
-					</Stack>
-				</Paper>
-				<Stack gap="sm">
-					<Title order={4}>Recent receipts</Title>
-					{receipts.length === 0 && (
-						<Text c="slate">No receipts recorded for the selected workbench.</Text>
-					)}
-					{receipts.map((entry) => (
-						<Paper
-							key={entry.id}
-							withBorder
-							p="md"
-						>
-							<Group justify="space-between">
-								<Text fw={650}>{entry.intent}</Text>
-								<Badge variant="light">
-									{workbenchKindOptions.find(
-										(candidate) => candidate.value === entry.kind,
-									)?.label ?? entry.kind}
-								</Badge>
-							</Group>
-							<Text
-								size="sm"
-								c="slate"
-								mt={4}
-							>
-								{new Date(entry.recordedAtUnixMs).toLocaleString()}
-							</Text>
-							{entry.context && <Text mt="sm">{entry.context}</Text>}
-							{entry.diagnostics && (
-								<Text
-									mt="sm"
-									size="sm"
-								>
-									{entry.diagnostics}
-								</Text>
+										)}
+									</Stack>
+								</Paper>
 							)}
-						</Paper>
-					))}
-				</Stack>
+						</Stack>
+					</Paper>
+				)}
+				{showReceiptsLane && (
+					<Paper
+						withBorder
+						p="lg"
+					>
+						<Stack>
+							<Title order={4}>Record work item</Title>
+							<Select
+								label="Workbench"
+								value={activeWorkbench?.id ?? null}
+								data={workbench.workbenches.map((entry) => ({
+									value: entry.id,
+									label: entry.name,
+								}))}
+								placeholder="Create a workbench first"
+								onChange={(next) =>
+									saveWorkbench({
+										workbenches: workbench.workbenches,
+										activeWorkbenchId: next ?? undefined,
+										receipts: workbench.receipts,
+										templates: workbench.templates,
+										linkedPaths: workbench.linkedPaths,
+									})
+								}
+							/>
+							<Select
+								label="Work type"
+								value={receiptKind}
+								data={workbenchKindOptions}
+								onChange={(next) =>
+									setReceiptKind((next as WorkbenchRunKind | null) ?? "testing")
+								}
+							/>
+							<TextInput
+								label="Intent"
+								placeholder="Validate routing narrowing on real project tasks"
+								value={receiptIntent}
+								onChange={(event) => setReceiptIntent(event.currentTarget.value)}
+							/>
+							<Textarea
+								label="Context"
+								placeholder="Prompt/context identity, scope, dependencies, expected oracles"
+								minRows={2}
+								value={receiptContext}
+								onChange={(event) => setReceiptContext(event.currentTarget.value)}
+							/>
+							<Textarea
+								label="Diagnostics"
+								placeholder="Command output, CI links, failures, or notes"
+								minRows={2}
+								value={receiptDiagnostics}
+								onChange={(event) =>
+									setReceiptDiagnostics(event.currentTarget.value)
+								}
+							/>
+							{receiptCaptureError && (
+								<Alert
+									color="red"
+									title="Runtime receipt capture failed"
+								>
+									{receiptCaptureError}
+								</Alert>
+							)}
+							<Group justify="flex-end">
+								<Button
+									variant="light"
+									onClick={captureRuntimeReceipt}
+									loading={capturingReceipt}
+									disabled={!connection || !activeWorkbench || !connected}
+								>
+									Capture runtime receipt
+								</Button>
+								<Button
+									onClick={recordReceipt}
+									disabled={
+										!connection ||
+										!activeWorkbench ||
+										receiptIntent.trim().length === 0
+									}
+								>
+									Record receipt
+								</Button>
+							</Group>
+						</Stack>
+					</Paper>
+				)}
+				{showReceiptsLane && (
+					<Stack gap="sm">
+						<Title order={4}>Recent receipts</Title>
+						{receipts.length === 0 && (
+							<Text c="slate">No receipts recorded for the selected workbench.</Text>
+						)}
+						{receipts.map((entry) => (
+							<Paper
+								key={entry.id}
+								withBorder
+								p="md"
+							>
+								<Group justify="space-between">
+									<Text fw={650}>{entry.intent}</Text>
+									<Badge variant="light">
+										{workbenchKindOptions.find(
+											(candidate) => candidate.value === entry.kind,
+										)?.label ?? entry.kind}
+									</Badge>
+								</Group>
+								<Text
+									size="sm"
+									c="slate"
+									mt={4}
+								>
+									{new Date(entry.recordedAtUnixMs).toLocaleString()}
+								</Text>
+								{entry.context && <Text mt="sm">{entry.context}</Text>}
+								{entry.diagnostics && (
+									<Text
+										mt="sm"
+										size="sm"
+									>
+										{entry.diagnostics}
+									</Text>
+								)}
+							</Paper>
+						))}
+					</Stack>
+				)}
 			</Stack>
 		);
 	if (section === "activity")

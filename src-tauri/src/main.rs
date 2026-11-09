@@ -136,6 +136,7 @@ fn main() {
             open::open_query_file,
             open::open_in_explorer,
             open::probe_external_path,
+            open::write_external_text_file,
         ])
         .setup(|app| {
             info!("Launch args: {:?}", env::args());

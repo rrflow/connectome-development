@@ -459,6 +459,12 @@ export interface RrdExternalPathProbeView {
 	message: string | null;
 }
 
+export interface RrdWriteExternalTextFileRequest {
+	path: string;
+	content: string;
+	create_parent_dirs: boolean;
+}
+
 /**
  * A failed native RRD command. `retryable` is the engine's own classification:
  * it marks a transient storage conflict retryable, such as a diagnostic read
@@ -506,6 +512,15 @@ export async function probeExternalPath(
 		};
 	}
 	return call<RrdExternalPathProbeView>("probe_external_path", { request });
+}
+
+export async function writeExternalTextFile(
+	request: RrdWriteExternalTextFileRequest,
+): Promise<void> {
+	if (!isTauri()) {
+		throw new Error("External file writes require native Connectome");
+	}
+	await call<void>("write_external_text_file", { request });
 }
 
 /** One authenticated RRD session held by Connectome's native process. */
