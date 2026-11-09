@@ -5,6 +5,78 @@ export interface DatasetBuildArtifact {
 	content: string;
 }
 
+/**
+ * A check in the execution checklist carries the fact that decided it.
+ * Connectome can only settle configuration facts it holds; invariant and
+ * parity checks are decided by the engine workbench run and its receipts, so
+ * they leave here as not evaluated. A "passed" without evidence is not
+ * representable.
+ */
+export type ExecutionCheckStatus =
+	| { kind: "satisfied"; evidence: string }
+	| { kind: "unsatisfied"; reason: string }
+	| { kind: "not-evaluated"; evaluator: "engine-workbench-run" };
+
+export interface ExecutionCheck {
+	id: string;
+	required: boolean;
+	status: ExecutionCheckStatus;
+}
+
+export function evaluateExecutionChecks({
+	template,
+	workloadProfile,
+	remoteSources,
+}: {
+	template: WorkbenchDatasetTemplate;
+	workloadProfile: BenchmarkWorkloadProfile;
+	remoteSources: WorkbenchRemoteSource[];
+}): ExecutionCheck[] {
+	const configuredSources = remoteSources.filter(
+		(source) => source.status === "configured",
+	).length;
+	const remoteSourceStatus: ExecutionCheckStatus = !workloadProfile.requiresRemoteSource
+		? {
+				kind: "satisfied",
+				evidence: `workload profile ${workloadProfile.id} does not require a remote source`,
+			}
+		: configuredSources > 0
+			? {
+					kind: "satisfied",
+					evidence: `${configuredSources} configured remote source(s) of ${remoteSources.length}`,
+				}
+			: {
+					kind: "unsatisfied",
+					reason: `workload profile ${workloadProfile.id} requires a configured remote source; ${remoteSources.length} listed, none configured`,
+				};
+	const engineDecides: ExecutionCheckStatus = {
+		kind: "not-evaluated",
+		evaluator: "engine-workbench-run",
+	};
+	return [
+		{
+			id: "dataset-template-selected",
+			required: true,
+			status: {
+				kind: "satisfied",
+				evidence: `template ${template.id} (${template.name}) with ${template.minimumRequirements.length} minimum requirement(s)`,
+			},
+		},
+		{
+			id: "remote-source-availability",
+			required: workloadProfile.requiresRemoteSource,
+			status: remoteSourceStatus,
+		},
+		{ id: "controller-contract-explicit", required: true, status: engineDecides },
+		{ id: "cold-trigger-invariant", required: true, status: engineDecides },
+		{ id: "comparable-workload-targets", required: true, status: engineDecides },
+	];
+}
+
+export function countUnsatisfiedRequiredChecks(checks: ExecutionCheck[]): number {
+	return checks.filter((check) => check.required && check.status.kind === "unsatisfied").length;
+}
+
 export interface DatasetBuildResult {
 	id: string;
 	templateId: string;
@@ -182,36 +254,14 @@ export function buildDatasetArtifacts({
 		id: `prompt-${index + 1}`,
 		text: `Validate requirement: ${requirement}`,
 	}));
+	const checks = evaluateExecutionChecks({ template, workloadProfile, remoteSources });
 	const executionChecklist = {
 		runId,
 		workloadProfile: workloadProfile.id,
-		checks: [
-			{
-				id: "dataset-template-selected",
-				required: true,
-				passed: true,
-			},
-			{
-				id: "remote-source-availability",
-				required: workloadProfile.requiresRemoteSource,
-				passed: !workloadProfile.requiresRemoteSource || remoteSources.length > 0,
-			},
-			{
-				id: "controller-contract-explicit",
-				required: true,
-				passed: true,
-			},
-			{
-				id: "cold-trigger-invariant",
-				required: true,
-				passed: true,
-			},
-			{
-				id: "comparable-workload-targets",
-				required: true,
-				passed: true,
-			},
-		],
+		evaluation:
+			"Connectome records the configuration facts it holds. Invariant and parity checks are decided by the engine workbench run and its receipts; they are not evaluated here.",
+		unsatisfiedRequiredChecks: countUnsatisfiedRequiredChecks(checks),
+		checks,
 	};
 	return [
 		{

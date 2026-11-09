@@ -52,3 +52,50 @@ The original CI run `42544180903` reported frontend Biome failures and native fo
 - Local native tests remain blocked by missing GLib development libraries.
 - The final-head candidate CI and merge-group CI must be human-triggered and pass before the PR is made ready.
 - Do not infer completion of H-06, POAM-011/012, or any engine qualification from these checks.
+
+## 2026-11-09 rework: mount the lanes, restore the native commands, stop claiming passes
+
+Starting point: PR head `5eafc875` merged with Connectome main `d2d49ceb` (`0430343f`). Inspection
+showed that the integration merge had kept the candidate's five panel modules but mounted none
+of them (no importer for `workbenchDatasetPanel`, `workbenchTemplateAuthoringPanel`,
+`workbenchTemplateLibraryPanel`, `workbenchLinkedCloudPanel`, `workbenchMcplLanePanel`; no
+caller of `buildDatasetArtifacts`), and had dropped the two native commands the session layer
+calls (`probe_external_path`, `write_external_text_file`, present at candidate `bd0223be` in
+`src-tauri/src/open.rs`). The dataset generator's `execution-checklist.json` hard-coded four
+checks `passed: true`, three of them invariant and parity checks nothing in Connectome evaluates.
+
+Changes:
+
+- `workbenchLanes.tsx` (new) ports the candidate `workspace.tsx` lane state and handlers onto
+  main's `WorkbenchPanel`: templates, scripted learning events, linked paths probed through the
+  native commands, remote sources, doc workspace, dataset bundle generation (download, or a
+  linked folder in native Connectome), receipts on the active local workbench, and a compare
+  prompt staged into the prompt workbench. State is written back from the store's latest copy.
+- `workbench.tsx` gains a `Workbench lane` selector (Prompt workbench, Dataset authoring, MCPL
+  learning, Linked paths + cloud docs) and an `onOpenRoute` prop; `index.tsx` passes the
+  workspace route opener. The prompt workbench, flights and local notes are unchanged and remain
+  the default lane. Routes in templates use the workspace's real tab routes.
+- `workbenchDataset.ts`: `ExecutionCheckStatus` is `satisfied` with evidence, `unsatisfied` with
+  a reason, or `not-evaluated` naming `engine-workbench-run` as the evaluator; the checklist
+  records `unsatisfiedRequiredChecks` and states that invariant and parity checks are decided by
+  the engine run. A pass without a fact is not representable.
+- `src-tauri/src/open.rs` and `main.rs`: the two commands restored and registered.
+- `tests/smoke/connectome.spec.ts`: one case switches lanes, saves a template, generates the
+  bundle, reads the downloaded checklist and requires exactly `satisfied, satisfied,
+  not-evaluated, not-evaluated, not-evaluated` with no `passed` key, then finds the receipt on
+  the local workbench.
+
+Validation on this tree (Windows, Node 22.23.2, pnpm 11.24.0, Playwright 1.62.1):
+
+| Command | Result |
+| --- | --- |
+| `corepack pnpm check` | Passed: `tsc`, Biome 539 files, identity, isolation, API examples (80 operations), value model, rrflowQL, worker disclosure, inventory neighborhood, guides, dependency authority, version 0.0.5 |
+| `corepack pnpm build` | Passed; 2356 modules, same chunk-size warning as before |
+| `corepack pnpm test:smoke` | 13/13 passed against the isolated Vite preview, including the new lane case |
+| `cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check` | Passed |
+| `cargo check` / `cargo clippy --all-targets --locked -- -D warnings` (src-tauri) | Passed |
+| `cargo test --manifest-path src-tauri/Cargo.toml --all-targets --locked` | 58 passed, 0 failed, 26 ignored |
+
+Not done: the dataset bundle still leaves Connectome through the native shell rather than an
+engine operation (POAM-053 owns that), no live-engine workbench run, no visual baseline
+comparison. H-06 is not qualified by this record.
