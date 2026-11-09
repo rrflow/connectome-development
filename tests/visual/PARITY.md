@@ -281,7 +281,7 @@ information and supports the same interaction, at equal or better clarity.
 
 August had one custom popup, on graph nodes, and 19 plain browser tooltips: the refresh and inspector
 buttons, the transport controls of Flights, Stream and Cluster, each flight telemetry packet, and the
-surface matrix's entrypoints. Today's window must keep all of them. Parking lot 007 proposes going further.
+surface matrix's entrypoints. Today's window must keep all of them. Parking lot 007's decision 4 goes further: every control on every tab explains itself.
 
 - [ ] Each transport control says what it does on hover.
 - [ ] A graph node shows its full label, kind and detail on hover.
