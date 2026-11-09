@@ -13,8 +13,12 @@ import {
 import type { ChangeEvent, Ref } from "react";
 import type {
 	WorkbenchLearningAction,
+	WorkbenchLearningActionName,
 	WorkbenchLearningEvent,
+	WorkbenchLearningEventKind,
+	WorkbenchLearningEventMode,
 	WorkbenchLearningTrigger,
+	WorkbenchLearningTriggerKind,
 	WorkbenchTemplateStep,
 } from "~/types";
 
@@ -113,14 +117,14 @@ export function WorkbenchTemplateAuthoringPanel({
 	onChangeTemplateFilePatterns: (value: string) => void;
 	templateFolderPatterns: string;
 	onChangeTemplateFolderPatterns: (value: string) => void;
-	learningKind: string;
-	learningKindOptions: { value: string; label: string }[];
-	onChangeLearningKind: (next: string | null) => void;
-	learningMode: string;
-	learningModeOptions: { value: string; label: string }[];
-	onChangeLearningMode: (next: string | null) => void;
+	learningKind: WorkbenchLearningEventKind;
+	learningKindOptions: { value: WorkbenchLearningEventKind; label: string }[];
+	onChangeLearningKind: (next: WorkbenchLearningEventKind | null) => void;
+	learningMode: WorkbenchLearningEventMode;
+	learningModeOptions: { value: WorkbenchLearningEventMode; label: string }[];
+	onChangeLearningMode: (next: WorkbenchLearningEventMode | null) => void;
 	learningComponent: "card" | "alert" | "badge";
-	onChangeLearningComponent: (next: string | null) => void;
+	onChangeLearningComponent: (next: "card" | "alert" | "badge" | null) => void;
 	learningTitle: string;
 	onChangeLearningTitle: (value: string) => void;
 	learningBody: string;
@@ -132,9 +136,9 @@ export function WorkbenchTemplateAuthoringPanel({
 	onChangeLearningRequiresSignoff: (next: string | null) => void;
 	learningCatamorphismNote: string;
 	onChangeLearningCatamorphismNote: (value: string) => void;
-	learningActionName: string;
-	learningActionOptions: { value: string; label: string }[];
-	onChangeLearningActionName: (next: string | null) => void;
+	learningActionName: WorkbenchLearningActionName;
+	learningActionOptions: { value: WorkbenchLearningActionName; label: string }[];
+	onChangeLearningActionName: (next: WorkbenchLearningActionName | null) => void;
 	learningActionLabel: string;
 	onChangeLearningActionLabel: (value: string) => void;
 	learningActionPayload: string;
@@ -142,9 +146,9 @@ export function WorkbenchTemplateAuthoringPanel({
 	learningActions: WorkbenchLearningAction[];
 	onAddLearningAction: () => void;
 	onRemoveLearningAction: (actionId: string) => void;
-	learningTriggerKind: string;
-	learningTriggerOptions: { value: string; label: string }[];
-	onChangeLearningTriggerKind: (next: string | null) => void;
+	learningTriggerKind: WorkbenchLearningTriggerKind;
+	learningTriggerOptions: { value: WorkbenchLearningTriggerKind; label: string }[];
+	onChangeLearningTriggerKind: (next: WorkbenchLearningTriggerKind | null) => void;
 	learningTriggerDescription: string;
 	onChangeLearningTriggerDescription: (value: string) => void;
 	learningTriggers: WorkbenchLearningTrigger[];
@@ -278,13 +282,17 @@ export function WorkbenchTemplateAuthoringPanel({
 								label="Event kind"
 								value={learningKind}
 								data={learningKindOptions}
-								onChange={onChangeLearningKind}
+								onChange={(next) =>
+									onChangeLearningKind(next as WorkbenchLearningEventKind | null)
+								}
 							/>
 							<Select
 								label="Mode"
 								value={learningMode}
 								data={learningModeOptions}
-								onChange={onChangeLearningMode}
+								onChange={(next) =>
+									onChangeLearningMode(next as WorkbenchLearningEventMode | null)
+								}
 							/>
 							<Select
 								label="A2UI component"
@@ -294,7 +302,11 @@ export function WorkbenchTemplateAuthoringPanel({
 									{ value: "alert", label: "Alert" },
 									{ value: "badge", label: "Badge" },
 								]}
-								onChange={onChangeLearningComponent}
+								onChange={(next) =>
+									onChangeLearningComponent(
+										next as "card" | "alert" | "badge" | null,
+									)
+								}
 							/>
 						</Group>
 						<TextInput
@@ -343,7 +355,11 @@ export function WorkbenchTemplateAuthoringPanel({
 										label="Action"
 										value={learningActionName}
 										data={learningActionOptions}
-										onChange={onChangeLearningActionName}
+										onChange={(next) =>
+											onChangeLearningActionName(
+												next as WorkbenchLearningActionName | null,
+											)
+										}
 									/>
 									<TextInput
 										label="Action label"
@@ -403,7 +419,11 @@ export function WorkbenchTemplateAuthoringPanel({
 										label="Trigger"
 										value={learningTriggerKind}
 										data={learningTriggerOptions}
-										onChange={onChangeLearningTriggerKind}
+										onChange={(next) =>
+											onChangeLearningTriggerKind(
+												next as WorkbenchLearningTriggerKind | null,
+											)
+										}
 									/>
 									<TextInput
 										label="Trigger note"

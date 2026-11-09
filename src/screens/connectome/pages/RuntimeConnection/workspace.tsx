@@ -54,6 +54,17 @@ import {
 	type DatasetBuildResult,
 } from "./workbenchDataset";
 import { WorkbenchDatasetPanel } from "./workbenchDatasetPanel";
+import {
+	buildDatasetCompareReadiness,
+	buildDatasetFlowReadiness,
+	buildDatasetOutputFolderOptions,
+	buildLearningEventEntries,
+	buildLinkedPathOptions,
+	findLinkedOutputFolder,
+	getLatestDatasetBuildResult,
+	getSelectedWorkloadProfile,
+	getWorkbenchLaneVisibility,
+} from "./workbenchLaneHelpers";
 import { WorkbenchLinkedCloudPanel } from "./workbenchLinkedCloudPanel";
 import { WorkbenchMcplLanePanel } from "./workbenchMcplLanePanel";
 import { WorkbenchTemplateAuthoringPanel } from "./workbenchTemplateAuthoringPanel";
@@ -1968,101 +1979,88 @@ export function ProjectSection({
 		workbench.templates[0] ??
 		null;
 	const learningEvents = useMemo(
-		() =>
-			workbench.templates.flatMap((template) =>
-				template.learningEvents.map((event) => ({
-					templateId: template.id,
-					templateName: template.name,
-					event,
-				})),
-			),
+		() => buildLearningEventEntries(workbench.templates),
 		[workbench.templates],
 	);
-	const showRuntimeLane = workbenchLane === "runtime-control";
-	const showDatasetLane = workbenchLane === "dataset-authoring";
-	const showMcplLane = workbenchLane === "mcpl-learning";
-	const showCloudLane = workbenchLane === "cloud-docs";
-	const showReceiptsLane = workbenchLane === "receipts";
-	const selectedWorkloadProfile =
-		benchmarkWorkloadProfiles.find((profile) => profile.id === datasetWorkloadProfileId) ??
-		benchmarkWorkloadProfiles[0];
-	const datasetFlowReadiness = useMemo(
-		() => [
-			{
-				id: "template",
-				label: "Template selected",
-				ready: Boolean(selectedDatasetTemplate),
-			},
-			{
-				id: "steps",
-				label: "0–5 step contract defined",
-				ready:
-					Boolean(selectedDatasetTemplate) &&
-					(selectedDatasetTemplate?.steps.length ?? 0) <= 5,
-			},
-			{
-				id: "cloud",
-				label: "Cloud source requirement",
-				ready: !selectedWorkloadProfile.requiresRemoteSource || remoteSources.length > 0,
-			},
-			{
-				id: "folder",
-				label: "Output path strategy",
-				ready:
-					Boolean(datasetBuildFolderLinkId) ||
-					!selectedWorkloadProfile.requiresRemoteSource,
-			},
-		],
-		[
-			selectedDatasetTemplate,
-			selectedWorkloadProfile,
-			remoteSources.length,
-			datasetBuildFolderLinkId,
-		],
+	const linkedPathOptions = useMemo(
+		() => buildLinkedPathOptions(workbench.linkedPaths),
+		[workbench.linkedPaths],
 	);
-	const latestDatasetBuildResult = datasetBuildResults[0] ?? null;
-	const datasetOutputFolderOptions = useMemo(
+	const handleLearningKindChange = useCallback(
+		(next: WorkbenchLearningEventKind | null) => {
+			setLearningKind(next ?? "did-you-know");
+		},
+		[setLearningKind],
+	);
+	const handleLearningModeChange = useCallback(
+		(next: WorkbenchLearningEventMode | null) => {
+			setLearningMode(next ?? "passive");
+		},
+		[setLearningMode],
+	);
+	const handleLearningComponentChange = useCallback(
+		(next: "card" | "alert" | "badge" | null) => {
+			setLearningComponent(next ?? "card");
+		},
+		[setLearningComponent],
+	);
+	const handleLearningActionNameChange = useCallback(
+		(next: WorkbenchLearningActionName | null) => {
+			setLearningActionName(next ?? "navigate-route");
+		},
+		[setLearningActionName],
+	);
+	const handleLearningTriggerKindChange = useCallback(
+		(next: WorkbenchLearningTriggerKind | null) => {
+			setLearningTriggerKind(next ?? "manual");
+		},
+		[setLearningTriggerKind],
+	);
+	const handleLearningRouteChange = useCallback(
+		(next: string | null) => {
+			setLearningRoute(next ?? "workbench");
+		},
+		[setLearningRoute],
+	);
+	const handleLearningRequiresSignoffChange = useCallback(
+		(next: string | null) => {
+			setLearningRequiresSignoff((next ?? "yes") === "yes");
+		},
+		[setLearningRequiresSignoff],
+	);
+	const { showRuntimeLane, showDatasetLane, showMcplLane, showCloudLane, showReceiptsLane } =
+		getWorkbenchLaneVisibility(workbenchLane);
+	const selectedWorkloadProfile = getSelectedWorkloadProfile(datasetWorkloadProfileId);
+	const datasetFlowReadiness = useMemo(
 		() =>
-			workbench.linkedPaths
-				.filter((path) => path.kind === "directory")
-				.map((path) => ({
-					value: path.id,
-					label: `${path.label} (${path.status})`,
-				})),
+			buildDatasetFlowReadiness({
+				selectedDatasetTemplate,
+				selectedWorkloadProfile,
+				remoteSources,
+				datasetBuildFolderLinkId,
+			}),
+		[selectedDatasetTemplate, selectedWorkloadProfile, remoteSources, datasetBuildFolderLinkId],
+	);
+	const latestDatasetBuildResult = getLatestDatasetBuildResult(datasetBuildResults);
+	const datasetOutputFolderOptions = useMemo(
+		() => buildDatasetOutputFolderOptions(workbench.linkedPaths),
 		[workbench.linkedPaths],
 	);
 	const datasetCompareReadiness = useMemo(
-		() => [
-			{
-				id: "bundle",
-				label: "Benchmark bundle generated",
-				ready: Boolean(latestDatasetBuildResult),
-			},
-			{
-				id: "session",
-				label: "Connected runtime session",
-				ready: connected && Boolean(sessionClient),
-			},
-			{
-				id: "workbench",
-				label: "Active workbench selected",
-				ready: Boolean(activeWorkbench),
-			},
-			{
-				id: "snapshot",
-				label: "Governed snapshot available",
-				ready: Boolean(workbenchSnapshot),
-			},
-		],
+		() =>
+			buildDatasetCompareReadiness({
+				latestDatasetBuildResult,
+				connected,
+				sessionClientAvailable: Boolean(sessionClient),
+				activeWorkbench: activeWorkbench ?? null,
+				workbenchSnapshotAvailable: Boolean(workbenchSnapshot),
+			}),
 		[latestDatasetBuildResult, connected, sessionClient, activeWorkbench, workbenchSnapshot],
 	);
-	const linkedOutputFolder =
-		workbench.linkedPaths.find(
-			(path) =>
-				path.id === datasetBuildFolderLinkId &&
-				path.kind === "directory" &&
-				path.status === "available",
-		) ?? null;
+	const linkedOutputFolder = findLinkedOutputFolder(
+		workbench.linkedPaths,
+		datasetBuildFolderLinkId,
+	);
 
 	const subsystemStatus: Array<{
 		id: WorkbenchSubsystem;
@@ -2874,48 +2872,28 @@ export function ProjectSection({
 								onChangeTemplateFolderPatterns={setTemplateFolderPatterns}
 								learningKind={learningKind}
 								learningKindOptions={learningKindOptions}
-								onChangeLearningKind={(next) =>
-									setLearningKind(
-										(next as WorkbenchLearningEventKind | null) ??
-											"did-you-know",
-									)
-								}
+								onChangeLearningKind={handleLearningKindChange}
 								learningMode={learningMode}
 								learningModeOptions={learningModeOptions}
-								onChangeLearningMode={(next) =>
-									setLearningMode(
-										(next as WorkbenchLearningEventMode | null) ?? "passive",
-									)
-								}
+								onChangeLearningMode={handleLearningModeChange}
 								learningComponent={learningComponent}
-								onChangeLearningComponent={(next) =>
-									setLearningComponent(
-										(next as "card" | "alert" | "badge" | null) ?? "card",
-									)
-								}
+								onChangeLearningComponent={handleLearningComponentChange}
 								learningTitle={learningTitle}
 								onChangeLearningTitle={setLearningTitle}
 								learningBody={learningBody}
 								onChangeLearningBody={setLearningBody}
 								learningRoute={learningRoute}
 								workbenchRouteOptions={workbenchRouteOptions}
-								onChangeLearningRoute={(next) =>
-									setLearningRoute(next ?? "workbench")
-								}
+								onChangeLearningRoute={handleLearningRouteChange}
 								learningRequiresSignoff={learningRequiresSignoff}
-								onChangeLearningRequiresSignoff={(next) =>
-									setLearningRequiresSignoff((next ?? "yes") === "yes")
+								onChangeLearningRequiresSignoff={
+									handleLearningRequiresSignoffChange
 								}
 								learningCatamorphismNote={learningCatamorphismNote}
 								onChangeLearningCatamorphismNote={setLearningCatamorphismNote}
 								learningActionName={learningActionName}
 								learningActionOptions={learningActionOptions}
-								onChangeLearningActionName={(next) =>
-									setLearningActionName(
-										(next as WorkbenchLearningActionName | null) ??
-											"navigate-route",
-									)
-								}
+								onChangeLearningActionName={handleLearningActionNameChange}
 								learningActionLabel={learningActionLabel}
 								onChangeLearningActionLabel={setLearningActionLabel}
 								learningActionPayload={learningActionPayload}
@@ -2925,11 +2903,7 @@ export function ProjectSection({
 								onRemoveLearningAction={removeLearningAction}
 								learningTriggerKind={learningTriggerKind}
 								learningTriggerOptions={learningTriggerOptions}
-								onChangeLearningTriggerKind={(next) =>
-									setLearningTriggerKind(
-										(next as WorkbenchLearningTriggerKind | null) ?? "manual",
-									)
-								}
+								onChangeLearningTriggerKind={handleLearningTriggerKindChange}
 								learningTriggerDescription={learningTriggerDescription}
 								onChangeLearningTriggerDescription={setLearningTriggerDescription}
 								learningTriggers={learningTriggers}
@@ -2943,10 +2917,7 @@ export function ProjectSection({
 								onChangeTemplateStepCount={updateTemplateStepCount}
 								templateSteps={templateSteps}
 								onUpdateTemplateStep={updateTemplateStep}
-								linkedPathOptions={workbench.linkedPaths.map((entry) => ({
-									value: entry.id,
-									label: `${entry.label} (${entry.status})`,
-								}))}
+								linkedPathOptions={linkedPathOptions}
 								onCreateTemplate={createTemplate}
 							/>
 						)}
@@ -3021,9 +2992,13 @@ export function ProjectSection({
 					<WorkbenchMcplLanePanel
 						learningEvents={learningEvents}
 						runningEventIds={runningEventIds}
+						isTriggerActive={(event) =>
+							event.triggers.some((trigger) => isTriggerActive(trigger))
+						}
 						onRunLearningEvent={(templateName, event) =>
 							void runLearningEvent(templateName, event)
 						}
+						onOpenRoute={onOpen}
 					/>
 				)}
 				{(showDatasetLane || showCloudLane || showReceiptsLane) && !connection && (
