@@ -39,7 +39,7 @@ export const benchmarkWorkloadProfiles: BenchmarkWorkloadProfile[] = [
 	{
 		id: "retrieval-parity-heavy",
 		label: "Retrieval parity heavy",
-		description: "High retrieval sample count with comparator parity focus for Surreal/Arango.",
+		description: "High retrieval sample count with configured-backend parity focus.",
 		minimumPromptCount: 30,
 		requiresRemoteSource: true,
 		targetLatencyMs: 900,
@@ -127,7 +127,7 @@ export function buildDatasetArtifacts({
 		reasoningEngine: "enabled",
 		triggerInvariant:
 			"cold-served vector read => RRFlowCLD trigger => cold-period workflow with bounded observable receipts",
-		compareTargets: ["SurrealDB", "ArangoDB"],
+		compareTargets: ["configured-reference", "configured-candidate"],
 		telemetry: {
 			profile: telemetry.profile,
 			hops: telemetry.hops,
@@ -165,14 +165,14 @@ export function buildDatasetArtifacts({
 				requiresColdTriggerReceipts: true,
 			},
 			{
-				id: "surrealdb",
-				label: "SurrealDB comparator",
+				id: "configured-reference",
+				label: "Configured reference comparator",
 				pipeline: ["query", "vector retrieval", "result parity"],
 				requiresColdTriggerReceipts: false,
 			},
 			{
-				id: "arangodb",
-				label: "ArangoDB comparator",
+				id: "configured-candidate",
+				label: "Configured candidate comparator",
 				pipeline: ["traversal", "retrieval", "result parity"],
 				requiresColdTriggerReceipts: false,
 			},

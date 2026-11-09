@@ -8,7 +8,7 @@ use std::{env, sync::OnceLock};
 
 use log::info;
 use paths::get_logs_directory;
-use rrd::engram::engramState;
+use rrd::estate::EstateState;
 use rrd::RrdClientState;
 use tauri::{AppHandle, Manager, RunEvent};
 use tauri_plugin_log::{Target, TargetKind};
@@ -96,8 +96,8 @@ fn main() {
                 ])
                 .build(),
         )
-        .manage(open::OpenResourcengram(Default::default()))
-        .manage(engramState::default())
+        .manage(open::OpenResourceState(Default::default()))
+        .manage(EstateState::default())
         .manage(RrdClientState::default())
         .invoke_handler(tauri::generate_handler![
             config::load_config,
@@ -105,10 +105,10 @@ fn main() {
             config::backup_config,
             config::has_config_backup,
             config::restore_config_backup,
-            rrd::engram::rrd_engram_preview,
-            rrd::engram::rrd_engram_serve,
-            rrd::engram::rrd_engram_status,
-            rrd::engram::rrd_engram_stop,
+            rrd::estate::rrd_estate_preview,
+            rrd::estate::lifecycle::rrd_estate_serve,
+            rrd::estate::lifecycle::rrd_estate_status,
+            rrd::estate::lifecycle::rrd_estate_stop,
             diagnostics::runtime_diagnostics_request,
             rrd::rrd_public_request,
             rrd::rrd_connect,
@@ -120,11 +120,33 @@ fn main() {
             rrd::rrd_database,
             rrd::rrd_schema,
             rrd::rrd_storage,
+            rrd::rrd_physical_storage,
             rrd::rrd_query,
+            rrd::rrd_task,
+            rrd::rrd_attunement,
             rrd::rrd_vector_collections,
             rrd::rrd_vector_points,
             rrd::rrd_vector_search,
             rrd::rrd_vector_map,
+            rrd::rrd_vector_quantizations,
+            rrd::rrd_vector_quantization_propose,
+            rrd::rrd_vector_quantization_apply,
+            rrd::rrd_vector_quantization_discard,
+            rrd::rrd_vector_compare,
+            rrd::rrd_change_preview,
+            rrd::rrd_change_commit,
+            rrd::rrd_change_discard,
+            rrd::rrd_changes,
+            rrd::rrd_changes_follow,
+            rrd::rrd_audit,
+            rrd::rrd_audit_export,
+            rrd::rrd_query_export,
+            rrd::rrd_artifact_save,
+            rrd::rrd_backups,
+            rrd::rrd_backup_create,
+            rrd::rrd_backup_restore,
+            rrd::rrd_live_open,
+            rrd::rrd_live_close,
             rrd::rrd_disconnect,
             window::toggle_devtools,
             window::new_window,
@@ -135,8 +157,6 @@ fn main() {
             open::prune_allowed_files,
             open::open_query_file,
             open::open_in_explorer,
-            open::probe_external_path,
-            open::write_external_text_file,
         ])
         .setup(|app| {
             info!("Launch args: {:?}", env::args());
@@ -163,11 +183,11 @@ fn main() {
         RunEvent::Opened { urls } => {
             info!("Opened resources: {:?}", urls);
 
-            *app.state::<open::OpenResourcengram>().0.lock().unwrap() = urls;
+            *app.state::<open::OpenResourceState>().0.lock().unwrap() = urls;
             window::emit_last(app, "open-resource", ());
         }
         RunEvent::Exit => {
-            rrd::engram::stop_on_exit(&app.state::<engramState>());
+            rrd::estate::stop_on_exit(&app.state::<EstateState>());
         }
         _ => (),
     })

@@ -8,26 +8,32 @@
 //! Lenses call in concurrently. Each request pins the current session lease
 //! until it completes, and the lease is renewed or replaced only while no
 //! request pins it, because a renewal rotates the bearer the engine accepts.
+//!
+//! Governed effects live in submodules: `transaction` (preview, then commit
+//! exactly what was previewed), `backup`, `artifact` (exports held natively
+//! until saved), `history` (changefeed and audit pages), `live` (durable
+//! subscriptions delivered over `/v1/ws`) and `quantization` (quantized search
+//! generations: propose a lifecycle step, then apply exactly that step).
 
 use super::error::RrdError;
 use super::transport::{is_loopback_origin, rrd_origin};
 use super::view::{
     self, ConnectionView, DatabaseView, MapLinkView, MapPointView, PromptFlightDetailView,
-    PromptFlightEventView, PromptFlightLaunchView, PromptFlightSummaryView, QueryView, ServiceView, SessionView, StorageView,
-    VectorCollectionsView, VectorMapProgressView, VectorMapView, VectorPointsView, VectorSearchView,
-    WorkbenchSnapshotView,
+    PromptFlightEventView, PromptFlightLaunchView, PromptFlightSummaryView, QueryView, ServiceView,
+    SessionView, StorageView, VectorCollectionsView, VectorMapProgressView, VectorMapView,
+    VectorPointsView, VectorSearchView, WorkbenchSnapshotView,
 };
 use rrd_client::{ClientConfig, RequestOptions, RrdClient, Session};
 use rrd_contract::{
     CanonicalId, CloseSession, CreateSession, DataReference, DataVectorValue, DiagnosticSnapshot,
     ExecuteQuery, LaunchPromptFlight, ListPromptFlights, ListVectorCollections,
     PromptFlightContextMode, PromptFlightContextRequest, PromptFlightProvider, QueryBudget,
-    ReadDiagnosticSnapshot, ReadPromptFlight, RenewSession, RetrieveVectorPoints,
-    ScrollVectorPoints, SearchVectors, ServiceCapabilities, SessionLimits, VectorPointBatch,
-    VectorPointPage, VectorPointSnapshot, VectorSearchHit, VectorSearchMode, VectorSearchQuery, VectorSearchResult,
-    MAX_CONTEXT_GRAPH_DEPTH, MAX_CONTEXT_ITEMS, MAX_CONTEXT_OUTPUT_BYTES, MAX_CONTEXT_STORAGE_KEYS,
-    MAX_DIAGNOSTIC_RUNTIME_SCANNED_CHANGES, MAX_PROMPT_FLIGHT_STORAGE_KEYS, MAX_QUERY_BYTES,
-    MAX_VECTOR_POINT_PAGE, MAX_VECTOR_SEARCH_TOP_K, MAX_VECTOR_STORAGE_KEYS,
+    ReadDiagnosticSnapshot, ReadPromptFlight, ReadStorageDiagnostics, RenewSession,
+    RetrieveVectorPoints, ScrollVectorPoints, SearchVectors, ServiceCapabilities, SessionLimits,
+    VectorPointBatch, VectorPointPage, VectorPointSnapshot, VectorSearchHit, VectorSearchMode,
+    VectorSearchQuery, VectorSearchResult, MAX_DIAGNOSTIC_RUNTIME_SCANNED_CHANGES,
+    MAX_PROMPT_FLIGHT_STORAGE_KEYS, MAX_QUERY_BYTES, MAX_VECTOR_POINT_PAGE,
+    MAX_VECTOR_SEARCH_TOP_K, MAX_VECTOR_STORAGE_KEYS,
 };
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -42,6 +48,25 @@ use tokio::net::TcpStream;
 use tokio::sync::{RwLock, RwLockReadGuard};
 use tokio::task::JoinSet;
 use uuid::Uuid;
+
+mod artifact;
+pub mod attunement;
+mod backup;
+mod history;
+mod live;
+mod quantization;
+pub mod tasks;
+mod transaction;
+
+pub use artifact::{save_artifact, RrdAuditExportRequest, RrdQueryExportRequest};
+pub use backup::{RrdBackupCreateRequest, RrdBackupRestoreRequest, RrdBackupsRequest};
+pub use history::{RrdAuditRequest, RrdChangesFollowRequest, RrdChangesRequest};
+pub use live::{LiveSink, RrdLiveOpenRequest};
+pub use quantization::{
+    RrdQuantizationApplyRequest, RrdQuantizationProposeRequest, RrdQuantizationsRequest,
+    RrdVectorCompareRequest,
+};
+pub use transaction::{RrdChangeCommitRequest, RrdChangePreviewRequest};
 
 // Connectome's own session policy; the engine enforces its own ceilings.
 const SESSION_IDLE_TIMEOUT_MS: u64 = 900_000;
@@ -66,7 +91,7 @@ const MAX_VECTOR_MAP_POINTS: usize = 600;
 const VECTOR_MAP_NEIGHBOURS: u64 = 5;
 /// Exact searches in flight at once while the similarity map is built.
 const VECTOR_MAP_CONCURRENCY: usize = 8;
-const WORKBENCH_RECENT_PAGE_LIMIT: u16 = 8;
+const WORKBENCH_PAGE_LIMIT: u16 = 8;
 
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -216,14 +241,14 @@ impl Deadlines {
     }
 
     /// Whether a request sent at `now` completes before the session can lapse.
-    fn outlive_request(self, now: Instant) -> bool {
-        self.idle.min(self.absolute).saturating_duration_since(now) > SESSION_RENEWAL_MARGIN
+    fn outlive_request(self, now: Instant, margin: Duration) -> bool {
+        self.idle.min(self.absolute).saturating_duration_since(now) > margin
     }
 
     /// Whether renewing at `now` still buys a request's worth of time; past
     /// this point only a new session can.
-    fn renewable(self, now: Instant) -> bool {
-        self.absolute.saturating_duration_since(now) > SESSION_RENEWAL_MARGIN
+    fn renewable(self, now: Instant, margin: Duration) -> bool {
+        self.absolute.saturating_duration_since(now) > margin
     }
 }
 
@@ -264,19 +289,30 @@ impl Lease {
 
 pub struct NativeRrdClient {
     client: RrdClient,
+    address: SocketAddr,
     endpoint: String,
     instance: CanonicalId,
     principal: CanonicalId,
     api_key: Secret,
     connected_at_unix_ms: u64,
     service: ServiceView,
-    /// The engram's configured query budget, read from its capability document.
+    /// The project's configured query budget, read from its capability document.
     query_budget: QueryBudget,
     /// The session policy the engine granted when the connection opened.
     limits: SessionLimits,
     ids: RequestIds,
     /// `None` once the operator closed the session.
     lease: RwLock<Option<Lease>>,
+    /// The previewed change waiting for its commit, if any.
+    pending: tokio::sync::Mutex<Option<transaction::PendingChange>>,
+    pending_attunement: tokio::sync::Mutex<Option<attunement::PendingAttunement>>,
+    /// The proposed quantization lifecycle step waiting to be applied, if any.
+    quantization: tokio::sync::Mutex<Option<quantization::PendingStep>>,
+    artifacts: artifact::Artifacts,
+    /// Counts lease refreshes. A live subscription's socket keeps the bearer
+    /// it connected with, so it reconnects whenever this changes.
+    bearer_generation: tokio::sync::watch::Sender<u64>,
+    live: live::LiveSubscriptions,
 }
 
 fn now_unix_ms() -> Result<u64, String> {
@@ -342,6 +378,24 @@ async fn reachable_loopback(candidates: &[SocketAddr]) -> Result<SocketAddr, Str
     ))
 }
 
+/// Whether the instance proved at `endpoint` still answers there as itself.
+/// The SDK checks the instance identity its public capabilities carry, so
+/// another process that took over the port does not pass. This can only take
+/// readiness away: answering is not RRFlow's authenticated proof.
+pub async fn answers_as(endpoint: &str, instance: &str) -> Result<(), RrdError> {
+    let (_, candidates) = loopback_candidates(endpoint)?;
+    let address = reachable_loopback(&candidates).await?;
+    let config = ClientConfig {
+        request_timeout: LOOPBACK_PROBE_TIMEOUT,
+        max_attempts: 1,
+        ..ClientConfig::default()
+    };
+    let client = RrdClient::connect_local(address, canonical(instance, "instance")?, config)
+        .map_err(RrdError::sdk)?;
+    client.capabilities().await.map_err(RrdError::sdk)?;
+    Ok(())
+}
+
 fn read_credential(path: &str) -> Result<(CanonicalId, Secret), String> {
     let path = Path::new(path);
     let metadata = std::fs::metadata(path)
@@ -396,6 +450,27 @@ fn neighbour_links(
         .collect()
 }
 
+/// One rrflowQL request within the estate's budget, refused before it is sent
+/// when the contract could never accept it.
+fn execute_query(
+    query: &str,
+    scope: String,
+    budget: &QueryBudget,
+) -> Result<ExecuteQuery, RrdError> {
+    if query.trim().is_empty() || query.len() > MAX_QUERY_BYTES || query.contains('\0') {
+        return Err(format!(
+            "RRFlowQL query must be non-empty, at most {MAX_QUERY_BYTES} bytes, and free of NUL"
+        )
+        .into());
+    }
+    Ok(ExecuteQuery {
+        scope,
+        query: query.to_owned(),
+        parameters: Default::default(),
+        budget: budget.clone(),
+    })
+}
+
 /// The lowest and highest cursor seen across the reads that built one view.
 fn widen(range: Option<(u64, u64)>, cursor: u64) -> (u64, u64) {
     range.map_or((cursor, cursor), |(low, high)| {
@@ -411,6 +486,7 @@ impl NativeRrdClient {
         let (principal, api_key) = read_credential(&request.credential_path)?;
         let config = ClientConfig {
             request_timeout: REQUEST_TIMEOUT,
+            max_attempts: 1,
             ..ClientConfig::default()
         };
         let client =
@@ -423,6 +499,7 @@ impl NativeRrdClient {
             limits: lease.session.limits().clone(),
             lease: RwLock::new(Some(lease)),
             client,
+            address,
             endpoint,
             instance,
             principal,
@@ -431,6 +508,12 @@ impl NativeRrdClient {
             service: view::service(&capabilities),
             query_budget: capabilities.configuration.query.clone(),
             ids,
+            pending: Default::default(),
+            pending_attunement: Default::default(),
+            quantization: Default::default(),
+            artifacts: Default::default(),
+            bearer_generation: tokio::sync::watch::Sender::new(0),
+            live: Default::default(),
         })
     }
 
@@ -459,13 +542,26 @@ impl NativeRrdClient {
     /// help, under the write lock, so no in-flight request holds the bearer
     /// that the renewal rotates or the replacement closes.
     async fn lease(&self) -> Result<RwLockReadGuard<'_, Lease>, RrdError> {
+        self.lease_for(SESSION_RENEWAL_MARGIN).await
+    }
+
+    async fn lease_for(&self, margin: Duration) -> Result<RwLockReadGuard<'_, Lease>, RrdError> {
+        if margin
+            >= Duration::from_millis(
+                self.limits
+                    .idle_timeout_ms
+                    .min(self.limits.absolute_timeout_ms),
+            )
+        {
+            return Err("configured controller duration exceeds the native session window".into());
+        }
         {
             let current = self.lease.read().await;
             let fresh = current
                 .as_ref()
                 .ok_or(SESSION_CLOSED)?
                 .deadlines
-                .outlive_request(Instant::now());
+                .outlive_request(Instant::now(), margin);
             if fresh {
                 return RwLockReadGuard::try_map(current, Option::as_ref)
                     .map_err(|_| SESSION_CLOSED.into());
@@ -476,23 +572,56 @@ impl NativeRrdClient {
             .as_ref()
             .ok_or(SESSION_CLOSED)?
             .deadlines
-            .outlive_request(Instant::now());
+            .outlive_request(Instant::now(), margin);
         // Another request may have refreshed the session while this one waited.
         if stale {
             let refreshed = self
-                .refresh(current.as_ref().ok_or(SESSION_CLOSED)?)
+                .refresh(current.as_ref().ok_or(SESSION_CLOSED)?, margin)
                 .await?;
             *current = Some(refreshed);
+            self.bearer_generation
+                .send_modify(|generation| *generation += 1);
+        }
+        if !current
+            .as_ref()
+            .ok_or(SESSION_CLOSED)?
+            .deadlines
+            .outlive_request(Instant::now(), margin)
+        {
+            return Err("the granted session cannot outlive this request".into());
         }
         RwLockReadGuard::try_map(current.downgrade(), Option::as_ref)
             .map_err(|_| SESSION_CLOSED.into())
     }
 
+    /// Refreshes the session now, as `lease` does once it nears a deadline:
+    /// renewed in place, or replaced by a new session when `replace` is set.
+    #[cfg(test)]
+    async fn refresh_now(&self, replace: bool) -> Result<(), RrdError> {
+        let mut current = self.lease.write().await;
+        let lease = current.as_ref().ok_or(SESSION_CLOSED)?;
+        let refreshed = if replace {
+            let replacement =
+                Lease::open(&self.client, &self.principal, &self.api_key, &self.ids).await?;
+            let _ = self
+                .client
+                .close_session(&lease.session, CloseSession {}, self.ids.next(true)?)
+                .await;
+            replacement
+        } else {
+            self.refresh(lease, SESSION_RENEWAL_MARGIN).await?
+        };
+        *current = Some(refreshed);
+        self.bearer_generation
+            .send_modify(|generation| *generation += 1);
+        Ok(())
+    }
+
     /// Renews `current`, or opens a new session when renewal cannot outlast a
     /// request or the engine refuses it (the session lapsed while Connectome
     /// sat idle, or used up its renewals).
-    async fn refresh(&self, current: &Lease) -> Result<Lease, RrdError> {
-        if current.deadlines.renewable(Instant::now()) {
+    async fn refresh(&self, current: &Lease, margin: Duration) -> Result<Lease, RrdError> {
+        if current.deadlines.renewable(Instant::now(), margin) {
             let requested_at = Instant::now();
             match self
                 .client
@@ -538,12 +667,15 @@ impl NativeRrdClient {
         self.client.capabilities().await.map_err(RrdError::sdk)
     }
 
-    pub async fn workbench_snapshot(&self) -> Result<WorkbenchSnapshotView, RrdError> {
+    pub async fn workbench_snapshot(
+        &self,
+        after_cursor: u64,
+    ) -> Result<WorkbenchSnapshotView, RrdError> {
         let scope = self.scope();
         let flights_request = ListPromptFlights {
             scope: scope.clone(),
-            after_cursor: 0,
-            limit: WORKBENCH_RECENT_PAGE_LIMIT,
+            after_cursor,
+            limit: WORKBENCH_PAGE_LIMIT,
             max_storage_keys: MAX_PROMPT_FLIGHT_STORAGE_KEYS,
         };
         let flights_page = self
@@ -553,10 +685,9 @@ impl NativeRrdClient {
                     .await
             })
             .await?;
-        let recent_flights = flights_page
+        let flights = flights_page
             .flights
             .iter()
-            .rev()
             .map(|flight| PromptFlightSummaryView {
                 flight_id: flight.flight_id.as_str().to_owned(),
                 status: flight.status.as_str().to_owned(),
@@ -566,37 +697,11 @@ impl NativeRrdClient {
                 known_at_cursor: flight.known_at_cursor,
             })
             .collect::<Vec<_>>();
-        let latest_flight = flights_page.flights.last().cloned();
-        let latest_flight = if let Some(flight) = latest_flight {
-            let request = ReadPromptFlight {
-                scope: scope.clone(),
-                flight_id: flight.flight_id.clone(),
-                max_storage_keys: MAX_PROMPT_FLIGHT_STORAGE_KEYS,
-            };
-            let result = self
-                .send(false, |session, options| async move {
-                    self.client.read_prompt_flight(&session, request, options).await
-                })
-                .await?;
-            Some(PromptFlightSummaryView {
-                flight_id: result.flight.record.flight_id.as_str().to_owned(),
-                status: result.flight.record.status.as_str().to_owned(),
-                provider: result.flight.record.provider.as_str().to_owned(),
-                context_mode: result.flight.record.context_mode.as_str().to_owned(),
-                flight_cursor: result.flight.record.flight_cursor,
-                known_at_cursor: result.flight.record.known_at_cursor,
-            })
-        } else {
-            None
-        };
-
         Ok(WorkbenchSnapshotView {
             scope,
-            task_count: 0,
-            flight_count: flights_page.flights.len(),
-            latest_task: None,
-            latest_flight,
-            recent_flights,
+            after_cursor,
+            truncated: flights_page.truncated,
+            flights,
         })
     }
 
@@ -620,6 +725,9 @@ impl NativeRrdClient {
             .map(str::trim)
             .filter(|value| !value.is_empty())
             .map(str::to_owned);
+        // Use the running engine's configured recall ceilings. Protocol maxima
+        // are not necessarily admitted by this project's configuration.
+        let recall = self.capabilities().await?.configuration.recall;
         let launch = LaunchPromptFlight {
             scope: self.scope(),
             prompt: request.prompt,
@@ -628,19 +736,22 @@ impl NativeRrdClient {
             context: PromptFlightContextRequest {
                 valid_at: now_unix_ms()?,
                 seeds: Vec::new(),
-                max_graph_depth: MAX_CONTEXT_GRAPH_DEPTH,
-                max_items: MAX_CONTEXT_ITEMS,
-                max_output_bytes: MAX_CONTEXT_OUTPUT_BYTES,
-                max_storage_keys: MAX_CONTEXT_STORAGE_KEYS,
+                max_graph_depth: recall.max_graph_depth,
+                max_items: recall.max_items,
+                max_output_bytes: recall.max_output_bytes,
+                max_storage_keys: recall.max_storage_keys,
             },
             acceptance_marker,
+            task_id: None,
         };
         launch
             .validate()
             .map_err(|error| RrdError::from(error.to_string()))?;
         let result = self
             .send(true, |session, options| async move {
-                self.client.launch_prompt_flight(&session, launch, options).await
+                self.client
+                    .launch_prompt_flight(&session, launch, options)
+                    .await
             })
             .await?;
 
@@ -660,8 +771,8 @@ impl NativeRrdClient {
         &self,
         request: RrdReadPromptFlightRequest,
     ) -> Result<PromptFlightDetailView, RrdError> {
-        let flight_id =
-            canonical(&request.flight_id, "flight id").map_err(|error| RrdError::from(error.as_str()))?;
+        let flight_id = canonical(&request.flight_id, "flight id")
+            .map_err(|error| RrdError::from(error.as_str()))?;
         let read = ReadPromptFlight {
             scope: self.scope(),
             flight_id,
@@ -669,7 +780,9 @@ impl NativeRrdClient {
         };
         let result = self
             .send(false, |session, options| async move {
-                self.client.read_prompt_flight(&session, read, options).await
+                self.client
+                    .read_prompt_flight(&session, read, options)
+                    .await
             })
             .await?;
         let record = result.flight.record;
@@ -773,27 +886,30 @@ impl NativeRrdClient {
         Ok(view::storage(&snapshot, &self.service.storage_profile))
     }
 
-    pub async fn query(&self, request: RrdQueryRequest) -> Result<QueryView, RrdError> {
-        if request.query.trim().is_empty()
-            || request.query.len() > MAX_QUERY_BYTES
-            || request.query.contains('\0')
-        {
-            return Err(format!(
-                "RRFlowQL query must be non-empty, at most {MAX_QUERY_BYTES} bytes, and free of NUL"
-            )
-            .into());
-        }
-        let request = ExecuteQuery {
+    pub async fn physical_storage(&self) -> Result<view::PhysicalStorageView, RrdError> {
+        let request = ReadStorageDiagnostics {
             scope: self.scope(),
-            query: request.query,
-            parameters: Default::default(),
-            budget: self.query_budget.clone(),
         };
-        let result = self
+        let snapshot = self
             .send(false, |session, options| async move {
-                self.client.execute_query(&session, request, options).await
+                self.client
+                    .read_storage_diagnostics(&session, request, options)
+                    .await
             })
             .await?;
+        Ok(view::physical(&snapshot))
+    }
+
+    pub async fn query(&self, request: RrdQueryRequest) -> Result<QueryView, RrdError> {
+        let execution = execute_query(&request.query, self.scope(), &self.query_budget)?;
+        let result = self
+            .send(false, |session, options| async move {
+                self.client
+                    .execute_query(&session, execution, options)
+                    .await
+            })
+            .await
+            .map_err(|error| error.in_query(&request.query))?;
         Ok(view::query(&result))
     }
 
@@ -1028,10 +1144,18 @@ impl NativeRrdClient {
     }
 
     /// Closes the session once no request pins it; later requests fail closed.
+    /// The session's open transaction ends with it, so a pending change is
+    /// dropped, and so are held exports.
     pub async fn close(&self) -> Result<(), RrdError> {
+        // Live subscriptions close their durable subscriptions first, while
+        // the session that owns them is still open.
+        self.live.close_all().await;
         let Some(lease) = self.lease.write().await.take() else {
             return Ok(());
         };
+        *self.pending.lock().await = None;
+        *self.pending_attunement.lock().await = None;
+        self.artifacts.clear();
         self.client
             .close_session(&lease.session, CloseSession {}, self.ids.next(true)?)
             .await
@@ -1110,10 +1234,13 @@ mod tests {
         let deadlines = Deadlines::granted(start, &limits(900_000, 3_600_000)).expect("deadlines");
         let margin = SESSION_RENEWAL_MARGIN;
         let idle = Duration::from_millis(900_000);
-        assert!(deadlines.outlive_request(start));
-        assert!(deadlines.outlive_request(start + idle - margin - Duration::from_millis(1)));
-        assert!(!deadlines.outlive_request(start + idle - margin));
-        assert!(!deadlines.outlive_request(start + idle + idle));
+        assert!(deadlines.outlive_request(start, SESSION_RENEWAL_MARGIN));
+        assert!(deadlines.outlive_request(
+            start + idle - margin - Duration::from_millis(1),
+            SESSION_RENEWAL_MARGIN
+        ));
+        assert!(!deadlines.outlive_request(start + idle - margin, SESSION_RENEWAL_MARGIN));
+        assert!(!deadlines.outlive_request(start + idle + idle, SESSION_RENEWAL_MARGIN));
     }
 
     #[test]
@@ -1122,15 +1249,15 @@ mod tests {
         let session = limits(900_000, 3_600_000);
         let deadlines = Deadlines::granted(start, &session).expect("deadlines");
         let later = start + Duration::from_millis(850_000);
-        assert!(!deadlines.outlive_request(later));
-        assert!(deadlines.renewable(later));
+        assert!(!deadlines.outlive_request(later, SESSION_RENEWAL_MARGIN));
+        assert!(deadlines.renewable(later, SESSION_RENEWAL_MARGIN));
         let renewed = deadlines.renewed(later, &session).expect("renewed");
-        assert!(renewed.outlive_request(later));
+        assert!(renewed.outlive_request(later, SESSION_RENEWAL_MARGIN));
         assert_eq!(renewed.absolute, deadlines.absolute);
         // Near the absolute deadline only a new session can help.
         let late = deadlines.absolute - SESSION_RENEWAL_MARGIN;
-        assert!(!deadlines.renewable(late));
-        assert!(!renewed.outlive_request(late));
+        assert!(!deadlines.renewable(late, SESSION_RENEWAL_MARGIN));
+        assert!(!renewed.outlive_request(late, SESSION_RENEWAL_MARGIN));
     }
 
     fn hit(id: &str, score: f64) -> VectorSearchHit {

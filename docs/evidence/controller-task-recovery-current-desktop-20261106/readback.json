@@ -1,0 +1,103 @@
+{
+	"schema_version": "connectome.current-desktop-readback.v1",
+	"source": {
+		"ui_commit": "5973afa132cbc5168d738d04c47543f7aa6a2d41",
+		"native_candidate_commit": "f45305394dbe391786c7d618645a5fc0b1b2bbee",
+		"native_tree": "49299102bd52a28081e2dffafa7dc9c65f4e4873",
+		"desktop_binary_sha256": "7b200ac3b12375812eeb24017fe9948174b594c95acc89ca07bfef2434787850",
+		"engine_binary_sha256": "086c42cec160de19104a67976f7608f74e61d86000f66e4c2c310a2ffd9a8af3",
+		"frozen_native_receipt_sha256": "e1bee26e073f545e838f057d56ad603be7a9e7b34c23de0319de65a93a294080",
+		"ui_build_exit": 0
+	},
+	"task_input": {
+		"public_source": "https://github.com/rrflow/connectome-development/pull/29",
+		"title": "Add explicit task budget recovery to Connectome",
+		"source_head": "5973afa132cbc5168d738d04c47543f7aa6a2d41",
+		"body_bytes_utf8": 3755,
+		"normalization": "CRLF to LF only; no truncation",
+		"normalized_body_sha256": "454d1ffcf6824f05d337b127d315afbb243bbc79a28998fdb063f113b2cb85a8",
+		"matched_observed_goal": true,
+		"body_text_published": false
+	},
+	"trial": {
+		"sequence": [
+			"proposal",
+			"explicit_stop",
+			"explicit_resume",
+			"separate_worker_draft",
+			"reload_and_independent_readback"
+		],
+		"sequence_source": ["journey-comparison.json", "final-review.json"],
+		"full_payloads_equal_after_reload": ["task", "budget", "attempt-1", "attempt-2"],
+		"task_and_original_attempt_retained_across_recovery": true,
+		"worker_accepted_and_linked_to_proposal": true
+	},
+	"budget": {
+		"after_resume": {
+			"reserved_steps": 1,
+			"charged_elapsed_ms": 2025,
+			"limits": {
+				"max_run_elapsed_ms": 900000,
+				"max_steps": 256,
+				"max_step_elapsed_ms": 60000
+			}
+		},
+		"after_worker_and_reload": {
+			"reserved_steps": 2,
+			"max_steps": 256,
+			"charged_elapsed_ms": 18497,
+			"original_deadline_preserved": true,
+			"limits": {
+				"max_run_elapsed_ms": 900000,
+				"max_steps": 256,
+				"max_step_elapsed_ms": 60000
+			}
+		}
+	},
+	"worker": {
+		"content_sha256": "610b3dc469de941350a3df26c06195f920165273a1748c3a7b7a9482b05e32e6",
+		"response_sha256": "61e80d99735f6be5f48fe73ac9858a13470346039741c921402d0bf0056eb6b7",
+		"usage_tokens": {
+			"prompt_tokens": 1440,
+			"completion_tokens": 214,
+			"total_tokens": 1654
+		},
+		"elapsed_ms": 16429,
+		"context": null,
+		"content_published": false
+	},
+	"comparison_correction": {
+		"initial_failed_assertion_receipt": "comparison-failure.json",
+		"corrected_comparison": "Task reads across writes carry fresh runtime stamps and per-read diagnostics; compare complete task object and selected_versions separately. Full payload equality actually holds across this reload.",
+		"failed_assertion_preserved": true,
+		"quality_qualified": false,
+		"project_effects_proven": false
+	},
+	"cleanup": {
+		"first_observation": {
+			"observed_at": "2026-11-07T02:47:13.5424230Z",
+			"owned_engine_absent": false,
+			"owned_desktop_absent": true,
+			"prior_process_untouched": true
+		},
+		"later_independent_observation": {
+			"observed_at": "2026-11-07T02:47:55.9746051Z",
+			"both_owned_processes_absent": true,
+			"additional_stop_issued": false
+		},
+		"scope": "Point-in-time process observations; no inference about other processes or remote work."
+	},
+	"configuration_preservation": {
+		"original_profile_count": 4,
+		"all_original_profiles_unchanged": true,
+		"other_top_level_configuration_unchanged": true,
+		"allowed_changed_keys": ["connections", "activeResource"]
+	},
+	"limits": [
+		"Worker output and usage are retained observations, not an independent quality assessment.",
+		"No project-file context or effect, training, learning, tensor/weight attestation, memory measurement, performance qualification, or release qualification is established.",
+		"Provider health and queue metrics were point-in-time observations; loaded weights are not verified.",
+		"The prior unknown estate or process remains untouched; no uncertain lease was retried or cleared.",
+		"Usage cost is unknown."
+	]
+}

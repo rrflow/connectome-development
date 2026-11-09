@@ -1,0 +1,79 @@
+{
+	"operation": "task-read",
+	"request": {
+		"scope": "instance:instance-2cfd4423f8f3fa42bd264f2b",
+		"task_id": "task-31e2c411d8ebf766c358a2af861bce43301e730771ab0af2e550bccb745c6051",
+		"max_storage_keys": 10000
+	},
+	"response": {
+		"protocol": "rrd",
+		"protocol_version": 1,
+		"request_id": "ui-readback-f84ad52e86234f85ae88ac915a5ad807",
+		"operation_id": "ui-readback-f84ad52e86234f85ae88ac915a5ad807",
+		"outcome": {
+			"status": "ok",
+			"payload": {
+				"task": {
+					"format_version": 1,
+					"task_id": "task-31e2c411d8ebf766c358a2af861bce43301e730771ab0af2e550bccb745c6051",
+					"scope": "instance:instance-2cfd4423f8f3fa42bd264f2b",
+					"title": "Verify Connectome PR28 selected-worker handoff and recovery",
+					"goal": "Review the actual Connectome PR28 desktop worker handoff currently under verification. Propose concise verification steps for one configured BF16 route proposal, one explicit worker draft, and reload/readback preserving the same task, attempts and spent budget. Limit this response to a draft; do not claim tests passed, edit files, execute commands, or label this as reviewed training data. Source: https://github.com/rrflow/connectome-development/pull/28 at 95a81077d89efb5cd14e14bcbdecbc9bfa76d872.",
+					"status": "open",
+					"opened_at_unix_ms": 1793474531035,
+					"idempotency_key": "connectome-b5df190d77f8422aa7636619fdf4a9c5-key-4",
+					"operation_sha256": "8d4086d72010b8412665d23783eda22cd064f3a67e7d818333b2bb79c8d4a1c0",
+					"task_cursor": 5,
+					"known_at_cursor": 5
+				},
+				"read": {
+					"runtime_manifest_sha256": "26f26f8e94685d22466859262323bf376bb214f5169a8e7567ad4c14221c60a0",
+					"runtime_cursor": 11,
+					"schema_revision": 3,
+					"catalogue_revision": 0
+				},
+				"selected_versions": 1,
+				"read_evidence": {
+					"contract_version": 1,
+					"key_budget": 10000,
+					"point_reads": 11,
+					"range_scans": 1,
+					"keys_examined": 12,
+					"values_decoded": 12,
+					"decoded_bytes": 4603,
+					"stamp_validation": {
+						"method": "authenticated_current_head",
+						"change_reads": 0,
+						"proof_nodes": 0
+					},
+					"paths": [
+						{
+							"path": "read_stamp",
+							"point_reads": 5,
+							"range_scans": 0,
+							"keys_examined": 5,
+							"values_decoded": 5,
+							"decoded_bytes": 2609
+						},
+						{
+							"path": "record_versions",
+							"point_reads": 0,
+							"range_scans": 1,
+							"keys_examined": 1,
+							"values_decoded": 1,
+							"decoded_bytes": 1610
+						},
+						{
+							"path": "accumulator_proof",
+							"point_reads": 6,
+							"range_scans": 0,
+							"keys_examined": 6,
+							"values_decoded": 6,
+							"decoded_bytes": 384
+						}
+					]
+				}
+			}
+		}
+	}
+}

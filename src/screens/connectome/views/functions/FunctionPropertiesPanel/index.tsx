@@ -237,7 +237,7 @@ export function FunctionPropertiesPanel({
 							}
 							styles={{
 								input: {
-									color: isLight ? "#8d6bff" : "#a79fff",
+									color: isLight ? "#b84d00" : "#f79c62",
 								},
 							}}
 						/>

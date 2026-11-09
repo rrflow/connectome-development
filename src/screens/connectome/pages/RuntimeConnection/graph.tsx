@@ -383,6 +383,8 @@ export function GraphCanvas({
 		});
 		instance.on("beforeRender", labels.beginFrame);
 		instance.on("afterRender", labels.endFrame);
+		// sigma drew its first frame while it was constructed, before these handlers existed.
+		labels.endFrame();
 		const repaint = () => {
 			focusRef.current.lit = litNodes(layout, focusRef.current);
 			instance.refresh({ skipIndexation: true });

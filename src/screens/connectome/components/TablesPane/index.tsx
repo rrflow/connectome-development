@@ -9,7 +9,7 @@ import { Icon } from "~/components/Icon";
 import { ContentPane } from "~/components/Pane";
 import { Spacer } from "~/components/Spacer";
 import { TABLE_VARIANT_ICONS } from "~/constants";
-import { useConnection, useIsConnected, useRequireDatabase } from "~/hooks/connection";
+import { useConnection, useIsConnected } from "~/hooks/connection";
 import { useConnectionAndView } from "~/hooks/routing";
 import { useHasSchemaAccess, useTables } from "~/hooks/schema";
 import { useStable } from "~/hooks/stable";
@@ -23,6 +23,7 @@ import {
 	iconReset,
 	iconSearch,
 } from "~/icons";
+import { useRequireDatabase } from "~/modals/require-database";
 import { showTableDefinitionModal } from "~/modals/table-definition";
 import { useConfirmation } from "~/providers/Confirmation";
 import { executeQuery } from "~/screens/connectome/connection/connection";

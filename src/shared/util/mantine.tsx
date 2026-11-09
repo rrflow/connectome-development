@@ -1,25 +1,44 @@
 import {
+	ActionIcon,
 	Alert,
+	Anchor,
 	Autocomplete,
+	Badge,
+	Button,
 	Checkbox,
-	DEFAULT_THEME,
+	CloseButton,
 	Drawer,
 	Indicator,
 	InputBase,
-	MantineThemeOverride,
+	type MantineThemeOverride,
+	Modal,
 	MultiSelect,
 	Notification,
 	NumberInput,
 	Paper,
 	PasswordInput,
+	rem,
+	ScrollArea,
 	Select,
 	Switch,
 	TagsInput,
 	Textarea,
 	TextInput,
+	ThemeIcon,
 	Title,
+	Tooltip,
 } from "@mantine/core";
-import { MANTINE_THEME } from "@surrealdb/ui";
+
+/**
+ * Connectome's Mantine theme.
+ *
+ * Type, spacing, radii, the two neutral scales (`obsidian`, `slate`), the
+ * accent scale (`rrflow`) and the gradient are defined here and nowhere
+ * else; the matching CSS custom properties live in
+ * `src/shared/assets/styles/theme.scss`. Components use Mantine's built-in
+ * variants with Connectome defaults. When ColdLight's generated tokens are
+ * adopted, this file maps them into Mantine; nothing else changes.
+ */
 
 const ICON_SIZES: Record<string, number> = {
 	xs: 0.5,
@@ -29,22 +48,143 @@ const ICON_SIZES: Record<string, number> = {
 	xl: 1.5,
 };
 
-export const Connectome_THEME: MantineThemeOverride = {
-	...MANTINE_THEME,
-	colors: {
-		...MANTINE_THEME.colors,
-		rrflow: MANTINE_THEME.colors?.violet ?? DEFAULT_THEME.colors.violet,
+/** Near-black violet-tinted neutrals, the surface of the dark scheme. */
+const OBSIDIAN = [
+	"#F3F7F7",
+	"#E3EBEC",
+	"#D3DEDF",
+	"#9BB0B3",
+	"#7D9599",
+	"#4E666B",
+	"#2F464B",
+	"#16292E",
+	"#0E1E22",
+	"#081417",
+] as const;
+
+/** Cool blue-tinted neutrals for secondary surfaces and text. */
+const SLATE = [
+	"#F5F6F7",
+	"#E7E9ED",
+	"#DCDFE4",
+	"#9AA1AB",
+	"#848B95",
+	"#6F7988",
+	"#393F48",
+	"#1D2229",
+	"#14191F",
+	"#0C0F14",
+] as const;
+
+/** Connectome's accent: a burnt orange scale, the "to" end of the gradient. */
+const RRFLOW = [
+	"#FFF1E8",
+	"#FFDCC4",
+	"#FFBE94",
+	"#F79C62",
+	"#EC7F3A",
+	"#CC5500",
+	"#B84D00",
+	"#8F3B00",
+	"#6B2C00",
+	"#4A1F00",
+] as const;
+
+export const CONNECTOME_GRADIENT = {
+	from: "var(--connectome-gradient-from)",
+	to: "var(--connectome-gradient-to)",
+	deg: 135,
+};
+
+export const CONNECTOME_THEME: MantineThemeOverride = {
+	fontFamily: "'Inter Variable', Inter, system-ui, sans-serif",
+	fontFamilyMonospace: "'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace",
+	primaryColor: "obsidian",
+	primaryShade: 6,
+	defaultRadius: "xs",
+	fontSizes: {
+		xs: rem(12),
+		sm: rem(13),
+		md: rem(14),
+		lg: rem(16),
+		xl: rem(18),
 	},
+	headings: {
+		fontWeight: "600",
+		sizes: {
+			h1: { fontSize: rem(32), fontWeight: "700" },
+			h2: { fontSize: rem(26), fontWeight: "600" },
+			h3: { fontSize: rem(22), fontWeight: "500" },
+			h4: { fontSize: rem(18), fontWeight: "500" },
+			h5: { fontSize: rem(16), fontWeight: "500" },
+			h6: { fontSize: rem(14), fontWeight: "800" },
+		},
+	},
+	spacing: {
+		xs: rem(4),
+		sm: rem(8),
+		md: rem(12),
+		lg: rem(16),
+		xl: rem(24),
+		"2xl": rem(32),
+		"3xl": rem(52),
+	},
+	radius: {
+		xs: rem(4),
+		sm: rem(8),
+		md: rem(12),
+		lg: rem(20),
+		xl: rem(30),
+	},
+	colors: {
+		obsidian: [...OBSIDIAN],
+		slate: [...SLATE],
+		rrflow: [...RRFLOW],
+		violet: [...RRFLOW],
+	},
+	defaultGradient: CONNECTOME_GRADIENT,
 	components: {
-		...MANTINE_THEME.components,
-		Autocomplete: Autocomplete.extend({
+		ActionIcon: ActionIcon.extend({
 			defaultProps: {
-				variant: "filled",
+				radius: "xl",
+				size: "lg",
+				variant: "subtle",
+				color: "obsidian",
+			},
+		}),
+		ThemeIcon: ThemeIcon.extend({
+			defaultProps: {
+				radius: "xl",
+				size: "lg",
+				variant: "light",
 			},
 		}),
 		Alert: Alert.extend({
 			defaultProps: {
 				variant: "light",
+			},
+		}),
+		Anchor: Anchor.extend({
+			defaultProps: {
+				c: "rrflow.4",
+			},
+		}),
+		Badge: Badge.extend({
+			defaultProps: {
+				variant: "light",
+			},
+		}),
+		Button: Button.extend({
+			defaultProps: {
+				radius: "xl",
+				variant: "light",
+			},
+		}),
+		CloseButton: CloseButton.extend({
+			defaultProps: {
+				size: "lg",
+				radius: "xl",
+				variant: "subtle",
 			},
 		}),
 		Drawer: Drawer.extend({
@@ -63,13 +203,44 @@ export const Connectome_THEME: MantineThemeOverride = {
 				variant: "gradient",
 			},
 		}),
-		Paper: Paper.extend({
-			defaultProps: {},
-		}),
 		Switch: Switch.extend({
 			defaultProps: {
 				variant: "gradient",
 				withThumbIndicator: false,
+			},
+		}),
+		Paper: Paper.extend({
+			defaultProps: {
+				radius: "xs",
+				withBorder: true,
+			},
+		}),
+		ScrollArea: ScrollArea.extend({
+			defaultProps: {
+				scrollbarSize: 8,
+				scrollbars: "y",
+				type: "scroll",
+			},
+		}),
+		Tooltip: Tooltip.extend({
+			defaultProps: {
+				radius: "xs",
+			},
+		}),
+		Modal: Modal.extend({
+			defaultProps: {
+				size: "lg",
+				radius: "sm",
+				withCloseButton: false,
+			},
+		}),
+		Autocomplete: Autocomplete.extend({
+			defaultProps: {
+				spellCheck: false,
+				variant: "filled",
+				scrollAreaProps: {
+					scrollbars: "y",
+				},
 			},
 		}),
 		Select: Select.extend({
@@ -121,7 +292,7 @@ export const Connectome_THEME: MantineThemeOverride = {
 		}),
 		Indicator: Indicator.extend({
 			defaultProps: {
-				color: "violet",
+				color: "rrflow",
 			},
 		}),
 	},

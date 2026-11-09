@@ -4,12 +4,13 @@ import "@mantine/notifications/styles.css";
 import "@mantine/charts/styles.css";
 import "@mantine/dates/styles.css";
 import "mantine-contextmenu/styles.layer.css";
-import "@surrealdb/ui/styles.css";
+
+import "@fontsource-variable/inter";
+import "@fontsource-variable/jetbrains-mono";
 
 import "~/shared/assets/styles/layers.scss";
-import "~/shared/assets/styles/fonts.scss";
 import "~/shared/assets/styles/global.scss";
-import "~/shared/assets/styles/override.scss";
+import "~/shared/assets/styles/theme.scss";
 import "~/shared/assets/styles/variants.scss";
 
 import "../adapter";
@@ -18,7 +19,6 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { createRoot } from "react-dom/client";
 import { startConfigSync } from "~/shared/util/config";
-import { HeadInjector } from "~/shared/util/head";
 import { preloadImages } from "~/shared/util/preloader";
 import { App } from "~/shell/components/App";
 import { adapter } from "../adapter";
@@ -43,12 +43,7 @@ import { generateEditorIcons } from "../editor/icons";
 		throw new Error("Root element not found");
 	}
 
-	createRoot(root).render(
-		<>
-			<HeadInjector />
-			<App />
-		</>,
-	);
+	createRoot(root).render(<App />);
 
 	// Preload images
 	preloadImages();

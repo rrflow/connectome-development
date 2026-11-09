@@ -16,7 +16,7 @@ without another installation. Credentials are stored by RRFlow and read by the
 native client; no token is entered in a URL or browser storage.
 
 The default project is in Connectome's application-data directory under
-`engrams/local`. The serving settings can select an absolute project path,
+`estates/local` in the currently pinned desktop implementation. The serving settings can select an absolute project path,
 fresh/existing mode, and an explicit engine override. Startup binds a free
 loopback port and creates or updates its local connection profile. Close the
 app to stop all owned engines, or use **Stop this engine** for one project; data remains.
@@ -50,31 +50,90 @@ native components; **Knowledge** opens their existing live lenses. **Advanced
 details** reveals protocol, installed identity, readiness cursor and capabilities.
 The glossary remains available. Actual errors remain visible in either view.
 
-**Workbench** provides project-scoped planning and receipt tracking for testing,
-reverse engineering, optimization and release-update work. It records operator
-intent, context and diagnostics per project profile, and can capture runtime-backed
-receipts from authenticated engine reads (capabilities/schema/database/storage/
-vector metadata), launch governed observe flights, and capture task/flight
-snapshot summaries. It still does not execute provider calls, model runs or
-cloud workflows in this build.
-The Workbench also renders a bounded recent-flight snapshot from the engine so
-operators can inspect governed flight IDs, status, provider and context mode
-without leaving the project workspace, then drill into a selected flight's
-governed summary and event timeline.
+**Reasoning → Workbench** launches an engine observe flight and displays its
+engine-recorded events. Flight pages follow the engine's creation-order cursor;
+the displayed page is not presented as a complete history. The prompt is
+persisted by the engine. This provider does not call LFG, SWAG or a language
+model. Users can create local workbenches, save notes, and explicitly capture
+engine diagnostic readings; these are labelled as desktop-profile notes rather
+than engine audit. Capture reads capabilities, graph counts, storage details and
+vector catalogue details separately. Connectome discards the result if the
+observed profile, session, instance or local workbench changes while those reads
+are pending, including when the workbench view unmounts. This guard follows
+identity changes observed by the UI; it does not make the separate reads an
+atomic engine snapshot. Existing local notes remain readable. The native process
+tests cover a flight, pagination and session reconnect; they do not establish
+rendered desktop behavior or model quality.
 
-**Knowledge paths**, **Activity**, **Learning**, and **Services** still explain
-the requirements and explicitly show what this build cannot enable: remote source
-activation, session replay, training, provider billing and cloud synchronization.
-The page has no synthetic progress, generated run history or enabled learning
-switch. rrflow.ai, rroflow.ai and shippin.cloud are planned service roles, not
-verified login endpoints. Running projects in parallel does not authorize context
-sharing or training; each requires separate engine-backed consent.
+The workbench also presents the returned event sequence, a bounded project graph
+and the rrflowKV storage path together. Graph labels and relationships come from
+the engine read; positions and colors are presentation. Choose a preview limit or
+open the graph lens, and use the keyboard record list to inspect a record. The
+storage observation has its own timestamp and is not atomic with the graph read.
+Event order does not establish MCP hops or unreported model decisions. The
+[visual implementation plan](workbench-visual-observability-2026-11-07.md)
+records remaining indexing, provider, learning and performance dependencies.
+
+Remote source activation, training, provider billing and cloud synchronization
+require separately implemented and authorized integrations. Running projects
+in parallel does not itself authorize context sharing or training.
 
 The [research and implementation sequence](project-workspace-research.md) connects
 this layout to published UX research and current vendor workflows, with evidence
 limits. Browser smoke proves navigation and rendering; the native process corpus
 proves two owned engines, project-scoped records/relations/vectors, session
 reconnect and targeted stop while the other engine continues to answer.
+
+## Tasks and experimental controller proposals
+
+Open **Tasks** in an authenticated project workspace. **Read tasks** lists up to
+32 records per page; **Next task page** follows the returned cursor. Supply your
+own title, goal, acceptance criteria and limits to **Record task in RRFlow**.
+Opening a task does not invoke a model.
+
+Select a task, read its budget, and explicitly supply step/run limits if none is
+configured. **Review controller inputs** reads the engine's endpoint policy and
+task identity. It displays configured candidate IDs and exact digests. Missing
+policy is unavailable, never replaced by a default model. Endpoint/profile and
+provider-credential setup remain engine/operator responsibilities in this slice.
+
+**Request one experimental proposal** sends once through the native SDK. It does
+not execute the proposed worker. Budget reads and **Stop task budget** remain
+available while that call holds a shared session lease. Stop uses the budget
+digest you last read; if it changed, refresh and review again. Stop does not prove
+remote GPU termination. Durations beyond the granted native session window are
+refused before dispatch, rather than silently truncated.
+
+The last attempted task/attempt coordinates are saved per project profile and
+instance before dispatch. **Recover last attempt** reopens that task; **Read budget
+and attempt** only reads engine state. Keep older attempt IDs if you need their
+readback: this view currently bookmarks only the latest attempt per project.
+A lost reply must not trigger another inference. A local **Not dispatched** result
+allows renewed input review; unresolved remote state remains visibly uncertain.
+No credentials, authoritative result cache or training consent enter local storage.
+
+The [selected-worker handoff](controller-worker-handoff.md) extends this workspace
+with explicit review and one engine-admitted draft request. The current
+[reconciliation](controller-task-recovery-reconciliation.md) pins both SDKs and the bundled-engine source to native PR230
+`f4530539`, retaining the landed worker and observation integration. Earlier
+[worker desktop evidence](controller-worker-desktop-live.md) keeps its original
+engine identity; fresh validation of this reconciled UI is still required.
+
+The [task recovery increment](controller-task-recovery.md) adds explicit resume.
+After **Read budget and attempt**, **Resume task budget** is available for
+known-completed cancelled or failed work. It keeps the original deadline, limits
+and spent effort and does not invoke a model. Review current inputs before
+requesting new work. The engine denies expired/exhausted budgets and stale
+authority; unknown execution cannot resume. If the reply is lost, read the budget
+again before another change. Existing attempts remain available through public
+engine readback.
+
+The [earlier desktop recovery trial](controller-task-recovery-desktop.md) proves
+proposal, Stop/resume, worker draft and reload/readback on its recorded source.
+A fresh trial on this reconciliation and dependency/candidate/protected acceptance
+remain required. Source-edit successor planning, project effects, the complete
+RROFLOW workflow and model qualification remain open. Native process checks are
+distinct from a live BF16 desktop journey and release evidence.
 
 ## Learn and navigate
 
@@ -115,7 +174,7 @@ corepack pnpm engine:check
 corepack pnpm tauri:bundle
 ```
 
-Engine staging builds the exact RRFlow revision in the native Cargo lock.
+Engine staging requires Python 3.11+ (the canonical builder uses `tomllib`); CI selects Python 3.15.0 explicitly. Staging uses the canonical builder at the exact RRFlow revision in the native Cargo lock. The sidecar helper checks the executable's embedded source revision, clean flag, target and self-reported file digest before publishing it. CI compares its builder receipt to the executable on fresh-build and cache paths. These hashes and coordinates are consistency checks, not a signature or remote build attestation.
 It is a build-time action; installed startup downloads no engine source.
 For a development artifact, `corepack pnpm tauri build --debug --no-bundle
 --config src-tauri/tauri.bundle.conf.json` embeds the production frontend and
@@ -124,6 +183,12 @@ as `rrflow.exe` (Windows) or `rrflow` (Linux/macOS). The frontend-only browser
 preview intentionally cannot launch a native engine or hold its credentials.
 
 ## Validation
+
+The [actual desktop worker trial](controller-worker-desktop-live.md) records
+source-bound BF16 selection, explicit worker draft and reload/readback evidence,
+including the remaining integration and release limits.
+The [evidence formatting correction](controller-worker-evidence-formatting.md)
+records the subsequent failed publication CI and unchanged observation values.
 
 Run `corepack pnpm check`, `corepack pnpm build` and `corepack pnpm test:smoke`.
 Native checks are `cargo test --manifest-path src-tauri/Cargo.toml --all-targets

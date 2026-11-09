@@ -142,26 +142,29 @@ export function StoragePipeline({ view }: { view: RrdPhysicalStorageView }) {
 	const resident = metric(view, "page_cache", "resident");
 	const hits = metric(view, "page_cache", "hits");
 	const misses = metric(view, "page_cache", "misses");
-	const lookups = (hits?.value ?? 0) + (misses?.value ?? 0);
+	const lookups = hits && misses ? hits.value + misses.value : null;
 	const hitRatio = view.headline.find((entry) => entry.id === "page_cache_hit_ratio");
 
-	const onDisk = (segments?.value ?? 0) > 0;
-	const summary = onDisk ? (
+	const cacheReading =
+		hitRatio && lookups !== null
+			? ` and answered ${formatMetric("ratio", hitRatio.value)} of ${formatCount(lookups)} lookups from memory.`
+			: lookups === 0
+				? " and has no reported page lookups yet."
+				: " (lookup statistics are not reported).";
+	const summary = !segments ? (
+		<>The engine did not report an immutable segment count for this observation.</>
+	) : segments.value > 0 ? (
 		<>
 			{value(segments)} <Term id="segment">segments</Term> hold {value(segmentBytes)} on disk.
 			The <Term id="pageCache">page cache</Term> holds {value(resident)} of {limit(resident)}
-			{hitRatio
-				? ` and answered ${formatMetric("ratio", hitRatio.value)} of ${formatCount(lookups)} lookups from memory.`
-				: " and has not been asked for a page yet."}
+			{cacheReading}
 		</>
 	) : (
 		<>
-			Everything is still in memory: {value(versions)} <Term id="version">versions</Term> sit
-			in the <Term id="memtable">memtable</Term>. rrflowKV writes its first{" "}
-			<Term id="segment">segment</Term> to disk when the memtable reaches {limit(versions)}{" "}
-			versions or the <Term id="wal">write-ahead log</Term> reaches {limit(wal)}. Until then
-			there is nothing on disk to read, so the <Term id="pageCache">page cache</Term> stays
-			empty.
+			No immutable segments are reported. The <Term id="memtable">memtable</Term> holds{" "}
+			{value(versions)} <Term id="version">versions</Term>; the{" "}
+			<Term id="wal">write-ahead log</Term> may already contain persisted writes. Reported
+			flush thresholds are {limit(versions)} versions and {limit(wal)} of WAL payload.
 		</>
 	);
 
@@ -177,7 +180,7 @@ export function StoragePipeline({ view }: { view: RrdPhysicalStorageView }) {
 					step={1}
 					term="wal"
 					title="Write-ahead log"
-					purpose="Every change is written here first, so it survives a crash."
+					purpose="Records writes ahead of storage changes; durability depends on sync and recovery."
 					reading={value(wal)}
 					gauge={wal}
 					details={[`of ${limit(wal)} before a flush`]}
@@ -217,9 +220,11 @@ export function StoragePipeline({ view }: { view: RrdPhysicalStorageView }) {
 					gauge={resident}
 					details={[
 						`of ${limit(resident)} in use`,
-						hitRatio
+						hitRatio && lookups !== null
 							? `${formatMetric("ratio", hitRatio.value)} of ${formatCount(lookups)} lookups served from memory`
-							: "No segment reads yet",
+							: lookups === 0
+								? "No reported page lookups yet"
+								: "Lookup statistics not reported",
 					]}
 				/>
 			</Group>

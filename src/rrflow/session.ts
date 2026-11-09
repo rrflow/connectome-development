@@ -1,4 +1,7 @@
 import { Channel, type InvokeArgs, invoke, isTauri } from "@tauri-apps/api/core";
+import type { AttunementCommand, AttunementReply } from "~/rrflow/attunement";
+import type { TaskCommand, TaskReply } from "~/rrflow/tasks";
+import type { VectorQuantizationMethod } from "./model";
 
 /*
  * Authenticated RRD session views.
@@ -6,8 +9,12 @@ import { Channel, type InvokeArgs, invoke, isTauri } from "@tauri-apps/api/core"
  * RRFlow's Rust SDK (`rrd-client` + `rrd-contract`) owns every RRD wire type
  * and validates each response inside the Tauri process. These interfaces are
  * Connectome view models: the bounded projections `src-tauri/src/rrd/view.rs`
- * serializes for the Database, Vectors, and Storage lenses. The operator
- * credential and the session bearer never cross into the webview.
+ * serializes for the Database, Vectors, and Storage lenses, and those its
+ * `effect`, `history` and `quantization` modules serialize for changes,
+ * backups, exports, the changefeed, the audit chain and quantized search
+ * generations. The operator credential and the session bearer never cross
+ * into the webview; a pending change, a proposed lifecycle step and a held
+ * export cross only as opaque handles.
  */
 
 export interface RrdReference {
@@ -70,11 +77,9 @@ export interface RrdPromptFlightSummaryView {
 
 export interface RrdWorkbenchSnapshotView {
 	scope: string;
-	task_count: number;
-	flight_count: number;
-	latest_task: RrdTaskSummaryView | null;
-	latest_flight: RrdPromptFlightSummaryView | null;
-	recent_flights: RrdPromptFlightSummaryView[];
+	after_cursor: number;
+	truncated: boolean;
+	flights: RrdPromptFlightSummaryView[];
 }
 
 export interface RrdPromptFlightLaunchView {
@@ -286,10 +291,103 @@ export interface RrdVectorSearchView {
 	exact: boolean;
 	known_at_cursor: number;
 	keys_examined: number;
+	/** Vectors the search read at full precision. */
 	canonical_candidates: number;
+	/** Candidates the engine's plan expected to score. */
 	selected_candidates: number;
+	/** Candidates the exact scorer reranked; 0 for an exact search. */
+	exact_rerank: number;
+	/** Points written after the generation, searched exactly beside it. */
+	overlay_candidates: number;
+	/** The quantized generation an approximate search read. */
+	selected_generation: number | null;
 	loaded_artifact_bytes: number;
 	hits: RrdHitView[];
+}
+
+/** One quantized search generation of a named vector. */
+export interface RrdGenerationView {
+	artifact_id: string;
+	collection_id: string;
+	vector_name: string;
+	method: VectorQuantizationMethod;
+	state: "ready" | "active" | "retired";
+	generation: number;
+	source_cursor: number;
+	indexed_vectors: number;
+	packed_vector_bytes: number;
+	full_precision_vector_bytes: number;
+	auxiliary_bytes: number;
+	maximum_compression_ratio: number;
+	configuration_sha256: string;
+	artifact_sha256: string;
+	object_sha256: string;
+	object_length: number;
+	built_at_unix_ms: number;
+	lifecycle_revision: number;
+}
+
+/** The generations of one named vector, by artifact and then newest first. */
+export interface RrdQuantizationsView {
+	collection_id: string;
+	vector_name: string;
+	lifecycle_revision: number;
+	generations: RrdGenerationView[];
+	/** The engine returned as many as were asked for; there may be more. */
+	truncated: boolean;
+}
+
+/** One lifecycle step as the webview proposes it. */
+export type RrdQuantizationStep =
+	| {
+			step: "build";
+			collection_id: string;
+			vector_name: string;
+			method: VectorQuantizationMethod;
+	  }
+	| { step: "activate" | "retire"; artifact_id: string; generation: number };
+
+/**
+ * A lifecycle step held natively under `handle`. `request` is exactly what
+ * applying it sends, scope and key budget included.
+ */
+export interface RrdQuantizationProposalView {
+	handle: string;
+	step: RrdQuantizationStep["step"];
+	operation: string;
+	request: Record<string, unknown>;
+}
+
+export interface RrdQuantizationAppliedView {
+	step: RrdQuantizationStep["step"];
+	generation: RrdGenerationView;
+	/** The engine had already applied this step and returned its recorded result. */
+	idempotent_replay: boolean;
+	/** For a build: the vector versions it encoded and the keys it read. */
+	selected_versions: number | null;
+	keys_examined: number | null;
+}
+
+/** One side of a comparison, without the query point, timed natively. */
+export interface RrdComparedSearchView {
+	search: RrdVectorSearchView;
+	round_trip_ms: number;
+}
+
+/** Exact and approximate search for one example, side by side. */
+export interface RrdVectorCompareView {
+	query: RrdReference;
+	top_k: number;
+	exact: RrdComparedSearchView;
+	/** Absent when the engine refused to search approximately. */
+	approximate: RrdComparedSearchView | null;
+	/** The engine's reason, when it refused. */
+	approximate_refusal: string | null;
+	/** Approximate hits that are exact neighbours, counting ties at the cut. */
+	matched: number;
+	recall: number | null;
+	/** Both searches read the estate at the same cursor. */
+	same_cursor: boolean;
 }
 
 export interface RrdMapPointView {
@@ -408,6 +506,257 @@ export interface RrdStorageView {
 	physical: RrdPhysicalStorageView;
 }
 
+/**
+ * One contract mutation as the webview proposes it, such as
+ * `{ mutation: "put_record", reference, valid_from, properties }`. The native
+ * process validates it against `rrd-contract` before anything reaches the
+ * engine; the value model that types it is generated in a later step.
+ */
+export interface RrdMutation {
+	mutation: string;
+	[field: string]: unknown;
+}
+
+/** What one mutation writes, as a preview or a change row renders it. */
+export interface RrdMutationView {
+	/** The mutation's wire name, such as `put_record` or `retire_data`. */
+	operation: string;
+	/** `kind:id` for a record or relation; the event kind; `schema`. */
+	target: string;
+	/** A relation's `from → to`, or the subject the mutation attaches to. */
+	subject: string | null;
+	properties: Record<string, string>;
+}
+
+/** The read-your-writes snapshot behind a preview: its read stamp and size. */
+export interface RrdProspectiveView {
+	valid_at_unix_ms: number;
+	known_at_cursor: number;
+	schema_revision: number;
+	read_manifest_sha256: string;
+	selected_versions: number;
+	keys_examined: number;
+	entries: number;
+}
+
+/**
+ * A previewed change waiting for the operator. Commit it with `handle` and the
+ * `operation_sha256` shown; the native process commits exactly the previewed
+ * mutations. A newer preview on the same connection replaces it.
+ */
+export interface RrdChangePreviewView {
+	handle: string;
+	operation_sha256: string;
+	read_cursor: number;
+	mutations: RrdMutationView[];
+	prospective: RrdProspectiveView;
+	timeout_ms: number;
+}
+
+export interface RrdCommitReceiptView {
+	operation_sha256: string;
+	mutation_count: number;
+	first_claim_sequence: number;
+	last_claim_sequence: number;
+	runtime_commit_sha256: string | null;
+	first_runtime_cursor: number | null;
+	last_runtime_cursor: number | null;
+	/** The engine answered with the receipt of a commit it had already made. */
+	idempotent_replay: boolean;
+}
+
+export interface RrdChangeView {
+	cursor: number;
+	commit_sha256: string;
+	commit_ordinal: number;
+	at_unix_ms: number;
+	actor: string;
+	family: "data" | "claim";
+	mutation: RrdMutationView;
+	change_sha256: string;
+	previous_change_sha256: string | null;
+}
+
+export interface RrdChangesView {
+	requested_after_cursor: number;
+	through_cursor: number;
+	head_cursor: number;
+	has_more: boolean;
+	validation_method: string;
+	change_reads: number;
+	proof_nodes: number;
+	changes: RrdChangeView[];
+}
+
+export interface RrdChangesFollowView {
+	/** No change arrived before the wait ended. */
+	timed_out: boolean;
+	waited_ms: number;
+	page: RrdChangesView;
+}
+
+export interface RrdAuditRecordView {
+	sequence: number;
+	at_unix_ms: number;
+	principal: string | null;
+	/** The security action, such as `transaction_commit`. */
+	action: string;
+	/** `kind:id` segments joined by `/`. */
+	resource: string;
+	request_id: string;
+	operation_id: string;
+	phase: "authorized" | "completed";
+	decision: "allowed" | "denied" | "failed";
+	status_code: number;
+	audit_sha256: string;
+	previous_audit_sha256: string | null;
+}
+
+export interface RrdAuditView {
+	requested_after_sequence: number;
+	through_sequence: number;
+	chain_anchor_sha256: string | null;
+	chain_head_sha256: string | null;
+	records: RrdAuditRecordView[];
+}
+
+export interface RrdArchiveView {
+	archive_sha256: string;
+	action_count: number;
+	standalone_claims: number;
+	runtime_commits: number;
+	runtime_mutations: number;
+	payload_bytes: number;
+	claim_sequence: number;
+	runtime_cursor: number;
+}
+
+/** How a backup carries one family of estate state. */
+export interface RrdCoverageView {
+	family: string;
+	coverage: "included" | "referenced_only" | "rebuild_required" | "excluded";
+}
+
+export interface RrdBackupView {
+	backup_sha256: string;
+	label: string;
+	created_at_unix_ms: number;
+	application_complete: boolean;
+	archive: RrdArchiveView;
+	coverage: RrdCoverageView[];
+}
+
+export interface RrdBackupsView {
+	revision: number;
+	catalogue_sha256: string;
+	archives_verified: boolean;
+	backups: RrdBackupView[];
+}
+
+export interface RrdBackupCreatedView {
+	backup: RrdBackupView;
+	catalogue_revision: number;
+	catalogue_sha256: string;
+	idempotent_replay: boolean;
+}
+
+/** A backup restored into its own verified root; the estate is not replaced. */
+export interface RrdRestoreView {
+	backup_sha256: string;
+	restore_id: string;
+	inventory: RrdArchiveView;
+	reopened: boolean;
+	idempotent_replay: boolean;
+}
+
+/** A verified export the native process holds until it is saved. */
+export interface RrdArtifactView {
+	handle: string;
+	media_type: string;
+	file_name: string;
+	bytes: number;
+	sha256: string;
+}
+
+export interface RrdQueryExportView {
+	artifact: RrdArtifactView;
+	profile: string;
+	canonical_query: string;
+	known_at_cursor: number;
+	schema_revision: number;
+	read_manifest_sha256: string;
+	rows: number;
+	columns: number;
+	row_groups: number;
+	elapsed_micros: number;
+}
+
+export interface RrdAuditExportView {
+	artifact: RrdArtifactView;
+	requested_after_sequence: number;
+	through_sequence: number;
+	record_count: number;
+	chain_anchor_sha256: string | null;
+	chain_head_sha256: string | null;
+}
+
+export interface RrdSavedArtifactView {
+	path: string;
+	bytes: number;
+	sha256: string;
+}
+
+/** What a live subscription follows. */
+export type RrdLiveStream = { kind: "changes" } | { kind: "query"; query: string };
+
+export interface RrdLiveView {
+	handle: string;
+	stream: "changes" | "query";
+	/** The cursor the subscription delivers after. */
+	after_cursor: number;
+	/** Engine-observed identity version to retain with a query continuation cursor. */
+	result_identity_version: number | null;
+	/** A live query's first result, read at `after_cursor`, when opened without a cursor. */
+	first: RrdQueryView | null;
+}
+
+export interface RrdRowChangeView {
+	before: RrdQueryRowView;
+	after: RrdQueryRowView;
+}
+
+/**
+ * Why a subscription was attached to a connection: first opened, resumed after
+ * a lost connection or a session renewal, or continued by a new subscription
+ * after the session was replaced.
+ */
+export type RrdLiveAttachment = "opened" | "reconnected" | "renewed" | "replaced";
+
+/**
+ * One live event, in cursor order. A change never repeats; after a reconnect a
+ * live-query delta can overlap the one before it, so rows apply by identity.
+ */
+export type RrdLiveEventView =
+	| {
+			event: "subscribed";
+			reason: RrdLiveAttachment;
+			generation: number;
+			acknowledged_cursor: number;
+			head_cursor: number;
+	  }
+	| { event: "changes"; from_cursor: number; through_cursor: number; page: RrdChangesView }
+	| {
+			event: "rows";
+			from_cursor: number;
+			through_cursor: number;
+			head_cursor: number;
+			added: RrdQueryRowView[];
+			updated: RrdRowChangeView[];
+			removed: RrdQueryRowView[];
+	  }
+	/** Closed by the operator (`message` is null) or stopped by a failure. */
+	| { event: "ended"; message: string | null; retryable: boolean };
+
 export interface RrdConnectRequest {
 	/** Loopback HTTP origin of the RRD service. */
 	endpoint: string;
@@ -465,24 +814,51 @@ export interface RrdWriteExternalTextFileRequest {
 	create_parent_dirs: boolean;
 }
 
+export interface RrdVectorCompareRequest {
+	collection_id: string;
+	vector_name: string;
+	example: RrdReference;
+	/** Neighbours to compare, not counting the query point. */
+	top_k: number;
+	/** Candidates the approximate search reranks exactly: more than `top_k`. */
+	exact_rerank: number;
+}
+
+/**
+ * Where the engine's parser refused a query a command sent: `offset` counts
+ * UTF-16 code units into the query, and `reason` is the parser's own words.
+ */
+export interface RrdQueryError {
+	offset: number;
+	reason: string;
+}
+
 /**
  * A failed native RRD command. `retryable` is the engine's own classification:
  * it marks a transient storage conflict retryable, such as a diagnostic read
- * that requests landing meanwhile kept changing.
+ * that requests landing meanwhile kept changing. `query` locates a parse
+ * refusal of the query the command sent.
  */
 export class RrdCommandError extends Error {
 	readonly retryable: boolean;
+	readonly query: RrdQueryError | null;
 
-	constructor(message: string, retryable: boolean) {
+	constructor(message: string, retryable: boolean, query: RrdQueryError | null = null) {
 		super(message);
 		this.name = "RrdCommandError";
 		this.retryable = retryable;
+		this.query = query;
 	}
 }
 
 /** Whether a failure is the engine asking to be asked again later. */
 export function isRetryable(error: unknown): boolean {
 	return error instanceof RrdCommandError && error.retryable;
+}
+
+/** Where the engine refused a query, when a failure is that refusal. */
+export function queryRefusal(error: unknown): RrdQueryError | null {
+	return error instanceof RrdCommandError ? error.query : null;
 }
 
 /** Invokes a native RRD command, turning its error into an `Error`. */
@@ -492,7 +868,11 @@ async function call<T>(command: string, args?: InvokeArgs): Promise<T> {
 	} catch (error) {
 		if (typeof error === "object" && error !== null && "message" in error) {
 			const retryable = "retryable" in error && error.retryable === true;
-			throw new RrdCommandError(String(error.message), retryable);
+			const query =
+				"query" in error && typeof error.query === "object" && error.query !== null
+					? (error.query as RrdQueryError)
+					: null;
+			throw new RrdCommandError(String(error.message), retryable, query);
 		}
 		throw error instanceof Error ? error : new Error(String(error));
 	}
@@ -554,14 +934,24 @@ export class RrdSessionClient {
 		return this.call<RrdConnectionView | null>("rrd_session");
 	}
 
+	async attunement(request: AttunementCommand): Promise<AttunementReply> {
+		this.requireNative();
+		return this.call<AttunementReply>("rrd_attunement", { request });
+	}
+
+	async task(request: TaskCommand): Promise<TaskReply> {
+		this.requireNative();
+		return this.call<TaskReply>("rrd_task", { request });
+	}
+
 	async capabilities(): Promise<RrdServiceView> {
 		this.requireNative();
 		return this.call<RrdServiceView>("rrd_capabilities");
 	}
 
-	async workbenchSnapshot(): Promise<RrdWorkbenchSnapshotView> {
+	async workbenchSnapshot(afterCursor: number): Promise<RrdWorkbenchSnapshotView> {
 		this.requireNative();
-		return this.call<RrdWorkbenchSnapshotView>("rrd_workbench_snapshot");
+		return this.call<RrdWorkbenchSnapshotView>("rrd_workbench_snapshot", { afterCursor });
 	}
 
 	async launchObserveFlight(
@@ -591,6 +981,11 @@ export class RrdSessionClient {
 	async storage(): Promise<RrdStorageView> {
 		this.requireNative();
 		return this.call<RrdStorageView>("rrd_storage");
+	}
+
+	async physicalStorage(): Promise<RrdPhysicalStorageView> {
+		this.requireNative();
+		return this.call<RrdPhysicalStorageView>("rrd_physical_storage");
 	}
 
 	async query(query: string): Promise<RrdQueryView> {
@@ -625,6 +1020,173 @@ export class RrdSessionClient {
 		const progress = new Channel<RrdVectorMapProgressView>();
 		if (onProgress) progress.onmessage = onProgress;
 		return this.call<RrdVectorMapView>("rrd_vector_map", { request, onProgress: progress });
+	}
+
+	/** The quantized search generations of one named vector. */
+	async vectorQuantizations(
+		collectionId: string,
+		vectorName: string,
+	): Promise<RrdQuantizationsView> {
+		this.requireNative();
+		return this.call<RrdQuantizationsView>("rrd_vector_quantizations", {
+			request: { collection_id: collectionId, vector_name: vectorName },
+		});
+	}
+
+	/**
+	 * Holds a lifecycle step natively and returns the exact request applying it
+	 * sends; nothing reaches the engine. A newer proposal replaces it.
+	 */
+	async proposeQuantization(step: RrdQuantizationStep): Promise<RrdQuantizationProposalView> {
+		this.requireNative();
+		return this.call<RrdQuantizationProposalView>("rrd_vector_quantization_propose", {
+			request: step,
+		});
+	}
+
+	/**
+	 * Applies a proposed step exactly as proposed. Applying it again after a
+	 * failure whose outcome is unknown returns the engine's recorded result.
+	 */
+	async applyQuantization(
+		proposal: RrdQuantizationProposalView,
+	): Promise<RrdQuantizationAppliedView> {
+		this.requireNative();
+		return this.call<RrdQuantizationAppliedView>("rrd_vector_quantization_apply", {
+			request: { handle: proposal.handle },
+		});
+	}
+
+	async discardQuantization(handle: string): Promise<void> {
+		this.requireNative();
+		await this.call<void>("rrd_vector_quantization_discard", { handle });
+	}
+
+	/** Exact and approximate search for one stored example, side by side. */
+	async vectorCompare(request: RrdVectorCompareRequest): Promise<RrdVectorCompareView> {
+		this.requireNative();
+		return this.call<RrdVectorCompareView>("rrd_vector_compare", { request });
+	}
+
+	/**
+	 * Previews a data change inside a new transaction; nothing is committed. A
+	 * newer preview on this connection replaces it.
+	 */
+	async previewChange(mutations: RrdMutation[], validAt?: number): Promise<RrdChangePreviewView> {
+		this.requireNative();
+		return this.call<RrdChangePreviewView>("rrd_change_preview", {
+			request: { mutations, valid_at: validAt },
+		});
+	}
+
+	/** Commits a previewed change exactly as previewed, under the digest shown. */
+	async commitChange(preview: RrdChangePreviewView): Promise<RrdCommitReceiptView> {
+		this.requireNative();
+		return this.call<RrdCommitReceiptView>("rrd_change_commit", {
+			request: { handle: preview.handle, operation_sha256: preview.operation_sha256 },
+		});
+	}
+
+	async discardChange(handle: string): Promise<void> {
+		this.requireNative();
+		await this.call<void>("rrd_change_discard", { handle });
+	}
+
+	/** Changes after `afterCursor`, at most 256 per page. */
+	async changes(afterCursor: number, limit: number): Promise<RrdChangesView> {
+		this.requireNative();
+		return this.call<RrdChangesView>("rrd_changes", {
+			request: { after_cursor: afterCursor, limit },
+		});
+	}
+
+	/** Waits up to `waitTimeoutMs` (at most 5000) for changes after `afterCursor`. */
+	async followChanges(
+		afterCursor: number,
+		limit: number,
+		waitTimeoutMs: number,
+	): Promise<RrdChangesFollowView> {
+		this.requireNative();
+		return this.call<RrdChangesFollowView>("rrd_changes_follow", {
+			request: { after_cursor: afterCursor, limit, wait_timeout_ms: waitTimeoutMs },
+		});
+	}
+
+	/** Audit records after `afterSequence`, at most 512 per page. */
+	async audit(afterSequence: number, limit: number): Promise<RrdAuditView> {
+		this.requireNative();
+		return this.call<RrdAuditView>("rrd_audit", {
+			request: { after_sequence: afterSequence, limit },
+		});
+	}
+
+	async exportAudit(afterSequence: number, limit: number): Promise<RrdAuditExportView> {
+		this.requireNative();
+		return this.call<RrdAuditExportView>("rrd_audit_export", {
+			request: { after_sequence: afterSequence, limit },
+		});
+	}
+
+	/** Runs `query` as a Parquet export; the file stays native until saved. */
+	async exportQuery(query: string): Promise<RrdQueryExportView> {
+		this.requireNative();
+		return this.call<RrdQueryExportView>("rrd_query_export", { request: { query } });
+	}
+
+	/** Saves a held export where the operator chooses; `null` when cancelled. */
+	async saveArtifact(handle: string): Promise<RrdSavedArtifactView | null> {
+		this.requireNative();
+		return this.call<RrdSavedArtifactView | null>("rrd_artifact_save", { handle });
+	}
+
+	async backups(verifyArchives = false): Promise<RrdBackupsView> {
+		this.requireNative();
+		return this.call<RrdBackupsView>("rrd_backups", {
+			request: { verify_archives: verifyArchives },
+		});
+	}
+
+	async createBackup(label: string): Promise<RrdBackupCreatedView> {
+		this.requireNative();
+		return this.call<RrdBackupCreatedView>("rrd_backup_create", { request: { label } });
+	}
+
+	/** Restores a backup into its own verified root beside the estate. */
+	async restoreBackup(backupSha256: string): Promise<RrdRestoreView> {
+		this.requireNative();
+		return this.call<RrdRestoreView>("rrd_backup_restore", {
+			request: { backup_sha256: backupSha256 },
+		});
+	}
+
+	/**
+	 * Opens a live subscription; `onEvent` hears its events until it is closed
+	 * or ends. Without `afterCursor`, changes start at the estate's head and a
+	 * live query runs once first, its result returned as `first`.
+	 * Query continuation also requires the identity version observed with that cursor.
+	 */
+	async openLive(
+		stream: RrdLiveStream,
+		onEvent: (event: RrdLiveEventView) => void,
+		afterCursor?: number,
+		resultIdentityVersion?: number,
+	): Promise<RrdLiveView> {
+		this.requireNative();
+		const events = new Channel<RrdLiveEventView>();
+		events.onmessage = onEvent;
+		return this.call<RrdLiveView>("rrd_live_open", {
+			request: {
+				stream,
+				after_cursor: afterCursor,
+				result_identity_version: resultIdentityVersion,
+			},
+			onEvent: events,
+		});
+	}
+
+	async closeLive(handle: string): Promise<void> {
+		this.requireNative();
+		await this.call<void>("rrd_live_close", { handle });
 	}
 
 	async disconnect(): Promise<void> {

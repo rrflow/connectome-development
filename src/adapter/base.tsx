@@ -1,9 +1,10 @@
 import type {
 	ConnectomeConfig,
-	engramPreview,
-	engramSelection,
+	EstatePreview,
+	EstateSelection,
+	InstanceStatus,
 	Platform,
-	Servedengram,
+	ServedEstate,
 	UrlTarget,
 } from "~/types";
 
@@ -86,23 +87,27 @@ export interface ConnectomeAdapter {
 	saveConfig(config: ConnectomeConfig): Promise<void>;
 
 	/**
-	 * Serve the configured local engram: install it when the project has no
-	 * engram yet, start the engine on a loopback port, and wait until it is
-	 * ready. Resolves with the served engram's coordinates.
+	 * Serve the configured local estate: install it when the project has no
+	 * estate yet, attach to it when another process already serves it, or
+	 * start the engine on a loopback port, and wait until it is ready.
+	 * Resolves with the served estate's coordinates.
 	 */
-	previewengram(selection?: engramSelection): Promise<engramPreview>;
-	serveengram(acceptedPlanSha256?: string, selection?: engramSelection): Promise<Servedengram>;
+	previewEstate(selection?: EstateSelection): Promise<EstatePreview>;
+	serveEstate(acceptedPlanSha256?: string, selection?: EstateSelection): Promise<ServedEstate>;
 
 	/**
-	 * The living project engines owned by this desktop process
+	 * Every project instance the native registry tracks. It looks at each one
+	 * first, and proves and attaches an instance started elsewhere for any of
+	 * the known `projects`.
 	 */
-	servedengrams(): Promise<Servedengram[]>;
+	projectInstances(projects: string[]): Promise<InstanceStatus>;
 
 	/**
-	 * Stop only the owned engine at the exact returned canonical project path.
-	 * Resolves with whether that engine was running.
+	 * Stop the engine this desktop started at the exact canonical project
+	 * path, or dismiss its failure. An instance started elsewhere is never
+	 * stopped. Resolves with whether an engine was stopped.
 	 */
-	stopengram(project: string): Promise<boolean>;
+	stopEstate(project: string): Promise<boolean>;
 
 	/**
 	 * Open the given URL in the default browser

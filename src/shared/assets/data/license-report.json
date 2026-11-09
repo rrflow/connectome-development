@@ -98,6 +98,20 @@
 		"author": "Sean Sullivan <sean@fig.io>"
 	},
 	{
+		"name": "@fontsource-variable/inter",
+		"licenseType": "OFL-1.1",
+		"link": "git+https://github.com/fontsource/font-files.git",
+		"installedVersion": "5.3.0",
+		"author": "Google Inc."
+	},
+	{
+		"name": "@fontsource-variable/jetbrains-mono",
+		"licenseType": "OFL-1.1",
+		"link": "git+https://github.com/fontsource/font-files.git",
+		"installedVersion": "5.3.0",
+		"author": "Google Inc."
+	},
+	{
 		"name": "@lezer/common",
 		"licenseType": "MIT",
 		"link": "git+https://code.haverbeke.berlin/lezer/common.git",
@@ -271,13 +285,6 @@
 		"link": "git+https://github.com/surrealdb/surrealql.wasm.git",
 		"installedVersion": "0.3.1",
 		"author": "Tobie Morgan Hitchcock https://surrealdb.com"
-	},
-	{
-		"name": "@surrealdb/ui",
-		"licenseType": "n/a",
-		"link": "https://registry.npmjs.org/@surrealdb/ui/-/ui-1.2.24.tgz",
-		"installedVersion": "1.0.93",
-		"author": "n/a"
 	},
 	{
 		"name": "@surrealdb/wasm",

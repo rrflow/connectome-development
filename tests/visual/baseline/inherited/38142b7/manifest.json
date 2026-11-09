@@ -1,0 +1,705 @@
+{
+	"revision": "38142b7",
+	"viewport": [1440, 900],
+	"browser": "Chromium (Playwright), reducedMotion reduce, Disable animations on, seeded Math.random",
+	"seed": {
+		"file": "tests/visual/seed.surql",
+		"sha256": "464a7496b6d10ddde2b150e2d355678e8c8713063bd5763fe5d6d9dfaafc378e"
+	},
+	"capturePatches": [
+		"src/shared/util/defaults.tsx: open the Sandbox as a pre-runtime saved profile",
+		"src/screens/connectome/connection/connection.tsx: strip the engine-name prefix before parsing the version",
+		"src/adapter/mini.tsx: strip the engine-name prefix before parsing the version",
+		"tools/mini-embed.html: restore the meta tag the mini adapter selector looks for"
+	],
+	"build": "vite build with VITE_FFLAG_GRAPHQL_VIEW, VITE_FFLAG_APIDOCS_VIEW and VITE_FFLAG_V3_MIGRATION_TOOLING set to true",
+	"format": "lossless WebP converted from the PNG capture",
+	"images": [
+		{
+			"theme": "dark",
+			"state": "overview",
+			"file": "dark/overview.webp",
+			"bytes": 151240,
+			"sha256": "5961527d782f663fc0db27a63dd7ec126234cb6d061f524277180161799cccf0"
+		},
+		{
+			"theme": "dark",
+			"state": "command-palette",
+			"file": "dark/command-palette.webp",
+			"bytes": 94716,
+			"sha256": "c671c4a6ce390b318c640d789d3e98e61bb8132015743252c1ec20955aba3745"
+		},
+		{
+			"theme": "dark",
+			"state": "sandbox-onboarding",
+			"file": "dark/sandbox-onboarding.webp",
+			"bytes": 118450,
+			"sha256": "11f8e826f60852df5c1cf402f6b9a2bd17bdb1282d0258c480645de5c4c70473"
+		},
+		{
+			"theme": "dark",
+			"state": "query-starter-rrflowql-basics",
+			"file": "dark/query-starter-rrflowql-basics.webp",
+			"bytes": 42470,
+			"sha256": "79879b44c99e11465e237b6e5562a1505f74a1070f9e6c1d4c1a26760dc94c4b"
+		},
+		{
+			"theme": "dark",
+			"state": "query-starter-graph-queries",
+			"file": "dark/query-starter-graph-queries.webp",
+			"bytes": 69496,
+			"sha256": "47efd448bc3b5136bc10d3dc983c79e0597abb219d8a9764bdd19727b1f8efba"
+		},
+		{
+			"theme": "dark",
+			"state": "query-starter-vector-queries",
+			"file": "dark/query-starter-vector-queries.webp",
+			"bytes": 78230,
+			"sha256": "f7dbe2f6bf5f7cdd5535c17d904fb54aa78b48492940b6a6d630519e09334e0b"
+		},
+		{
+			"theme": "dark",
+			"state": "query-seed-combined",
+			"file": "dark/query-seed-combined.webp",
+			"bytes": 48006,
+			"sha256": "db2f9694b7b555910ba74ddd572166fbdf1a26872a7ba941de02e8946f5ebf6c"
+		},
+		{
+			"theme": "dark",
+			"state": "query-graph-traversal",
+			"file": "dark/query-graph-traversal.webp",
+			"bytes": 53688,
+			"sha256": "6ba7194025b3d78aa0d6dd63413b58a83710e9f08b0a2bae734b24f4a52ef5ae"
+		},
+		{
+			"theme": "dark",
+			"state": "query-result-mode-menu",
+			"file": "dark/query-result-mode-menu.webp",
+			"bytes": 73746,
+			"sha256": "cc6b65dd4569a6abaca8ac167c0d0f99a2341e05f59905be269c55164e19c1fa"
+		},
+		{
+			"theme": "dark",
+			"state": "query-result-combined-view-all-results-in-a-single-list",
+			"file": "dark/query-result-combined-view-all-results-in-a-single-list.webp",
+			"bytes": 62478,
+			"sha256": "79ac128d903b949a8e1681c0b5cb5eb0ab3b2acfcd0d7518150e2c6ed8537e45"
+		},
+		{
+			"theme": "dark",
+			"state": "query-result-individual-inspect-each-result-individually",
+			"file": "dark/query-result-individual-inspect-each-result-individually.webp",
+			"bytes": 62210,
+			"sha256": "c2ccb4e36045ff2b72e7977bedd11d497faee8d60caa444b5c2ff2744ca40be4"
+		},
+		{
+			"theme": "dark",
+			"state": "query-result-graph-visualize-query-results-in-a-graph",
+			"file": "dark/query-result-graph-visualize-query-results-in-a-graph.webp",
+			"bytes": 59936,
+			"sha256": "589902e37b741ae1cdf7df39aa9bd92df52ec098bf9eb8943d39c4a89c8b7dcb"
+		},
+		{
+			"theme": "dark",
+			"state": "query-result-table-render-query-results-in-a-table",
+			"file": "dark/query-result-table-render-query-results-in-a-table.webp",
+			"bytes": 92408,
+			"sha256": "d37be3a568dc001f1440040c45201750e3c2f1a82c249bdb13bf6cd7555016dd"
+		},
+		{
+			"theme": "dark",
+			"state": "query-result-live-subscribe-to-live-query-results",
+			"file": "dark/query-result-live-subscribe-to-live-query-results.webp",
+			"bytes": 45952,
+			"sha256": "3cdecaed4d6dc904e74deb72c418b6b1c8bab7c23c2338ae50d530817b6366a3"
+		},
+		{
+			"theme": "dark",
+			"state": "query-variables",
+			"file": "dark/query-variables.webp",
+			"bytes": 48462,
+			"sha256": "77b8b25ca7bd0f9745e116606eabd5861bf5c2e4f596c127f20dc83adb51909a"
+		},
+		{
+			"theme": "dark",
+			"state": "query-saved",
+			"file": "dark/query-saved.webp",
+			"bytes": 25414,
+			"sha256": "425b9c4d3bb023eabdbf5f4fd4e005e8bd94e1f631a30665b3caeaa1d5a16d05"
+		},
+		{
+			"theme": "dark",
+			"state": "query-history",
+			"file": "dark/query-history.webp",
+			"bytes": 38474,
+			"sha256": "bc878ed17e3f46494b6ddce5546a58dac1367d2e3a010c845b247a2f195bc524"
+		},
+		{
+			"theme": "dark",
+			"state": "explorer",
+			"file": "dark/explorer.webp",
+			"bytes": 49200,
+			"sha256": "b4fe30d2acfedc1d4e8e4f9263781a4fc2368b90cea531dd1d27b5d11e0ab778"
+		},
+		{
+			"theme": "dark",
+			"state": "explorer-person",
+			"file": "dark/explorer-person.webp",
+			"bytes": 67670,
+			"sha256": "aee331ff27c71b4f6e45e26089f17de2b46c7cffde93b40a7542d967bc413cb6"
+		},
+		{
+			"theme": "dark",
+			"state": "explorer-relation-table",
+			"file": "dark/explorer-relation-table.webp",
+			"bytes": 46148,
+			"sha256": "dbb6e160e31fb85c87fc8cab70a08a9a212e0aaa2853661fbaf94ab6cc92b11e"
+		},
+		{
+			"theme": "dark",
+			"state": "inspector-open",
+			"file": "dark/inspector-open.webp",
+			"bytes": 49398,
+			"sha256": "2473499462cb7923aecabdf27d6f2cfa36babecc21ac4166faf4b47dfb6f45d9"
+		},
+		{
+			"theme": "dark",
+			"state": "inspector-content",
+			"file": "dark/inspector-content.webp",
+			"bytes": 49360,
+			"sha256": "921caf8a6bc87606d8678d27c76159d081082f338464669804254da84bb25965"
+		},
+		{
+			"theme": "dark",
+			"state": "inspector-relations",
+			"file": "dark/inspector-relations.webp",
+			"bytes": 44606,
+			"sha256": "4685b2d94329be215ac9b5d7e47f183fecc42a028f260d9348b24748cb1a41f6"
+		},
+		{
+			"theme": "dark",
+			"state": "geography-drawer",
+			"file": "dark/geography-drawer.webp",
+			"bytes": 156066,
+			"sha256": "5f340a4b4559aa85f6351691720b0597b8ede18b24ad05297956049f9f096d6e"
+		},
+		{
+			"theme": "dark",
+			"state": "designer-graph",
+			"file": "dark/designer-graph.webp",
+			"bytes": 32938,
+			"sha256": "310388c52c56f8d4003a67f5c4c44e654fe0443db1be312e49042f19ca7b2ee5"
+		},
+		{
+			"theme": "dark",
+			"state": "designer-table-drawer",
+			"file": "dark/designer-table-drawer.webp",
+			"bytes": 29238,
+			"sha256": "ff883f3cb6ad2d5f40ea36579677e6ce253c39da659b2a668b98a997d77d8c31"
+		},
+		{
+			"theme": "dark",
+			"state": "graphql",
+			"file": "dark/graphql.webp",
+			"bytes": 25210,
+			"sha256": "28e64cf6d8a8f524cf5dfa61a975add6c73e6a24248c35f394f8387a555d7556"
+		},
+		{
+			"theme": "dark",
+			"state": "authentication",
+			"file": "dark/authentication.webp",
+			"bytes": 15770,
+			"sha256": "6631805171e86d3f1fa79b0babb3d550f0751247d0769b4e466a74e5c7a17286"
+		},
+		{
+			"theme": "dark",
+			"state": "parameters",
+			"file": "dark/parameters.webp",
+			"bytes": 50678,
+			"sha256": "e7d6a2f8e42fa7d991bf16b0f770e4d3387b18794aa0187b550ecc38b5c79132"
+		},
+		{
+			"theme": "dark",
+			"state": "functions",
+			"file": "dark/functions.webp",
+			"bytes": 57228,
+			"sha256": "7a54dc3cdda7da86ed51216445d89d089ac11399eff6497627357df148e0be01"
+		},
+		{
+			"theme": "dark",
+			"state": "documentation",
+			"file": "dark/documentation.webp",
+			"bytes": 49794,
+			"sha256": "022927eb84431da91636eec72fcba7540a12aba9e022f3a5e9a8f58f01e34a94"
+		},
+		{
+			"theme": "dark",
+			"state": "parameters-team",
+			"file": "dark/parameters-team.webp",
+			"bytes": 33220,
+			"sha256": "d08abc478aed3a36ab2f9650572e806ac93d223aa207890c9422ca9baa65fbbf"
+		},
+		{
+			"theme": "dark",
+			"state": "functions-greet",
+			"file": "dark/functions-greet.webp",
+			"bytes": 41780,
+			"sha256": "3b4dc13804d9f0022220b93fb18d7b05675f721390ee9b1db0deaf3c0228d2d3"
+		},
+		{
+			"theme": "dark",
+			"state": "authentication-user",
+			"file": "dark/authentication-user.webp",
+			"bytes": 40454,
+			"sha256": "701b2109ecbccecf3b394522af58cb995f5103af04b1966f22249f6562490939"
+		},
+		{
+			"theme": "dark",
+			"state": "explorer-record-creator",
+			"file": "dark/explorer-record-creator.webp",
+			"bytes": 44204,
+			"sha256": "fd55931e405c13be7d699c510735771a577b9985eec9bc62ed4d17d9de4eaf16"
+		},
+		{
+			"theme": "dark",
+			"state": "modal-export-database",
+			"file": "dark/modal-export-database.webp",
+			"bytes": 39764,
+			"sha256": "1d157bcf53c61bb35f3308be74e9402d3f7ac729fa196ae9b46aab7b011be037"
+		},
+		{
+			"theme": "dark",
+			"state": "modal-import-database",
+			"file": "dark/modal-import-database.webp",
+			"bytes": 67738,
+			"sha256": "f6e4aa4172a115f304a2535916675af2fd9faec55fe5104a8c6b1082025a8cf1"
+		},
+		{
+			"theme": "dark",
+			"state": "designer-options",
+			"file": "dark/designer-options.webp",
+			"bytes": 43234,
+			"sha256": "51a5524b49b19fd06210897ade29a20465c0f763dcc353c2b081b82084519a0a"
+		},
+		{
+			"theme": "dark",
+			"state": "designer-help",
+			"file": "dark/designer-help.webp",
+			"bytes": 33526,
+			"sha256": "f766058d6f8da23aed9dbace4675f20b33c5f701d4812f5d277d9c73f4ac18db"
+		},
+		{
+			"theme": "dark",
+			"state": "modal-table-creator",
+			"file": "dark/modal-table-creator.webp",
+			"bytes": 28662,
+			"sha256": "2bdb4c82436b33def4f9c614454abcd4623fdcb8db89e1024f36e483f9f899f8"
+		},
+		{
+			"theme": "dark",
+			"state": "connection-menu",
+			"file": "dark/connection-menu.webp",
+			"bytes": 48410,
+			"sha256": "535f8eee9d977667dc630e7c8bb62968d7c6b1fdd6b7f50b52cba927dbbb7756"
+		},
+		{
+			"theme": "dark",
+			"state": "settings-preferences",
+			"file": "dark/settings-preferences.webp",
+			"bytes": 55608,
+			"sha256": "4f4112daf07230f14f0255d8f37ec21074d64907fbe933fc9472de13f17668da"
+		},
+		{
+			"theme": "dark",
+			"state": "settings-keybindings",
+			"file": "dark/settings-keybindings.webp",
+			"bytes": 47278,
+			"sha256": "b88aaf1d556d76d88e6ae3b94fe98d730967f03430e7819a64059f6c7505efcf"
+		},
+		{
+			"theme": "dark",
+			"state": "settings-templates",
+			"file": "dark/settings-templates.webp",
+			"bytes": 38666,
+			"sha256": "76844e0cca618d624c0546c6cec690fd0dbf05509f0b61b0826701bd3b04e4aa"
+		},
+		{
+			"theme": "dark",
+			"state": "settings-backup-restore",
+			"file": "dark/settings-backup-restore.webp",
+			"bytes": 56262,
+			"sha256": "569515079797eb9afb7324833b54072aa518232947b5dc9d151a4ba3efe0c2d4"
+		},
+		{
+			"theme": "dark",
+			"state": "settings-oss-licenses",
+			"file": "dark/settings-oss-licenses.webp",
+			"bytes": 58322,
+			"sha256": "24b48a44bf5f7b6c0fb063d1b263c52db0b61e419bde0e2022db9fd86b6551c1"
+		},
+		{
+			"theme": "dark",
+			"state": "settings-about",
+			"file": "dark/settings-about.webp",
+			"bytes": 46944,
+			"sha256": "51e0a856255eed3850ad092b7987ee3858bd12a1978d4e81c48316c3f3cd32e8"
+		},
+		{
+			"theme": "dark",
+			"state": "mini-embed-generator",
+			"file": "dark/mini-embed-generator.webp",
+			"bytes": 100310,
+			"sha256": "ec62de0ca49d9941e8847320965775d467d38d695a4f63915fecc63d972b9cdf"
+		},
+		{
+			"theme": "dark",
+			"state": "mini-runner",
+			"file": "dark/mini-runner.webp",
+			"bytes": 13602,
+			"sha256": "18f58ec1f703adb98af19bc66390fb0d638250032458bc1970bc2f63c8c3f1c8"
+		},
+		{
+			"theme": "light",
+			"state": "overview",
+			"file": "light/overview.webp",
+			"bytes": 140656,
+			"sha256": "f3f51588b2b204049833071b4e10962d824dc1f40af929fb27598ed583f3d235"
+		},
+		{
+			"theme": "light",
+			"state": "command-palette",
+			"file": "light/command-palette.webp",
+			"bytes": 82666,
+			"sha256": "29e56fecc7350e572b9391971d58e44069b98be825d2203717f62620dd0d6c63"
+		},
+		{
+			"theme": "light",
+			"state": "sandbox-onboarding",
+			"file": "light/sandbox-onboarding.webp",
+			"bytes": 115738,
+			"sha256": "904ff25c3ed0434dae5268d7d11967dbeda019538adae91cbb30c4eb7c5040f0"
+		},
+		{
+			"theme": "light",
+			"state": "query-starter-rrflowql-basics",
+			"file": "light/query-starter-rrflowql-basics.webp",
+			"bytes": 42252,
+			"sha256": "57329c19d7f1463a0da1c07d53d05e85ce9aecc2e79624ccb0647fe8b1164ed6"
+		},
+		{
+			"theme": "light",
+			"state": "query-starter-graph-queries",
+			"file": "light/query-starter-graph-queries.webp",
+			"bytes": 66882,
+			"sha256": "a9cca6b8c4e077bb89bfbf513147e7cb1acbfa04a2ea9eb2a4945818f9a47889"
+		},
+		{
+			"theme": "light",
+			"state": "query-starter-vector-queries",
+			"file": "light/query-starter-vector-queries.webp",
+			"bytes": 76236,
+			"sha256": "99adc10ad95a92b1c4f63c79c3bacc9a426a01b14d8dc48948e8d41d308cab22"
+		},
+		{
+			"theme": "light",
+			"state": "query-seed-combined",
+			"file": "light/query-seed-combined.webp",
+			"bytes": 46810,
+			"sha256": "892e6ebc7b450128439fa6e6a78b943c5db178d086d90d05262d53fa64a2fb05"
+		},
+		{
+			"theme": "light",
+			"state": "query-graph-traversal",
+			"file": "light/query-graph-traversal.webp",
+			"bytes": 52594,
+			"sha256": "2ad54baa9af14734254a8fffa8333e1ef45b005cd9e7a616b8d9770cd45fe8db"
+		},
+		{
+			"theme": "light",
+			"state": "query-result-mode-menu",
+			"file": "light/query-result-mode-menu.webp",
+			"bytes": 73294,
+			"sha256": "c42662c297d37bf90de959f3a1fb6bd51707049689449af8cf49afe4a2af668f"
+		},
+		{
+			"theme": "light",
+			"state": "query-result-combined-view-all-results-in-a-single-list",
+			"file": "light/query-result-combined-view-all-results-in-a-single-list.webp",
+			"bytes": 61918,
+			"sha256": "a2f49a2fb51ba7ed0484d49dc7b76732eeb5989b1772790dcf0a943e1588302d"
+		},
+		{
+			"theme": "light",
+			"state": "query-result-individual-inspect-each-result-individually",
+			"file": "light/query-result-individual-inspect-each-result-individually.webp",
+			"bytes": 62306,
+			"sha256": "8a14f7b1f3d0ef37f1ae97722c4ab1cf7c9287b6df605b7c2231d641cc2a1ab3"
+		},
+		{
+			"theme": "light",
+			"state": "query-result-graph-visualize-query-results-in-a-graph",
+			"file": "light/query-result-graph-visualize-query-results-in-a-graph.webp",
+			"bytes": 57546,
+			"sha256": "9739efab7a7c986853d4a251e95a0394943615c5d147b84a23bc1a57389166f3"
+		},
+		{
+			"theme": "light",
+			"state": "query-result-table-render-query-results-in-a-table",
+			"file": "light/query-result-table-render-query-results-in-a-table.webp",
+			"bytes": 85446,
+			"sha256": "5c22e62e9c28bccf2fa5eb2d219a81e9987874cfeb6cd5652eabc51906a444d5"
+		},
+		{
+			"theme": "light",
+			"state": "query-result-live-subscribe-to-live-query-results",
+			"file": "light/query-result-live-subscribe-to-live-query-results.webp",
+			"bytes": 45542,
+			"sha256": "ab961f195a813f29aa958c01339828a985cd2157a4869e07ff8d318ab2627686"
+		},
+		{
+			"theme": "light",
+			"state": "query-variables",
+			"file": "light/query-variables.webp",
+			"bytes": 48134,
+			"sha256": "2e467594c1b070ae7d3bd13a835411f16431a058dfa14abff985bcfe50422131"
+		},
+		{
+			"theme": "light",
+			"state": "query-saved",
+			"file": "light/query-saved.webp",
+			"bytes": 25888,
+			"sha256": "fcd28b712cc5f209a7d43a8638fd9aee230de5b234c722df7f8da1865287177d"
+		},
+		{
+			"theme": "light",
+			"state": "query-history",
+			"file": "light/query-history.webp",
+			"bytes": 38704,
+			"sha256": "01d3b597ca5e5cee98f851bac334056084804e1317f5ec732921e0093c9b2538"
+		},
+		{
+			"theme": "light",
+			"state": "explorer",
+			"file": "light/explorer.webp",
+			"bytes": 48048,
+			"sha256": "9caaa2fbb84805ea435e35af17268cac777bdf300a7df24944d9d39cfa4eebfd"
+		},
+		{
+			"theme": "light",
+			"state": "explorer-person",
+			"file": "light/explorer-person.webp",
+			"bytes": 59818,
+			"sha256": "981dde8d1021083a5d8b4b4e3ecf0b9bfc7bc0a4fe57011e5a544007fba856d9"
+		},
+		{
+			"theme": "light",
+			"state": "explorer-relation-table",
+			"file": "light/explorer-relation-table.webp",
+			"bytes": 44544,
+			"sha256": "407df029702aa9fdf6e6f3c562310a7067aade4b9a1ef74bfc6043663c337001"
+		},
+		{
+			"theme": "light",
+			"state": "inspector-open",
+			"file": "light/inspector-open.webp",
+			"bytes": 48756,
+			"sha256": "da87c6731c0c9b93c8d98af10561d6c8395476a0283557db4d4b68e567ad73ca"
+		},
+		{
+			"theme": "light",
+			"state": "inspector-content",
+			"file": "light/inspector-content.webp",
+			"bytes": 48638,
+			"sha256": "ccf7f462218bc85554291f54a61705509e313bed56cee039bcab783f9be1aa0d"
+		},
+		{
+			"theme": "light",
+			"state": "inspector-relations",
+			"file": "light/inspector-relations.webp",
+			"bytes": 43594,
+			"sha256": "09e766fd381b65e26e2b17108a3c4386baf015284ed6e7683692bb3f1efe0eb9"
+		},
+		{
+			"theme": "light",
+			"state": "geography-drawer",
+			"file": "light/geography-drawer.webp",
+			"bytes": 155460,
+			"sha256": "87f99914fdd5b40d3a97166e68155ee1f3b2f275dae4b5cfab95ace5960a51e5"
+		},
+		{
+			"theme": "light",
+			"state": "designer-graph",
+			"file": "light/designer-graph.webp",
+			"bytes": 32960,
+			"sha256": "65bc0f476aba1ab30587ab88eddf2ca58476aff0830748674c343bd1fd3f6091"
+		},
+		{
+			"theme": "light",
+			"state": "designer-table-drawer",
+			"file": "light/designer-table-drawer.webp",
+			"bytes": 27226,
+			"sha256": "fe2b13a0cefc28e8a3237c9ef5fe3e447e3a1415a17a823b7568e77fca968567"
+		},
+		{
+			"theme": "light",
+			"state": "graphql",
+			"file": "light/graphql.webp",
+			"bytes": 24526,
+			"sha256": "01d817cdbbc6b069aee2b9256eecbf11d1506471675847f5c3f1a1c91856fac4"
+		},
+		{
+			"theme": "light",
+			"state": "authentication",
+			"file": "light/authentication.webp",
+			"bytes": 16394,
+			"sha256": "5dd1ec207de97224e3060aec5b5895f14e5797748f6b5ae85468c2bacfd8c2b2"
+		},
+		{
+			"theme": "light",
+			"state": "parameters",
+			"file": "light/parameters.webp",
+			"bytes": 49992,
+			"sha256": "3463861c5ea3c60788dfeb03c26a607a47efbe1c37b7ccb433bf5e63b07b4bfe"
+		},
+		{
+			"theme": "light",
+			"state": "functions",
+			"file": "light/functions.webp",
+			"bytes": 31958,
+			"sha256": "df341daa02ee40ca4fa2f8835fed1f2fcf586c16b6f85103ed9a6f410bce9175"
+		},
+		{
+			"theme": "light",
+			"state": "documentation",
+			"file": "light/documentation.webp",
+			"bytes": 46532,
+			"sha256": "fe31e6b016482ce614c95aac2a09487c8b5d35def191e34615964a0ae5484bd8"
+		},
+		{
+			"theme": "light",
+			"state": "parameters-team",
+			"file": "light/parameters-team.webp",
+			"bytes": 32644,
+			"sha256": "bf1c96f6be2de924eda2d9a7f5dc477e462d0b6675c18f7368a22ba9572decc4"
+		},
+		{
+			"theme": "light",
+			"state": "functions-greet",
+			"file": "light/functions-greet.webp",
+			"bytes": 41800,
+			"sha256": "86f3cdd3c75b1f59526ccd3eb4f7b0cad9a26b077cd9111fa5761c1c5c49d6bb"
+		},
+		{
+			"theme": "light",
+			"state": "authentication-user",
+			"file": "light/authentication-user.webp",
+			"bytes": 42356,
+			"sha256": "4c777934a9527cadb89a6b885ff19a116146d441ee950591240d0aa5b74f183b"
+		},
+		{
+			"theme": "light",
+			"state": "explorer-record-creator",
+			"file": "light/explorer-record-creator.webp",
+			"bytes": 43164,
+			"sha256": "7992962ec5e09a7d3f4dad52013dc8a1dd0b9224bc2194f4005b6c257826abc0"
+		},
+		{
+			"theme": "light",
+			"state": "modal-export-database",
+			"file": "light/modal-export-database.webp",
+			"bytes": 57886,
+			"sha256": "b9dea0f7632cb349b43c12a2177f52b2bd3fd689031daf98cefa59e46b3267e2"
+		},
+		{
+			"theme": "light",
+			"state": "modal-import-database",
+			"file": "light/modal-import-database.webp",
+			"bytes": 59842,
+			"sha256": "6323363767d839ef072b4cb7c2fa19f17211a0bd2f64af1b3b59cf3ae6d74587"
+		},
+		{
+			"theme": "light",
+			"state": "designer-options",
+			"file": "light/designer-options.webp",
+			"bytes": 42478,
+			"sha256": "3d3ea8957393d0ca75583ee0f4969f9257f4c82d4b057ffcf563a1160384191d"
+		},
+		{
+			"theme": "light",
+			"state": "designer-help",
+			"file": "light/designer-help.webp",
+			"bytes": 32912,
+			"sha256": "939cfe9bb1de687652af40c78f05db3f967fc1721922c60fb32aa4783a742585"
+		},
+		{
+			"theme": "light",
+			"state": "modal-table-creator",
+			"file": "light/modal-table-creator.webp",
+			"bytes": 42354,
+			"sha256": "808391f29f8f570d65f457d52154fc917f1d94e35dada6f37d3aebdf066c8cd1"
+		},
+		{
+			"theme": "light",
+			"state": "connection-menu",
+			"file": "light/connection-menu.webp",
+			"bytes": 47024,
+			"sha256": "67dc9320e72e8d723eafd5925003e590f1db34f1d0ef2ca2354d1d4e90f1b38c"
+		},
+		{
+			"theme": "light",
+			"state": "settings-preferences",
+			"file": "light/settings-preferences.webp",
+			"bytes": 56636,
+			"sha256": "a8297d49406101b846706ac4d59c81c6122d28946074894fc23113a41e30112d"
+		},
+		{
+			"theme": "light",
+			"state": "settings-keybindings",
+			"file": "light/settings-keybindings.webp",
+			"bytes": 47944,
+			"sha256": "e74cc59962150fea1c4ffad4f3b3367d1f36e7f844d386019aa67eff83ced2f0"
+		},
+		{
+			"theme": "light",
+			"state": "settings-templates",
+			"file": "light/settings-templates.webp",
+			"bytes": 38752,
+			"sha256": "037341fbcb549327f772952aa0fb7f2c259892260a29681519effd50afc52f7a"
+		},
+		{
+			"theme": "light",
+			"state": "settings-backup-restore",
+			"file": "light/settings-backup-restore.webp",
+			"bytes": 55894,
+			"sha256": "23346ef16265fe5e0f89f8ec758e61f6b41283cfc3a598357092a18e19fe61dd"
+		},
+		{
+			"theme": "light",
+			"state": "settings-oss-licenses",
+			"file": "light/settings-oss-licenses.webp",
+			"bytes": 58580,
+			"sha256": "b35da3dda334e115b070a439d923a26edcbf8635152711c6efa7b0f545f3c25f"
+		},
+		{
+			"theme": "light",
+			"state": "settings-about",
+			"file": "light/settings-about.webp",
+			"bytes": 47460,
+			"sha256": "63411c0a5de61911146ce9f13c294bd5374007606080038f112940435bffdf55"
+		},
+		{
+			"theme": "light",
+			"state": "mini-embed-generator",
+			"file": "light/mini-embed-generator.webp",
+			"bytes": 97774,
+			"sha256": "8639e3acfec21e1cbd562783728f6c31b6008e992dfcab3735e23f1c7b9feb85"
+		},
+		{
+			"theme": "light",
+			"state": "mini-runner",
+			"file": "light/mini-runner.webp",
+			"bytes": 13262,
+			"sha256": "f788e4feec335e2e632f30e36d78dbc3fd280b9b3bab4cd197af69dde282b239"
+		}
+	]
+}

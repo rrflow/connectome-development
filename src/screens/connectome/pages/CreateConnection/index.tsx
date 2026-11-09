@@ -158,7 +158,7 @@ export function CreateConnectionPage() {
 	// The engram the desktop is serving, as a template for a runtime
 	// connection: the announced loopback address, the instance the engine
 	// identified as, and a reference to the operator credential file.
-	const served = useDatabaseStore((s) => s.servedengram);
+	const served = useDatabaseStore((s) => s.servedEstate);
 	const localhost = useMemo(() => {
 		if (!served) {
 			return null;

@@ -3,7 +3,7 @@ use std::path::Path;
 use std::sync::Mutex;
 
 use log::info;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use tauri::{AppHandle, Manager, State, Window};
 use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_dialog::FilePath;
@@ -14,7 +14,7 @@ use crate::window;
 const MAX_FILE_SIZE: u64 = 5 * 1024 * 1024;
 
 /// The state holding resources requested for opening
-pub struct OpenResourcengram(pub Mutex<Vec<url::Url>>);
+pub struct OpenResourceState(pub Mutex<Vec<url::Url>>);
 
 pub fn store_resources<T: IntoIterator<Item = String>>(app: &AppHandle, args: T) {
     let mut urls = Vec::new();
@@ -30,7 +30,7 @@ pub fn store_resources<T: IntoIterator<Item = String>>(app: &AppHandle, args: T)
     }
 
     if !urls.is_empty() {
-        *app.state::<OpenResourcengram>().0.lock().unwrap() = urls;
+        *app.state::<OpenResourceState>().0.lock().unwrap() = urls;
     }
 }
 
@@ -55,7 +55,7 @@ pub struct LinkResource {
 }
 
 #[tauri::command]
-pub fn get_opened_resources(state: State<OpenResourcengram>) -> Vec<OpenedResource> {
+pub fn get_opened_resources(state: State<OpenResourceState>) -> Vec<OpenedResource> {
     {
         info!("Fetching requested resources {:?}", state.0.lock().unwrap());
     }
@@ -92,7 +92,7 @@ pub fn get_opened_resources(state: State<OpenResourcengram>) -> Vec<OpenedResour
 }
 
 #[tauri::command]
-pub fn clear_opened_resources(state: State<OpenResourcengram>) {
+pub fn clear_opened_resources(state: State<OpenResourceState>) {
     *state.0.lock().unwrap() = Vec::new();
 }
 
@@ -155,7 +155,7 @@ pub async fn open_query_file(app: AppHandle, window: Window) {
 
     info!("My paths: {:?}", urls);
 
-    *app.state::<OpenResourcengram>().0.lock().unwrap() = urls;
+    *app.state::<OpenResourceState>().0.lock().unwrap() = urls;
     window::emit_last(&app, "open-resource", ());
 }
 
@@ -166,68 +166,4 @@ pub async fn open_in_explorer(path: String) {
     if whitelist.contains(&path) {
         showfile::show_path_in_file_manager(Path::new(&path));
     }
-}
-
-#[derive(Debug, Deserialize)]
-pub struct ExternalPathProbeRequest {
-    pub path: String,
-}
-
-#[derive(Debug, Serialize)]
-pub struct ExternalPathProbeView {
-    pub path: String,
-    pub connected: bool,
-    pub is_directory: Option<bool>,
-    pub size_bytes: Option<u64>,
-    pub modified_at_unix_ms: Option<u64>,
-    pub message: Option<String>,
-}
-
-#[tauri::command]
-pub fn probe_external_path(request: ExternalPathProbeRequest) -> ExternalPathProbeView {
-    let path = Path::new(request.path.as_str());
-    match fs::metadata(path) {
-        Ok(metadata) => {
-            let modified_at_unix_ms = metadata
-                .modified()
-                .ok()
-                .and_then(|modified| modified.duration_since(std::time::UNIX_EPOCH).ok())
-                .and_then(|duration| u64::try_from(duration.as_millis()).ok());
-            ExternalPathProbeView {
-                path: request.path,
-                connected: true,
-                is_directory: Some(metadata.is_dir()),
-                size_bytes: Some(metadata.len()),
-                modified_at_unix_ms,
-                message: None,
-            }
-        }
-        Err(error) => ExternalPathProbeView {
-            path: request.path,
-            connected: false,
-            is_directory: None,
-            size_bytes: None,
-            modified_at_unix_ms: None,
-            message: Some(error.to_string()),
-        },
-    }
-}
-
-#[derive(Debug, Deserialize)]
-pub struct WriteExternalTextFileRequest {
-    pub path: String,
-    pub content: String,
-    pub create_parent_dirs: bool,
-}
-
-#[tauri::command]
-pub fn write_external_text_file(request: WriteExternalTextFileRequest) -> Result<(), String> {
-    let path = Path::new(request.path.as_str());
-    if request.create_parent_dirs {
-        if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent)
-                .map_err(|error| format!("cannot create parent directories: {error}"))?;
-        }
-    }
-    fs::write(path, request.content).map_err(|error| format!("cannot write file: {error}"))
 }
