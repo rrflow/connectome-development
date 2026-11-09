@@ -5,6 +5,7 @@
 **Candidate before integration:** `bd0223be62de3bfee724327df158000b8478986f`  
 **Merged main baseline:** `4da67e27f52ef20861fd9ee8c8351ce48920f49a`  
 **Integration commit:** `8cfebd206a0e5af81f6f207c1a2fea3bc687fe8c`  
+**Smoke isolation and journal commit:** `3c125d9288df5d19134fe93110f89fb443bfefd2`
 **Journal update:** 2026-11-09 (Playwright isolation follow-up)
 
 ## Scope and result
@@ -42,7 +43,7 @@ During this follow-up, the first smoke attempt found no `dist/`, and a later att
 
 The existing smoke cases use mocked RRD responses; they are UI checks, not live-daemon integration evidence. The busy-port check establishes isolation behavior only; it is expected to fail startup when the configured port is occupied.
 
-The original CI run `42544180903` reported frontend Biome failures and native formatting failures on macOS, Ubuntu, and Windows. CI for integration commit `8cfebd2` (`42571220909`) is `action_required` and has no jobs. No current-head candidate CI or merge-group result is claimed.
+The original CI run `42544180903` reported frontend Biome failures and native formatting failures on macOS, Ubuntu, and Windows. The pull-request runs for integration commit `8cfebd2` (`42571220909`) and current head `3c125d9` (`42573543395`) are both `action_required` with no jobs. No current-head candidate CI or merge-group result is claimed.
 
 ## Limits and remaining gates
 
