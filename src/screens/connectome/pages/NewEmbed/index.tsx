@@ -14,7 +14,7 @@ import {
 	TextInput,
 } from "@mantine/core";
 import { useDebouncedState, useDisclosure } from "@mantine/hooks";
-import { useMemo, useRef, usengram } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Icon } from "~/components/Icon";
 import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
@@ -26,7 +26,7 @@ import classes from "./style.module.scss";
 
 export function NewEmbedPage() {
 	const [url, setUrl] = useDebouncedState("", 250);
-	const [parsedState, setParsedState] = usengram<EmbedState>();
+	const [parsedState, setParsedState] = useState<EmbedState>();
 	const [showParse, showParseHandle] = useDisclosure();
 
 	const frame = useRef<HTMLIFrameElement>(null);

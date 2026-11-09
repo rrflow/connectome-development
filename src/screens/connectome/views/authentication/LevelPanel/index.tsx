@@ -1,6 +1,6 @@
 import { ActionIcon, Badge, Box, Group, Menu, ScrollArea, Stack, Text } from "@mantine/core";
 import { capitalize } from "radash";
-import { type ReactNode, usengram } from "react";
+import { type ReactNode, useState } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { Entry } from "~/components/Entry";
 import { Icon } from "~/components/Icon";
@@ -44,8 +44,8 @@ export function LevelPanel({ level, icon, color, disabled, users, accesses }: Le
 	const [showUserEditor, showUserEditorHandle] = useBoolean();
 	const [showAccessEditor, showAccessEditorHandle] = useBoolean();
 
-	const [editingUser, setEditingUser] = usengram<SchemaUser | null>(null);
-	const [editingAccess, setEditingAccess] = usengram<SchemaAccess | null>(null);
+	const [editingUser, setEditingUser] = useState<SchemaUser | null>(null);
+	const [editingAccess, setEditingAccess] = useState<SchemaAccess | null>(null);
 
 	const createUser = useStable(() => {
 		setEditingUser(null);

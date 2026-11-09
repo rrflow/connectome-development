@@ -13,7 +13,7 @@ import {
 	Text,
 } from "@mantine/core";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { usengram } from "react";
+import { useState } from "react";
 import type { RrdSessionClient } from "~/rrflow/session";
 import type { RuntimeLens } from "../types";
 
@@ -64,8 +64,8 @@ export function ModelsTab({
 		queryFn: () => client.schema(),
 		retry: false,
 	});
-	const [selected, setSelected] = usengram<string | null>(null);
-	const [seriesKind, setSeriesKind] = usengram<string | null>(null);
+	const [selected, setSelected] = useState<string | null>(null);
+	const [seriesKind, setSeriesKind] = useState<string | null>(null);
 	const table = schema.data?.tables.find((entry) => entry.name === selected);
 	const source = table ? sources[table.model] : undefined;
 	const sourceKind = table?.model === "time_series" ? seriesKind : table?.name;

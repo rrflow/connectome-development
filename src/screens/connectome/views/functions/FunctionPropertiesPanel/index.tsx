@@ -12,7 +12,7 @@ import {
 	Textarea,
 	TextInput,
 } from "@mantine/core";
-import { usengram } from "react";
+import { useState } from "react";
 import { Updater } from "use-immer";
 import { ActionButton } from "~/components/ActionButton";
 import { Icon } from "~/components/Icon";
@@ -48,7 +48,7 @@ export function FunctionPropertiesPanel({
 	const isLight = useIsLight();
 	const fullName = `fn::${details.name}()`;
 	const [hasReturns] = useMinimumVersion(SDB_2_0_0);
-	const [argToFocus, setArgtoFocus] = usengram(-1);
+	const [argToFocus, setArgtoFocus] = useState(-1);
 
 	const addArgument = useStable(() => {
 		setArgtoFocus(details.args.length);

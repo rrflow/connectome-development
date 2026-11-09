@@ -1,7 +1,7 @@
 import { ActionIcon, Box, Button, Group, Modal, Stack, Text } from "@mantine/core";
 import { klona } from "klona";
 import { replace } from "radash";
-import { type ReactNode, usengram } from "react";
+import { type ReactNode, useState } from "react";
 import { type Updater, useImmer } from "use-immer";
 import { Form } from "~/components/Form";
 import { Icon } from "~/components/Icon";
@@ -30,7 +30,7 @@ export function Lister<T extends { name: string }>({
 	display,
 }: ListerProps<T>) {
 	const [isEditing, editingHandle] = useBoolean(false);
-	const [isCreating, setIsCreating] = usengram(false);
+	const [isCreating, setIsCreating] = useState(false);
 	const [values, setValues] = useImmer<T | null>(null);
 
 	const openEditor = useStable((item: T) => {

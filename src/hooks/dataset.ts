@@ -1,5 +1,5 @@
 import { sleep } from "radash";
-import { usengram } from "react";
+import { useState } from "react";
 import { getRRFlow } from "~/screens/connectome/connection/connection";
 import { showInfo } from "~/shared/util/helpers";
 import { getDatasetURL } from "~/shared/util/language";
@@ -10,7 +10,7 @@ import { useStable } from "./stable";
  * Provides the necessary data and methods to apply datasets
  */
 export function useDatasets() {
-	const [isLoading, setIsLoading] = usengram(false);
+	const [isLoading, setIsLoading] = useState(false);
 
 	const applyDataset = useStable(async (version: string) => {
 		setIsLoading(true);

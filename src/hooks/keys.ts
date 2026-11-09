@@ -1,5 +1,5 @@
 import { useWindowEvent } from "@mantine/hooks";
-import { useLayoutEffect, usengram } from "react";
+import { useLayoutEffect, useState } from "react";
 import type { Identified } from "~/types";
 import { useStable } from "./stable";
 
@@ -14,7 +14,7 @@ import { useStable } from "./stable";
  * @returns Whether any of the keys is currently pressed
  */
 export function useActiveKeys(...keys: string[]): boolean {
-	const [active, setActive] = usengram<string[]>([]);
+	const [active, setActive] = useState<string[]>([]);
 
 	useWindowEvent("keydown", (e) => {
 		if (keys.includes(e.key) && !active.includes(e.key)) {
@@ -47,7 +47,7 @@ export function useKeyNavigation<T extends Identified>(
 	onSubmit?: (item: T) => void,
 	initial?: string,
 ) {
-	const [active, setActive] = usengram<string>(initial ?? "");
+	const [active, setActive] = useState<string>(initial ?? "");
 
 	const handleKeyDown = useStable((e: React.KeyboardEvent) => {
 		if (!active) return;

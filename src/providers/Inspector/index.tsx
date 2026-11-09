@@ -1,6 +1,6 @@
 import { noop } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { createContext, type PropsWithChildren, useContext, usengram } from "react";
+import { createContext, type PropsWithChildren, useContext, useState } from "react";
 import { type HistoryHandle, useHistory } from "~/hooks/history";
 import { useStable } from "~/hooks/stable";
 import { getRRFlowQL } from "~/screens/connectome/connection/connection";
@@ -33,7 +33,7 @@ export function useInspector() {
 }
 
 export function InspectorProvider({ children }: PropsWithChildren) {
-	const [historyItems, setHistoryItems] = usengram<RecordId[]>([]);
+	const [historyItems, setHistoryItems] = useState<RecordId[]>([]);
 	const [isInspecting, isInspectingHandle] = useDisclosure();
 
 	const history = useHistory({

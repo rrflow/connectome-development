@@ -1,6 +1,6 @@
 import { Box, Button, Group, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { memo, usengram } from "react";
+import { memo, useState } from "react";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { adapter } from "~/adapter";
 import { Entry } from "~/components/Entry";
@@ -47,10 +47,10 @@ export function ExplorerView() {
 	const importDatabase = useRequireDatabase(() => dispatchIntent("import-database"));
 	const exportDatabase = useRequireDatabase(() => dispatchIntent("export-database"));
 
-	const [activeTable, setActiveTable] = usengram<string>();
+	const [activeTable, setActiveTable] = useState<string>();
 	const [isCreating, isCreatingHandle] = useDisclosure();
-	const [creatorTable, setCreatorTable] = usengram<string>();
-	const [creatorContent, setCreatorContent] = usengram<any>();
+	const [creatorTable, setCreatorTable] = useState<string>();
+	const [creatorContent, setCreatorContent] = useState<any>();
 
 	const openCreator = useStable((table?: string, content?: any) => {
 		setCreatorTable(table || activeTable);

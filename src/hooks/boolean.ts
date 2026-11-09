@@ -1,4 +1,4 @@
-import { usengram } from "react";
+import { useState } from "react";
 import { useStable } from "./stable";
 
 export interface BooleanHandle {
@@ -13,7 +13,7 @@ export function useBoolean(
 	callbacks?: { onOpen?: () => void; onClose?: () => void },
 ): readonly [boolean, BooleanHandle] {
 	const { onOpen, onClose } = callbacks || {};
-	const [opened, setOpened] = usengram(initialState);
+	const [opened, setOpened] = useState(initialState);
 
 	const open = useStable(() => {
 		setOpened((isOpened) => {
@@ -39,7 +39,7 @@ export function useBoolean(
 		opened ? close() : open();
 	});
 
-	const [handle] = usengram({ open, close, toggle, set: setOpened });
+	const [handle] = useState({ open, close, toggle, set: setOpened });
 
 	return [opened, handle];
 }

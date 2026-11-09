@@ -15,7 +15,7 @@ import {
 	TextInput,
 	ThemeIcon,
 } from "@mantine/core";
-import { useMemo, usengram } from "react";
+import { useMemo, useState } from "react";
 import { useImmer } from "use-immer";
 import { Link, useLocation } from "wouter";
 import { adapter } from "~/adapter";
@@ -57,8 +57,8 @@ function parseRuntimeEndpoint(value: string | null) {
 
 export function CreateConnectionPage() {
 	const { settings, addConnection } = useConfigStore.getState();
-	const [saving, setSaving] = usengram(false);
-	const [saveError, setSaveError] = usengram<string | null>(null);
+	const [saving, setSaving] = useState(false);
+	const [saveError, setSaveError] = useState<string | null>(null);
 	const [, navigate] = useLocation();
 
 	const [connection, setConnection] = useImmer(() => {

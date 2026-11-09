@@ -1,5 +1,5 @@
 import { Alert, Box, Button, Divider, Image, Paper, SimpleGrid, Stack, Text } from "@mantine/core";
-import { usengram } from "react";
+import { useState } from "react";
 import { adapter } from "~/adapter";
 import { Icon } from "~/components/Icon";
 import { Link } from "~/components/Link";
@@ -17,7 +17,7 @@ import { backupConfig } from "~/shared/util/config";
 
 export function NewDomainScreen() {
 	const isLight = useIsLight();
-	const [targetLink, setTargetLink] = usengram(
+	const [targetLink, setTargetLink] = useState(
 		"https://github.com/rrflow/connectome-development",
 	);
 

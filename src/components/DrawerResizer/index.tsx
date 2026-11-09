@@ -1,6 +1,6 @@
 import { Box, BoxProps } from "@mantine/core";
 import clsx from "clsx";
-import { useEffect, useRef, usengram } from "react";
+import { useEffect, useRef, useState } from "react";
 import { clamp } from "~/shared/util/helpers";
 import classes from "./style.module.scss";
 
@@ -11,7 +11,7 @@ export interface DrawerResizerProps extends BoxProps {
 }
 
 export function DrawerResizer({ minSize, maxSize, onResize, ...props }: DrawerResizerProps) {
-	const [isResizing, setIsResizing] = usengram(false);
+	const [isResizing, setIsResizing] = useState(false);
 	const resizer = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {

@@ -4,7 +4,7 @@ import { EditorState, Prec, type SelectionRange } from "@codemirror/state";
 import { type EditorView, keymap, scrollPastEnd } from "@codemirror/view";
 import { Button, Group, HoverCard, Paper, rem, Text, ThemeIcon, Transition } from "@mantine/core";
 import { objectify, trim } from "radash";
-import { useMemo, useRef, usengram } from "react";
+import { useMemo, useRef, useState } from "react";
 import { type HtmlPortalNode, OutPortal } from "react-reverse-portal";
 import { ActionButton } from "~/components/ActionButton";
 import { CodeEditor, StateSnapshot } from "~/components/CodeEditor";
@@ -87,7 +87,7 @@ export function QueryPane({
 	const rrflowqlVersion = useDatabaseVersionLinter(editor);
 	const queryStateMap = useQueryStore((s) => s.queryState);
 	const saveTasks = useRef<Map<string, any>>(new Map());
-	const [executionHidden, setExecutionHidden] = usengram(false);
+	const [executionHidden, setExecutionHidden] = useState(false);
 	const [allowSelectionExecution] = useSetting("behavior", "querySelectionExecution");
 	const [showSelectionExecutionWarning] = useSetting(
 		"behavior",

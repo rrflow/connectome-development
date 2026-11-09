@@ -14,7 +14,7 @@ import {
 import { useDebouncedValue, useInputState } from "@mantine/hooks";
 import clsx from "clsx";
 import { useContextMenu } from "mantine-contextmenu";
-import { type MouseEvent, useEffect, useLayoutEffect, usengram } from "react";
+import { type MouseEvent, useEffect, useLayoutEffect, useState } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { DataTable } from "~/components/DataTable";
 import { Icon } from "~/components/Icon";
@@ -69,14 +69,14 @@ export function ExplorerPane({ activeTable, onCreateRecord }: ExplorerPaneProps)
 
 	const allowCreate = schema && getTableVariant(schema) !== "view";
 
-	const [sortMode, setSortMode] = usengram<SortMode>(null);
+	const [sortMode, setSortMode] = useState<SortMode>(null);
 
 	const [selected, setSelected] = useInputState(new Set<string>());
 	const [filter, setFilter] = useInputState("");
-	const [filtering, setFiltering] = usengram(false);
+	const [filtering, setFiltering] = useState(false);
 	const [showFilter] = useDebouncedValue(filtering, 250);
 	const [filterClause] = useDebouncedValue(filter, 500);
-	const [isFilterValid, setIsFilterValid] = usengram(true);
+	const [isFilterValid, setIsFilterValid] = useState(true);
 
 	useEffect(() => {
 		let cancelled = false;

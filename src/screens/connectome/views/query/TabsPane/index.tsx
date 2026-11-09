@@ -1,7 +1,7 @@
 import { Badge, type BoxProps, Divider, type ElementProps, ScrollArea, Stack } from "@mantine/core";
 import clsx from "clsx";
 import { useContextMenu } from "mantine-contextmenu";
-import { usengram } from "react";
+import { useState } from "react";
 import { adapter } from "~/adapter";
 import { DesktopAdapter } from "~/adapter/desktop";
 import { ActionButton } from "~/components/ActionButton";
@@ -66,7 +66,7 @@ function Query({
 }: QueryProps) {
 	const { addQueryTab, updateQueryTab } = useConfigStore.getState();
 	const { showContextMenu } = useContextMenu();
-	const [isRenaming, setIsRenaming] = usengram(false);
+	const [isRenaming, setIsRenaming] = useState(false);
 	const [queryQuickClose] = useSetting("behavior", "queryQuickClose");
 	const [connection] = useConnectionAndView();
 	const isLight = useIsLight();

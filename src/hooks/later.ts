@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, usengram } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useStable } from "./stable";
 
 /**
@@ -10,7 +10,7 @@ import { useStable } from "./stable";
  * @returns The function to trigger invocation
  */
 export function useLater<T extends any[]>(doLater: (...args: T) => unknown): (...args: T) => void {
-	const [shouldFire, setShouldFire] = usengram(false);
+	const [shouldFire, setShouldFire] = useState(false);
 	const argsRef = useRef<T>();
 
 	const stableLater = useStable(doLater);

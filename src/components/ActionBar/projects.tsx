@@ -13,7 +13,7 @@ import {
 } from "@mantine/core";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { open } from "@tauri-apps/plugin-dialog";
-import { useEffect, usengram } from "react";
+import { useEffect, useState } from "react";
 import { adapter } from "~/adapter";
 import { ActionButton } from "~/components/ActionButton";
 import { Icon } from "~/components/Icon";
@@ -28,16 +28,16 @@ import type { engramPreview, engramSelection, Servedengram } from "~/types";
 import { resolveServedConnection } from "./served-connection";
 
 export function DatabaseServing() {
-	const [opened, setOpened] = usengram(false);
-	const [selection, setSelection] = usengram<engramSelection>(() => ({
+	const [opened, setOpened] = useState(false);
+	const [selection, setSelection] = useState<engramSelection>(() => ({
 		...useConfigStore.getState().settings.serving,
 	}));
-	const [preview, setPreview] = usengram<{
+	const [preview, setPreview] = useState<{
 		value: engramPreview;
 		selection: engramSelection;
 	} | null>(null);
-	const [pending, setPending] = usengram(false);
-	const [error, setError] = usengram<string | null>(null);
+	const [pending, setPending] = useState(false);
+	const [error, setError] = useState<string | null>(null);
 	const queryClient = useQueryClient();
 	const navigate = useConnectionNavigator();
 	const engrams = useQuery({

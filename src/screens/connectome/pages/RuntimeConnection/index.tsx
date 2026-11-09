@@ -14,7 +14,7 @@ import {
 } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import { isTauri } from "@tauri-apps/api/core";
-import { type ReactNode, useMemo, usengram } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import { Redirect, useLocation } from "wouter";
 import { Icon } from "~/components/Icon";
 import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
@@ -136,10 +136,10 @@ export function RuntimeConnectionPage({
 		queryFn: () => sessionClient.current(),
 		staleTime: Number.POSITIVE_INFINITY,
 	});
-	const [selected, setSelected] = usengram<string | null>(null);
-	const [colorBy, setColorBy] = usengram("cluster");
-	const [showIdentity, setShowIdentity] = usengram(false);
-	const [glossaryOpen, setGlossaryOpen] = usengram(false);
+	const [selected, setSelected] = useState<string | null>(null);
+	const [colorBy, setColorBy] = useState("cluster");
+	const [showIdentity, setShowIdentity] = useState(false);
+	const [glossaryOpen, setGlossaryOpen] = useState(false);
 
 	const handshake = query.data;
 	const current = nativeSession.data ?? null;
@@ -418,13 +418,13 @@ export function RuntimeConnectionPage({
 										{handshake.service.deployment.storage_profile} ·{" "}
 										{handshake.service.deployment.endpoint_presentation}
 									</Text>
-									{handshake.service.installed_engram && (
+									{handshake.service.installed_estate && (
 										<Text
 											fz="sm"
 											ff="monospace"
 										>
-											{handshake.service.installed_engram.project_id} ·{" "}
-											{handshake.service.installed_engram.engram_id} ·
+											{handshake.service.installed_estate.project_id} ·{" "}
+											{handshake.service.installed_estate.estate_id} ·
 											configuration r
 											{handshake.service.configuration.revision}
 										</Text>

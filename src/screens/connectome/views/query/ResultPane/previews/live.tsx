@@ -1,7 +1,7 @@
 import { Accordion, Badge, Center, Group, ScrollArea, Stack, Text } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
 import { useContextMenu } from "mantine-contextmenu";
-import { useEffect, useMemo, usengram } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CodeEditor } from "~/components/CodeEditor";
 import { Icon } from "~/components/Icon";
 import { RelativeTime } from "~/components/RelativeTime";
@@ -55,7 +55,7 @@ function LiveMessageBody({
 	format: Formatter;
 	extensions: any[];
 }) {
-	const [formatted, setFormatted] = usengram("");
+	const [formatted, setFormatted] = useState("");
 
 	useEffect(() => {
 		let cancelled = false;

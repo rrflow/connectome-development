@@ -1,6 +1,6 @@
 import { Box, Button, Group, Modal, Stack, Text, TextInput } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { type ChangeEvent, memo, useRef, usengram } from "react";
+import { type ChangeEvent, memo, useRef, useState } from "react";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { useImmer } from "use-immer";
 import { adapter } from "~/adapter";
@@ -37,9 +37,9 @@ export function ParametersView() {
 	const [details, setDetails] = useImmer<SchemaParameter | null>(null);
 	const [isCreating, isCreatingHandle] = useDisclosure();
 	const [showCreator, showCreatorHandle] = useDisclosure();
-	const [createName, setCreateName] = usengram("");
+	const [createName, setCreateName] = useState("");
 
-	const [error, setError] = usengram("");
+	const [error, setError] = useState("");
 
 	const handle = useSaveable({
 		valid: !!details,

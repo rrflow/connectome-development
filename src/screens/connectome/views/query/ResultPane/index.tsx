@@ -4,7 +4,7 @@ import { Button, Center, Group, Stack, Text, Tooltip, UnstyledButton } from "@ma
 import dayjs from "dayjs";
 import { unparse } from "papaparse";
 import { isArray, isObject } from "radash";
-import { useLayoutEffect, useMemo, usengram } from "react";
+import { useLayoutEffect, useMemo, useState } from "react";
 import { adapter, isMini } from "~/adapter";
 import { ActionButton } from "~/components/ActionButton";
 import { Icon } from "~/components/Icon";
@@ -84,7 +84,7 @@ export function ResultPane({ activeTab, selection, editor, corners }: ResultPane
 	const isQueryValid = useQueryStore((s) => s.isQueryValid);
 
 	const [allowSelectionExecution] = useSetting("behavior", "querySelectionExecution");
-	const [resultTab, setResultTab] = usengram<number>(1);
+	const [resultTab, setResultTab] = useState<number>(1);
 	const selectedTab = resultTab - 1;
 	const resultMode = activeTab.resultMode;
 	const resultFormat = activeTab.resultFormat;

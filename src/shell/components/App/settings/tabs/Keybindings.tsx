@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
 import equal from "fast-deep-equal";
-import { Fragment, useMemo, usengram } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { Icon } from "~/components/Icon";
 import { KeybindInput } from "~/components/Inputs/keybinding";
@@ -39,7 +39,7 @@ export function KeybindingsTab() {
 	const keybinds = useCommandKeybinds();
 
 	const [isRecording, recordingHandle] = useBoolean();
-	const [recordCommand, setRecordCommand] = usengram<Command | null>(null);
+	const [recordCommand, setRecordCommand] = useState<Command | null>(null);
 
 	const filtered = useMemo(() => {
 		return categories.flatMap((category) => {
@@ -184,7 +184,7 @@ interface RecordingModalProps {
 function RecordingModal({ command, commands, keybindMap, onClose }: RecordingModalProps) {
 	const { setKeybinding, removeKeybinding } = useConfigStore.getState();
 
-	const [binding, setBinding] = usengram<string[]>([]);
+	const [binding, setBinding] = useState<string[]>([]);
 	const active = keybindMap.get(command.id);
 	const hasOldBinding = active && active.length > 0;
 	const isResettable = active && !equal(active, command.binding);

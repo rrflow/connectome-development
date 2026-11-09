@@ -1,7 +1,7 @@
 import { foldCode, unfoldCode } from "@codemirror/language";
 import type { EditorView } from "@codemirror/view";
 import { Box, Stack, Text } from "@mantine/core";
-import { memo, useCallback, useEffect, useMemo, useRef, usengram } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CodeEditor } from "~/components/CodeEditor";
 import { rrflowqlRecordLinks } from "~/editor";
 import { type Formatter, useResultFormatter } from "~/hooks/rrflowql";
@@ -82,7 +82,7 @@ const combinedPreview = memo(function CombinedPreview({ responses, query }: Prev
 	const editorViewRef = useRef<EditorView | null>(null);
 	const previousModeRef = useRef<string | null>(null);
 	const noneResultMode = query.noneResultMode;
-	const [contents, setContents] = usengram("");
+	const [contents, setContents] = useState("");
 
 	const noneResultCount = useMemo(() => {
 		let count = 0;

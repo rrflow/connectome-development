@@ -1,6 +1,6 @@
 import { EditorView } from "@codemirror/view";
 import { Alert, Badge, Box, Stack } from "@mantine/core";
-import { useMemo, usengram } from "react";
+import { useMemo, useState } from "react";
 import type { Updater } from "use-immer";
 import { CodeEditor } from "~/components/CodeEditor";
 import { Icon } from "~/components/Icon";
@@ -26,7 +26,7 @@ export function ParameterEditorPanel({
 	isCreating,
 	onChange,
 }: ParameterEditorPanelProps) {
-	const [editor, setEditor] = usengram<EditorView | null>(null);
+	const [editor, setEditor] = useState<EditorView | null>(null);
 	const rrflowqlVersion = useDatabaseVersionLinter(editor);
 
 	const extensions = useMemo(

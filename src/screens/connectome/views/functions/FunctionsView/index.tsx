@@ -1,6 +1,6 @@
 import { Box, Button, Group, Modal, Stack, Text, TextInput } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { type ChangeEvent, memo, useEffect, useRef, usengram } from "react";
+import { type ChangeEvent, memo, useEffect, useRef, useState } from "react";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { useImmer } from "use-immer";
 import { adapter } from "~/adapter";
@@ -52,13 +52,13 @@ export function FunctionsView() {
 
 	const { functions, models } = useDatabaseSchema();
 
-	const [available, setAvailable] = usengram<FunctionDetails[]>([]);
+	const [available, setAvailable] = useState<FunctionDetails[]>([]);
 	const [active, setActive] = useImmer<FunctionDetails | null>(null);
 	const [isCreating, isCreatingHandle] = useDisclosure();
 	const [showCreator, showCreatorHandle] = useDisclosure();
-	const [createName, setCreateName] = usengram("");
+	const [createName, setCreateName] = useState("");
 
-	const [error, setError] = usengram("");
+	const [error, setError] = useState("");
 
 	useEffect(() => {
 		const availableFunctions: FunctionDetails[] = functions.map((f) => ({

@@ -10,7 +10,7 @@ import {
 	ThemeIcon,
 	Title,
 } from "@mantine/core";
-import { usengram } from "react";
+import { useState } from "react";
 import { isDesktop } from "~/adapter";
 import { ActionButton } from "~/components/ActionButton";
 import { Entry } from "~/components/Entry";
@@ -224,7 +224,7 @@ function SettingsSidebar({
 export function Settings() {
 	const [flags, setFlags] = useFeatureFlags();
 	const [open, openHandle] = useBoolean();
-	const [activeTab, setActiveTab] = usengram("preferences");
+	const [activeTab, setActiveTab] = useState("preferences");
 
 	const categories: OptionalCategory[] = CATEGORIES.map((c) => ({
 		...c,

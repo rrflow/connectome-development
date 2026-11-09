@@ -17,7 +17,7 @@ import { useQuery } from "@tanstack/react-query";
 import { isTauri } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import type { ChangeEvent } from "react";
-import { useCallback, useEffect, useMemo, usengram, useRef } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import type {
 	RrdMetricView,
 	RrdPromptFlightDetailView,
@@ -790,100 +790,100 @@ export function ProjectSection({
 	const activeWorkbenchId = workbench.activeWorkbenchId ?? workbench.workbenches[0]?.id;
 	const activeWorkbench =
 		workbench.workbenches.find((candidate) => candidate.id === activeWorkbenchId) ?? null;
-	const [newWorkbenchName, setNewWorkbenchName] = usengram("");
-	const [newWorkbenchDescription, setNewWorkbenchDescription] = usengram("");
-	const [receiptKind, setReceiptKind] = usengram<WorkbenchRunKind>("testing");
-	const [receiptIntent, setReceiptIntent] = usengram("");
-	const [receiptContext, setReceiptContext] = usengram("");
-	const [receiptDiagnostics, setReceiptDiagnostics] = usengram("");
-	const [receiptCaptureError, setReceiptCaptureError] = usengram<string | null>(null);
-	const [capturingReceipt, setCapturingReceipt] = usengram(false);
-	const [flightPrompt, setFlightPrompt] = usengram("");
-	const [flightContextMode, setFlightContextMode] = usengram<"fresh" | "pruned">("pruned");
-	const [flightAcceptanceMarker, setFlightAcceptanceMarker] = usengram("");
-	const [launchFlightError, setLaunchFlightError] = usengram<string | null>(null);
-	const [launchingFlight, setLaunchingFlight] = usengram(false);
-	const [workbenchSnapshot, setWorkbenchSnapshot] = usengram<RrdWorkbenchSnapshotView | null>(
+	const [newWorkbenchName, setNewWorkbenchName] = useState("");
+	const [newWorkbenchDescription, setNewWorkbenchDescription] = useState("");
+	const [receiptKind, setReceiptKind] = useState<WorkbenchRunKind>("testing");
+	const [receiptIntent, setReceiptIntent] = useState("");
+	const [receiptContext, setReceiptContext] = useState("");
+	const [receiptDiagnostics, setReceiptDiagnostics] = useState("");
+	const [receiptCaptureError, setReceiptCaptureError] = useState<string | null>(null);
+	const [capturingReceipt, setCapturingReceipt] = useState(false);
+	const [flightPrompt, setFlightPrompt] = useState("");
+	const [flightContextMode, setFlightContextMode] = useState<"fresh" | "pruned">("pruned");
+	const [flightAcceptanceMarker, setFlightAcceptanceMarker] = useState("");
+	const [launchFlightError, setLaunchFlightError] = useState<string | null>(null);
+	const [launchingFlight, setLaunchingFlight] = useState(false);
+	const [workbenchSnapshot, setWorkbenchSnapshot] = useState<RrdWorkbenchSnapshotView | null>(
 		null,
 	);
-	const [snapshotError, setSnapshotError] = usengram<string | null>(null);
-	const [loadingSnapshot, setLoadingSnapshot] = usengram(false);
-	const [selectedFlightId, setSelectedFlightId] = usengram<string | null>(null);
+	const [snapshotError, setSnapshotError] = useState<string | null>(null);
+	const [loadingSnapshot, setLoadingSnapshot] = useState(false);
+	const [selectedFlightId, setSelectedFlightId] = useState<string | null>(null);
 	const [selectedFlightDetail, setSelectedFlightDetail] =
-		usengram<RrdPromptFlightDetailView | null>(null);
-	const [loadingFlightDetail, setLoadingFlightDetail] = usengram(false);
-	const [flightDetailError, setFlightDetailError] = usengram<string | null>(null);
-	const [flightFilter, setFlightFilter] = usengram<"all" | "fresh" | "pruned">("all");
-	const [flightSort, setFlightSort] = usengram<"newest" | "oldest">("newest");
-	const [selectedRouteId, setSelectedRouteId] = usengram<string>(routePlans[0].id);
-	const [selectedRoutineId, setSelectedRoutineId] = usengram<string>(routines[0].id);
-	const [templateName, setTemplateName] = usengram("");
-	const [templateDescription, setTemplateDescription] = usengram("");
-	const [templateSchema, setTemplateSchema] = usengram("");
-	const [templateSkills, setTemplateSkills] = usengram("");
-	const [templateResearchReferences, setTemplateResearchReferences] = usengram("");
-	const [templateRequirements, setTemplateRequirements] = usengram("");
-	const [templateFilePatterns, setTemplateFilePatterns] = usengram("");
-	const [templateFolderPatterns, setTemplateFolderPatterns] = usengram("");
-	const [templateStepCount, setTemplateStepCount] = usengram("3");
-	const [templateImportError, setTemplateImportError] = usengram<string | null>(null);
-	const [learningKind, setLearningKind] = usengram<WorkbenchLearningEventKind>("did-you-know");
-	const [learningMode, setLearningMode] = usengram<WorkbenchLearningEventMode>("passive");
-	const [learningComponent, setLearningComponent] = usengram<"card" | "alert" | "badge">("card");
-	const [learningRequiresSignoff, setLearningRequiresSignoff] = usengram(true);
-	const [learningTitle, setLearningTitle] = usengram("");
-	const [learningBody, setLearningBody] = usengram("");
-	const [learningRoute, setLearningRoute] = usengram<string>("workbench");
-	const [learningCatamorphismNote, setLearningCatamorphismNote] = usengram("");
+		useState<RrdPromptFlightDetailView | null>(null);
+	const [loadingFlightDetail, setLoadingFlightDetail] = useState(false);
+	const [flightDetailError, setFlightDetailError] = useState<string | null>(null);
+	const [flightFilter, setFlightFilter] = useState<"all" | "fresh" | "pruned">("all");
+	const [flightSort, setFlightSort] = useState<"newest" | "oldest">("newest");
+	const [selectedRouteId, setSelectedRouteId] = useState<string>(routePlans[0].id);
+	const [selectedRoutineId, setSelectedRoutineId] = useState<string>(routines[0].id);
+	const [templateName, setTemplateName] = useState("");
+	const [templateDescription, setTemplateDescription] = useState("");
+	const [templateSchema, setTemplateSchema] = useState("");
+	const [templateSkills, setTemplateSkills] = useState("");
+	const [templateResearchReferences, setTemplateResearchReferences] = useState("");
+	const [templateRequirements, setTemplateRequirements] = useState("");
+	const [templateFilePatterns, setTemplateFilePatterns] = useState("");
+	const [templateFolderPatterns, setTemplateFolderPatterns] = useState("");
+	const [templateStepCount, setTemplateStepCount] = useState("3");
+	const [templateImportError, setTemplateImportError] = useState<string | null>(null);
+	const [learningKind, setLearningKind] = useState<WorkbenchLearningEventKind>("did-you-know");
+	const [learningMode, setLearningMode] = useState<WorkbenchLearningEventMode>("passive");
+	const [learningComponent, setLearningComponent] = useState<"card" | "alert" | "badge">("card");
+	const [learningRequiresSignoff, setLearningRequiresSignoff] = useState(true);
+	const [learningTitle, setLearningTitle] = useState("");
+	const [learningBody, setLearningBody] = useState("");
+	const [learningRoute, setLearningRoute] = useState<string>("workbench");
+	const [learningCatamorphismNote, setLearningCatamorphismNote] = useState("");
 	const [learningActionName, setLearningActionName] =
-		usengram<WorkbenchLearningActionName>("navigate-route");
-	const [learningActionLabel, setLearningActionLabel] = usengram("");
-	const [learningActionPayload, setLearningActionPayload] = usengram("");
-	const [learningActions, setLearningActions] = usengram<WorkbenchLearningAction[]>([]);
+		useState<WorkbenchLearningActionName>("navigate-route");
+	const [learningActionLabel, setLearningActionLabel] = useState("");
+	const [learningActionPayload, setLearningActionPayload] = useState("");
+	const [learningActions, setLearningActions] = useState<WorkbenchLearningAction[]>([]);
 	const [learningTriggerKind, setLearningTriggerKind] =
-		usengram<WorkbenchLearningTriggerKind>("manual");
-	const [learningTriggerDescription, setLearningTriggerDescription] = usengram("");
-	const [learningTriggers, setLearningTriggers] = usengram<WorkbenchLearningTrigger[]>([
+		useState<WorkbenchLearningTriggerKind>("manual");
+	const [learningTriggerDescription, setLearningTriggerDescription] = useState("");
+	const [learningTriggers, setLearningTriggers] = useState<WorkbenchLearningTrigger[]>([
 		{ id: newId(), kind: "manual", description: "Run on operator command." },
 	]);
-	const [templateLearningEvents, setTemplateLearningEvents] = usengram<WorkbenchLearningEvent[]>(
+	const [templateLearningEvents, setTemplateLearningEvents] = useState<WorkbenchLearningEvent[]>(
 		[],
 	);
-	const [templateSteps, setTemplateSteps] = usengram<WorkbenchTemplateStep[]>(
+	const [templateSteps, setTemplateSteps] = useState<WorkbenchTemplateStep[]>(
 		buildTemplateSteps(3, undefined),
 	);
-	const [linkLabelDraft, setLinkLabelDraft] = usengram("");
-	const [linkError, setLinkError] = usengram<string | null>(null);
-	const [eventExecutionError, setEventExecutionError] = usengram<string | null>(null);
-	const [runningEventIds, setRunningEventIds] = usengram<string[]>([]);
-	const [autoTriggeredEventKeys, setAutoTriggeredEventKeys] = usengram<string[]>([]);
-	const [telemetryProfile, setTelemetryProfile] = usengram("real-world-baseline");
-	const [trackHops, setTrackHops] = usengram(true);
-	const [trackActions, setTrackActions] = usengram(true);
-	const [trackTools, setTrackTools] = usengram(true);
-	const [trackTime, setTrackTime] = usengram(true);
-	const [executionLog, setExecutionLog] = usengram<WorkbenchExecutionLog[]>([]);
-	const [workbenchLane, setWorkbenchLane] = usengram<WorkbenchLane>("runtime-control");
-	const [datasetBuildTemplateId, setDatasetBuildTemplateId] = usengram<string | null>(null);
-	const [datasetWorkloadProfileId, setDatasetWorkloadProfileId] = usengram<string>(
+	const [linkLabelDraft, setLinkLabelDraft] = useState("");
+	const [linkError, setLinkError] = useState<string | null>(null);
+	const [eventExecutionError, setEventExecutionError] = useState<string | null>(null);
+	const [runningEventIds, setRunningEventIds] = useState<string[]>([]);
+	const [autoTriggeredEventKeys, setAutoTriggeredEventKeys] = useState<string[]>([]);
+	const [telemetryProfile, setTelemetryProfile] = useState("real-world-baseline");
+	const [trackHops, setTrackHops] = useState(true);
+	const [trackActions, setTrackActions] = useState(true);
+	const [trackTools, setTrackTools] = useState(true);
+	const [trackTime, setTrackTime] = useState(true);
+	const [executionLog, setExecutionLog] = useState<WorkbenchExecutionLog[]>([]);
+	const [workbenchLane, setWorkbenchLane] = useState<WorkbenchLane>("runtime-control");
+	const [datasetBuildTemplateId, setDatasetBuildTemplateId] = useState<string | null>(null);
+	const [datasetWorkloadProfileId, setDatasetWorkloadProfileId] = useState<string>(
 		benchmarkWorkloadProfiles[0].id,
 	);
-	const [datasetBuildRunLabel, setDatasetBuildRunLabel] = usengram("");
-	const [datasetBuildFolderLinkId, setDatasetBuildFolderLinkId] = usengram<string | null>(null);
-	const [datasetBuildError, setDatasetBuildError] = usengram<string | null>(null);
-	const [datasetBuildResults, setDatasetBuildResults] = usengram<DatasetBuildResult[]>([]);
+	const [datasetBuildRunLabel, setDatasetBuildRunLabel] = useState("");
+	const [datasetBuildFolderLinkId, setDatasetBuildFolderLinkId] = useState<string | null>(null);
+	const [datasetBuildError, setDatasetBuildError] = useState<string | null>(null);
+	const [datasetBuildResults, setDatasetBuildResults] = useState<DatasetBuildResult[]>([]);
 	const [remoteSourceProvider, setRemoteSourceProvider] =
-		usengram<WorkbenchRemoteSourceProvider>("google-drive");
-	const [remoteSourceMode, setRemoteSourceMode] = usengram<WorkbenchRemoteSourceMode>("import");
-	const [remoteSourceLabel, setRemoteSourceLabel] = usengram("");
-	const [remoteSourceUrl, setRemoteSourceUrl] = usengram("");
-	const [remoteSourceNote, setRemoteSourceNote] = usengram("");
-	const [remoteSourceError, setRemoteSourceError] = usengram<string | null>(null);
-	const [selectedDocSourceId, setSelectedDocSourceId] = usengram<string | null>(null);
-	const [docWorkspaceTitle, setDocWorkspaceTitle] = usengram("");
-	const [docWorkspaceContent, setDocWorkspaceContent] = usengram("");
-	const [docWorkspaceError, setDocWorkspaceError] = usengram<string | null>(null);
-	const [docWorkspaceBusy, setDocWorkspaceBusy] = usengram(false);
+		useState<WorkbenchRemoteSourceProvider>("google-drive");
+	const [remoteSourceMode, setRemoteSourceMode] = useState<WorkbenchRemoteSourceMode>("import");
+	const [remoteSourceLabel, setRemoteSourceLabel] = useState("");
+	const [remoteSourceUrl, setRemoteSourceUrl] = useState("");
+	const [remoteSourceNote, setRemoteSourceNote] = useState("");
+	const [remoteSourceError, setRemoteSourceError] = useState<string | null>(null);
+	const [selectedDocSourceId, setSelectedDocSourceId] = useState<string | null>(null);
+	const [docWorkspaceTitle, setDocWorkspaceTitle] = useState("");
+	const [docWorkspaceContent, setDocWorkspaceContent] = useState("");
+	const [docWorkspaceError, setDocWorkspaceError] = useState<string | null>(null);
+	const [docWorkspaceBusy, setDocWorkspaceBusy] = useState(false);
 	const importInputRef = useRef<HTMLInputElement | null>(null);
 
 	const storageSignals = useQuery<RrdStorageView>({

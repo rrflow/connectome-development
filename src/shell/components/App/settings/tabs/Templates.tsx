@@ -1,6 +1,6 @@
 import { ActionIcon, Box, Button, Group, Menu, Modal, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { type HTMLAttributes, type MouseEvent, usengram } from "react";
+import { type HTMLAttributes, type MouseEvent, useState } from "react";
 import { useImmer } from "use-immer";
 import { ConnectionAddressDetails } from "~/components/ConnectionDetails/address";
 import { ConnectionAuthDetails } from "~/components/ConnectionDetails/authentication";
@@ -239,7 +239,7 @@ interface ItemProps extends EntryProps, Omit<HTMLAttributes<HTMLButtonElement>, 
 }
 
 function Item({ template, onOpen, onRemove, onDuplicate, ...other }: ItemProps) {
-	const [showOptions, setShowOptions] = usengram(false);
+	const [showOptions, setShowOptions] = useState(false);
 
 	const activate = useStable(() => {
 		onOpen(template);

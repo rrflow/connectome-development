@@ -32,7 +32,7 @@ import {
 	useEffect,
 	useLayoutEffect,
 	useRef,
-	usengram,
+	useState,
 } from "react";
 import { adapter } from "~/adapter";
 import { ActionButton } from "~/components/ActionButton";
@@ -134,23 +134,23 @@ export function TableGraphPane(props: TableGraphPaneProps) {
 		c?.diagramHoverFocus,
 	]);
 
-	const [isExporting, setIsExporting] = usengram(false);
-	const [isTiny, setIsTiny] = usengram(false);
+	const [isExporting, setIsExporting] = useState(false);
+	const [isTiny, setIsTiny] = useState(false);
 	const ref = useRef<ElementRef<"div">>(null);
 	const isLight = useIsLight();
 
 	const { fitView, zoomIn, zoomOut, getViewport, setViewport } = useReactFlow();
-	const [warnings, setWarnings] = usengram<GraphWarning[]>([]);
+	const [warnings, setWarnings] = useState<GraphWarning[]>([]);
 	const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
 	const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
-	const [rendering, setRendering] = usengram(false);
+	const [rendering, setRendering] = useState(false);
 
 	const { getNodes, getEdges } = useReactFlow();
 	const nodesInitialized = useNodesInitialized({ includeHiddenNodes: true });
 	const isLayedOut = useRef(false);
 
-	const [hoveredNode, setHoveredNode] = usengram<string | null>(null);
-	const [isDragging, setIsDragging] = usengram(false);
+	const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+	const [isDragging, setIsDragging] = useState(false);
 
 	const [defaultAlgorithm] = useSetting("appearance", "defaultDiagramAlgorithm");
 	const [defaultDirection] = useSetting("appearance", "defaultDiagramDirection");

@@ -21,7 +21,7 @@ import {
 	UnstyledButton,
 } from "@mantine/core";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useMemo, useRef, usengram } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Icon } from "~/components/Icon";
 import { Label } from "~/components/Label";
 import { Section } from "~/components/Section";
@@ -184,14 +184,14 @@ export function RecordsTab({
 	onOpenLens,
 }: RuntimeLensProps & RecordFocusProps) {
 	const database = useQuery(databaseQuery(client, sessionKey));
-	const [scope, setScope] = usengram<GraphScope>("engram");
-	const [depth, setDepth] = usengram(1);
-	const [direction, setDirection] = usengram<GraphDirection>("both");
-	const [recordKinds, setRecordKinds] = usengram<string[]>([]);
-	const [relationKinds, setRelationKinds] = usengram<string[]>([]);
-	const [consoleOpen, setConsoleOpen] = usengram(false);
-	const [schemaOpen, setSchemaOpen] = usengram(false);
-	const [draft, setDraft] = usengram<string | null>(null);
+	const [scope, setScope] = useState<GraphScope>("engram");
+	const [depth, setDepth] = useState(1);
+	const [direction, setDirection] = useState<GraphDirection>("both");
+	const [recordKinds, setRecordKinds] = useState<string[]>([]);
+	const [relationKinds, setRelationKinds] = useState<string[]>([]);
+	const [consoleOpen, setConsoleOpen] = useState(false);
+	const [schemaOpen, setSchemaOpen] = useState(false);
+	const [draft, setDraft] = useState<string | null>(null);
 	const consoleRef = useRef<HTMLDivElement>(null);
 	const execution = useMutation({
 		mutationFn: (query: string) => client.query(query),

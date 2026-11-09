@@ -13,7 +13,7 @@ import {
 import Graph from "graphology";
 import { circular } from "graphology-layout";
 import forceAtlas2, { inferSettings } from "graphology-layout-forceatlas2";
-import { type ReactNode, useEffect, useMemo, useRef, usengram } from "react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import Sigma from "sigma";
 import type { EdgeDisplayData, NodeDisplayData } from "sigma/types";
 import { ActionButton } from "~/components/ActionButton";
@@ -208,10 +208,10 @@ export function GraphCanvas({
 	const theme = useMantineTheme();
 	const isLight = useIsLight();
 	const handleSelect = useStable(onSelect);
-	const [hover, setHover] = usengram<{ id: string; left: number; top: number } | null>(null);
-	const [activeGroup, setActiveGroup] = usengram<string | null>(null);
-	const [expanded, setExpanded] = usengram(false);
-	const [legendOpen, setLegendOpen] = usengram(true);
+	const [hover, setHover] = useState<{ id: string; left: number; top: number } | null>(null);
+	const [activeGroup, setActiveGroup] = useState<string | null>(null);
+	const [expanded, setExpanded] = useState(false);
+	const [legendOpen, setLegendOpen] = useState(true);
 
 	const colors = useMemo(
 		() =>
