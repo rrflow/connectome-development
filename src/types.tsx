@@ -1,8 +1,9 @@
 import type { ElementProps, MantineColorScheme } from "@mantine/core";
 import { AboutMetadata } from "@tauri-apps/api/menu";
 import type { FeatureFlagMap } from "~/shared/util/feature-flags";
-import type { Duration, RecordId } from "~/vendor/rrflow-client";
+import type { Duration } from "~/vendor/rrflow-client";
 
+export type MiniAppearance = "normal" | "compact" | "plain";
 export type AccessType = "JWT" | "RECORD";
 export type BannerType = "info" | "warning" | "important";
 export type AuthLevel = "root" | "namespace" | "database";
@@ -17,7 +18,6 @@ export type DiagramLinks = "default" | "hidden" | "visible";
 export type DiagramMode = "default" | "fields" | "summary" | "simple";
 export type DiagramHoverFocus = "default" | "none" | "neighbours" | "chain" | "recursive";
 export type InstallMode = "fresh" | "existing";
-export type MiniAppearance = "normal" | "compact" | "plain";
 export type NoneResultMode = "default" | "show" | "hide" | "collapse";
 export type Orientation = "horizontal" | "vertical";
 export type Platform = "darwin" | "windows" | "linux";
@@ -260,6 +260,8 @@ export interface Connection {
 	runtimeInstance?: string;
 	/** Path to the installed RRD operator credential file. A reference only: the native process reads it. */
 	runtimeCredential?: string;
+	/** The canonical project directory whose instance this connection opens. */
+	runtimeProject?: string;
 	icon: number;
 	labels?: string[];
 	instance?: boolean;
@@ -346,14 +348,14 @@ export interface ConnectomeTemplateSettings {
 }
 
 /**
- * How the desktop serves a local RRFlow engram. RRFlow has one storage
+ * How the desktop serves a local RRFlow estate. RRFlow has one storage
  * engine, picks its own loopback port, and keeps the operator credential in a
  * file the native process reads, so there is nothing else to configure.
  */
 export interface ConnectomeServingSettings {
-	/** The project directory that holds, or will hold, the engram. Empty means the app's default engram. */
+	/** The project directory that holds, or will hold, the estate. Empty means the app's default estate. */
 	project: string;
-	/** Installation mode used when the project has no engram yet. */
+	/** Installation mode used when the project has no estate yet. */
 	mode: InstallMode;
 	/** An explicit `rrflow` executable; empty means the one on PATH. */
 	executable: string;
@@ -372,43 +374,72 @@ export interface EngineBinding {
 	revision?: string;
 }
 
-export interface engramSelection {
+export interface EstateSelection {
 	project: string;
 	mode: InstallMode;
 	executable: string;
+	/** The identity a pending installation preview was planned with. */
+	installationIdentity?: string;
+	/** Explicit per-project mapping path; never contains credential values. */
+	endpointCredentialMapping?: string;
 }
 
-export interface engramPreview {
+export interface EstatePreview {
 	project: string;
 	mode: InstallMode;
 	engine: EngineBinding;
 	installation: { installation: { plan_sha256: string }; [key: string]: unknown } | null;
+	/** Present with `installation`: keep it with the preview to apply the same plan. */
+	installation_identity: string | null;
 }
 
-/** The engram the native process is serving, as the webview may see it: coordinates only. */
-export interface Servedengram {
+/** The estate the native process is serving, as the webview may see it: coordinates only. */
+export interface ServedEstate {
 	project: string;
 	endpoint: string;
 	instance: string;
 	credential_path: string;
 	installed: boolean;
-	engine: EngineBinding;
+	/** Who started the instance: this desktop, or a process elsewhere. */
+	origin: InstanceOrigin;
+	/** The engine this desktop ran; absent for an instance started elsewhere. */
+	engine?: EngineBinding;
+	/** The mapping path this desktop started the engine with; never its contents. */
+	endpoint_credentials?: string | null;
 }
 
-export type engramStageName = "engine" | "install" | "serve" | "ready";
-export type engramStagengram = "running" | "done" | "skipped" | "failed" | "stopped";
+export type EstateStageName = "engine" | "attach" | "install" | "serve" | "ready";
+
+export type InstanceState = "starting" | "ready" | "stopping" | "stopped" | "failed";
+export type InstanceOrigin = "connectome" | "elsewhere";
+
+/** One project's RRFlow instance as the native registry tracks it. */
+export interface ProjectInstance {
+	project: string;
+	state: InstanceState;
+	origin: InstanceOrigin;
+	/** The boundary a start or an attach last reached, or where it failed. */
+	stage?: EstateStageName | "stop";
+	/** What this state means for this instance. */
+	detail: string;
+	/** The instance's coordinates once it is ready. */
+	estate?: ServedEstate;
+	/** The native registry's transition number when this was observed. */
+	revision: number;
+}
+
+/** Every tracked instance, as of one native transition number. */
+export interface InstanceStatus {
+	revision: number;
+	instances: ProjectInstance[];
+}
+export type EstateStageState = "running" | "done" | "skipped" | "failed" | "stopped";
 
 /** One boundary of the serve sequence, reported by the native process as it is reached. */
-export interface engramStage {
-	stage: engramStageName;
-	state: engramStagengram;
+export interface EstateStage {
+	stage: EstateStageName;
+	state: EstateStageState;
 	detail: string;
-}
-
-export interface GraphqlQuery {
-	query?: string;
-	variables?: Record<string, any>;
-	operationName?: string;
 }
 
 export interface QueryResponse {
@@ -721,28 +752,6 @@ export interface Driver {
 	name: string;
 	icon: React.FC<{ active?: boolean } & ElementProps<"svg">>;
 	link: string;
-}
-
-export interface SidekickChatMessage {
-	id: RecordId | null;
-	sent_at: Date;
-	content: string;
-	role: "user" | "assistant";
-	sources?: {
-		header: string;
-		links: {
-			url: string;
-			title: string;
-			img_url: string | null;
-		}[];
-	};
-}
-
-export interface SidekickChat {
-	id: RecordId;
-	author: string;
-	title: string;
-	last_activity: Date;
 }
 
 export interface AppMenu {

@@ -1,0 +1,55 @@
+{
+	"revision": "sprint 016, after step 4",
+	"application": "Connectome desktop preview build (VITE_CONNECTOME_PREVIEW=true, tauri build --debug --no-bundle), WebView2 attached over CDP",
+	"engine": {
+		"revision": "15f36a8758e32b33c930a20da836def3e5cc3207",
+		"source": "the rrflow binary built from the pinned revision, on PATH"
+	},
+	"estate": "installed fresh by the capture in a scratch project folder, then seeded by seed_served_estate_for_visual_capture with the lens fixtures",
+	"purpose": "Around the selection with every drawn record named, and the stopped engine row in the state it settles on. Compare baseline/window/step-3 and baseline/window/step-4",
+	"runs": "1366x768 dark with the final harness, 56 captures with no failed step. 1440x900 light with the same application and the harness before the stopped-row wait, 56 captures with no failed step",
+	"determinism": "the same masks as the native baseline: run-varying characters painted magenta",
+	"format": "WebP quality 82, converted from the PNG captures",
+	"images": [
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-guide-step-5",
+			"file": "1366x768/dark/native-guide-step-5.webp",
+			"bytes": 41326,
+			"sha256": "b22faae5f33289f238ce9b895da437393c9716883a51ed2e6ca7117b6f4d1ea0"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-project-engines-stopped",
+			"file": "1366x768/dark/native-project-engines-stopped.webp",
+			"bytes": 47538,
+			"sha256": "d4de7743d3741fb4c13ac66662e70ec18b67799de2abfe7fb1ffae07b827da17"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-records-around-selection",
+			"file": "1366x768/dark/native-records-around-selection.webp",
+			"bytes": 56538,
+			"sha256": "ca2bbd598ecaa2d9822a572d69e8e46b49f40c8850b7191087f7b9c5fca1b109"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-guide-step-5",
+			"file": "1440x900/light/native-guide-step-5.webp",
+			"bytes": 43362,
+			"sha256": "726eea44178c73d885c315ef7e8e276ec8d526f3efbf4281f70f10b5dde420f0"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-records-around-selection",
+			"file": "1440x900/light/native-records-around-selection.webp",
+			"bytes": 58410,
+			"sha256": "f5365ad89ebc311c397a65c259900d1eb60e1e05424c972b85e055a247a08b0d"
+		}
+	]
+}

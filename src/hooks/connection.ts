@@ -3,7 +3,6 @@ import { unique } from "radash";
 import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { GLOBAL_PAGES, SANDBOX, VIEW_PAGES } from "~/constants";
-import { openRequiredDatabaseModal } from "~/modals/require-database";
 import { useFeatureFlags } from "~/shared/util/feature-flags";
 import { fuzzyMatch } from "~/shared/util/helpers";
 import { useConfigStore } from "~/shell/stores/config";
@@ -18,7 +17,6 @@ import {
 	ViewPageInfo,
 } from "~/types";
 import { useConnectionAndView } from "./routing";
-import { useStable } from "./stable";
 
 /**
  * Returns whether Connectome is connected to a database
@@ -100,7 +98,7 @@ export function useAvailablePages(): Partial<Record<GlobalPage, GlobalPageInfo>>
 	const [flags] = useFeatureFlags();
 
 	return useMemo(() => {
-		const draft = { ...GLOBAL_PAGES } as const;
+		const draft: Partial<Record<GlobalPage, GlobalPageInfo>> = { ...GLOBAL_PAGES };
 		const condition: GlobalCondition = { flags };
 
 		for (const { id, disabled } of Object.values(draft)) {
@@ -178,21 +176,6 @@ export function useMinimumVersion(minimum: string) {
 export function useActiveQuery() {
 	return useConnection((c) => {
 		return c?.queries.find((q) => q.id === c.activeQuery);
-	});
-}
-
-/**
- * Requires a selected database before executing a callback
- */
-export function useRequireDatabase(callback: () => void) {
-	const hasDatabase = useConnection((c) => !!c?.lastDatabase);
-
-	return useStable(() => {
-		if (hasDatabase) {
-			callback();
-		} else {
-			openRequiredDatabaseModal(callback);
-		}
 	});
 }
 

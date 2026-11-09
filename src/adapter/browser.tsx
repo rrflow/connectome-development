@@ -6,7 +6,14 @@ import {
 } from "~/shared/util/file-system";
 import * as idxdb from "~/shared/util/idxdb";
 import { CONFIG_KEY } from "~/shared/util/storage";
-import type { ConnectomeConfig, engramPreview, Platform, Servedengram, UrlTarget } from "~/types";
+import type {
+	ConnectomeConfig,
+	EstatePreview,
+	InstanceStatus,
+	Platform,
+	ServedEstate,
+	UrlTarget,
+} from "~/types";
 import type { ConnectomeAdapter, FileFilter } from "./base";
 
 /**
@@ -69,19 +76,19 @@ export class BrowserAdapter implements ConnectomeAdapter {
 		localStorage.removeItem(CONFIG_KEY);
 	}
 
-	public async previewengram(): Promise<engramPreview> {
+	public async previewEstate(): Promise<EstatePreview> {
 		throw new Error("Use the native desktop to start RRFlow");
 	}
 
-	public async serveengram(): Promise<Servedengram> {
+	public async serveEstate(): Promise<ServedEstate> {
 		throw new Error("Not supported");
 	}
 
-	public async servedengrams(): Promise<Servedengram[]> {
-		return [];
+	public async projectInstances(): Promise<InstanceStatus> {
+		return { revision: 0, instances: [] };
 	}
 
-	public async stopengram(): Promise<boolean> {
+	public async stopEstate(): Promise<boolean> {
 		throw new Error("Not supported");
 	}
 

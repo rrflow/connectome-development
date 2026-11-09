@@ -1,0 +1,120 @@
+{
+	"revision": "sprint 016, step 4",
+	"application": "Connectome desktop preview build (VITE_CONNECTOME_PREVIEW=true, tauri build --debug --no-bundle), WebView2 attached over CDP",
+	"engine": {
+		"revision": "15f36a8758e32b33c930a20da836def3e5cc3207",
+		"source": "the rrflow binary built from the pinned revision, on PATH"
+	},
+	"estate": "installed fresh by the capture in a scratch project folder, then seeded by seed_served_estate_for_visual_capture with the lens fixtures",
+	"purpose": "Home with its Guides section, and each state of the first guide; every other screen is unchanged from baseline/window/step-3",
+	"runs": "1366x768 dark and 1440x900 light, 56 captures each with no failed step, including the guide-explore-graph, guide-ahead-of-its-steps, guide-away-and-back and guide-reduced-motion walks",
+	"comparison": "against step 3 at 1366x768 dark: no screen lost, 7 added; 30 of 49 identical within 0.1% of pixels, and the rest differ by Home behind a dialog, run-varying digests or the build time",
+	"determinism": "the same masks as the native baseline: run-varying characters painted magenta",
+	"format": "WebP quality 82, converted from the PNG captures",
+	"images": [
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-guide-control-hidden",
+			"file": "1366x768/dark/native-guide-control-hidden.webp",
+			"bytes": 45390,
+			"sha256": "19ccc9ec9d57fdfdfdd5c63f38c5ffebd238385e4e4e9041cd55517c4ec00033"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-guide-on-another-tab",
+			"file": "1366x768/dark/native-guide-on-another-tab.webp",
+			"bytes": 59324,
+			"sha256": "892713fad77f56bc6894ca4bdefb4294944c5e9287945aa81fab6f9fd26c51ce"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-guide-step-1",
+			"file": "1366x768/dark/native-guide-step-1.webp",
+			"bytes": 49348,
+			"sha256": "33a80ce4d7207b29cf53adc412a33ce7dbd471e031507faf4cbe8dc1512f3835"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-guide-step-2",
+			"file": "1366x768/dark/native-guide-step-2.webp",
+			"bytes": 42552,
+			"sha256": "cea7de583a057af85e7d03c629f09241e108f8a66e1e886c2ab37c92b25cd84e"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-guide-step-3",
+			"file": "1366x768/dark/native-guide-step-3.webp",
+			"bytes": 43120,
+			"sha256": "1ea66187493b67049e80a3167b258bb75b1a5ea3dc77ba18137dc2f439acf06d"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-guide-step-4",
+			"file": "1366x768/dark/native-guide-step-4.webp",
+			"bytes": 37752,
+			"sha256": "21a913274a4ca0ca3fd3eacd297768c60360af3c5acc1ea7c87dadc970b0af33"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-guide-step-5",
+			"file": "1366x768/dark/native-guide-step-5.webp",
+			"bytes": 39960,
+			"sha256": "6f45d6cf5d0498e02b9853282602880732c7e1941b065a697e2151b803f2e4fe"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-workbench-overview",
+			"file": "1366x768/dark/native-workbench-overview.webp",
+			"bytes": 68762,
+			"sha256": "395807628e9bec86d5b507c9973731785051a0b84a384379f241159fa20e3b41"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-guide-step-1",
+			"file": "1440x900/light/native-guide-step-1.webp",
+			"bytes": 53052,
+			"sha256": "daf6339bd33123ba1a4f7145d6a41b6780d6800a532240666bce1f65321739bf"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-guide-step-2",
+			"file": "1440x900/light/native-guide-step-2.webp",
+			"bytes": 45014,
+			"sha256": "d8773b03f45b9d7a1a22c67c6145bea32bba0d1a1b60779ce4f364986f527bb8"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-guide-step-3",
+			"file": "1440x900/light/native-guide-step-3.webp",
+			"bytes": 44552,
+			"sha256": "427ee5f81d4d16c89ee34136701b0f2f8014346a309c3466efd08b8d6e27d84b"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-guide-step-4",
+			"file": "1440x900/light/native-guide-step-4.webp",
+			"bytes": 38278,
+			"sha256": "5b88d27c215ceca1cbbe74d912a4e133c267fd2ae8779425235ce504291ef46d"
+		},
+		{
+			"window": "1440x900",
+			"theme": "light",
+			"state": "native-guide-step-5",
+			"file": "1440x900/light/native-guide-step-5.webp",
+			"bytes": 42054,
+			"sha256": "842cd2939e52d27d8bb73aebc0dd6e8624b0760a171567bd4491e9943d8e985d"
+		}
+	]
+}

@@ -1,0 +1,64 @@
+{
+	"failedRevision": "386fdcdb9ea8e4d8f5c08dadbe17a2f94b3b1d08",
+	"failedRun": 41234351899,
+	"cause": "Biome formatting errors in 12 newly published JSON files; no implementation failure. Smoke artifacts were absent because source checks stopped before smoke execution.",
+	"failedLogSha256": "86791dfbd57392bb6fdb018e1c0a83190d644ad33ba8615c870006e687d6b6f0",
+	"receiptJsonValueEquality": {
+		"before-reload-task.json": {
+			"beforeSha256": "6b680d11dc235d3d7828cdc61ee560b20a10319dd0b1c14b284ba3f720d65f3b",
+			"afterSha256": "6dea46bdfb109022dbe7631aca513012f0c6cadd471497a590ec687af45c927c",
+			"jsonValueEqual": true
+		},
+		"before-reload-budget.json": {
+			"beforeSha256": "64bf5239cb93327c25cc6746578425ef01f7a415181fa4990bd1081112b0fe0a",
+			"afterSha256": "0aa481e5f05a3bf5b654dbdca4abb97c75df3ed9b11ec5e0e9d28802b4f63fc2",
+			"jsonValueEqual": true
+		},
+		"before-reload-selection.json": {
+			"beforeSha256": "9f0f1801f1f03b3e1fe2217b46f02654de982872406d8acc4adf0d4c973a2b72",
+			"afterSha256": "9bfeda53607a9bc7ba77cf82f1e4bb70b9e61b8bd39776b5f5ada420ea074e12",
+			"jsonValueEqual": true
+		},
+		"before-reload-worker.json": {
+			"beforeSha256": "e3d3694896ca146029f2a81574d874ce64bc1f9f659f1f69351faf2d23980d18",
+			"afterSha256": "bc9f1e1dd7b8004af4eb37607c390c884461f471cfdb46120847f9a71f80fbee",
+			"jsonValueEqual": true
+		},
+		"after-reload-task.json": {
+			"beforeSha256": "950a5c165affa828cd507127792648e8a5e067a90ca06363987edb19e6f72ba5",
+			"afterSha256": "408c152b4b7a8d61628e241504611891f12ff7240b160cc5ab30aa625ec93279",
+			"jsonValueEqual": true
+		},
+		"after-reload-budget.json": {
+			"beforeSha256": "cfc1ce0d8bcf6defb44c40e6b419d5a8bfcaf45df3d9bfe71d63fd6b383f7207",
+			"afterSha256": "183d059cf54afaed4c5e9e04ca9884685410493a25416fb52656244242da5cd8",
+			"jsonValueEqual": true
+		},
+		"after-reload-selection.json": {
+			"beforeSha256": "1211dd33feae5a0ce15a89d67e8cbb11dbd4924bc1bdea2c3a35932be5b00850",
+			"afterSha256": "dc32363ceccffac8e69abdc47d91c6fe93ebd63473477feafba1c745d0ad2ec2",
+			"jsonValueEqual": true
+		},
+		"after-reload-worker.json": {
+			"beforeSha256": "d70df5382c0c3a000f040140c03518319a309726dc02fd942fd1feff95ff59d8",
+			"afterSha256": "48a76c6d428b485a5227505934a7f7bca3777c8d4671f0852137e42b3658c282",
+			"jsonValueEqual": true
+		},
+		"reload-equality.json": {
+			"beforeSha256": "1ba64a870e39d1c92e9167c3aa529ced2c13229b4c64fee4ac7f900573a4bca9",
+			"afterSha256": "28a7809c5ad6db790aacd6f05aa6b3ef2fd38acbfd61b5b4e10aab3b0f9da429",
+			"jsonValueEqual": true
+		},
+		"ui-candidate-observation.json": {
+			"beforeSha256": "509effccd308b1e0b3845dd979cf010df61094f4dfb3b58fe482d20644098d02",
+			"afterSha256": "4a2ae7c179294478230f2f7d1556ae0d1c064cee4bbba7a2d933ba95a8e0d096",
+			"jsonValueEqual": true
+		},
+		"owned-engine-stop.json": {
+			"beforeSha256": "e790a8b2197d21aee517c2a1e6d775b6d97a9394f194abfb0747219bf222748c",
+			"afterSha256": "884fca22c24a2e54877a031edabfb3984d3990351935be18eba446b577fce518",
+			"jsonValueEqual": true
+		}
+	},
+	"validationUpdate": "Published byte hashes updated after formatting; original capture and previous publication hashes remain recorded."
+}

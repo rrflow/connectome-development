@@ -7,8 +7,8 @@
 	position: relative;
 	border: 1px solid color-mix(in srgb, var(--mantine-color-violet-6) 32%, transparent);
 	background:
-		radial-gradient(circle at 86% 18%, rgba(145, 76, 255, 0.24), transparent 32%),
-		linear-gradient(135deg, rgba(145, 76, 255, 0.09), rgba(24, 24, 35, 0.1));
+		radial-gradient(circle at 86% 18%, rgba(47, 158, 166, 0.24), transparent 32%),
+		linear-gradient(135deg, rgba(47, 158, 166, 0.09), rgba(8, 20, 23, 0.1));
 }
 
 .capability {
@@ -34,7 +34,7 @@
 		inset: 0;
 		margin: auto;
 		border-radius: 50%;
-		border: 1px solid rgba(164, 111, 255, 0.52);
+		border: 1px solid rgba(236, 127, 58, 0.52);
 		animation: runtime-pulse 3.2s ease-out infinite;
 	}
 
@@ -51,7 +51,7 @@
 	0% {
 		transform: scale(0.12);
 		opacity: 0.95;
-		background: rgba(164, 111, 255, 0.35);
+		background: rgba(236, 127, 58, 0.35);
 	}
 
 	100% {

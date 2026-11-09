@@ -1,0 +1,18 @@
+{
+	"phases": ["before-reload", "after-reload-before-ui-recovery", "after-ui-recovery"],
+	"results": {
+		"task-read": {
+			"equalAcrossPhases": true,
+			"payloadSha256": "ea0975068c58986c8f6bc185c6844c953cbdbabd55a9da33bb3e80b77f5bf19c"
+		},
+		"task-budget-read": {
+			"equalAcrossPhases": true,
+			"payloadSha256": "59686a60f7895591b1294af1b5d01ac30df463a8064687d8f2e1b4105af1f237"
+		},
+		"task-attempt-read": {
+			"equalAcrossPhases": true,
+			"payloadSha256": "f9a4134d1d6db159e2a9189f55aed819f93b8b87537df605607b188ca372e391"
+		}
+	},
+	"scope": "Equality of actual public-engine payloads; no inference operation in readback driver."
+}

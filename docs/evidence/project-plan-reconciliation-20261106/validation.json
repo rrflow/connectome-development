@@ -1,0 +1,177 @@
+{
+	"formatVersion": 1,
+	"uiParents": {
+		"before": "1f2e2a5c96edf7b783297e0f960abed1be9aa955",
+		"protectedLanding": "f4623071baafd8e2618d56f26a829df1931f6963"
+	},
+	"nativeSource": "f45305394dbe391786c7d618645a5fc0b1b2bbee",
+	"engineSha256": "086c42cec160de19104a67976f7608f74e61d86000f66e4c2c310a2ffd9a8af3",
+	"toolchain": {
+		"node": "24.22.0",
+		"pnpm": "11.24.0",
+		"cargoBuildJobs": 1
+	},
+	"validatedSourceSha256": {
+		"src-tauri/src/main.rs": "d803965164afcf997de0297ea5469bfdd2948e88e9fc9fa4ff260fd37e2858a4",
+		"src-tauri/src/rrd.rs": "54873913548c08a01079c3d0a41f49a482f8f6768bec55d0fde15313645cbe4a",
+		"src-tauri/src/rrd/client.rs": "dc2d3be9b2b6dc69ef02add6e1bffabc6c0c65c64c3f7c6f598b525b5799bb25",
+		"src-tauri/src/rrd/client/process.rs": "be93b512c9bd5cb4926c3735157480d948cb24eb5a398962e8a4e67d9847e380",
+		"src/rrflow/session.ts": "f2291733abd9e3cebcb1eed87f1fc21ce1240173882485da65e834c3a2289df2",
+		"src/screens/connectome/pages/RuntimeConnection/index.tsx": "b9fb64eea2b453bc0ab3c62ab402d1379a86fe50f9dab5c57180e6f35bc0ee26",
+		"src/screens/connectome/pages/RuntimeConnection/areas.ts": "487a3477a1d7b3a41eb54d59598fff4919d2034bc0d3021d64bdaa93bae62513",
+		"src/screens/connectome/pages/RuntimeConnection/plan.tsx": "75800c4725a2488763fd93d0355141d6b65e885e36be906e3f64b17c27e82e99",
+		"tests/smoke/connectome.spec.ts": "d9573aff566c45b7ebba86626a9d09af4558f0c49ea84487e9b510e23dbe1643"
+	},
+	"commands": [
+		{
+			"argv": ["corepack", "pnpm", "check"],
+			"exit": 0
+		},
+		{
+			"argv": ["corepack", "pnpm", "build"],
+			"exit": 0
+		},
+		{
+			"argv": ["corepack", "pnpm", "test:smoke"],
+			"exit": 0
+		},
+		{
+			"argv": [
+				"cargo",
+				"test",
+				"--manifest-path",
+				"src-tauri/Cargo.toml",
+				"--locked",
+				"rrd::client::process::attunement",
+				"--",
+				"--ignored",
+				"--test-threads=1"
+			],
+			"exit": 0
+		},
+		{
+			"argv": [
+				"cargo",
+				"test",
+				"--manifest-path",
+				"src-tauri/Cargo.toml",
+				"--locked",
+				"rrd::client::process",
+				"--",
+				"--ignored",
+				"--test-threads=1"
+			],
+			"exit": 0
+		},
+		{
+			"argv": [
+				"cargo",
+				"test",
+				"--manifest-path",
+				"src-tauri/Cargo.toml",
+				"--locked",
+				"--all-targets"
+			],
+			"exit": 0
+		},
+		{
+			"argv": [
+				"cargo",
+				"clippy",
+				"--manifest-path",
+				"src-tauri/Cargo.toml",
+				"--all-targets",
+				"--locked",
+				"--",
+				"-D",
+				"warnings"
+			],
+			"exit": 0
+		},
+		{
+			"argv": ["cargo", "fmt", "--manifest-path", "src-tauri/Cargo.toml", "--", "--check"],
+			"exit": 0
+		}
+	],
+	"counts": {
+		"focusedAttunement": 3,
+		"processEntries": 23,
+		"inactiveProcessHelpers": 1,
+		"ordinaryNative": 54,
+		"ordinaryIgnoredProcessEntries": 23,
+		"browserSmoke": 4
+	},
+	"retainedLogs": [
+		{
+			"name": "pnpm-install.log",
+			"sha256": "54900d4ceff45cd9b70a3a3d2a61cfdc2a712e56e054bdddf15c415eb056425e",
+			"bytes": 570
+		},
+		{
+			"name": "sidecar-stage.log",
+			"sha256": "2ab6df4088fa187606a821bd4a5ca1550ff2713ef0551b0bc80a2fd1d3dcd731",
+			"bytes": 293
+		},
+		{
+			"name": "receipt-key-check.log",
+			"sha256": "6de1f2676806ac694fdf02942a06c1bcdbf9762ff217c99e2b18ecd1defffc79",
+			"bytes": 997
+		},
+		{
+			"name": "receipt-key-build.log",
+			"sha256": "d06cbc0c11d2511678156b9e24202c32074d8a44597a03a46af860aef2acd1ae",
+			"bytes": 16886
+		},
+		{
+			"name": "receipt-key-test-smoke.log",
+			"sha256": "3d96b4b0be3b89534908b24ae0e317af9eb2cd8649fa0d973e639ef59214d71f",
+			"bytes": 683
+		},
+		{
+			"name": "native-attunement.log",
+			"sha256": "01545b6c55bb57a352eea974f5a009e52c41d1413dd33d738a5b7d040d1e0c32",
+			"bytes": 12734
+		},
+		{
+			"name": "native-process.log",
+			"sha256": "0142db485467ca51ac204cce33e7c2e39affcda312d89857218589a635f3fd8d",
+			"bytes": 2608
+		},
+		{
+			"name": "native-native.log",
+			"sha256": "4937694f85ab3f7420005a862e2bc60699b9c6f98b16a44848e72aa6be60eaa4",
+			"bytes": 8916
+		},
+		{
+			"name": "native-clippy.log",
+			"sha256": "d21033cd6ac0a50ce5788e0ead763677d9efe0e3f340cd9a7dba7c4d2399e87d",
+			"bytes": 10165
+		},
+		{
+			"name": "native-fmt.log",
+			"sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+			"bytes": 0
+		},
+		{
+			"name": "frontend-smoke-strengthened.log",
+			"sha256": "eee0402d112e4042e1a4082753d9c665b1a3362583a3467c7ff58d6ef5a20476",
+			"bytes": 5394
+		},
+		{
+			"name": "frontend-smoke-corrected.log",
+			"sha256": "ecf21eed5b43d4b29a8c1cdc169c15635cc73f012569441e56e69fca90acfd34",
+			"bytes": 684
+		}
+	],
+	"failures": [
+		"Old staged8d manifest mismatched f453 lock; canonical restaging and hash check passed.",
+		"A strengthened smoke expected connected Tasks heading in disconnected preview; retained failure, corrected to actual session-required alert, then four passed.",
+		"Atomic patch rejected incorrect guide context; no partial source change; corrected."
+	],
+	"limits": [
+		"Working-tree validation with these source hashes; clean desktop build and live journey still pending.",
+		"Controlled protocol/source fixtures are not model quality or training data.",
+		"Build retains WASM resolution, externalization, mixed-import and large-chunk warnings.",
+		"Raw local logs remain private; hashes identify retained originals."
+	]
+}

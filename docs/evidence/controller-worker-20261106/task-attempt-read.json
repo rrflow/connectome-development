@@ -1,0 +1,40 @@
+{
+	"attempt": {
+		"attempt_id": "67615d65-1e5b-40b1-b3a8-e58b089e2fc5",
+		"ordinal": 2,
+		"status": "accepted",
+		"outcome_sha256": "1eca244dcf5028981b9d46ea05ab749335b9dc219b3b5f750a00cb6c5c46168a",
+		"result": null,
+		"worker_output": {
+			"contract_version": 1,
+			"scope": "instance:instance-49f097824c98ab1ed3e49a6f",
+			"task_id": "task-ed886df6db4b2c949185fcb2e41d89a91f47c24aba6f66db1566ea67f951dcee",
+			"attempt_id": "67615d65-1e5b-40b1-b3a8-e58b089e2fc5",
+			"selection_attempt_id": "e93c63ad-cc9c-4898-8895-444413f4d26a",
+			"selection_sha256": "1282c68f6225caef3416d442a65b3b32cfbaeedaa9c0eae3626b32ff8c33d696",
+			"task_sha256": "b80e7532d98c0b0f3c6b78f04bceec4b8ce6f0c131f10478990d2345b61938ba",
+			"configuration_sha256": "391f10f1d8aebda141a7df4ca51d7b219744a72597cd2fbf6e0d234dae4d7678",
+			"binding_id": "swag-custom-bf16",
+			"service_id": "swag-qwen3-coder-intent-20261028",
+			"packet_sha256": "388f8299473e93faab099e3e59d736080c018318c688c6fb62a48aa168bc0423",
+			"request_sha256": "88776cae3f2bfca9b2eaa549cbe65f030abbf0f3277e2d114070cab78edf5f00",
+			"response_sha256": "b528a4f66a03ce449ab30a5fedd3253e4590a1306566b15b7af64b8308cde06d",
+			"content_sha256": "27c023865a90bfdeae42f1df0b6715730ae3f25bddebed4f75b5e29cd3116016",
+			"content": "{\n  \"implementation_steps\": [\n    \"Integrate engine-owned selected-worker handoff logic into Connectome's current SDK compatibility layer.\",\n    \"Implement real model request handling and reload/readback mechanisms for the selected worker.\",\n    \"Ensure proper state synchronization between engine and worker during handoff operations.\"\n  ],\n  \"verification_steps\": [\n    \"Validate that the selected-worker handoff maintains consistency across model requests and reloads.\",\n    \"Confirm SDK compatibility with existing runtime manifest and catalogue revisions.\",\n    \"Test handoff behavior under simulated engine failure and recovery conditions.\"\n  ],\n  \"unresolved_questions\": [\n    \"How does the engine handle partial state updates during worker handoff?\",\n    \"What are the exact implications of the current schema revision on model reload behavior?\",\n    \"Are there any known edge cases in the runtime manifest that could affect handoff reliability?\"\n  ]\n}",
+			"read": {
+				"runtime_manifest_sha256": "be6291f5e91e56f74b92da527c7bd6df7b1c579e993caa70a6816877039e6bd7",
+				"runtime_cursor": 8,
+				"schema_revision": 3,
+				"catalogue_revision": 0
+			},
+			"context": null,
+			"usage": {
+				"prompt_tokens": 646,
+				"completion_tokens": 176,
+				"total_tokens": 822
+			},
+			"elapsed_ms": 13200,
+			"http_status": 200
+		}
+	}
+}

@@ -106,6 +106,7 @@ export function buildDatasetArtifacts({
 			kind: event.kind,
 			mode: event.mode,
 			title: event.title,
+			body: event.body,
 			component: event.component,
 			requiresOperatorSignoff: event.requiresOperatorSignoff,
 			triggers: event.triggers,
@@ -122,9 +123,9 @@ export function buildDatasetArtifacts({
 			minimumPromptCount: workloadProfile.minimumPromptCount,
 			targetLatencyMs: workloadProfile.targetLatencyMs,
 		},
-		classifier: "enabled",
-		decisionRouter: "enabled",
-		reasoningEngine: "enabled",
+		classifier: "planned",
+		decisionRouter: "planned",
+		reasoningEngine: "planned",
 		triggerInvariant:
 			"cold-served vector read => RRFlowCLD trigger => cold-period workflow with bounded observable receipts",
 		compareTargets: ["SurrealDB", "ArangoDB"],
@@ -189,27 +190,27 @@ export function buildDatasetArtifacts({
 			{
 				id: "dataset-template-selected",
 				required: true,
-				passed: true,
+				status: "verified",
 			},
 			{
 				id: "remote-source-availability",
 				required: workloadProfile.requiresRemoteSource,
-				passed: !workloadProfile.requiresRemoteSource || remoteSources.length > 0,
+				status: workloadProfile.requiresRemoteSource ? "unverified" : "not_required",
 			},
 			{
 				id: "controller-contract-explicit",
 				required: true,
-				passed: true,
+				status: "unverified",
 			},
 			{
 				id: "cold-trigger-invariant",
 				required: true,
-				passed: true,
+				status: "unverified",
 			},
 			{
 				id: "comparable-workload-targets",
 				required: true,
-				passed: true,
+				status: "unverified",
 			},
 		],
 	};

@@ -31,6 +31,13 @@ The first version Connectome numbers as its own.
   analytics tracking and the native command that carried it; 221 files and
   twelve dependencies.
 
-Still inherited and scheduled for removal rather than renaming (sprint 009):
-the inherited UI kit, and the views that still run on the inherited query
-client.
+- Connectome's own look: `~/icons` (Material Design Icons, Apache-2.0),
+  original pictograms, a text wordmark, a Connectome Mantine theme (violet →
+  cyan gradient, own surfaces and inputs), self-hosted Inter and JetBrains
+  Mono, an original application icon on every platform. The inherited UI kit
+  (unlicensed), its brand gradient and 117 component style rules, its logos,
+  application icon and imagery are deleted. Identity gate: 6 inherited
+  dependencies remain, all engine/client/editor packages for Slice D.
+
+Still inherited and scheduled for removal rather than renaming (sprint 009,
+Slice D): the views that still run on the inherited query client.

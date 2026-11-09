@@ -1,0 +1,11 @@
+{
+	"taskAndBothAttemptsEqual": true,
+	"budgetEqualAcrossReloadAndReadback": true,
+	"steps": 2,
+	"chargedMs": 22528,
+	"originalDeadline": 1793483148281,
+	"workerContentSha256": "911f5abff6d58cc1711eca1d818ba067eb72f86ba45605cdbe925c06c10ea218",
+	"taskStillOpen": true,
+	"trainingDataCreated": false,
+	"modelQualityQualified": false
+}

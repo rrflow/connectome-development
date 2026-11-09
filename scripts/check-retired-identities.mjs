@@ -46,13 +46,15 @@ const vendor = /surreal/i;
 
 /**
  * Files whose purpose is to preserve or report third-party provenance, plus
- * this gate, which must spell the name it forbids.
+ * the gates that must spell the name they forbid: this one, and the RRFlow
+ * isolation gate, which fails when an RRFlow page loads the vendor's packages.
  */
 const noticeFiles = new Set([
 	"LICENSE",
 	"NOTICE",
 	"src/shared/assets/data/license-report.json",
 	"scripts/check-retired-identities.mjs",
+	"scripts/check-rrflow-isolation.mjs",
 ]);
 
 /**

@@ -45,6 +45,7 @@ export function WorkbenchLinkedCloudPanel({
 	remoteSourceError,
 	onAddRemoteSource,
 	remoteSources,
+	onOpenSource,
 	onLoadDocIntoWorkspace,
 	onRemoveRemoteSource,
 	docWorkspaceBusy,
@@ -54,20 +55,20 @@ export function WorkbenchLinkedCloudPanel({
 	onChangeDocWorkspaceContent,
 	docWorkspaceError,
 	onCopyDocWorkspace,
-	onSaveDocWorkspaceToLinkedFolder,
-	canSaveDocWorkspaceToLinkedFolder,
+	onSaveDocWorkspace,
+	canSaveDocWorkspace,
 	selectedDocSourceId,
 }: {
 	connectionAvailable: boolean;
-	linkLabelDraft: string;
-	onChangeLinkLabelDraft: (value: string) => void;
-	onAddLinkedFile: () => void;
-	onAddLinkedFolder: () => void;
-	onRefreshLinks: () => void;
+	linkLabelDraft?: string;
+	onChangeLinkLabelDraft?: (value: string) => void;
+	onAddLinkedFile?: () => void;
+	onAddLinkedFolder?: () => void;
+	onRefreshLinks?: () => void;
 	linkError: string | null;
 	linkedPaths: WorkbenchLinkedPath[];
 	formatWhen: (unixMs?: number) => string;
-	onReconnectLinkedPath: (linkedPathId: string) => void;
+	onReconnectLinkedPath?: (linkedPathId: string) => void;
 	onRemoveLinkedPath: (linkedPathId: string) => void;
 	remoteSourceProvider: WorkbenchRemoteSourceProvider;
 	remoteSourceProviderOptions: { value: WorkbenchRemoteSourceProvider; label: string }[];
@@ -84,7 +85,8 @@ export function WorkbenchLinkedCloudPanel({
 	remoteSourceError: string | null;
 	onAddRemoteSource: () => void;
 	remoteSources: WorkbenchRemoteSource[];
-	onLoadDocIntoWorkspace: (source: WorkbenchRemoteSource) => void;
+	onOpenSource: (source: WorkbenchRemoteSource) => void;
+	onLoadDocIntoWorkspace?: (source: WorkbenchRemoteSource) => void;
 	onRemoveRemoteSource: (sourceId: string) => void;
 	docWorkspaceBusy: boolean;
 	docWorkspaceTitle: string;
@@ -93,8 +95,8 @@ export function WorkbenchLinkedCloudPanel({
 	onChangeDocWorkspaceContent: (value: string) => void;
 	docWorkspaceError: string | null;
 	onCopyDocWorkspace: () => void;
-	onSaveDocWorkspaceToLinkedFolder: () => void;
-	canSaveDocWorkspaceToLinkedFolder: boolean;
+	onSaveDocWorkspace: () => void;
+	canSaveDocWorkspace: boolean;
 	selectedDocSourceId: string | null;
 }) {
 	return (
@@ -105,34 +107,36 @@ export function WorkbenchLinkedCloudPanel({
 			<Stack>
 				<Title order={4}>Linked external files and folders</Title>
 				<Text size="sm">
-					Link external datasets once, then let Workbench auto-check availability and
-					reconnect paths when a drive disconnects.
+					Saved links are shown below. Path linking, availability checks, and reconnection
+					require an authorized native integration and are not available here.
 				</Text>
-				<TextInput
-					label="Link label (optional)"
-					placeholder="USB benchmark pack"
-					value={linkLabelDraft}
-					onChange={(event) => onChangeLinkLabelDraft(event.currentTarget.value)}
-				/>
+				{onChangeLinkLabelDraft && (
+					<TextInput
+						label="Link label (optional)"
+						placeholder="USB benchmark pack"
+						value={linkLabelDraft}
+						onChange={(event) => onChangeLinkLabelDraft(event.currentTarget.value)}
+					/>
+				)}
 				<Group>
 					<Button
 						variant="light"
 						onClick={onAddLinkedFile}
-						disabled={!connectionAvailable}
+						disabled={!connectionAvailable || !onAddLinkedFile}
 					>
 						Link file
 					</Button>
 					<Button
 						variant="light"
 						onClick={onAddLinkedFolder}
-						disabled={!connectionAvailable}
+						disabled={!connectionAvailable || !onAddLinkedFolder}
 					>
 						Link folder
 					</Button>
 					<Button
 						variant="subtle"
 						onClick={onRefreshLinks}
-						disabled={!connectionAvailable}
+						disabled={!connectionAvailable || !onRefreshLinks}
 					>
 						Refresh links
 					</Button>
@@ -172,7 +176,7 @@ export function WorkbenchLinkedCloudPanel({
 									}
 									variant="light"
 								>
-									{entry.status}
+									Last recorded: {entry.status}
 								</Badge>
 							</Group>
 							<Text
@@ -201,7 +205,8 @@ export function WorkbenchLinkedCloudPanel({
 									<Button
 										size="xs"
 										variant="light"
-										onClick={() => onReconnectLinkedPath(entry.id)}
+										disabled={!onReconnectLinkedPath}
+										onClick={() => onReconnectLinkedPath?.(entry.id)}
 									>
 										Reconnect
 									</Button>
@@ -220,8 +225,8 @@ export function WorkbenchLinkedCloudPanel({
 				))}
 				<Title order={5}>Cloud sources foundation</Title>
 				<Text size="sm">
-					Register Google Drive and Google Docs relay sources for import, RAG, and test
-					dataset generation with minimal setup.
+					Save source details for planning. Registration does not grant access, import
+					data, or enable synchronization.
 				</Text>
 				<Group grow>
 					<Select
@@ -312,6 +317,9 @@ export function WorkbenchLinkedCloudPanel({
 							>
 								{source.url}
 							</Text>
+							<Text size="xs">
+								Last recorded status: {source.status} (not verified)
+							</Text>
 							{source.relayUrl && (
 								<Text
 									size="xs"
@@ -332,9 +340,7 @@ export function WorkbenchLinkedCloudPanel({
 								<Button
 									size="xs"
 									variant="subtle"
-									onClick={() =>
-										window.open(source.relayUrl ?? source.url, "_blank")
-									}
+									onClick={() => onOpenSource(source)}
 								>
 									Open source
 								</Button>
@@ -342,7 +348,8 @@ export function WorkbenchLinkedCloudPanel({
 									<Button
 										size="xs"
 										variant="subtle"
-										onClick={() => onLoadDocIntoWorkspace(source)}
+										onClick={() => onLoadDocIntoWorkspace?.(source)}
+										disabled={!onLoadDocIntoWorkspace}
 										loading={docWorkspaceBusy}
 									>
 										Load doc
@@ -365,10 +372,10 @@ export function WorkbenchLinkedCloudPanel({
 					p="sm"
 				>
 					<Stack>
-						<Title order={6}>Doc workspace (pull/edit/copy/save)</Title>
+						<Title order={6}>Doc workspace (edit/copy/save)</Title>
 						<Text size="xs">
-							Use this to relay a Google Doc into Workbench, edit it for dataset prep,
-							then copy or save into a linked folder.
+							Remote document loading is unavailable. Edit text here, copy it, or save
+							it to a location you select.
 						</Text>
 						<TextInput
 							label="Title"
@@ -405,10 +412,10 @@ export function WorkbenchLinkedCloudPanel({
 							<Button
 								size="xs"
 								variant="light"
-								onClick={onSaveDocWorkspaceToLinkedFolder}
-								disabled={!canSaveDocWorkspaceToLinkedFolder}
+								onClick={onSaveDocWorkspace}
+								disabled={!canSaveDocWorkspace}
 							>
-								Save to linked folder
+								Save text
 							</Button>
 							{selectedDocSourceId && <Badge variant="light">source linked</Badge>}
 						</Group>

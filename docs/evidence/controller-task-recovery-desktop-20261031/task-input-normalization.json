@@ -1,0 +1,9 @@
+{
+	"rawProjectedBytes": 4096,
+	"crlfPairs": 24,
+	"engineGoalBytes": 4072,
+	"rawProjectedSha256": "d29683018475514875a009d9711cf889ba884199f816e822af3f7d8b8805a393",
+	"engineGoalSha256": "f8a94a04b6822a24ab885a64a4af5e8190b7bc8bf6023ac70e5107b97bef5efb",
+	"verifiedTransformation": "CRLF to LF only",
+	"initialObserverAssertion": "Raw projected bytes did not equal the browser textarea value; no task/model trial was repeated"
+}

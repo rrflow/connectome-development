@@ -23,11 +23,11 @@ Deleted 2026-10-18: `cloud.tsx` (inherited vendor's hosted-cloud account state),
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
-interface Engram {
+interface StoreState {
   // State shape
 }
 
-export const useStoreName = create<Engram>()(
+export const useStoreName = create<StoreState>()(
   immer((set, get) => ({
     // Initial state + actions
   }))

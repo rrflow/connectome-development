@@ -1,0 +1,10 @@
+{
+	"status": "passed",
+	"eventId": "880141f6-294d-8536-a26b-936f5424c7c8",
+	"eventCount": 1,
+	"replayAcknowledgedWithoutDuplicate": true,
+	"modelBudgetUnchanged": true,
+	"taskStatus": "open",
+	"modelDispatchRequested": false,
+	"scope": "Local configured RROFLOW ingest; no cloud deployment or reviewed training claim."
+}

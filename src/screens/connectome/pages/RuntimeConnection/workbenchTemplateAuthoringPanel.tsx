@@ -1,5 +1,4 @@
 import {
-	Alert,
 	Button,
 	Group,
 	Paper,
@@ -10,7 +9,6 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import type { ChangeEvent, Ref } from "react";
 import type {
 	WorkbenchLearningAction,
 	WorkbenchLearningActionName,
@@ -24,12 +22,6 @@ import type {
 
 export function WorkbenchTemplateAuthoringPanel({
 	connectionAvailable,
-	templatesCount,
-	onExportTemplates,
-	onOpenTemplateImport,
-	importInputRef,
-	onImportTemplates,
-	templateImportError,
 	templateName,
 	onChangeTemplateName,
 	templateDescription,
@@ -95,12 +87,6 @@ export function WorkbenchTemplateAuthoringPanel({
 	onCreateTemplate,
 }: {
 	connectionAvailable: boolean;
-	templatesCount: number;
-	onExportTemplates: () => void;
-	onOpenTemplateImport: () => void;
-	importInputRef: Ref<HTMLInputElement>;
-	onImportTemplates: (event: ChangeEvent<HTMLInputElement>) => void;
-	templateImportError: string | null;
 	templateName: string;
 	onChangeTemplateName: (value: string) => void;
 	templateDescription: string;
@@ -180,36 +166,6 @@ export function WorkbenchTemplateAuthoringPanel({
 					Define reusable, configurable templates with schema and minimum requirements for
 					reasoning-engine tests and experiments.
 				</Text>
-				<Group>
-					<Button
-						variant="light"
-						onClick={onExportTemplates}
-						disabled={templatesCount === 0}
-					>
-						Export templates
-					</Button>
-					<Button
-						variant="light"
-						onClick={onOpenTemplateImport}
-					>
-						Import templates
-					</Button>
-					<input
-						ref={importInputRef}
-						type="file"
-						accept="application/json,.json"
-						style={{ display: "none" }}
-						onChange={(event) => onImportTemplates(event)}
-					/>
-				</Group>
-				{templateImportError && (
-					<Alert
-						color="red"
-						title="Template import failed"
-					>
-						{templateImportError}
-					</Alert>
-				)}
 				<TextInput
 					label="Template name"
 					placeholder="Real project retrieval benchmark"
@@ -273,9 +229,8 @@ export function WorkbenchTemplateAuthoringPanel({
 					<Stack>
 						<Title order={5}>MCPL Learning scripted events</Title>
 						<Text size="xs">
-							Build Did You Know, Knowledge Drop, and Factoid events as A2UI
-							components for passive or interactive flows, then catamorphize back to
-							Clyffy.
+							Author event definitions in this profile. Saving a definition does not
+							activate its triggers or execute its actions.
 						</Text>
 						<Group grow>
 							<Select

@@ -1,0 +1,10 @@
+{
+	"sourceUrl": "https://github.com/rrflow/connectome-development/pull/29",
+	"sourceRevision": "0f75c015c0687a554cdf2b1a48c36488f8113aee",
+	"bodySha256": "d1b6b401f78cdde24f2ca03a6f783a24168f9a14e3dc36533698b88c81484c21",
+	"projectedGoalSha256": "d29683018475514875a009d9711cf889ba884199f816e822af3f7d8b8805a393",
+	"originalBytes": 4573,
+	"projectedBytes": 4096,
+	"truncated": true,
+	"purpose": "Existing contract goal bound; actual source text, no generated task or training label"
+}

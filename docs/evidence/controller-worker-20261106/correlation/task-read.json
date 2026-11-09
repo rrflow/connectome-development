@@ -1,0 +1,62 @@
+{
+	"task": {
+		"format_version": 1,
+		"task_id": "task-b9e7b5e2006b5ed84179fc9925600fddfd06e421038b707c56f1de711024f4f7",
+		"scope": "instance:instance-38c9e31abb311dbe4e726551",
+		"title": "Verify UI worker handoff with correlated RROFLOW readback",
+		"goal": "Review the remaining integration work for https://github.com/rrflow/connectome-development/pull/28 at b5fc2778b3d6d8644936baccd90957e9b14f137d. The user requires real UI task handoff, engine-owned execution, correlated RROFLOW debugging evidence and independently reviewed learning. Propose implementation steps, verification steps and unresolved questions for connecting the retained worker attempt to the configured observation sink. Task text only is supplied. Do not claim code inspection, executed commands, edited files, successful delivery, reviewed quality or training consent.",
+		"status": "open",
+		"opened_at_unix_ms": 1794006761050,
+		"idempotency_key": "connectome-3d775128c49b45b6965fc7ac64663e04-key-4",
+		"operation_sha256": "2b270534396ee57150e81da216a1e1313aba007fae11133bf5d8cc443b75cecb",
+		"task_cursor": 4,
+		"known_at_cursor": 4
+	},
+	"read": {
+		"runtime_manifest_sha256": "15b1e1f015ebc023e19120e1abd3644d7b0d695eeb602bc31a21f2e0f2383a9d",
+		"runtime_cursor": 10,
+		"schema_revision": 3,
+		"catalogue_revision": 0
+	},
+	"selected_versions": 1,
+	"read_evidence": {
+		"contract_version": 1,
+		"key_budget": 100000,
+		"point_reads": 10,
+		"range_scans": 1,
+		"keys_examined": 11,
+		"values_decoded": 11,
+		"decoded_bytes": 4559,
+		"stamp_validation": {
+			"method": "authenticated_current_head",
+			"change_reads": 0,
+			"proof_nodes": 0
+		},
+		"paths": [
+			{
+				"path": "read_stamp",
+				"point_reads": 5,
+				"range_scans": 0,
+				"keys_examined": 5,
+				"values_decoded": 5,
+				"decoded_bytes": 2547
+			},
+			{
+				"path": "record_versions",
+				"point_reads": 0,
+				"range_scans": 1,
+				"keys_examined": 1,
+				"values_decoded": 1,
+				"decoded_bytes": 1692
+			},
+			{
+				"path": "accumulator_proof",
+				"point_reads": 5,
+				"range_scans": 0,
+				"keys_examined": 5,
+				"values_decoded": 5,
+				"decoded_bytes": 320
+			}
+		]
+	}
+}

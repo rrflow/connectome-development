@@ -12,6 +12,7 @@ export function WorkbenchTemplateLibraryPanel({
 	linkedPaths,
 	onRemoveTemplate,
 	onOpenRoute,
+	canOpenRoute,
 	isTriggerActive,
 	onRunLearningEvent,
 	runningEventIds,
@@ -21,8 +22,9 @@ export function WorkbenchTemplateLibraryPanel({
 	linkedPaths: WorkbenchLinkedPath[];
 	onRemoveTemplate: (templateId: string) => void;
 	onOpenRoute: (route: string) => void;
-	isTriggerActive: (trigger: WorkbenchLearningTrigger) => boolean;
-	onRunLearningEvent: (templateName: string, event: WorkbenchLearningEvent) => void;
+	canOpenRoute: (route: string) => boolean;
+	isTriggerActive?: (trigger: WorkbenchLearningTrigger) => boolean;
+	onRunLearningEvent?: (templateId: string, event: WorkbenchLearningEvent) => void;
 	runningEventIds: string[];
 }) {
 	return (
@@ -55,6 +57,19 @@ export function WorkbenchTemplateLibraryPanel({
 						p="sm"
 					>
 						<Stack gap="xs">
+							{!onRunLearningEvent && (
+								<Text size="xs">
+									Scripted event execution and signal evaluation are not
+									available. These are saved event definitions, not engine
+									outcomes.
+								</Text>
+							)}
+							{onRunLearningEvent && (
+								<Text size="xs">
+									Events run only when selected by the operator. Diagnostic
+									captures create local notes, not engine audit receipts.
+								</Text>
+							)}
 							<Group justify="space-between">
 								<Text fw={650}>{template.name}</Text>
 								<Group gap="xs">
@@ -123,11 +138,19 @@ export function WorkbenchTemplateLibraryPanel({
 											{index + 1}. {step.title} → {step.route}
 											{linked
 												? ` · link=${linked.label} (${linked.status})`
-												: ""}
+												: step.linkedPathId
+													? ` · unresolved link=${step.linkedPathId}`
+													: ""}
 										</Text>
 										<Button
 											size="xs"
 											variant="subtle"
+											disabled={!canOpenRoute(step.route)}
+											title={
+												!canOpenRoute(step.route)
+													? "Route unavailable"
+													: undefined
+											}
 											onClick={() => onOpenRoute(step.route)}
 										>
 											Open
@@ -200,26 +223,34 @@ export function WorkbenchTemplateLibraryPanel({
 														<Text size="xs">
 															actions:{" "}
 															{event.actions
-																.map((action) => action.name)
+																.map((action) =>
+																	action.payload
+																		? `${action.name} (${action.payload})`
+																		: action.name,
+																)
 																.join(", ")}
 														</Text>
 													)}
-													{event.triggers.some((trigger) =>
-														isTriggerActive(trigger),
-													) && (
-														<Badge
-															size="sm"
-															color="orange"
-															variant="light"
-														>
-															Signal active
-														</Badge>
-													)}
+													{isTriggerActive &&
+														event.triggers.some((trigger) =>
+															isTriggerActive(trigger),
+														) && (
+															<Badge
+																size="sm"
+																color="orange"
+																variant="light"
+															>
+																Signal active
+															</Badge>
+														)}
 													{event.mode === "interactive" &&
 														event.route && (
 															<Button
 																size="xs"
 																variant="light"
+																disabled={
+																	!canOpenRoute(event.route)
+																}
 																onClick={() =>
 																	onOpenRoute(
 																		event.route ?? "workbench",
@@ -237,14 +268,18 @@ export function WorkbenchTemplateLibraryPanel({
 																	? "light"
 																	: "subtle"
 															}
+															disabled={!onRunLearningEvent}
 															onClick={() =>
-																onRunLearningEvent(
-																	template.name,
+																onRunLearningEvent?.(
+																	template.id,
 																	event,
 																)
 															}
 															loading={runningEventIds.includes(
-																event.id,
+																JSON.stringify([
+																	template.id,
+																	event.id,
+																]),
 															)}
 														>
 															{event.requiresOperatorSignoff

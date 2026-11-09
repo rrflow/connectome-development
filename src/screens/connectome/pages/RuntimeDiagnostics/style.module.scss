@@ -9,7 +9,7 @@
 
 .launcher {
 	background:
-		radial-gradient(circle at 92% 0%, rgba(139, 92, 246, 0.2), transparent 34%),
+		radial-gradient(circle at 92% 0%, rgba(47, 158, 166, 0.2), transparent 34%),
 		color-mix(in srgb, var(--mantine-color-body) 94%, transparent);
 }
 
@@ -62,8 +62,8 @@
 	padding: 22px 24px 22px 12px;
 	overflow: hidden;
 	background:
-		linear-gradient(90deg, transparent 24%, rgba(139, 92, 246, 0.035) 25%, transparent 26%, transparent 49%, rgba(139, 92, 246, 0.035) 50%, transparent 51%, transparent 74%, rgba(139, 92, 246, 0.035) 75%, transparent 76%),
-		radial-gradient(circle at 52% 42%, rgba(139, 92, 246, 0.12), transparent 48%);
+		linear-gradient(90deg, transparent 24%, rgba(47, 158, 166, 0.035) 25%, transparent 26%, transparent 49%, rgba(47, 158, 166, 0.035) 50%, transparent 51%, transparent 74%, rgba(47, 158, 166, 0.035) 75%, transparent 76%),
+		radial-gradient(circle at 52% 42%, rgba(47, 158, 166, 0.12), transparent 48%);
 }
 
 .lane {
@@ -84,7 +84,7 @@
 
 	>span {
 		height: 1px;
-		background: linear-gradient(90deg, rgba(139, 92, 246, 0.12), rgba(139, 92, 246, 0.5), rgba(139, 92, 246, 0.12));
+		background: linear-gradient(90deg, rgba(47, 158, 166, 0.12), rgba(47, 158, 166, 0.5), rgba(47, 158, 166, 0.12));
 	}
 }
 
@@ -95,17 +95,17 @@
 	height: 9px;
 	padding: 0;
 	transform: translate(-50%, -50%);
-	border: 1px solid rgba(216, 195, 255, 0.8);
+	border: 1px solid rgba(143, 214, 218, 0.8);
 	border-radius: 50%;
 	background: var(--mantine-color-violet-5);
-	box-shadow: 0 0 12px rgba(139, 92, 246, 0.75);
+	box-shadow: 0 0 12px rgba(47, 158, 166, 0.75);
 	cursor: pointer;
 
 	&.current {
 		width: 15px;
 		height: 15px;
 		background: white;
-		box-shadow: 0 0 0 5px rgba(139, 92, 246, 0.2), 0 0 24px rgba(180, 132, 255, 0.95);
+		box-shadow: 0 0 0 5px rgba(47, 158, 166, 0.2), 0 0 24px rgba(95, 196, 203, 0.95);
 	}
 }
 

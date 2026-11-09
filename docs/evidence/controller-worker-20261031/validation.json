@@ -1,0 +1,71 @@
+{
+	"startingConnectomeCommit": "f8139cc725a6f546fdf177b522ff4772121bf8ca",
+	"engineCommit": "e35283303f4c5823c612686d32fb6bee1ac368ac",
+	"engineSha256": "8c323716f02e210ebc211bf4593dde84b03d1b55d50f62e710676cda5a971da0",
+	"sourceFileSha256": {
+		"package.json": "e5d5cbd73f8b3d4753fed12ca5e2e9362d09c8348ebc3feaa735b149b9b3a4b1",
+		"pnpm-lock.yaml": "9c553fd6e54516a754bfd4f27a866d786f7b4c556c8610764450ee3ed9cc38bf",
+		"src-tauri/Cargo.toml": "95ad272ca9e95c1cfa076024b9309149cdbbbc530f1be8f559bbc5e17650b32e",
+		"src-tauri/Cargo.lock": "f76af01bd549b3eec04f06d44c7033747c381f916280854cd1e0ba75fb9f85ac",
+		"src-tauri/src/rrd/client/tasks.rs": "f1255a0cb6c900daa0208549f4150a0d53546cbf2eb3dbdee3aa29af77ff1dde",
+		"src-tauri/src/rrd/client/process/tasks.rs": "d2294df0cc117a8369731b4dd00572959b0c2f008229290277ca78f1e2c51502",
+		"src-tauri/fixtures/task-worker-output.json": "40bdb8b279b1b3465e76529c2a30beee2ae2da354692d7c48d9806576317a54d",
+		"src/rrflow/tasks.ts": "c2750422cadd298c4b2f473f644c4be9b599916cac1d35912ad3d8e860eac59a",
+		"src/rrflow/fixtures/engine-values.json": "c83be8dbb2415e932baf7a8b0daa7b405679b6e2ff0e5a7883e199acc62a8398",
+		"src/screens/connectome/pages/RuntimeConnection/tasks.tsx": "7954496229e717dfbb3d63ae8babfb67f980040e8041b5a90512ded7e7c7ea43",
+		".github/workflows/connectome-ci.yml": "4bcf4f26162268068d0752978d54880f53b7681dbb646209b330a5a71b356846"
+	},
+	"checks": {
+		"native-suite": {
+			"passed": 41,
+			"ignored": 17,
+			"logSha256": "8e87fa58e997c43ecbc89e00908bbbb575ef7a0474d430e3974aa72e0b26d66f"
+		},
+		"installed-process-suite": {
+			"passed": 17,
+			"failed": 0,
+			"visualSeedHelper": "returned without capture inputs; no visual evidence claimed",
+			"logSha256": "8b27c212d9ec8f9d048d103ede8a27350e3e68cdfd4a2f882c6c55705836a39a"
+		},
+		"native-clippy": {
+			"exitCode": 0,
+			"logSha256": "4c9230ffb999ef0dbd3fd1e56ff602c3d99e235b81cfc9ec9f720a7d50abf484"
+		},
+		"native-format": {
+			"exitCode": 0,
+			"logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+		},
+		"frontend-check-final": {
+			"exitCode": 0,
+			"logSha256": "3bc4d46b2db124cb01f9506088b2dccf69f4c37d9d38a3de9e5c795e27dc20c0"
+		},
+		"frontend-build": {
+			"exitCode": 0,
+			"logSha256": "8c35ccc68dc54d3ee5d6bc69d391d343309a3d385dc399626aa3cd9cad5becea"
+		},
+		"browser-smoke": {
+			"passed": 4,
+			"scope": "existing production browser smoke; no native worker UI execution",
+			"logSha256": "ea2707f1975366660b8da2d070d8ce0d4c6e7807b475b00725ba20264b8f664e"
+		},
+		"value-fixture-generation": {
+			"passed": 1,
+			"actualEngine": true,
+			"logSha256": "71745b0bd4e8687fe578a7b4cf20523e39458b3bd0566e1790c57aca0300c0cb"
+		},
+		"installed-task-check": {
+			"passed": 1,
+			"overlapsInstalledSuite": true,
+			"logSha256": "832858c4cabf5e82d86c342ff8104084b4ae7e221ba84e0a6976f3a9cacc656a"
+		},
+		"native-projection-test": {
+			"passed": 1,
+			"overlapsNativeSuite": true,
+			"logSha256": "52db1535202de3f7e64d3048cee9604e60ff13eba68b0de218211cacffbfb924"
+		}
+	},
+	"newProviderCalls": 0,
+	"liveWorkerDesktopProof": false,
+	"trainingDataCreated": false,
+	"releaseQualified": false
+}

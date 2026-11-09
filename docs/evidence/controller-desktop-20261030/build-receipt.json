@@ -1,0 +1,16 @@
+{
+	"connectome_source": "d7eb6ea3027b76e1afd515715ab4958e66083060",
+	"engine_source": "61ddb26416811ba7e56edf2e28b8cef3acad5930",
+	"preview": true,
+	"qualification": "development build; no installer or clean-machine proof",
+	"files": {
+		"connectome.exe": {
+			"size": 47428608,
+			"sha256": "a0169dfe698d2112eb6c7deae2fb77ff37b303b556da3712a9f3ca84902bb937"
+		},
+		"rrflow.exe": {
+			"size": 167331328,
+			"sha256": "bea59498eaee2c80312a365370abd6109e91188705914c826eb06d0e1fa85748"
+		}
+	}
+}

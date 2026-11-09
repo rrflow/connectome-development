@@ -28,7 +28,7 @@ export function DocumentationView() {
 		<Group
 			h="100%"
 			wrap="nowrap"
-			gap="var(--Connectome-divider-size)"
+			gap="var(--connectome-divider-size)"
 			pr="lg"
 			pb="lg"
 			pl={{ base: "lg", md: 0 }}

@@ -1,0 +1,40 @@
+[
+	{
+		"check": "initial native cargo check",
+		"exit_code": 1,
+		"diagnostic": "E0599: CorrelationId does not implement Display/ToString",
+		"record": "tool transcript; corrected with as_str().to_owned()"
+	},
+	{
+		"check": "initial frontend build",
+		"exit_code": 1,
+		"log": "frontend-build.log",
+		"diagnostic": "esbuild observed a partial source write while development edits overlapped the build",
+		"correction": "complete stable-source build passed; final frontend build also passed"
+	},
+	{
+		"check": "first lost-reply test compilation",
+		"exit_code": 101,
+		"log": "process-fault.log",
+		"diagnostic": "RrdConnectRequest is not Clone",
+		"correction": "construct each connection request from the actual served estate"
+	},
+	{
+		"check": "first expiry/cancellation scenario",
+		"exit_code": 101,
+		"log": "process-controls-final.log",
+		"diagnostic": "1 ms lease scenario returned API DeadlineExceeded; two other installed scenarios passed",
+		"correction": "use a 10000 ms requested lease and wait for its returned expiration before recovery"
+	},
+	{
+		"check": "first browser smoke",
+		"exit_code": 0,
+		"log": "browser-smoke.log",
+		"limitation": "nested pnpm preview server used Node 24.21; superseded by browser-smoke-pinned-node.log using the required Node 24.22.0"
+	},
+	{
+		"check": "source diff review",
+		"diagnostic": "Windows default text decoding altered Unicode separators and one comment during local edits",
+		"correction": "restored exact original UTF-8 characters; subsequent reads/writes explicitly use UTF-8; final build uses corrected text"
+	}
+]

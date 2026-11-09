@@ -104,7 +104,7 @@ Work:
 Keep as Tauri views backed by RRD:
 
 - connection catalogue and negotiated instance identity;
-- engram desired/observed state and reconciliation progress;
+- estate desired/observed state and reconciliation progress;
 - tables, model catalogue, schema, and RRFlowQL studio;
 - runtime capability/surface matrix and runtime-tool catalogue;
 - prompt-flight playback, temporal stream, causal traces, cluster history, and
@@ -246,14 +246,14 @@ Starting revision `38f68ce` on `agent/rrd-engine-lenses`.
 - Bounds come from the contract (`MAX_QUERY_BYTES`,
   `MAX_VECTOR_STORAGE_KEYS`, `MAX_VECTOR_POINT_PAGE`,
   `MAX_VECTOR_SEARCH_TOP_K`, `MAX_DIAGNOSTIC_RUNTIME_SCANNED_CHANGES`) and
-  query budgets from the engram's configured `configuration.query`.
+  query budgets from the estate's configured `configuration.query`.
 - Lenses on the runtime page: Database (schema registry, ForceAtlas2 record
   and relation graph, record inspector, RRFlowQL console with record and
   traversal queries), Vectors (collections, named-vector contract, paged
   point scroll, exact query-by-example search with read evidence), and
   Storage (cursors, sequences, retention, vector artifacts, query indexes).
 - The public handshake parser now reads the current capability contract
-  (`deployment`, `installed_engram`, `configuration`) instead of the retired
+  (`deployment`, `installed_estate`, `configuration`) instead of the retired
   scalar `deployment_mode`.
 
 Verified locally: `pnpm check` (Biome, identity gate, `tsc`), `cargo fmt
@@ -300,7 +300,7 @@ previous revision exited 101.
   and fails if the window label prefix stops matching it.
 - The runtime page leads with its lenses once a session is open; engine
   identity, attunement, and mesh details sit behind a toggle (`61b5a34`).
-- The Database lens draws either the whole engram or one record's
+- The Database lens draws either the whole estate or one record's
   neighbourhood (1–3 hops, outgoing, incoming, or both), filters by record and
   relation kind, and keeps the drawn neighbourhood lit while the focus is
   selected; nested query values render as plain lists and maps (`3cb07d8`,
@@ -315,7 +315,7 @@ previous revision exited 101.
 
 Verified: Connectome CI passed all four jobs at `28f5662`. At the new pin,
 strict Clippy and `cargo test` (11 passed), both `--locked`. The Windows
-desktop app was driven through WebView2 DevTools against a live engram on the
+desktop app was driven through WebView2 DevTools against a live estate on the
 development server (270 records, 986 relations, 270 vectors), and every lens
 was reviewed by screenshot.
 
@@ -328,7 +328,7 @@ Branch `agent/layman-lenses-wip`, from `61d9c6a`, through `abc549c`.
   term is dotted-underlined with a plain meaning, and "What do these words
   mean?" opens the whole glossary. Terms stay canonical; only the
   explanations are plain.
-- Records & relations colours the engram by cluster (deterministic Louvain
+- Records & relations colours the estate by cluster (deterministic Louvain
   over the relations, computed natively in `src-tauri/src/rrd/cluster.rs`
   and named after each cluster's most linked record), kind, folder, or
   field. It adds hover cards, "Start here", a selection panel with links in
@@ -378,13 +378,13 @@ Defects found by driving the real app, and fixed:
 
 Known, not fixed here: the map costs one exact search per point, and each
 search re-reads the change log from cursor 0 (RRFlow plan step 2b). On the
-live demo engram: 270 searches, 1,320,583 keys examined, 46.9 s (57.1 s
+live demo estate: 270 searches, 1,320,583 keys examined, 46.9 s (57.1 s
 while the Storage lens retried its busy reads).
 
 Verified: `pnpm check`, render smoke, `cargo fmt --check`, strict Clippy,
 and `cargo test` (23 passed), all `--locked`; Connectome CI green at
 `df82883`, `00ef348`, `8ba7163`, and `abc549c`. The Windows desktop app was
-driven through WebView2 DevTools against the live engram (271 records, 986
+driven through WebView2 DevTools against the live estate (271 records, 986
 relations, 270 vectors): the strip reads "Signed in as local-operator since
 8:24 PM · renews automatically"; similar records showed 1.4 s after opening
 Vectors with the map still building; Storage explained the busy engine
@@ -410,7 +410,7 @@ through `d60cca7`.
   and when the RRFlow crates resolve to more than one commit. Each rule was
   proven against a synthetic manifest that breaks it.
 - RRD process tests (`a84bd5c`). Two ignored tests in
-  `src-tauri/src/rrd/client/process.rs` install a fresh engram with a real
+  `src-tauri/src/rrd/client/process.rs` install a fresh estate with a real
   `rrflow` (`install plan`, then `install apply --expect <plan_sha256>`),
   serve it on a kernel-chosen loopback port (`--json serve --bind
   127.0.0.1:0` announces the address), wait for `rrflow ready`, load a
@@ -423,7 +423,7 @@ through `d60cca7`.
   page it read was partial, even when it stopped inside that page at the
   record limit. When the limit-th audit record lies in the final, partial
   page and is not the head, the read fails with 400 "audit chain does not
-  reach its durable head". On the fixture engram the 64-record audit page
+  reach its durable head". On the fixture estate the 64-record audit page
   Connectome asked for failed every time. The lenses render neither the
   change page nor the audit page, so the diagnostic read now asks for one
   record of each: a non-empty one-record page is never partial, so the flag

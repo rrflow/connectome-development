@@ -1,0 +1,9 @@
+{
+	"sameTask": true,
+	"sameAcceptedSelection": true,
+	"resumeOnlyChangedObservedClockRelativeToPreStopBudget": true,
+	"spentSteps": 1,
+	"chargedMs": 2048,
+	"originalDeadline": 1793483148281,
+	"budgetReplaysOrProviderCallsByObserver": 0
+}

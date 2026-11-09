@@ -1,0 +1,33 @@
+{
+	"protocol": "rrd",
+	"protocol_version": 1,
+	"request_id": "desktop-observation-2f33194ecf9c433899d488b636999318",
+	"operation_id": "desktop-observation-2f33194ecf9c433899d488b636999318",
+	"outcome": {
+		"status": "ok",
+		"payload": {
+			"budget": {
+				"format_version": 1,
+				"instance_id": "instance-eeac456970b0e85859ec6989",
+				"scope": "instance:instance-eeac456970b0e85859ec6989",
+				"task_id": "task-507644d1def1a5d1f86657fca362fd227eb7afee35336971e52f1bb4e126bca7",
+				"configuration_sha256": "2d382dbde4b923db65fb5ebbf841d12b45ec0e278c7cab41635dbff782072d55",
+				"limits": {
+					"max_run_elapsed_ms": 900000,
+					"max_steps": 256,
+					"max_step_elapsed_ms": 60000
+				},
+				"started_at_unix_ms": 1793482248281,
+				"deadline_unix_ms": 1793483148281,
+				"last_observed_at_unix_ms": 1793482415272,
+				"charged_elapsed_ms": 22528,
+				"reserved_steps": 2,
+				"active_attempt": null,
+				"execution_may_continue": false,
+				"stopped": null,
+				"stop_expected_sha256": null
+			},
+			"budget_sha256": "f93a19e4278b3de0c1f9848fd3133cba4791c698c079864e4b318ce2c64dc5ef"
+		}
+	}
+}

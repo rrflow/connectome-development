@@ -767,12 +767,8 @@ export function ProjectSection({
 	section,
 	detail,
 	connected,
-	sessionClient,
-	connectionId,
 	onOpen,
 }: {
-	section: string;
-	detail?: string;
 	connected: boolean;
 	sessionClient?: RrdSessionClient;
 	connectionId: string;

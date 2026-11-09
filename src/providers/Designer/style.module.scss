@@ -21,13 +21,13 @@
 }
 
 .kind {
-	color: var(--Connectome-kind-color);
+	color: var(--connectome-kind-color);
 }
 
 .drawer-root {
 
 	:global(.mantine-Input-input),
 	:global(.mantine-Checkbox-input) {
-		background-color: var(--rrflow-paper-background-filled);
+		background-color: var(--connectome-paper-background-filled);
 	}
 }

@@ -6,6 +6,23 @@ import { useConnection } from "~/hooks/connection";
 import { useStable } from "~/hooks/stable";
 import { SelectDatabase } from "~/screens/connectome/components/SelectDatabase";
 
+/**
+ * Requires a selected database before executing a callback. The namespace and
+ * database choice belongs to the inherited client, so this hook lives with its
+ * modal instead of in the shared connection hooks the RRFlow pages load.
+ */
+export function useRequireDatabase(callback: () => void) {
+	const hasDatabase = useConnection((c) => !!c?.lastDatabase);
+
+	return useStable(() => {
+		if (hasDatabase) {
+			callback();
+		} else {
+			openRequiredDatabaseModal(callback);
+		}
+	});
+}
+
 export function openRequiredDatabaseModal(callback: () => void) {
 	openModal({
 		modalId: "require-database",

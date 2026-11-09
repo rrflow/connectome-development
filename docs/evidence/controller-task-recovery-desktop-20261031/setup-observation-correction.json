@@ -1,0 +1,6 @@
+{
+	"failure": "Local observer used catalogue_path instead of emitted endpoint_catalogue_path after server was already listening",
+	"sameProcessPreserved": true,
+	"pid": 112984,
+	"providerCallsByObserver": 0
+}

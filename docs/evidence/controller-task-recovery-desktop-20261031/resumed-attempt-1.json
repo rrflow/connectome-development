@@ -1,0 +1,46 @@
+{
+	"protocol": "rrd",
+	"protocol_version": 1,
+	"request_id": "desktop-observation-55a5bc86acfd48a3ab5dd1f742df90f6",
+	"operation_id": "desktop-observation-55a5bc86acfd48a3ab5dd1f742df90f6",
+	"outcome": {
+		"status": "ok",
+		"payload": {
+			"attempt": {
+				"attempt_id": "e88af8fa-4f5a-4c5f-9f1e-51ae8fd6c3a0",
+				"ordinal": 1,
+				"status": "accepted",
+				"outcome_sha256": "a1b2ccb13dd252bb11159167d2035be91530ee406555b38001a6de4b335c5938",
+				"result": null,
+				"endpoint_proposal": {
+					"contract_version": 1,
+					"purpose": "experimental_proposal",
+					"scope": "instance:instance-eeac456970b0e85859ec6989",
+					"task_id": "task-507644d1def1a5d1f86657fca362fd227eb7afee35336971e52f1bb4e126bca7",
+					"attempt_id": "e88af8fa-4f5a-4c5f-9f1e-51ae8fd6c3a0",
+					"task_sha256": "0c7d6d4dc6bf62ca6693330c5c09f1dde0aaf289d54f33e33b528678df0bf2c7",
+					"packet_sha256": "eb2e9ed99069b7861bd1c37634dbb9d9c330d25b9aa3b6e5fa86af3fb1c9a53e",
+					"configuration_sha256": "c44c2a440bc123cde83804109da1b18dcd1f84d4f50c3bd9f7b7ce1246c037fb",
+					"allowance_sha256": "9fa80c9d4381eb5303e31d07f169fdeaced34ded9bb20e8c63030701af8432ba",
+					"controller_binding_id": "swag-custom-bf16",
+					"service_id": "swag-qwen3-coder-intent-20261028",
+					"request_sha256": "67bb4e1630c65f36820c7c8d35854d6d7ce00307b81461d0af75f3b22211847e",
+					"response_sha256": "e8c5d3a3f3396f8e3dbd5133f58bef735fc0cf64644d446ddd3c26cd17cde7fc",
+					"content_sha256": "f00ec144e84b0093c575418c45be469717d1725ba11736e3f0070c2fa666e6a2",
+					"choice": {
+						"kind": "select",
+						"binding_id": "swag-custom-bf16",
+						"effort": null
+					},
+					"usage": {
+						"prompt_tokens": 1986,
+						"completion_tokens": 20,
+						"total_tokens": 2006
+					},
+					"elapsed_ms": 2014,
+					"http_status": 200
+				}
+			}
+		}
+	}
+}

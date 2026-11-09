@@ -9,9 +9,9 @@ import { MiniAdapter } from "~/adapter/mini";
 import { Link } from "~/components/Link";
 import { PanelDragger } from "~/components/Pane/dragger";
 import { Spacer } from "~/components/Spacer";
+import { Wordmark } from "~/components/Wordmark";
 import { setEditorText } from "~/editor/helpers";
 import { executeEditorQuery } from "~/editor/query";
-import { useLogoUrl } from "~/hooks/brand";
 import { useSetting } from "~/hooks/config";
 import { useActiveQuery } from "~/hooks/connection";
 import { useEventSubscription } from "~/hooks/event";
@@ -35,7 +35,6 @@ const ResultPaneLazy = memo(ResultPane);
 
 export function MiniQueryView() {
 	const { updateQueryTab } = useConfigStore();
-	const logoUrl = useLogoUrl();
 
 	const [orientation] = useSetting("appearance", "queryOrientation");
 	const [editor, setEditor] = useState(new EditorView());
@@ -108,12 +107,7 @@ export function MiniQueryView() {
 									w="auto"
 									src={pictoBrain}
 								/>
-								<Image
-									src={logoUrl}
-									// style={{ pointerEvents: "none" }}
-									h={18}
-									w="auto"
-								/>
+								<Wordmark size={14} />
 							</Group>
 						</Link>
 						<Spacer />

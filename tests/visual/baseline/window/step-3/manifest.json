@@ -1,0 +1,79 @@
+{
+	"revision": "sprint 016, step 3",
+	"application": "Connectome desktop preview build (VITE_CONNECTOME_PREVIEW=true, tauri build --debug --no-bundle), WebView2 attached over CDP",
+	"engine": {
+		"revision": "15f36a8758e32b33c930a20da836def3e5cc3207",
+		"source": "the rrflow binary built from the pinned revision, on PATH"
+	},
+	"estate": "installed fresh by the capture in a scratch project folder, then seeded by seed_served_estate_for_visual_capture with the lens fixture",
+	"purpose": "the screens step 3 changed; the others are unchanged from baseline/window/step-2",
+	"runs": "1366x768 dark and 1440x900 light, 49 captures each with no failed step",
+	"determinism": "the same masks as the native baseline: run-varying characters painted magenta",
+	"format": "WebP quality 82, converted from the PNG captures",
+	"images": [
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-inspector-closed",
+			"file": "1366x768/dark/native-inspector-closed.webp",
+			"bytes": 38858,
+			"sha256": "57c1bf2c9aa6002ee3bbc725f0a7dfb0399b29e514786f29a8b79b9efef768c9"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-inspector-details",
+			"file": "1366x768/dark/native-inspector-details.webp",
+			"bytes": 51682,
+			"sha256": "f794b39464f7f808abe6e6c6dcd9b9de8757fe660aea62c9c5789d96b66fd5ef"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-inspector-raw",
+			"file": "1366x768/dark/native-inspector-raw.webp",
+			"bytes": 59958,
+			"sha256": "36a33308f820d229ca2730cc580e1254f9ac67772178a77e6fd62e71c7de01aa"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-lens-records-relations",
+			"file": "1366x768/dark/native-lens-records-relations.webp",
+			"bytes": 55952,
+			"sha256": "ad2f9943677b77c572502d61da6c9655fca944bf64494cd983315726eaf1f624"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-lens-vectors",
+			"file": "1366x768/dark/native-lens-vectors.webp",
+			"bytes": 58868,
+			"sha256": "8cb25de4c36fb30378004561f237b62f2bb5119395a538acdc178e5867af962d"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-records-around-selection",
+			"file": "1366x768/dark/native-records-around-selection.webp",
+			"bytes": 54466,
+			"sha256": "5765deef8a5911ce6ea289e37612be1b371ff8afb1c60af5be173ecb2f91e7fa"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-records-selected",
+			"file": "1366x768/dark/native-records-selected.webp",
+			"bytes": 54338,
+			"sha256": "d9f7ed88dfd9626916dc299ca481fca971388c9edf654876a97587c02bb42489"
+		},
+		{
+			"window": "1366x768",
+			"theme": "dark",
+			"state": "native-vectors-nearest",
+			"file": "1366x768/dark/native-vectors-nearest.webp",
+			"bytes": 70776,
+			"sha256": "d8bfe0c7d537b26eb3415042c5398e50803f2204bfb6d7a563d313e0f5817069"
+		}
+	]
+}

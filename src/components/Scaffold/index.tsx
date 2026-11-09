@@ -9,7 +9,7 @@ import { useIsLight, useThemePreference } from "~/hooks/theme";
 import { CommandsProvider } from "~/providers/Commands";
 import { ConfirmationProvider } from "~/providers/Confirmation";
 import { FeatureFlagsProvider } from "~/providers/FeatureFlags";
-import { Connectome_THEME } from "~/shared/util/mantine";
+import { CONNECTOME_THEME } from "~/shared/util/mantine";
 import { ScaffoldErrorHandler } from "./error";
 
 const QUERY_CLIENT = new QueryClient();
@@ -23,7 +23,7 @@ export function Scaffold({ children }: PropsWithChildren) {
 			<QueryClientProvider client={QUERY_CLIENT}>
 				<MantineProvider
 					withCssVariables
-					theme={Connectome_THEME}
+					theme={CONNECTOME_THEME}
 					forceColorScheme={colorScheme}
 				>
 					<Notifications containerWidth={400} />

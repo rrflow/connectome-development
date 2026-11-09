@@ -7,7 +7,7 @@
 .identity {
 	border: 1px solid color-mix(in srgb, var(--mantine-color-violet-6) 34%, transparent);
 	background:
-		radial-gradient(circle at 90% 0%, rgba(139, 92, 246, 0.2), transparent 36%),
+		radial-gradient(circle at 90% 0%, rgba(47, 158, 166, 0.2), transparent 36%),
 		color-mix(in srgb, var(--mantine-color-body) 92%, transparent);
 }
 
@@ -32,6 +32,15 @@
 	background: color-mix(in srgb, var(--mantine-color-body) 92%, transparent);
 }
 
+/* Each card is a returned event, in engine order. */
+.eventFlow {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+	gap: var(--mantine-spacing-sm);
+	padding: 0;
+	list-style: none;
+}
+
 .row {
 	display: block;
 	width: 100%;
@@ -54,7 +63,252 @@
 	&[data-active] {
 		border-color: var(--mantine-color-violet-6);
 		background:
-			radial-gradient(circle at 100% 0%, rgba(139, 92, 246, 0.16), transparent 45%),
+			radial-gradient(circle at 100% 0%, rgba(47, 158, 166, 0.16), transparent 45%),
 			color-mix(in srgb, var(--mantine-color-body) 92%, transparent);
+	}
+}
+
+/* API reference: the topic list stays in view while the articles scroll. */
+.apiTopics {
+	position: sticky;
+	top: 0;
+	/* The work pane scrolls; this list stays inside it under the project bar and tabs. */
+	max-height: calc(100dvh - 130px);
+	overflow-y: auto;
+}
+
+.apiTopic {
+	display: block;
+	width: 100%;
+	padding: 3px 10px;
+	border-radius: var(--mantine-radius-xl);
+	color: var(--mantine-color-text);
+
+	&:hover {
+		background: color-mix(in srgb, var(--mantine-color-violet-6) 10%, transparent);
+	}
+
+	&[data-active] {
+		color: var(--mantine-color-white);
+		background: var(--mantine-color-violet-6);
+	}
+}
+
+.apiOperation {
+	border: 1px solid color-mix(in srgb, var(--mantine-color-violet-6) 14%, transparent);
+	background: color-mix(in srgb, var(--mantine-color-body) 92%, transparent);
+	scroll-margin-top: var(--mantine-spacing-md);
+}
+
+/* The rrflowQL console's editor, framed like the filled inputs around it. */
+.queryEditor {
+	/* The editor's fold gutter is its left inset, as an input's padding is. */
+	padding: calc(var(--mantine-spacing-xs) / 2) var(--mantine-spacing-xs)
+		calc(var(--mantine-spacing-xs) / 2) 0;
+	border: 1px solid transparent;
+	border-radius: var(--mantine-radius-xs);
+	background-color: var(--connectome-glass-subtle);
+
+	&:focus-within {
+		border-color: var(--connectome-focus-outline);
+		background-color: var(--connectome-focus-background);
+	}
+
+	/* At least the two rows the console's text area showed. */
+	:global(.cm-content) {
+		min-height: 2.8em;
+	}
+}
+
+/* The project window: only the work pane scrolls (sprint 016). */
+.workspace {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+
+	/* The project bar takes the band the page toolbar would leave empty. */
+	@media (min-width: 62em) {
+		top: -68px;
+	}
+}
+
+.workspaceTop {
+	flex-shrink: 0;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+	padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+	border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.workspaceBody {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+}
+
+.areaRail {
+	flex-shrink: 0;
+	width: 168px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: var(--mantine-spacing-sm);
+	border-right: 1px solid var(--mantine-color-default-border);
+	overflow-y: auto;
+}
+
+.area {
+	display: flex;
+	align-items: center;
+	gap: var(--mantine-spacing-sm);
+	padding: 8px 10px;
+	border-radius: var(--mantine-radius-xs);
+	font-weight: 500;
+	color: var(--mantine-color-dimmed);
+
+	&:hover {
+		background: var(--mantine-color-default-hover);
+		color: var(--mantine-color-bright);
+	}
+
+	&[data-active] {
+		background: var(--mantine-color-default-hover);
+		color: var(--mantine-color-bright);
+
+		svg {
+			color: var(--mantine-color-violet-5);
+		}
+	}
+}
+
+.workspaceMain {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.areaTabs {
+	flex-shrink: 0;
+	display: flex;
+	gap: 2px;
+	padding: 4px var(--mantine-spacing-md) 0;
+	border-bottom: 1px solid var(--mantine-color-default-border);
+	overflow-x: auto;
+}
+
+.areaTab {
+	padding: 8px 12px;
+	border-bottom: 2px solid transparent;
+	font-weight: 500;
+	white-space: nowrap;
+	color: var(--mantine-color-dimmed);
+
+	&:hover {
+		color: var(--mantine-color-bright);
+	}
+
+	&[data-active] {
+		color: var(--mantine-color-bright);
+		border-image: var(--connectome-gradient) 1;
+	}
+}
+
+.workspacePane {
+	flex: 1;
+	min-height: 0;
+	position: relative;
+}
+
+/* Details of what is selected. It takes no room until a view has something to show. */
+.inspector {
+	flex-shrink: 0;
+	width: 320px;
+	padding: var(--mantine-spacing-md);
+	border-left: 1px solid var(--mantine-color-default-border);
+	overflow-y: auto;
+
+	&:empty,
+	&[data-closed] {
+		display: none;
+	}
+}
+
+@media (max-width: 62em) {
+	.areaRail {
+		width: auto;
+	}
+
+	.area span {
+		display: none;
+	}
+}
+
+/* A guide attaches to a real control and never blocks the window under it. Dialogs and
+   dropdowns open above it. */
+.guideSpot {
+	position: fixed;
+	z-index: 190;
+	border-radius: var(--mantine-radius-sm);
+	box-shadow:
+		0 0 0 9999px rgb(8 6 14 / 0.55),
+		0 0 0 2px var(--mantine-color-violet-4),
+		var(--connectome-glow);
+	pointer-events: none;
+	transition:
+		top 220ms ease,
+		left 220ms ease,
+		width 220ms ease,
+		height 220ms ease;
+	animation: guide-arrive 420ms ease-out;
+}
+
+.guideCallout {
+	position: fixed;
+	z-index: 191;
+	width: 300px;
+	border: 1px solid var(--mantine-color-violet-5);
+	box-shadow: 0 10px 30px rgb(0 0 0 / 0.45);
+	transition:
+		top 220ms ease,
+		left 220ms ease;
+}
+
+.guideProgress {
+	display: flex;
+	gap: 3px;
+
+	span {
+		width: 16px;
+		height: 4px;
+		border-radius: 2px;
+		background: var(--mantine-color-default-border);
+		transition: background-color 220ms ease;
+
+		&[data-done] {
+			background: var(--mantine-color-violet-5);
+		}
+	}
+}
+
+@keyframes guide-arrive {
+	from {
+		box-shadow:
+			0 0 0 9999px rgb(8 6 14 / 0),
+			0 0 0 14px color-mix(in srgb, var(--mantine-color-violet-4) 0%, transparent),
+			var(--connectome-glow);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.guideSpot,
+	.guideCallout,
+	.guideProgress span {
+		animation: none;
+		transition: none;
 	}
 }
