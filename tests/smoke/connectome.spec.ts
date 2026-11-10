@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
 
 async function createDiagnosticProfiles(page: Page) {
@@ -1616,4 +1617,59 @@ test("an unknown project link returns safely to the overview", async ({ page }) 
 	await page.goto("/runtime/missing-profile/knowledge/records");
 	await expect(page.getByText("RRFlow instances", { exact: true })).toBeVisible();
 	expect(errors).toEqual([]);
+});
+
+test("workbench lanes save a template and generate a checklist that claims only what it checked", async ({
+	page,
+}) => {
+	const { profileA, profileB } = await createDiagnosticProfiles(page);
+	await openDiagnosticWorkbench(page, profileA, profileB);
+	await page.getByRole("textbox", { name: "Workbench lane", exact: true }).click();
+	await page.getByRole("option", { name: "Dataset authoring", exact: true }).click();
+	await expect(
+		page.getByRole("heading", { name: "Dataset templates (0–5 steps)", exact: true }),
+	).toBeVisible();
+	await expect(page.getByRole("heading", { name: "Prompt workbench", exact: true })).toHaveCount(
+		0,
+	);
+	await page.getByLabel("Template name", { exact: true }).fill("Real project retrieval");
+	await page
+		.getByLabel("Minimum requirements (one per line)", { exact: true })
+		.fill("Data source authorized\nPrompt set hash captured");
+	await page.getByRole("button", { name: "Save template", exact: true }).click();
+	await expect(page.getByText("Real project retrieval", { exact: true }).first()).toBeVisible();
+	const checklistDownload = page.waitForEvent("download", {
+		predicate: (download) => download.suggestedFilename().endsWith("execution-checklist.json"),
+	});
+	await page.getByLabel("Run label", { exact: true }).fill("smoke run");
+	await page.getByRole("button", { name: "Generate dataset files", exact: true }).click();
+	const checklistPath = await (await checklistDownload).path();
+	const checklist = JSON.parse(readFileSync(checklistPath, "utf8")) as {
+		unsatisfiedRequiredChecks: number;
+		checks: { id: string; required: boolean; status: { kind: string } }[];
+	};
+	expect(checklist.unsatisfiedRequiredChecks).toBe(0);
+	expect(checklist.checks.map((check) => [check.id, check.status.kind])).toEqual([
+		["dataset-template-selected", "satisfied"],
+		["remote-source-availability", "satisfied"],
+		["controller-contract-explicit", "not-evaluated"],
+		["cold-trigger-invariant", "not-evaluated"],
+		["comparable-workload-targets", "not-evaluated"],
+	]);
+	expect(JSON.stringify(checklist)).not.toContain('"passed"');
+	await expect(
+		page.getByText("Real project retrieval · Real project baseline · smoke run", {
+			exact: true,
+		}),
+	).toBeVisible();
+	await page.getByRole("textbox", { name: "Workbench lane", exact: true }).click();
+	await page.getByRole("option", { name: "Prompt workbench", exact: true }).click();
+	await expect(
+		page.getByRole("heading", { name: "Prompt workbench", exact: true }),
+	).toBeVisible();
+	await expect(
+		page.getByText("testing · Generated benchmark workload bundle (Real project baseline)", {
+			exact: true,
+		}),
+	).toBeVisible();
 });

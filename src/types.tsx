@@ -140,10 +140,117 @@ export interface WorkbenchReceipt {
 	recordedAtUnixMs: number;
 }
 
+export interface WorkbenchTemplateStep {
+	id: string;
+	title: string;
+	detail: string;
+	route: string;
+	linkedPathId?: string;
+}
+
+export type WorkbenchLearningEventKind = "did-you-know" | "knowledge-drop" | "factoid";
+
+export type WorkbenchLearningEventMode = "passive" | "interactive";
+
+export type WorkbenchLearningActionName =
+	| "navigate-route"
+	| "refresh-storage-signals"
+	| "refresh-governed-flights"
+	| "open-workbench"
+	| "capture-runtime-receipt";
+
+export interface WorkbenchLearningAction {
+	id: string;
+	name: WorkbenchLearningActionName;
+	label: string;
+	payload?: string;
+}
+
+export type WorkbenchLearningTriggerKind =
+	| "manual"
+	| "cold-signal"
+	| "linked-path-missing"
+	| "governed-flights-available";
+
+export interface WorkbenchLearningTrigger {
+	id: string;
+	kind: WorkbenchLearningTriggerKind;
+	description: string;
+}
+
+export interface WorkbenchLearningEvent {
+	id: string;
+	kind: WorkbenchLearningEventKind;
+	mode: WorkbenchLearningEventMode;
+	title: string;
+	body: string;
+	component: "card" | "alert" | "badge";
+	route?: string;
+	requiresOperatorSignoff: boolean;
+	triggers: WorkbenchLearningTrigger[];
+	actions: WorkbenchLearningAction[];
+	catamorphismTarget: string;
+	catamorphismNote: string;
+}
+
+export interface WorkbenchDatasetTemplate {
+	id: string;
+	name: string;
+	description: string;
+	schema: string;
+	skills: string[];
+	researchReferences: string[];
+	minimumRequirements: string[];
+	filePatterns: string[];
+	folderPatterns: string[];
+	createdAtUnixMs: number;
+	updatedAtUnixMs: number;
+	steps: WorkbenchTemplateStep[];
+	learningEvents: WorkbenchLearningEvent[];
+}
+
+export type WorkbenchLinkedPathStatus =
+	| "unknown"
+	| "available"
+	| "missing"
+	| "disconnected"
+	| "error";
+
+export interface WorkbenchLinkedPath {
+	id: string;
+	label: string;
+	path: string;
+	kind: "file" | "directory";
+	status: WorkbenchLinkedPathStatus;
+	lastCheckedAtUnixMs?: number;
+	lastConnectedAtUnixMs?: number;
+	message?: string;
+}
+
+export type WorkbenchRemoteSourceProvider = "google-drive" | "google-docs-relay";
+
+export type WorkbenchRemoteSourceMode = "import" | "rag" | "tests" | "mixed";
+
+export interface WorkbenchRemoteSource {
+	id: string;
+	label: string;
+	provider: WorkbenchRemoteSourceProvider;
+	mode: WorkbenchRemoteSourceMode;
+	url: string;
+	relayUrl?: string;
+	note?: string;
+	status: "configured" | "needs-auth" | "offline";
+	createdAtUnixMs: number;
+	updatedAtUnixMs: number;
+}
+
 export interface ConnectionWorkbenchState {
 	workbenches: WorkbenchDefinition[];
 	activeWorkbenchId?: string;
 	receipts: WorkbenchReceipt[];
+	templates: WorkbenchDatasetTemplate[];
+	linkedPaths: WorkbenchLinkedPath[];
+	remoteSources?: WorkbenchRemoteSource[];
 }
 
 export interface Connection {

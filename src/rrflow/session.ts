@@ -795,6 +795,25 @@ export interface RrdReadPromptFlightRequest {
 	flight_id: string;
 }
 
+export interface RrdExternalPathProbeRequest {
+	path: string;
+}
+
+export interface RrdExternalPathProbeView {
+	path: string;
+	connected: boolean;
+	is_directory: boolean | null;
+	size_bytes: number | null;
+	modified_at_unix_ms: number | null;
+	message: string | null;
+}
+
+export interface RrdWriteExternalTextFileRequest {
+	path: string;
+	content: string;
+	create_parent_dirs: boolean;
+}
+
 export interface RrdVectorCompareRequest {
 	collection_id: string;
 	vector_name: string;
@@ -857,6 +876,31 @@ async function call<T>(command: string, args?: InvokeArgs): Promise<T> {
 		}
 		throw error instanceof Error ? error : new Error(String(error));
 	}
+}
+
+export async function probeExternalPath(
+	request: RrdExternalPathProbeRequest,
+): Promise<RrdExternalPathProbeView> {
+	if (!isTauri()) {
+		return {
+			path: request.path,
+			connected: false,
+			is_directory: null,
+			size_bytes: null,
+			modified_at_unix_ms: null,
+			message: "Path probing requires native Connectome",
+		};
+	}
+	return call<RrdExternalPathProbeView>("probe_external_path", { request });
+}
+
+export async function writeExternalTextFile(
+	request: RrdWriteExternalTextFileRequest,
+): Promise<void> {
+	if (!isTauri()) {
+		throw new Error("External file writes require native Connectome");
+	}
+	await call<void>("write_external_text_file", { request });
 }
 
 /** One authenticated RRD session held by Connectome's native process. */

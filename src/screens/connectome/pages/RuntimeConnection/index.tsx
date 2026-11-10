@@ -434,6 +434,7 @@ export function RuntimeConnectionPage({
 						connected={Boolean(session)}
 						onOpenGraph={() => setLens("records")}
 						onOpenStorage={() => setLens("storage")}
+						onOpenRoute={openRoute}
 						onSelectRecord={(record) => {
 							setSelected(record);
 							setLens("records");

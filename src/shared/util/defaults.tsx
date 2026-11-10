@@ -141,6 +141,8 @@ export function createBaseConnection(settings: ConnectomeSettings): Connection {
 		workbench: {
 			workbenches: [],
 			receipts: [],
+			templates: [],
+			linkedPaths: [],
 		},
 	};
 }

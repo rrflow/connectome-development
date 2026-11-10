@@ -21,6 +21,8 @@ import { useConfigStore } from "~/shell/stores/config";
 import type { WorkbenchRunKind } from "~/types";
 import { formatTime } from "./format";
 import { FlightEventMap, ProjectVisuals } from "./visuals";
+import type { WorkbenchLane } from "./workbenchLaneHelpers";
+import { WorkbenchLanes, workbenchLaneOptions } from "./workbenchLanes";
 
 /** Engine flight readback is the source of the timeline; local notes are separate. */
 export function WorkbenchPanel({
@@ -31,6 +33,7 @@ export function WorkbenchPanel({
 	onOpenGraph,
 	onOpenStorage,
 	onSelectRecord,
+	onOpenRoute,
 }: {
 	client: RrdSessionClient;
 	connectionId: string;
@@ -39,7 +42,9 @@ export function WorkbenchPanel({
 	onOpenGraph: () => void;
 	onOpenStorage: () => void;
 	onSelectRecord: (record: string) => void;
+	onOpenRoute: (route: string) => void;
 }) {
+	const [lane, setLane] = useState<WorkbenchLane>("runtime-control");
 	const [prompt, setPrompt] = useState("");
 	const [contextMode, setContextMode] = useState<"fresh" | "pruned">("pruned");
 	const [selection, setSelection] = useState<{ sessionKey: string; id: string } | null>(null);
@@ -92,7 +97,12 @@ export function WorkbenchPanel({
 		const store = useConfigStore.getState();
 		const connection = store.connections.find((item) => item.id === connectionId);
 		if (!name || !connection) return;
-		const previous = connection.workbench ?? { workbenches: [], receipts: [] };
+		const previous = connection.workbench ?? {
+			workbenches: [],
+			receipts: [],
+			templates: [],
+			linkedPaths: [],
+		};
 		const now = Date.now();
 		const id = newId();
 		store.updateConnection({
@@ -224,315 +234,373 @@ export function WorkbenchPanel({
 		},
 	});
 
+	const captureActiveWorkbench = async () => {
+		if (!activeWorkbench) throw new Error("Create or select a local workbench first");
+		await capture.mutateAsync({
+			workbenchId: activeWorkbench,
+			connectionId,
+			sessionKey,
+			generation: captureLifecycle.current.generation,
+		});
+	};
+
 	return (
 		<Stack gap="lg">
-			<Title order={3}>Prompt workbench</Title>
-			<Text>
-				The observe flight stores the submitted prompt in the engine and shows its recorded
-				events. It does not invoke an LFG classifier, SWAG router, or language model.
-			</Text>
-			{!connected && (
-				<Alert title="Native session required">
-					Connect this project to inspect or launch flights.
-				</Alert>
-			)}
-			<Paper
-				withBorder
-				p="md"
-			>
-				<Stack>
-					<Textarea
-						label="Prompt"
-						value={prompt}
-						onChange={(event) => setPrompt(event.currentTarget.value)}
-						minRows={3}
-					/>
-					<Select
-						label="Context mode"
-						value={contextMode}
-						data={[
-							{ value: "pruned", label: "Pruned" },
-							{ value: "fresh", label: "Fresh" },
-						]}
-						allowDeselect={false}
-						onChange={(value) => setContextMode(value === "fresh" ? "fresh" : "pruned")}
-					/>
-					<Group>
-						<Button
-							disabled={!connected || !prompt.trim()}
-							loading={launch.isPending}
-							onClick={() =>
-								launch.mutate({ sessionKey, prompt: prompt.trim(), contextMode })
-							}
-						>
-							Launch observe flight
-						</Button>
-						<Button
-							variant="light"
-							disabled={!connected}
-							loading={snapshot.isFetching}
-							onClick={() => void snapshot.refetch()}
-						>
-							Refresh flights
-						</Button>
-					</Group>
-					{launch.isError && (
-						<Alert
-							color="red"
-							title="Flight launch failed"
-						>
-							{describeRrdError(launch.error)}
+			<Select
+				label="Workbench lane"
+				value={lane}
+				data={workbenchLaneOptions}
+				allowDeselect={false}
+				onChange={(next) => setLane((next as WorkbenchLane | null) ?? "runtime-control")}
+			/>
+			<WorkbenchLanes
+				client={client}
+				connectionId={connectionId}
+				connected={connected}
+				lane={lane}
+				onOpenRoute={onOpenRoute}
+				onRefreshSnapshot={() => snapshot.refetch()}
+				snapshotAvailable={Boolean(snapshot.data)}
+				flightCount={snapshot.data?.flights.length ?? 0}
+				onCaptureReceipt={captureActiveWorkbench}
+				onStageComparePrompt={(staged) => {
+					setPrompt(staged);
+					setContextMode("pruned");
+					setLane("runtime-control");
+				}}
+			/>
+			{lane === "runtime-control" && (
+				<>
+					<Title order={3}>Prompt workbench</Title>
+					<Text>
+						The observe flight stores the submitted prompt in the engine and shows its
+						recorded events. It does not invoke an LFG classifier, SWAG router, or
+						language model.
+					</Text>
+					{!connected && (
+						<Alert title="Native session required">
+							Connect this project to inspect or launch flights.
 						</Alert>
 					)}
-				</Stack>
-			</Paper>
-			{snapshot.isError && (
-				<Alert
-					color="red"
-					title="Flights could not be read"
-				>
-					{describeRrdError(snapshot.error)}
-				</Alert>
-			)}
-			{snapshot.data && (
-				<Paper
-					withBorder
-					p="md"
-				>
-					<Stack>
-						<Text fw={700}>
-							Flights in creation order after cursor {snapshot.data.after_cursor}
-						</Text>
-						{snapshot.data.flights.length === 0 && <Text>No flights returned.</Text>}
-						{snapshot.data.flights.map((flight) => (
-							<Group
-								key={flight.flight_id}
-								justify="space-between"
-							>
-								<Text>
-									{flight.flight_id} · {flight.status} · {flight.provider}
-								</Text>
+					<Paper
+						withBorder
+						p="md"
+					>
+						<Stack>
+							<Textarea
+								label="Prompt"
+								value={prompt}
+								onChange={(event) => setPrompt(event.currentTarget.value)}
+								minRows={3}
+							/>
+							<Select
+								label="Context mode"
+								value={contextMode}
+								data={[
+									{ value: "pruned", label: "Pruned" },
+									{ value: "fresh", label: "Fresh" },
+								]}
+								allowDeselect={false}
+								onChange={(value) =>
+									setContextMode(value === "fresh" ? "fresh" : "pruned")
+								}
+							/>
+							<Group>
 								<Button
-									size="xs"
-									variant={selected === flight.flight_id ? "filled" : "light"}
+									disabled={!connected || !prompt.trim()}
+									loading={launch.isPending}
 									onClick={() =>
-										setSelection({ sessionKey, id: flight.flight_id })
+										launch.mutate({
+											sessionKey,
+											prompt: prompt.trim(),
+											contextMode,
+										})
 									}
 								>
-									Inspect
+									Launch observe flight
+								</Button>
+								<Button
+									variant="light"
+									disabled={!connected}
+									loading={snapshot.isFetching}
+									onClick={() => void snapshot.refetch()}
+								>
+									Refresh flights
 								</Button>
 							</Group>
-						))}
-						<Group>
-							<Button
-								variant="light"
-								disabled={afterCursor === 0}
-								onClick={() => setPage({ sessionKey, cursor: 0 })}
-							>
-								First page
-							</Button>
-							<Button
-								variant="light"
-								disabled={
-									!snapshot.data.truncated || snapshot.data.flights.length === 0
-								}
-								onClick={() => {
-									const last = snapshot.data.flights.at(-1);
-									if (last) setPage({ sessionKey, cursor: last.flight_cursor });
-								}}
-							>
-								Next page
-							</Button>
-						</Group>
-					</Stack>
-				</Paper>
-			)}
-			{detail.isError && (
-				<Alert
-					color="red"
-					title="Flight detail could not be read"
-				>
-					{describeRrdError(detail.error)}
-				</Alert>
-			)}
-			{detail.data && (
-				<Paper
-					withBorder
-					p="md"
-				>
-					<Stack>
-						<FlightEventMap flight={detail.data} />
-						<Group>
-							<Title order={4}>Recorded events</Title>
-							<Badge>{detail.data.status}</Badge>
-							<Badge variant="outline">{detail.data.provider}</Badge>
-						</Group>
-						<Text size="sm">
-							{detail.data.flight_id} · {detail.data.context_mode} ·{" "}
-							{detail.data.elapsed_ms} ms · cursor {detail.data.known_at_cursor}
-						</Text>
-						<Text size="sm">
-							Context: {detail.data.context_items} items,{" "}
-							{detail.data.context_output_bytes} bytes
-						</Text>
-						{detail.data.events.length === 0 ? (
-							<Text>No events were returned.</Text>
-						) : (
-							<Timeline
-								active={detail.data.events.length - 1}
-								bulletSize={24}
-								lineWidth={2}
-							>
-								{detail.data.events.map((event) => (
-									<Timeline.Item
-										key={event.ordinal}
-										title={`${event.ordinal}: ${event.stage} · ${event.label}`}
-									>
-										<Text size="sm">{event.detail}</Text>
-										<Text
-											size="xs"
-											c="dimmed"
-										>
-											{formatTime(event.at_unix_ms)} · {event.elapsed_ms} ms
-											elapsed
-										</Text>
-									</Timeline.Item>
-								))}
-							</Timeline>
-						)}
-					</Stack>
-				</Paper>
-			)}
-			<ProjectVisuals
-				client={client}
-				sessionKey={sessionKey}
-				connected={connected}
-				onOpenGraph={onOpenGraph}
-				onOpenStorage={onOpenStorage}
-				onSelectRecord={onSelectRecord}
-			/>
-			<Paper
-				withBorder
-				p="md"
-			>
-				<Title order={4}>Local workbench notes</Title>
-				<Text size="sm">
-					These notes are stored in this desktop profile; they are not engine audit
-					receipts.
-				</Text>
-				<TextInput
-					label="Workbench name"
-					value={workbenchName}
-					onChange={(event) => setWorkbenchName(event.currentTarget.value)}
-				/>
-				<TextInput
-					label="Workbench description"
-					value={workbenchDescription}
-					onChange={(event) => setWorkbenchDescription(event.currentTarget.value)}
-				/>
-				<Button
-					variant="light"
-					disabled={!workbenchName.trim()}
-					onClick={createWorkbench}
-				>
-					Create local workbench
-				</Button>
-				<Select
-					label="Local workbench"
-					value={activeWorkbench}
-					data={(local?.workbenches ?? []).map((item) => ({
-						value: item.id,
-						label: item.name,
-					}))}
-					onChange={selectWorkbench}
-				/>
-				{(local?.workbenches ?? []).map((workbench) => (
-					<Text key={workbench.id}>
-						{workbench.name}: {workbench.description}
-					</Text>
-				))}
-				<Select
-					label="Note category"
-					value={noteKind}
-					data={["testing", "reverse-engineering", "optimization", "release-update"]}
-					allowDeselect={false}
-					onChange={(value) =>
-						setNoteKind((value as WorkbenchRunKind | null) ?? "testing")
-					}
-				/>
-				<TextInput
-					label="Note intent"
-					value={noteIntent}
-					onChange={(event) => setNoteIntent(event.currentTarget.value)}
-				/>
-				<Textarea
-					label="Note context"
-					value={noteContext}
-					onChange={(event) => setNoteContext(event.currentTarget.value)}
-				/>
-				<Textarea
-					label="Note diagnostics"
-					value={noteDiagnostics}
-					onChange={(event) => setNoteDiagnostics(event.currentTarget.value)}
-				/>
-				<Group>
-					<Button
-						disabled={!activeWorkbench || !noteIntent.trim()}
-						onClick={() => {
-							if (activeWorkbench) {
-								saveNote(
-									activeWorkbench,
-									noteIntent.trim(),
-									noteContext.trim(),
-									noteDiagnostics.trim(),
-								);
-								setNoteIntent("");
-								setNoteContext("");
-								setNoteDiagnostics("");
-							}
-						}}
-					>
-						Save local note
-					</Button>
-					<Button
-						variant="light"
-						disabled={!connected || !activeWorkbench}
-						loading={capture.isPending}
-						onClick={() => {
-							if (activeWorkbench)
-								capture.mutate({
-									workbenchId: activeWorkbench,
-									connectionId,
-									sessionKey,
-									generation: captureLifecycle.current.generation,
-								});
-						}}
-					>
-						Capture engine diagnostics
-					</Button>
-				</Group>
-				{capture.isError &&
-					capture.variables?.connectionId === connectionId &&
-					capture.variables?.sessionKey === sessionKey &&
-					capture.variables?.workbenchId === activeWorkbench &&
-					capture.variables?.generation === captureLifecycle.current.generation && (
+							{launch.isError && (
+								<Alert
+									color="red"
+									title="Flight launch failed"
+								>
+									{describeRrdError(launch.error)}
+								</Alert>
+							)}
+						</Stack>
+					</Paper>
+					{snapshot.isError && (
 						<Alert
 							color="red"
-							title="Diagnostics could not be read"
+							title="Flights could not be read"
 						>
-							{describeRrdError(capture.error)}
+							{describeRrdError(snapshot.error)}
 						</Alert>
 					)}
-				{(local?.receipts ?? []).map((receipt) => (
-					<details key={receipt.id}>
-						<summary>
-							{receipt.kind} · {receipt.intent}
-						</summary>
-						<Text size="sm">{receipt.context}</Text>
-						<Text size="sm">{receipt.diagnostics}</Text>
-					</details>
-				))}
-			</Paper>
+					{snapshot.data && (
+						<Paper
+							withBorder
+							p="md"
+						>
+							<Stack>
+								<Text fw={700}>
+									Flights in creation order after cursor{" "}
+									{snapshot.data.after_cursor}
+								</Text>
+								{snapshot.data.flights.length === 0 && (
+									<Text>No flights returned.</Text>
+								)}
+								{snapshot.data.flights.map((flight) => (
+									<Group
+										key={flight.flight_id}
+										justify="space-between"
+									>
+										<Text>
+											{flight.flight_id} · {flight.status} · {flight.provider}
+										</Text>
+										<Button
+											size="xs"
+											variant={
+												selected === flight.flight_id ? "filled" : "light"
+											}
+											onClick={() =>
+												setSelection({ sessionKey, id: flight.flight_id })
+											}
+										>
+											Inspect
+										</Button>
+									</Group>
+								))}
+								<Group>
+									<Button
+										variant="light"
+										disabled={afterCursor === 0}
+										onClick={() => setPage({ sessionKey, cursor: 0 })}
+									>
+										First page
+									</Button>
+									<Button
+										variant="light"
+										disabled={
+											!snapshot.data.truncated ||
+											snapshot.data.flights.length === 0
+										}
+										onClick={() => {
+											const last = snapshot.data.flights.at(-1);
+											if (last)
+												setPage({ sessionKey, cursor: last.flight_cursor });
+										}}
+									>
+										Next page
+									</Button>
+								</Group>
+							</Stack>
+						</Paper>
+					)}
+					{detail.isError && (
+						<Alert
+							color="red"
+							title="Flight detail could not be read"
+						>
+							{describeRrdError(detail.error)}
+						</Alert>
+					)}
+					{detail.data && (
+						<Paper
+							withBorder
+							p="md"
+						>
+							<Stack>
+								<FlightEventMap flight={detail.data} />
+								<Group>
+									<Title order={4}>Recorded events</Title>
+									<Badge>{detail.data.status}</Badge>
+									<Badge variant="outline">{detail.data.provider}</Badge>
+								</Group>
+								<Text size="sm">
+									{detail.data.flight_id} · {detail.data.context_mode} ·{" "}
+									{detail.data.elapsed_ms} ms · cursor{" "}
+									{detail.data.known_at_cursor}
+								</Text>
+								<Text size="sm">
+									Context: {detail.data.context_items} items,{" "}
+									{detail.data.context_output_bytes} bytes
+								</Text>
+								{detail.data.events.length === 0 ? (
+									<Text>No events were returned.</Text>
+								) : (
+									<Timeline
+										active={detail.data.events.length - 1}
+										bulletSize={24}
+										lineWidth={2}
+									>
+										{detail.data.events.map((event) => (
+											<Timeline.Item
+												key={event.ordinal}
+												title={`${event.ordinal}: ${event.stage} · ${event.label}`}
+											>
+												<Text size="sm">{event.detail}</Text>
+												<Text
+													size="xs"
+													c="dimmed"
+												>
+													{formatTime(event.at_unix_ms)} ·{" "}
+													{event.elapsed_ms} ms elapsed
+												</Text>
+											</Timeline.Item>
+										))}
+									</Timeline>
+								)}
+							</Stack>
+						</Paper>
+					)}
+					<ProjectVisuals
+						client={client}
+						sessionKey={sessionKey}
+						connected={connected}
+						onOpenGraph={onOpenGraph}
+						onOpenStorage={onOpenStorage}
+						onSelectRecord={onSelectRecord}
+					/>
+					<Paper
+						withBorder
+						p="md"
+					>
+						<Title order={4}>Local workbench notes</Title>
+						<Text size="sm">
+							These notes are stored in this desktop profile; they are not engine
+							audit receipts.
+						</Text>
+						<TextInput
+							label="Workbench name"
+							value={workbenchName}
+							onChange={(event) => setWorkbenchName(event.currentTarget.value)}
+						/>
+						<TextInput
+							label="Workbench description"
+							value={workbenchDescription}
+							onChange={(event) => setWorkbenchDescription(event.currentTarget.value)}
+						/>
+						<Button
+							variant="light"
+							disabled={!workbenchName.trim()}
+							onClick={createWorkbench}
+						>
+							Create local workbench
+						</Button>
+						<Select
+							label="Local workbench"
+							value={activeWorkbench}
+							data={(local?.workbenches ?? []).map((item) => ({
+								value: item.id,
+								label: item.name,
+							}))}
+							onChange={selectWorkbench}
+						/>
+						{(local?.workbenches ?? []).map((workbench) => (
+							<Text key={workbench.id}>
+								{workbench.name}: {workbench.description}
+							</Text>
+						))}
+						<Select
+							label="Note category"
+							value={noteKind}
+							data={[
+								"testing",
+								"reverse-engineering",
+								"optimization",
+								"release-update",
+							]}
+							allowDeselect={false}
+							onChange={(value) =>
+								setNoteKind((value as WorkbenchRunKind | null) ?? "testing")
+							}
+						/>
+						<TextInput
+							label="Note intent"
+							value={noteIntent}
+							onChange={(event) => setNoteIntent(event.currentTarget.value)}
+						/>
+						<Textarea
+							label="Note context"
+							value={noteContext}
+							onChange={(event) => setNoteContext(event.currentTarget.value)}
+						/>
+						<Textarea
+							label="Note diagnostics"
+							value={noteDiagnostics}
+							onChange={(event) => setNoteDiagnostics(event.currentTarget.value)}
+						/>
+						<Group>
+							<Button
+								disabled={!activeWorkbench || !noteIntent.trim()}
+								onClick={() => {
+									if (activeWorkbench) {
+										saveNote(
+											activeWorkbench,
+											noteIntent.trim(),
+											noteContext.trim(),
+											noteDiagnostics.trim(),
+										);
+										setNoteIntent("");
+										setNoteContext("");
+										setNoteDiagnostics("");
+									}
+								}}
+							>
+								Save local note
+							</Button>
+							<Button
+								variant="light"
+								disabled={!connected || !activeWorkbench}
+								loading={capture.isPending}
+								onClick={() => {
+									if (activeWorkbench)
+										capture.mutate({
+											workbenchId: activeWorkbench,
+											connectionId,
+											sessionKey,
+											generation: captureLifecycle.current.generation,
+										});
+								}}
+							>
+								Capture engine diagnostics
+							</Button>
+						</Group>
+						{capture.isError &&
+							capture.variables?.connectionId === connectionId &&
+							capture.variables?.sessionKey === sessionKey &&
+							capture.variables?.workbenchId === activeWorkbench &&
+							capture.variables?.generation ===
+								captureLifecycle.current.generation && (
+								<Alert
+									color="red"
+									title="Diagnostics could not be read"
+								>
+									{describeRrdError(capture.error)}
+								</Alert>
+							)}
+						{(local?.receipts ?? []).map((receipt) => (
+							<details key={receipt.id}>
+								<summary>
+									{receipt.kind} · {receipt.intent}
+								</summary>
+								<Text size="sm">{receipt.context}</Text>
+								<Text size="sm">{receipt.diagnostics}</Text>
+							</details>
+						))}
+					</Paper>
+				</>
+			)}
 		</Stack>
 	);
 }
