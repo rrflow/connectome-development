@@ -1658,7 +1658,9 @@ test("workbench lanes save a template and generate a checklist that claims only 
 	]);
 	expect(JSON.stringify(checklist)).not.toContain('"passed"');
 	await expect(
-		page.getByText("Real project retrieval · Real project baseline · smoke run", { exact: true }),
+		page.getByText("Real project retrieval · Real project baseline · smoke run", {
+			exact: true,
+		}),
 	).toBeVisible();
 	await page.getByRole("textbox", { name: "Workbench lane", exact: true }).click();
 	await page.getByRole("option", { name: "Prompt workbench", exact: true }).click();
