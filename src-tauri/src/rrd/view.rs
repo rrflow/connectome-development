@@ -448,6 +448,36 @@ pub struct QueryIndexView {
 }
 
 /// The snake_case wire name of a contract enum, which is how it renders.
+/// Characters of a digest-like id kept when nothing better names a record.
+const SHORT_ID: usize = 8;
+
+/// What a person recognises a record by: its title or name, else the last two
+/// parts of its file path, else its kind with a short id. Inventory records are
+/// keyed by content digests, which mean nothing on a graph.
+fn record_label(
+    reference: &DiagnosticRuntimeReference,
+    properties: &BTreeMap<String, String>,
+) -> String {
+    if let Some(named) = properties.get("title").or_else(|| properties.get("name")) {
+        return named.clone();
+    }
+    if let Some(path) = properties.get("path") {
+        let parts: Vec<&str> = path.split('/').filter(|part| !part.is_empty()).collect();
+        return match parts.as_slice() {
+            [] => "Project root".into(),
+            [.., parent, file] => format!("{parent}/{file}"),
+            [only] => (*only).into(),
+        };
+    }
+    let id = &reference.id;
+    let digest_like = id.len() >= 32 && id.chars().all(|c| c.is_ascii_hexdigit() || c == '-');
+    if digest_like {
+        format!("{} {}", reference.kind, &id[..SHORT_ID])
+    } else {
+        id.clone()
+    }
+}
+
 fn label<T: Serialize>(value: &T) -> String {
     match serde_json::to_value(value) {
         Ok(serde_json::Value::String(name)) => name,
@@ -606,11 +636,7 @@ pub fn database(snapshot: &DiagnosticSnapshot) -> DatabaseView {
         .iter()
         .map(|record| {
             let properties = display_properties(&record.properties);
-            let label = properties
-                .get("title")
-                .or_else(|| properties.get("name"))
-                .cloned()
-                .unwrap_or_else(|| record.reference.id.clone());
+            let label = record_label(&record.reference, &properties);
             NodeView {
                 id: runtime_reference(&record.reference),
                 kind: record.reference.kind.clone(),
@@ -1498,6 +1524,52 @@ fn rrflow_kv_metrics(kv: &DiagnosticRrflowKvSnapshot) -> (Vec<MetricView>, Vec<M
         },
     ];
     (headline, groups)
+}
+
+#[cfg(test)]
+mod record_label_tests {
+    use super::*;
+
+    fn reference(kind: &str, id: &str) -> DiagnosticRuntimeReference {
+        DiagnosticRuntimeReference {
+            kind: kind.into(),
+            id: id.into(),
+        }
+    }
+
+    fn properties(pairs: &[(&str, &str)]) -> BTreeMap<String, String> {
+        pairs
+            .iter()
+            .map(|(k, v)| ((*k).into(), (*v).into()))
+            .collect()
+    }
+
+    #[test]
+    fn a_source_entry_is_named_by_its_path_not_its_digest() {
+        let digest = "ab".repeat(32);
+        let entry = reference("source-tree-entry", &digest);
+        let named = |path| record_label(&entry, &properties(&[("path", path)]));
+        assert_eq!(
+            named("crates/engine/src/cold_history.rs"),
+            "src/cold_history.rs"
+        );
+        assert_eq!(named("README.md"), "README.md");
+        assert_eq!(named(""), "Project root");
+    }
+
+    #[test]
+    fn a_title_wins_and_a_bare_digest_becomes_kind_and_short_id() {
+        let digest = "cd".repeat(32);
+        let snapshot = reference("source-tree-snapshot", &digest);
+        assert_eq!(
+            record_label(&snapshot, &BTreeMap::new()),
+            "source-tree-snapshot cdcdcdcd"
+        );
+        let titled = properties(&[("title", "Plan"), ("path", "a/b")]);
+        assert_eq!(record_label(&snapshot, &titled), "Plan");
+        let plain = reference("document", "d1");
+        assert_eq!(record_label(&plain, &BTreeMap::new()), "d1");
+    }
 }
 
 #[cfg(test)]
