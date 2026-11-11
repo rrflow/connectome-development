@@ -167,6 +167,10 @@ pub struct GraphView {
     pub known_at_cursor: u64,
     pub nodes: Vec<NodeView>,
     pub edges: Vec<EdgeView>,
+    /// What the engine holds at this cursor; it may send fewer, the most
+    /// linked first.
+    pub records_total: u64,
+    pub relations_total: u64,
     /// Connectome-computed clusters, largest first; not estate data.
     pub clusters: Vec<ClusterView>,
 }
@@ -696,6 +700,8 @@ pub fn database(snapshot: &DiagnosticSnapshot) -> DatabaseView {
             known_at_cursor: snapshot.graph.known_at_cursor,
             nodes,
             edges,
+            records_total: snapshot.graph.records_total,
+            relations_total: snapshot.graph.relations_total,
             clusters,
         },
         sections: snapshot
