@@ -162,8 +162,10 @@ fn loopback_worker_profile(
             system_prompt: "Select the configured controlled test binding.".into(),
             maximum_output_tokens: 64,
             temperature_milli: 0,
+            lfg: None,
         }),
         observation_policy: None,
+        assessment_policy: None,
         worker_policy: Some(rrd_contract::EndpointWorkerPolicy {
             contract_version: rrd_contract::ENDPOINT_WORKER_VERSION,
             allow_network: true,
@@ -174,6 +176,7 @@ fn loopback_worker_profile(
             bindings: vec![rrd_contract::EndpointWorkerBinding {
                 binding_id,
                 protocol_evidence_sha256: evidence_sha256,
+                adapter: Default::default(),
                 system_prompt:
                     "Return one bounded protocol-test draft. Do not change project files.".into(),
                 generation: rrd_contract::EndpointGenerationSettings {
@@ -792,7 +795,7 @@ fn selected_source_query_projects_typed_inventory_from_installed_engine() {
         let successor_connected = approve(&client, handle).await;
         let (handle, _) = prepare(&client, &successor_connected, Control::Step).await;
         let inventoried = approve(&client, handle).await;
-        assert_eq!(inventoried["status"]["job"]["state"], "running");
+        assert_eq!(inventoried["status"]["job"]["state"], "succeeded");
         assert_eq!(
             inventoried["status"]["job"]["checkpoints"]
                 .as_array()
@@ -907,7 +910,7 @@ fn selected_source_worker_roundtrips_through_installed_ui_adapter() {
         let successor_connected = approve(&client, handle).await;
         let (handle, _) = prepare(&client, &successor_connected, Control::Step).await;
         let inventoried = approve(&client, handle).await;
-        assert_eq!(inventoried["status"]["job"]["state"], "running");
+        assert_eq!(inventoried["status"]["job"]["state"], "succeeded");
         assert_eq!(
             inventoried["status"]["job"]["checkpoints"]
                 .as_array()

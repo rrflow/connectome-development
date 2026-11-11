@@ -13,10 +13,11 @@ pub mod quantization;
 
 use super::cluster;
 use rrd_contract::{
-    DataReference, DataVectorValue, DiagnosticRrflowKvSnapshot, DiagnosticRuntimeReference,
-    DiagnosticSnapshot, DiagnosticStorageAdmission, DiagnosticStorageSnapshot, QueryResult,
-    QueryRowSnapshot, QueryValue, ServiceCapabilities, VectorCollectionCatalogueSnapshot,
-    VectorPointPage, VectorPointSnapshot, VectorSearchResult,
+    ColdHistoryFailureCode, ColdHistoryReadResult, DataReference, DataVectorValue,
+    DiagnosticRrflowKvSnapshot, DiagnosticRuntimeReference, DiagnosticSnapshot,
+    DiagnosticStorageAdmission, DiagnosticStorageSnapshot, QueryResult, QueryRowSnapshot,
+    QueryValue, ServiceCapabilities, VectorCollectionCatalogueSnapshot, VectorPointPage,
+    VectorPointSnapshot, VectorSearchResult,
 };
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
@@ -929,6 +930,83 @@ fn binary_size(bytes: u64) -> String {
         .unwrap_or_else(|| format!("{} bytes", grouped(bytes)))
 }
 
+/// rrflowCLD, the cold tier, as the engine reports it. Every number comes from
+/// the engine's durable head or from one verified published file.
+pub(super) fn cold_tier_group(cold: &ColdHistoryReadResult) -> MetricGroupView {
+    use MetricUnit::{Bytes, Count};
+    let mut metrics = vec![
+        gauge("files", "Published files", Count, cold.current_generation),
+        gauge(
+            "through_cursor",
+            "Stored through cursor",
+            Count,
+            cold.through_cursor,
+        ),
+    ];
+    let mut notes = Vec::new();
+    if !cold.enabled {
+        notes.push("Off for this installation: nothing is being moved to the cold tier.".into());
+    }
+    if let Some(latest) = &cold.generation {
+        metrics.push(gauge(
+            "latest_rows",
+            "Rows in latest file",
+            Count,
+            latest.rows,
+        ));
+        metrics.push(gauge(
+            "latest_row_groups",
+            "Row groups in latest file",
+            Count,
+            latest.row_groups,
+        ));
+        metrics.push(gauge(
+            "latest_bytes",
+            "Latest file size",
+            Bytes,
+            latest.artifact_bytes,
+        ));
+        notes.push(format!(
+            "Latest file is generation {}, sha-256 {}.",
+            latest.generation, latest.artifact_sha256
+        ));
+    }
+    if cold.pending {
+        notes.push("A prepared file is waiting to be published.".into());
+    }
+    if let Some(failure) = &cold.failure {
+        notes.push(format!(
+            "Publishing is stopped at cursor {}: {}.",
+            cold.through_cursor,
+            match failure.code {
+                ColdHistoryFailureCode::DeadlineExceeded => "the time limit was reached",
+                ColdHistoryFailureCode::ResourceLimit => "a change exceeds the configured limits",
+                ColdHistoryFailureCode::SourceConflict => "the source changed during publication",
+                ColdHistoryFailureCode::StorageOrOther => "a storage error occurred",
+            }
+        ));
+    }
+    if cold.enabled {
+        notes.push("Files are a copy today: LSM space is not reclaimed yet.".into());
+    }
+    MetricGroupView {
+        id: "rrflow_cld",
+        label: "rrflowCLD cold tier",
+        metrics,
+        notes,
+    }
+}
+
+/// The panel says the tier could not be read rather than showing nothing.
+pub(super) fn cold_tier_unavailable(reason: &str) -> MetricGroupView {
+    MetricGroupView {
+        id: "rrflow_cld",
+        label: "rrflowCLD cold tier",
+        metrics: Vec::new(),
+        notes: vec![format!("The engine did not report the cold tier: {reason}")],
+    }
+}
+
 pub(super) fn physical(storage: &DiagnosticStorageSnapshot) -> PhysicalStorageView {
     let (headline, mut groups) = storage
         .rrflow_kv
@@ -1423,6 +1501,96 @@ fn rrflow_kv_metrics(kv: &DiagnosticRrflowKvSnapshot) -> (Vec<MetricView>, Vec<M
 }
 
 #[cfg(test)]
+mod cold_tier_tests {
+    use super::*;
+    use rrd_contract::{ColdHistoryFailure, ColdHistoryGenerationSnapshot};
+
+    fn status() -> ColdHistoryReadResult {
+        ColdHistoryReadResult {
+            scope: "instance:test".into(),
+            enabled: true,
+            current_generation: 28,
+            through_cursor: 6181,
+            pending: false,
+            failure: None,
+            generation: Some(ColdHistoryGenerationSnapshot {
+                generation: 28,
+                requested_after_cursor: 6180,
+                through_cursor: 6181,
+                source_head_cursor: 6183,
+                source_manifest_sha256: "a".repeat(64),
+                policy_sha256: "b".repeat(64),
+                artifact_sha256: "c".repeat(64),
+                artifact_bytes: 4096,
+                rows: 1,
+                row_groups: 1,
+                observed_arrow_bytes: 2048,
+                declared_uncompressed_bytes: 1024,
+            }),
+            changes: Vec::new(),
+        }
+    }
+
+    fn value(group: &MetricGroupView, id: &str) -> f64 {
+        group
+            .metrics
+            .iter()
+            .find(|metric| metric.id == id)
+            .unwrap()
+            .value
+    }
+
+    #[test]
+    fn cold_tier_reports_the_engines_files_and_says_it_is_still_a_copy() {
+        let group = cold_tier_group(&status());
+        assert_eq!(group.id, "rrflow_cld");
+        assert_eq!(value(&group, "files"), 28.0);
+        assert_eq!(value(&group, "through_cursor"), 6181.0);
+        assert_eq!(value(&group, "latest_rows"), 1.0);
+        assert_eq!(value(&group, "latest_bytes"), 4096.0);
+        assert!(group
+            .notes
+            .iter()
+            .any(|note| note.contains(&"c".repeat(64))));
+        assert!(group
+            .notes
+            .iter()
+            .any(|note| note.contains("not reclaimed")));
+    }
+
+    #[test]
+    fn cold_tier_says_when_it_is_off_or_stopped() {
+        let mut off = status();
+        off.enabled = false;
+        off.generation = None;
+        let group = cold_tier_group(&off);
+        assert!(group.notes.iter().any(|note| note.starts_with("Off")));
+        assert!(!group
+            .notes
+            .iter()
+            .any(|note| note.contains("not reclaimed")));
+
+        let mut stopped = status();
+        stopped.failure = Some(ColdHistoryFailure {
+            code: ColdHistoryFailureCode::ResourceLimit,
+            since_unix_ms: 1,
+        });
+        let group = cold_tier_group(&stopped);
+        assert!(group
+            .notes
+            .iter()
+            .any(|note| note.contains("stopped at cursor 6181") && note.contains("limits")));
+    }
+
+    #[test]
+    fn an_unreadable_cold_tier_is_stated_not_hidden() {
+        let group = cold_tier_unavailable("unknown operation");
+        assert!(group.metrics.is_empty());
+        assert!(group.notes[0].contains("unknown operation"));
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
     use rrd_contract::{
@@ -1434,6 +1602,7 @@ mod tests {
     fn rrflow_kv() -> DiagnosticRrflowKvSnapshot {
         DiagnosticRrflowKvSnapshot {
             physical_sequence: 40,
+            rrflow_cld: None,
             manifest_generation: 3,
             durable_sequence: 38,
             memtable: DiagnosticMemtableSnapshot {

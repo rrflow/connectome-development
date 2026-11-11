@@ -28,7 +28,7 @@ import { ReadNotice } from "../components/notice";
 import { Stat } from "../components/stat";
 import type { RuntimeLensProps } from "../types";
 import { formatCount, formatSize, formatTime, shortDigest } from "../utils/format";
-import { PhysicalStorage } from "./physical";
+import { ColdTier, PhysicalStorage } from "./physical";
 import { StoragePipeline } from "./pipeline";
 
 /** The Storage lens follows the live engine while it is open. */
@@ -98,6 +98,7 @@ export function StorageTab({ client, sessionKey }: RuntimeLensProps) {
 					observedAt={view.physical.observed_at_unix_ms}
 				/>
 				<StoragePipeline view={view.physical} />
+				<ColdTier view={view.physical} />
 				<Group>
 					<Button
 						variant="subtle"

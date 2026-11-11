@@ -506,12 +506,32 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 						if (command === "rrd_storage")
 							return {
 								runtime_cursor: 7,
+								vector_artifacts: [],
+								query_indexes: [],
 								physical: {
 									profile: "stable-profile",
 									observed_at_unix_ms: 1,
 									evidence_level: "process-local",
 									headline: [],
-									groups: [],
+									groups: [
+										{
+											id: "rrflow_cld",
+											label: "rrflowCLD cold tier",
+											metrics: [
+												{
+													id: "files",
+													label: "Published files",
+													unit: "count",
+													value: 14,
+													limit: null,
+													cumulative: false,
+												},
+											],
+											notes: [
+												"Files are a copy today: LSM space is not reclaimed yet.",
+											],
+										},
+									],
 								},
 							};
 						if (command === "rrd_vector_collections") return { collections: [] };
@@ -631,6 +651,17 @@ test("inventory neighborhood follows the selected project session", async ({ pag
 	await expect(
 		inventory.getByRole("button", { name: "Profile A source", exact: true }),
 	).toHaveCount(0);
+});
+
+test("the storage tab shows the rrflowCLD cold tier the engine reports", async ({ page }) => {
+	const { profileA, profileB } = await createDiagnosticProfiles(page);
+	await openDiagnosticWorkbench(page, profileA, profileB);
+	await page.getByRole("button", { name: "Open storage details" }).click();
+	await expect(page.getByText("rrflowCLD cold tier", { exact: true })).toBeVisible();
+	await expect(page.getByText("Published files", { exact: true })).toBeVisible();
+	await expect(
+		page.getByText("Files are a copy today: LSM space is not reclaimed yet.", { exact: true }),
+	).toBeVisible();
 });
 
 test("a committed change reaches the graph without a reload", async ({ page }) => {
