@@ -837,6 +837,8 @@ impl NativeRrdClient {
                     max_storage_keys: TASK_READ_KEYS,
                     expected_task_sha256,
                     expected_configuration_sha256,
+                    flight: None,
+                    routing: None,
                 };
                 request.validate().map_err(contract_error)?;
                 let config = self.task_configuration().await?;

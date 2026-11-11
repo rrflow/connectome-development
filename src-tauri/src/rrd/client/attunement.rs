@@ -96,7 +96,7 @@ enum PreparedControl {
     Resume(ResumeAttunementWithLease),
     RecoverExpired(RecoverExpiredAttunement),
     Cancel(CancelAttunement),
-    Replan(AcceptAttunementReplan),
+    Replan(Box<AcceptAttunementReplan>),
 }
 
 pub(super) struct PendingAttunement {
@@ -382,11 +382,11 @@ impl NativeRrdClient {
                     )
                     .await
                     .map_err(RrdError::sdk)?;
-                PreparedControl::Replan(AcceptAttunementReplan {
+                PreparedControl::Replan(Box::new(AcceptAttunementReplan {
                     contract_version,
                     proposal_sha256: preview.proposal_sha256.clone(),
                     preview,
-                })
+                }))
             }
         };
         let options = self.ids.next(true)?;
@@ -485,7 +485,7 @@ impl NativeRrdClient {
                 .map(|r| (plan.clone(), r.status)),
             PreparedControl::Replan(request) => self
                 .client
-                .accept_attunement_replan(session, request.clone(), plan, options)
+                .accept_attunement_replan(session, (**request).clone(), plan, options)
                 .await
                 .map(|r| (r.plan, r.successor)),
         };

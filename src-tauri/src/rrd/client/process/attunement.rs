@@ -162,8 +162,10 @@ fn loopback_worker_profile(
             system_prompt: "Select the configured controlled test binding.".into(),
             maximum_output_tokens: 64,
             temperature_milli: 0,
+            lfg: None,
         }),
         observation_policy: None,
+        assessment_policy: None,
         worker_policy: Some(rrd_contract::EndpointWorkerPolicy {
             contract_version: rrd_contract::ENDPOINT_WORKER_VERSION,
             allow_network: true,
@@ -174,6 +176,7 @@ fn loopback_worker_profile(
             bindings: vec![rrd_contract::EndpointWorkerBinding {
                 binding_id,
                 protocol_evidence_sha256: evidence_sha256,
+                adapter: Default::default(),
                 system_prompt:
                     "Return one bounded protocol-test draft. Do not change project files.".into(),
                 generation: rrd_contract::EndpointGenerationSettings {

@@ -5,6 +5,8 @@ import type { RrdMetricView, RrdPhysicalStorageView } from "~/rrflow/session";
 import { formatCount, formatSize } from "./format";
 import classes from "./style.module.scss";
 
+const COLD_TIER_GROUP = "rrflow_cld";
+
 export function formatMetric(unit: RrdMetricView["unit"], value: number): string {
 	switch (unit) {
 		case "bytes":
@@ -133,73 +135,75 @@ export function PhysicalStorage({ view }: { view: RrdPhysicalStorageView }) {
 				))}
 			</SimpleGrid>
 			<SimpleGrid cols={{ base: 1, lg: 2 }}>
-				{view.groups.map((group) => (
-					<Paper
-						key={group.id}
-						p="md"
-					>
-						<Label>{group.label}</Label>
-						<Table
-							fz="sm"
-							verticalSpacing={4}
+				{view.groups
+					.filter((group) => group.id !== COLD_TIER_GROUP)
+					.map((group) => (
+						<Paper
+							key={group.id}
+							p="md"
 						>
-							<Table.Tbody>
-								{group.metrics.map((metric) => {
-									const percent = fill(metric);
-									const delta = deltas.get(`${group.id}.${metric.id}`);
-									return (
-										<Table.Tr key={metric.id}>
-											<Table.Td c="slate">{metric.label}</Table.Td>
-											<Table.Td
-												ff="monospace"
-												ta="right"
-											>
-												{formatMetric(metric.unit, metric.value)}
-											</Table.Td>
-											<Table.Td w={140}>
-												{percent !== null && metric.unit !== "ratio" ? (
-													<Progress
-														value={percent}
-														color={fillColor(percent)}
-													/>
-												) : delta !== undefined && delta !== 0 ? (
-													<Badge
-														variant="light"
-														color="green"
-														ff="monospace"
-													>
-														+{formatMetric(metric.unit, delta)}
-													</Badge>
-												) : metric.cumulative ? (
-													<Text
-														fz="xs"
-														c="slate"
-													>
-														since open
-													</Text>
-												) : null}
-											</Table.Td>
-										</Table.Tr>
-									);
-								})}
-							</Table.Tbody>
-						</Table>
-						{group.notes.length > 0 && (
-							<Box mt="xs">
-								{group.notes.map((note) => (
-									<Text
-										key={note}
-										fz="xs"
-										c="slate"
-										ff="monospace"
-									>
-										{note}
-									</Text>
-								))}
-							</Box>
-						)}
-					</Paper>
-				))}
+							<Label>{group.label}</Label>
+							<Table
+								fz="sm"
+								verticalSpacing={4}
+							>
+								<Table.Tbody>
+									{group.metrics.map((metric) => {
+										const percent = fill(metric);
+										const delta = deltas.get(`${group.id}.${metric.id}`);
+										return (
+											<Table.Tr key={metric.id}>
+												<Table.Td c="slate">{metric.label}</Table.Td>
+												<Table.Td
+													ff="monospace"
+													ta="right"
+												>
+													{formatMetric(metric.unit, metric.value)}
+												</Table.Td>
+												<Table.Td w={140}>
+													{percent !== null && metric.unit !== "ratio" ? (
+														<Progress
+															value={percent}
+															color={fillColor(percent)}
+														/>
+													) : delta !== undefined && delta !== 0 ? (
+														<Badge
+															variant="light"
+															color="green"
+															ff="monospace"
+														>
+															+{formatMetric(metric.unit, delta)}
+														</Badge>
+													) : metric.cumulative ? (
+														<Text
+															fz="xs"
+															c="slate"
+														>
+															since open
+														</Text>
+													) : null}
+												</Table.Td>
+											</Table.Tr>
+										);
+									})}
+								</Table.Tbody>
+							</Table>
+							{group.notes.length > 0 && (
+								<Box mt="xs">
+									{group.notes.map((note) => (
+										<Text
+											key={note}
+											fz="xs"
+											c="slate"
+											ff="monospace"
+										>
+											{note}
+										</Text>
+									))}
+								</Box>
+							)}
+						</Paper>
+					))}
 			</SimpleGrid>
 			<Group gap="xs">
 				<Badge variant="outline">{view.profile}</Badge>
@@ -213,5 +217,46 @@ export function PhysicalStorage({ view }: { view: RrdPhysicalStorageView }) {
 				</Text>
 			</Group>
 		</Stack>
+	);
+}
+
+/** rrflowCLD, the cold tier, exactly as the engine reports it. */
+export function ColdTier({ view }: { view: RrdPhysicalStorageView }) {
+	const group = view.groups.find((entry) => entry.id === COLD_TIER_GROUP);
+	if (!group) return null;
+	return (
+		<Paper p="md">
+			<Label>{group.label}</Label>
+			<Table
+				fz="sm"
+				verticalSpacing={4}
+			>
+				<Table.Tbody>
+					{group.metrics.map((metric) => (
+						<Table.Tr key={metric.id}>
+							<Table.Td c="slate">{metric.label}</Table.Td>
+							<Table.Td
+								ff="monospace"
+								ta="right"
+							>
+								{formatMetric(metric.unit, metric.value)}
+							</Table.Td>
+						</Table.Tr>
+					))}
+				</Table.Tbody>
+			</Table>
+			<Box mt="xs">
+				{group.notes.map((note) => (
+					<Text
+						key={note}
+						fz="xs"
+						c="slate"
+						ff="monospace"
+					>
+						{note}
+					</Text>
+				))}
+			</Box>
+		</Paper>
 	);
 }

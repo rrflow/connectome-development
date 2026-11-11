@@ -828,6 +828,43 @@ fn the_lenses_read_a_live_estate() {
         assert_eq!(physical.profile, "rrflow_kv");
         assert!(!physical.groups.is_empty());
 
+        // rrflowCLD: the real engine reports published cold-tier files. The
+        // bundled configuration turns the tier on and it publishes in the
+        // background, so wait for the first file instead of assuming one.
+        let deadline = std::time::Instant::now() + Duration::from_secs(30);
+        let cold = loop {
+            let view = client
+                .physical_storage()
+                .await
+                .expect("physical storage view");
+            let group = view
+                .groups
+                .into_iter()
+                .find(|group| group.id == "rrflow_cld")
+                .expect("the storage panel carries the cold tier");
+            let files = group.metrics.iter().find(|metric| metric.id == "files");
+            if files.is_some_and(|metric| metric.value > 0.0) {
+                break group;
+            }
+            assert!(
+                std::time::Instant::now() < deadline,
+                "no rrflowCLD file was published: {:?}",
+                group.notes
+            );
+            tokio::time::sleep(Duration::from_millis(250)).await;
+        };
+        eprintln!("rrflowCLD panel: {cold:?}");
+        let tab = client.storage().await.expect("storage tab view");
+        assert!(
+            tab.physical
+                .groups
+                .iter()
+                .any(|group| group.id == "rrflow_cld"),
+            "the Storage tab reads a separate view and must carry the cold tier too"
+        );
+        assert!(cold.metrics.iter().any(|metric| metric.id == "latest_rows"));
+        assert!(cold.notes.iter().any(|note| note.contains("sha-256")));
+
         // Vectors: the catalogue, the points, and an exact search by example.
         let catalogue = client.vector_collections().await.expect("collections");
         assert_eq!(catalogue.collections.len(), 1);

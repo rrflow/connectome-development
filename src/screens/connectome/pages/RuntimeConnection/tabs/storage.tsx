@@ -20,7 +20,7 @@ import { iconChevronDown, iconChevronUp, iconErrorCircle, iconRefresh } from "~/
 import { formatCount, formatSize, formatTime, shortDigest } from "../format";
 import { Term } from "../glossary";
 import { ReadNotice } from "../notice";
-import { PhysicalStorage } from "../physical";
+import { ColdTier, PhysicalStorage } from "../physical";
 import { StoragePipeline } from "../pipeline";
 import { busyRetry } from "../queries";
 import { Stat } from "../stat";
@@ -93,6 +93,7 @@ export function StorageTab({ client, sessionKey }: RuntimeLensProps) {
 					observedAt={view.physical.observed_at_unix_ms}
 				/>
 				<StoragePipeline view={view.physical} />
+				<ColdTier view={view.physical} />
 				<Group>
 					<Button
 						variant="subtle"

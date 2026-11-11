@@ -25,15 +25,15 @@ use super::view::{
 };
 use rrd_client::{ClientConfig, RequestOptions, RrdClient, Session};
 use rrd_contract::{
-    CanonicalId, CloseSession, CreateSession, DataReference, DataVectorValue, DiagnosticSnapshot,
-    ExecuteQuery, LaunchPromptFlight, ListPromptFlights, ListVectorCollections,
-    PromptFlightContextMode, PromptFlightContextRequest, PromptFlightProvider, QueryBudget,
-    ReadDiagnosticSnapshot, ReadPromptFlight, ReadStorageDiagnostics, RenewSession,
-    RetrieveVectorPoints, ScrollVectorPoints, SearchVectors, ServiceCapabilities, SessionLimits,
-    VectorPointBatch, VectorPointPage, VectorPointSnapshot, VectorSearchHit, VectorSearchMode,
-    VectorSearchQuery, VectorSearchResult, MAX_DIAGNOSTIC_RUNTIME_SCANNED_CHANGES,
-    MAX_PROMPT_FLIGHT_STORAGE_KEYS, MAX_QUERY_BYTES, MAX_VECTOR_POINT_PAGE,
-    MAX_VECTOR_SEARCH_TOP_K, MAX_VECTOR_STORAGE_KEYS,
+    CanonicalId, CloseSession, ColdHistoryReadResult, CreateSession, DataReference,
+    DataVectorValue, DiagnosticSnapshot, ExecuteQuery, LaunchPromptFlight, ListPromptFlights,
+    ListVectorCollections, PromptFlightContextMode, PromptFlightContextRequest,
+    PromptFlightProvider, QueryBudget, ReadColdHistory, ReadDiagnosticSnapshot, ReadPromptFlight,
+    ReadStorageDiagnostics, RenewSession, RetrieveVectorPoints, ScrollVectorPoints, SearchVectors,
+    ServiceCapabilities, SessionLimits, VectorPointBatch, VectorPointPage, VectorPointSnapshot,
+    VectorSearchHit, VectorSearchMode, VectorSearchQuery, VectorSearchResult,
+    MAX_DIAGNOSTIC_RUNTIME_SCANNED_CHANGES, MAX_PROMPT_FLIGHT_STORAGE_KEYS, MAX_QUERY_BYTES,
+    MAX_VECTOR_POINT_PAGE, MAX_VECTOR_SEARCH_TOP_K, MAX_VECTOR_STORAGE_KEYS,
 };
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -883,7 +883,9 @@ impl NativeRrdClient {
 
     pub async fn storage(&self) -> Result<StorageView, RrdError> {
         let snapshot = self.diagnostic_snapshot().await?;
-        Ok(view::storage(&snapshot, &self.service.storage_profile))
+        let mut storage = view::storage(&snapshot, &self.service.storage_profile);
+        self.attach_cold_tier(&mut storage.physical).await;
+        Ok(storage)
     }
 
     pub async fn physical_storage(&self) -> Result<view::PhysicalStorageView, RrdError> {
@@ -897,7 +899,52 @@ impl NativeRrdClient {
                     .await
             })
             .await?;
-        Ok(view::physical(&snapshot))
+        let mut physical = view::physical(&snapshot);
+        self.attach_cold_tier(&mut physical).await;
+        Ok(physical)
+    }
+
+    /// Both storage surfaces carry the cold tier. A profile with no physical
+    /// counters keeps its own empty-state notice.
+    async fn attach_cold_tier(&self, physical: &mut view::PhysicalStorageView) {
+        if physical.groups.is_empty() {
+            return;
+        }
+        physical.groups.push(match self.cold_tier().await {
+            Ok(cold) => view::cold_tier_group(&cold),
+            Err(error) => view::cold_tier_unavailable(&error.to_string()),
+        });
+    }
+
+    /// The durable cold-tier head and, when one exists, its verified latest file.
+    async fn cold_tier(&self) -> Result<ColdHistoryReadResult, RrdError> {
+        let head = self.read_cold_generation(None).await?;
+        if head.current_generation == 0 {
+            return Ok(head);
+        }
+        // Publication can advance between reads; the head stays true regardless.
+        Ok(self
+            .read_cold_generation(Some(head.current_generation))
+            .await
+            .unwrap_or(head))
+    }
+
+    async fn read_cold_generation(
+        &self,
+        generation: Option<u64>,
+    ) -> Result<ColdHistoryReadResult, RrdError> {
+        let request = ReadColdHistory {
+            scope: self.scope(),
+            generation,
+            max_artifact_bytes: 64 * 1024 * 1024,
+            budget: self.query_budget.clone(),
+        };
+        self.send(false, |session, options| async move {
+            self.client
+                .read_cold_history(&session, request, options)
+                .await
+        })
+        .await
     }
 
     pub async fn query(&self, request: RrdQueryRequest) -> Result<QueryView, RrdError> {
