@@ -31,6 +31,13 @@ import {
 } from "~/shared/assets/icons";
 import type { ColorGroup } from "./groups";
 import { createLabelLayer, type ScreenBox } from "./labels";
+import {
+	type EdgeAttributes,
+	type LayoutGraph,
+	type NodeAttributes,
+	nodeSize,
+	reconcileGraph,
+} from "./live-layout";
 
 /** Iterations of ForceAtlas2 applied before the first frame; the graph is static afterwards. */
 const LAYOUT_ITERATIONS = 300;
@@ -73,25 +80,13 @@ export interface CanvasEdge {
 	weight?: number;
 }
 
-interface NodeAttributes {
-	label: string;
-	x: number;
-	y: number;
-	size: number;
-	color: string;
-}
-
-interface EdgeAttributes {
-	weight: number;
-	size: number;
-}
-
 const EMPTY: ReadonlySet<string> = new Set();
 
 interface Focus {
 	hovered: string;
 	selected: string | null;
 	highlighted: ReadonlySet<string>;
+	changed: ReadonlySet<string>;
 	dimUnselected: boolean;
 	activeGroup: string | null;
 	groupOf: ReadonlyMap<string, string>;
@@ -126,6 +121,14 @@ export interface GraphCanvasProps extends BoxProps {
 	selected: string | null;
 	/** Nodes to keep lit and labelled around the selection. */
 	highlighted?: ReadonlySet<string>;
+	/** Nodes that just changed: labelled and raised without dimming the rest. */
+	changed?: ReadonlySet<string>;
+	/**
+	 * What this drawing shows. While it stays the same, new data updates the
+	 * drawing in place and nothing already drawn moves. Without it, every change
+	 * of data is laid out afresh.
+	 */
+	layoutKey?: string;
 	/**
 	 * Dim nodes outside the selection's direct neighbourhood. A neighbourhood
 	 * subgraph is already the context, so it keeps every drawn node lit.
@@ -193,6 +196,8 @@ export function GraphCanvas({
 	legendTitle,
 	selected,
 	highlighted,
+	changed,
+	layoutKey,
 	dimUnselected,
 	onSelect,
 	renderHover,
@@ -228,6 +233,7 @@ export function GraphCanvas({
 		hovered: "",
 		selected,
 		highlighted: highlighted ?? EMPTY,
+		changed: changed ?? EMPTY,
 		dimUnselected,
 		activeGroup,
 		groupOf,
@@ -235,7 +241,17 @@ export function GraphCanvas({
 		lit: null,
 	});
 
+	const drawing = useRef<{ key: string; directed: boolean; model: LayoutGraph } | null>(null);
 	const layout = useMemo(() => {
+		const previous = drawing.current;
+		if (
+			layoutKey !== undefined &&
+			previous?.key === layoutKey &&
+			previous.directed === directed &&
+			reconcileGraph(previous.model, nodes, edges, canvasLabel)
+		) {
+			return previous.model;
+		}
 		const model = new Graph<NodeAttributes, EdgeAttributes>({
 			multi: true,
 			type: directed ? "directed" : "undirected",
@@ -259,7 +275,7 @@ export function GraphCanvas({
 			}
 		}
 		model.forEachNode((node) => {
-			model.setNodeAttribute(node, "size", 3 + 2 * Math.log2(1 + model.degree(node)));
+			model.setNodeAttribute(node, "size", nodeSize(model.degree(node)));
 		});
 		if (model.order > 0) {
 			circular.assign(model);
@@ -273,8 +289,9 @@ export function GraphCanvas({
 				},
 			});
 		}
+		drawing.current = layoutKey === undefined ? null : { key: layoutKey, directed, model };
 		return model;
-	}, [nodes, edges, directed]);
+	}, [nodes, edges, directed, layoutKey]);
 
 	const legend = useMemo(() => {
 		const drawn = new Map<string, number>();
@@ -292,6 +309,7 @@ export function GraphCanvas({
 
 	// Selection, highlights, grouping, and legend focus repaint without relayout;
 	// a new selection is brought into view.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: a live update keeps `layout` and changes it in place, so `nodes` and `edges` signal that the lit set must be recomputed.
 	useEffect(() => {
 		const focus = focusRef.current;
 		const nextHighlights = highlighted ?? EMPTY;
@@ -300,6 +318,7 @@ export function GraphCanvas({
 			(selected !== null && focus.highlighted !== nextHighlights);
 		focus.selected = selected;
 		focus.highlighted = nextHighlights;
+		focus.changed = changed ?? EMPTY;
 		focus.dimUnselected = dimUnselected;
 		focus.activeGroup = activeGroup;
 		focus.groupOf = groupOf;
@@ -309,7 +328,18 @@ export function GraphCanvas({
 		if (!instance) return;
 		instance.refresh({ skipIndexation: true });
 		if (moved && selected) bringIntoView(instance, focus.lit ?? [selected]);
-	}, [layout, selected, highlighted, dimUnselected, activeGroup, groupOf, colors]);
+	}, [
+		layout,
+		nodes,
+		edges,
+		selected,
+		highlighted,
+		changed,
+		dimUnselected,
+		activeGroup,
+		groupOf,
+		colors,
+	]);
 
 	useEffect(() => {
 		if (!ref.current) return;
@@ -357,7 +387,7 @@ export function GraphCanvas({
 				if ((lit ? lit.size : layout.order) <= MAX_FORCED_LABELS) {
 					display.forceLabel = true;
 				}
-				if (node === focus.selected || node === focus.hovered) {
+				if (node === focus.selected || node === focus.hovered || focus.changed.has(node)) {
 					display.highlighted = true;
 					display.forceLabel = true;
 					display.zIndex = 2;
