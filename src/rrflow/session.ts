@@ -233,6 +233,33 @@ export interface RrdQueryView {
 	truncated: boolean;
 	keys_examined: number;
 	output_bytes: number;
+	/** How rrflowQL read rrflowKV to answer, as the engine counted it. */
+	read: RrdQueryReadView;
+	plan: RrdQueryPlanView;
+	/** Present only when the engine analysed the execution. */
+	analysis: RrdQueryAnalysisView | null;
+}
+
+export interface RrdQueryReadView {
+	point_reads: number;
+	range_scans: number;
+	keys_examined: number;
+	values_decoded: number;
+	decoded_bytes: number;
+}
+
+export interface RrdQueryPlanView {
+	exact: boolean;
+	/** The access path the planner chose, and why, when it named one. */
+	selected: string | null;
+	reason: string | null;
+}
+
+export interface RrdQueryAnalysisView {
+	engine: string;
+	input_rows: number;
+	elapsed_micros: number;
+	peak_memory_bytes: number;
 }
 
 export interface RrdNamedVectorView {
@@ -488,6 +515,18 @@ export interface RrdPhysicalStorageView {
 	evidence_level: string;
 	headline: RrdMetricView[];
 	groups: RrdMetricGroupView[];
+	/** rrflowCLD's state, when the engine reported it. */
+	cold_tier?: RrdColdTierStateView;
+}
+
+/** rrflowCLD as typed state, so a view never reads meaning out of a note. */
+export interface RrdColdTierStateView {
+	enabled: boolean;
+	pending: boolean;
+	through_cursor: number;
+	files: number;
+	/** Why publication stopped, in plain words, when it has. */
+	stopped: string | null;
 }
 
 export interface RrdStorageView {

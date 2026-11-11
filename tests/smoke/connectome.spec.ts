@@ -154,6 +154,7 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 					},
 					commitLiveChange: (clustered = false) => {
 						liveNodeCommitted = true;
+						liveHead = Math.max(liveHead, 8);
 						liveGraphClustered = clustered;
 						liveChannel?.onmessage({
 							event: "changes",
@@ -392,11 +393,27 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 												},
 											},
 										];
+							// Only the engine view reads at the head; inventory reads pin a checkpoint.
+							const probe = query.includes(" KNOWN HEAD ");
 							return {
-								known_at_cursor: 27,
+								known_at_cursor: probe ? liveHead : 27,
 								rows,
+								returned_rows: rows.length,
 								truncated: false,
 								keys_examined: 2,
+								read: {
+									point_reads: 0,
+									range_scans: 1,
+									keys_examined: 2,
+									values_decoded: 2,
+									decoded_bytes: 128,
+								},
+								plan: {
+									exact: true,
+									selected: "kind_prefix",
+									reason: "the kind bounds the key range",
+								},
+								analysis: null,
 							};
 						}
 						if (
@@ -550,7 +567,10 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 							};
 						if (command === "rrd_storage")
 							return {
-								runtime_cursor: 7,
+								observed_at_unix_ms: Date.now(),
+								runtime_cursor: liveHead,
+								change_head_cursor: liveHead,
+								oldest_retained_cursor: 1,
 								vector_artifacts: [],
 								query_indexes: [],
 								physical: {
@@ -558,7 +578,29 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 									observed_at_unix_ms: 1,
 									evidence_level: "process-local",
 									headline: [],
+									cold_tier: {
+										enabled: true,
+										pending: false,
+										through_cursor: 5,
+										files: 14,
+										stopped: null,
+									},
 									groups: [
+										{
+											id: "sequences",
+											label: "Sequences",
+											notes: [],
+											metrics: ["physical_sequence", "durable_sequence"].map(
+												(id) => ({
+													id,
+													label: id,
+													unit: "count",
+													value: 100 + liveHead,
+													limit: null,
+													cumulative: false,
+												}),
+											),
+										},
 										{
 											id: "rrflow_cld",
 											label: "rrflowCLD cold tier",
@@ -776,6 +818,34 @@ test("a large engram says how much of it the engine sent", async ({ page }) => {
 	await page.getByRole("tab", { name: "Graph", exact: true }).click();
 	await expect(page.getByText(/Drawing 1 of 40 records and 0 of 39 relations/)).toBeVisible();
 	await expect(page.getByText(/The engine sent the 1 most linked of 40 records/)).toBeVisible();
+});
+
+test("the engine tab shows rrflowDB, rrflowKV, rrflowQL and rrflowCLD on one cursor", async ({
+	page,
+}) => {
+	const { profileA, profileB } = await createDiagnosticProfiles(page);
+	await openDiagnosticWorkbench(page, profileA, profileB);
+	await page.getByRole("button", { name: "System", exact: true }).click();
+	await page.getByRole("tab", { name: "Engine", exact: true }).click();
+	await expect(page).toHaveURL(/\/system\/engine$/);
+	const agreement = page.locator("[data-engine-agreement]");
+	await expect(agreement).toHaveText("The head is change 7. rrflowCLD is 2 changes behind.");
+	const query = page.locator('[data-part-card="ql"]');
+	await expect(query).toContainText("answered at 7");
+	await expect(query).toContainText("1 range scan and 0 point reads: 2 keys examined");
+	await expect(query).toContainText("Plan: kind_prefix, because the kind bounds the key range.");
+	await expect(page.locator('[data-part-card="kv"]')).toContainText(
+		"Every write it has applied is on disk.",
+	);
+	await expect(page.locator('[data-part-card="cld"]')).toContainText("through 5");
+	// A committed change is read again by every part that follows it.
+	await page.evaluate(() =>
+		(
+			window as unknown as { __diagnosticCaptureTest: { commitLiveChange: () => void } }
+		).__diagnosticCaptureTest.commitLiveChange(),
+	);
+	await expect(agreement).toHaveText("The head is change 8. rrflowCLD is 3 changes behind.");
+	await expect(query).toContainText("answered at 8");
 });
 
 test("the graph opens a cluster and returns to the overview", async ({ page }) => {

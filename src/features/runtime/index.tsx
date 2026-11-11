@@ -33,6 +33,7 @@ import { useConfigStore } from "~/shell/stores/config";
 import { databaseQuery } from "./api/queries";
 import { ApiReference } from "./api-reference";
 import { GlossaryDrawer, Term } from "./components/glossary";
+import { EngineTab } from "./engine/engine-tab";
 import { graphTotals } from "./graph/totals";
 import { GuideCards } from "./guides/cards";
 import { ModelsTab } from "./models/models-tab";
@@ -470,6 +471,13 @@ export function RuntimeConnectionPage({
 					<VectorsTab
 						connection={session}
 						{...lensProps}
+					/>
+				)}
+				{session && route === "system/engine" && (
+					<EngineTab
+						connection={session}
+						client={sessionClient}
+						sessionKey={sessionKey}
 					/>
 				)}
 				{session && route === "system/storage" && (

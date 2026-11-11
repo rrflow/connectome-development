@@ -50,6 +50,7 @@ export const WORKSPACE_AREAS: WorkspaceArea[] = [
 		icon: iconServer,
 		tabs: [
 			{ route: "system/instance", label: "Instance" },
+			{ route: "system/engine", label: "Engine" },
 			{ route: "system/storage", label: "Storage" },
 			{ route: "system/api", label: "API reference" },
 		],

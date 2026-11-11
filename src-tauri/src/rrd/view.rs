@@ -225,6 +225,36 @@ pub struct QueryView {
     pub truncated: bool,
     pub keys_examined: u64,
     pub output_bytes: u64,
+    /// How rrflowQL read rrflowKV to answer, as the engine counted it.
+    pub read: QueryReadView,
+    pub plan: QueryPlanView,
+    /// Present only when the engine analysed the execution.
+    pub analysis: Option<QueryAnalysisView>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct QueryReadView {
+    pub point_reads: u64,
+    pub range_scans: u64,
+    pub keys_examined: u64,
+    pub values_decoded: u64,
+    pub decoded_bytes: u64,
+}
+
+#[derive(Debug, Serialize)]
+pub struct QueryPlanView {
+    pub exact: bool,
+    /// The access path the planner chose, and why, when it named one.
+    pub selected: Option<String>,
+    pub reason: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct QueryAnalysisView {
+    pub engine: String,
+    pub input_rows: u64,
+    pub elapsed_micros: u64,
+    pub peak_memory_bytes: u64,
 }
 
 #[derive(Debug, Serialize)]
@@ -428,6 +458,20 @@ pub struct PhysicalStorageView {
     pub evidence_level: String,
     pub headline: Vec<MetricView>,
     pub groups: Vec<MetricGroupView>,
+    /// rrflowCLD's state, when the engine reported it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cold_tier: Option<ColdTierStateView>,
+}
+
+/// rrflowCLD as typed state, so a view never reads meaning out of a note.
+#[derive(Debug, Clone, Serialize)]
+pub struct ColdTierStateView {
+    pub enabled: bool,
+    pub pending: bool,
+    pub through_cursor: u64,
+    pub files: u64,
+    /// Why publication stopped, in plain words, when it has.
+    pub stopped: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -745,6 +789,35 @@ pub fn query(result: &QueryResult) -> QueryView {
         truncated: result.execution.truncated,
         keys_examined: result.execution.read_evidence.keys_examined,
         output_bytes: result.execution.output_bytes,
+        read: QueryReadView {
+            point_reads: result.execution.read_evidence.point_reads,
+            range_scans: result.execution.read_evidence.range_scans,
+            keys_examined: result.execution.read_evidence.keys_examined,
+            values_decoded: result.execution.read_evidence.values_decoded,
+            decoded_bytes: result.execution.read_evidence.decoded_bytes,
+        },
+        plan: {
+            let selected = result
+                .plan
+                .candidates
+                .iter()
+                .find(|candidate| candidate.selected);
+            QueryPlanView {
+                exact: result.plan.exact,
+                selected: selected.map(|candidate| candidate.name.clone()),
+                reason: selected.map(|candidate| candidate.reason.clone()),
+            }
+        },
+        analysis: result
+            .execution
+            .analysis
+            .as_ref()
+            .map(|analysis| QueryAnalysisView {
+                engine: analysis.engine.clone(),
+                input_rows: analysis.input_rows,
+                elapsed_micros: analysis.elapsed_micros,
+                peak_memory_bytes: analysis.peak_memory_bytes,
+            }),
     }
 }
 
@@ -1010,12 +1083,7 @@ pub(super) fn cold_tier_group(cold: &ColdHistoryReadResult) -> MetricGroupView {
         notes.push(format!(
             "Publishing is stopped at cursor {}: {}.",
             cold.through_cursor,
-            match failure.code {
-                ColdHistoryFailureCode::DeadlineExceeded => "the time limit was reached",
-                ColdHistoryFailureCode::ResourceLimit => "a change exceeds the configured limits",
-                ColdHistoryFailureCode::SourceConflict => "the source changed during publication",
-                ColdHistoryFailureCode::StorageOrOther => "a storage error occurred",
-            }
+            cold_failure_reason(failure.code)
         ));
     }
     if cold.enabled {
@@ -1026,6 +1094,28 @@ pub(super) fn cold_tier_group(cold: &ColdHistoryReadResult) -> MetricGroupView {
         label: "rrflowCLD cold tier",
         metrics,
         notes,
+    }
+}
+
+fn cold_failure_reason(code: ColdHistoryFailureCode) -> &'static str {
+    match code {
+        ColdHistoryFailureCode::DeadlineExceeded => "the time limit was reached",
+        ColdHistoryFailureCode::ResourceLimit => "a change exceeds the configured limits",
+        ColdHistoryFailureCode::SourceConflict => "the source changed during publication",
+        ColdHistoryFailureCode::StorageOrOther => "a storage error occurred",
+    }
+}
+
+pub(super) fn cold_tier_state(cold: &ColdHistoryReadResult) -> ColdTierStateView {
+    ColdTierStateView {
+        enabled: cold.enabled,
+        pending: cold.pending,
+        through_cursor: cold.through_cursor,
+        files: cold.current_generation,
+        stopped: cold
+            .failure
+            .as_ref()
+            .map(|failure| cold_failure_reason(failure.code).to_string()),
     }
 }
 
@@ -1052,6 +1142,7 @@ pub(super) fn physical(storage: &DiagnosticStorageSnapshot) -> PhysicalStorageVi
         evidence_level: label(&storage.evidence_level),
         headline,
         groups,
+        cold_tier: None,
     }
 }
 
@@ -1658,6 +1749,22 @@ mod cold_tier_tests {
             .notes
             .iter()
             .any(|note| note.contains("stopped at cursor 6181") && note.contains("limits")));
+    }
+
+    #[test]
+    fn cold_tier_state_is_typed_not_read_from_notes() {
+        let state = cold_tier_state(&status());
+        assert!(state.enabled && !state.pending && state.stopped.is_none());
+        assert_eq!((state.through_cursor, state.files), (6181, 28));
+        let mut stopped = status();
+        stopped.failure = Some(ColdHistoryFailure {
+            code: ColdHistoryFailureCode::SourceConflict,
+            since_unix_ms: 1,
+        });
+        assert_eq!(
+            cold_tier_state(&stopped).stopped.as_deref(),
+            Some("the source changed during publication")
+        );
     }
 
     #[test]

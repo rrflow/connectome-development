@@ -1149,6 +1149,45 @@ mod source_projection_tests {
     }
 
     #[test]
+    fn the_query_view_keeps_how_rrflowql_read_rrflowkv() {
+        let mut result = query_result(Vec::new(), false);
+        result.execution.read_evidence.range_scans = 2;
+        result.execution.read_evidence.keys_examined = 21;
+        result.execution.read_evidence.values_decoded = 20;
+        result.execution.read_evidence.decoded_bytes = 4096;
+        result.plan.candidates = vec![
+            rrd_contract::QueryPlanCandidate {
+                name: "full_scan".into(),
+                selected: false,
+                exact: true,
+                reason: "no index".into(),
+            },
+            rrd_contract::QueryPlanCandidate {
+                name: "kind_prefix".into(),
+                selected: true,
+                exact: true,
+                reason: "the kind bounds the key range".into(),
+            },
+        ];
+        let view = crate::rrd::view::query(&result);
+        assert_eq!(
+            (
+                view.read.range_scans,
+                view.read.keys_examined,
+                view.read.values_decoded
+            ),
+            (2, 21, 20)
+        );
+        assert_eq!(view.read.decoded_bytes, 4096);
+        assert_eq!(view.plan.selected.as_deref(), Some("kind_prefix"));
+        assert_eq!(
+            view.plan.reason.as_deref(),
+            Some("the kind bounds the key range")
+        );
+        assert!(view.plan.exact && view.analysis.is_none());
+    }
+
+    #[test]
     fn accepts_only_exact_typed_file_map_and_preserves_read_identity_as_text() {
         let identity = "e".repeat(64);
         let content = "a".repeat(64);
