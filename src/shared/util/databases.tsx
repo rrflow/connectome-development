@@ -1,4 +1,4 @@
-import { executeQuery, executeQuerySingle } from "~/screens/connectome/connection/connection";
+import { executeQuery, executeQuerySingle } from "~/connection/connection";
 import { useDatabaseStore } from "~/stores/database";
 import { escapeIdent } from "~/vendor/rrflow-client";
 import { getAuthDB, getAuthNS, getConnection } from "./connection";

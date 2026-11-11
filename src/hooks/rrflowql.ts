@@ -1,6 +1,6 @@
 import { useDebouncedValue } from "@mantine/hooks";
 import { useEffect, useState } from "react";
-import { getRRFlowQL } from "~/screens/connectome/connection/connection";
+import { getRRFlowQL } from "~/connection/connection";
 import type { ResultFormat } from "~/types";
 import { useActiveQuery } from "./connection";
 import { useStable } from "./stable";

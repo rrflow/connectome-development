@@ -1,9 +1,9 @@
 import { noop } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { createContext, type PropsWithChildren, useContext, useState } from "react";
+import { getRRFlowQL } from "~/connection/connection";
 import { type HistoryHandle, useHistory } from "~/hooks/history";
 import { useStable } from "~/hooks/stable";
-import { getRRFlowQL } from "~/screens/connectome/connection/connection";
 import { RecordsChangedEvent } from "~/shared/util/global-events";
 import { RecordId } from "~/vendor/rrflow-client";
 import { InspectorDrawer } from "./drawer";

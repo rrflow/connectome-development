@@ -189,21 +189,19 @@ export class MiniAdapter extends BrowserAdapter {
 		// The inherited query runner loads on demand, in the original order, so
 		// the shared adapter selector that imports this class does not load the
 		// inherited client into every page (sprint 009 Slice D0).
-		import("~/screens/connectome/connection/connection").then(
-			({ executeQuery, executeUserQuery }) => {
-				if (this.#datasetQuery) {
-					executeQuery(this.#datasetQuery);
-				}
+		import("~/connection/connection").then(({ executeQuery, executeUserQuery }) => {
+			if (this.#datasetQuery) {
+				executeQuery(this.#datasetQuery);
+			}
 
-				if (this.#setupQuery) {
-					executeQuery(this.#setupQuery);
-				}
+			if (this.#setupQuery) {
+				executeQuery(this.#setupQuery);
+			}
 
-				if (this.autorun) {
-					executeUserQuery();
-				}
-			},
-		);
+			if (this.autorun) {
+				executeUserQuery();
+			}
+		});
 	}
 
 	public broadcastReady() {

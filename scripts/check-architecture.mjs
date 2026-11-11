@@ -13,7 +13,10 @@ import { fileURLToPath } from "node:url";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
 /** The only files allowed to name a feature from outside `src/features`. */
-const compositionRoots = new Set(["src/screens/connectome/index.tsx"]);
+const compositionRoots = new Set([
+	"src/screens/connectome/index.tsx",
+	"src/screens/mini-embed/index.tsx",
+]);
 
 /** A folder past this has stopped grouping anything; split it by what the code does. */
 const maxSourceFilesPerFolder = 12;

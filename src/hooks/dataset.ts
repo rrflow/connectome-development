@@ -1,6 +1,6 @@
 import { sleep } from "radash";
 import { useState } from "react";
-import { getRRFlow } from "~/screens/connectome/connection/connection";
+import { getRRFlow } from "~/connection/connection";
 import { showInfo } from "~/shared/util/helpers";
 import { getDatasetURL } from "~/shared/util/language";
 import { syncConnectionSchema } from "~/shared/util/schema";

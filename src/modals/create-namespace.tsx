@@ -7,10 +7,10 @@ import { Form } from "~/components/Form";
 import { Icon } from "~/components/Icon";
 import { LearnMore } from "~/components/LearnMore";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
+import { activateDatabase, executeQuery } from "~/connection/connection";
 import { useRootSchema } from "~/hooks/schema";
 import { useStable } from "~/hooks/stable";
 import { iconPlus } from "~/icons";
-import { activateDatabase, executeQuery } from "~/screens/connectome/connection/connection";
 import { escapeIdent } from "~/vendor/rrflow-client";
 
 export function openCreateNamespaceModal() {

@@ -105,7 +105,7 @@ export function ConnectionAddressDetails({
 			// The reachability probe still uses the inherited client (sprint 009 D2
 			// replaces it with RRFlow readiness); it loads on demand so the pages
 			// that open this form do not load that client.
-			const { createRRFlow } = await import("~/screens/connectome/connection/rrflow");
+			const { createRRFlow } = await import("~/connection/rrflow");
 			const test = await createRRFlow();
 
 			await sleep(500);

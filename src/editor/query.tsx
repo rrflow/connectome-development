@@ -1,10 +1,6 @@
 import { EditorSelection, SelectionRange, StateEffect, StateField } from "@codemirror/state";
 import type { Command, EditorView } from "@codemirror/view";
-import {
-	executeGraphql,
-	executeUserQuery,
-	tryParseParams,
-} from "~/screens/connectome/connection/connection";
+import { executeGraphql, executeUserQuery, tryParseParams } from "~/connection/connection";
 import { getConnection } from "~/shared/util/connection";
 import { getQueryRange } from "./rrflowql";
 

@@ -1,11 +1,11 @@
 import { useDisclosure } from "@mantine/hooks";
 import { createContext, type PropsWithChildren, useContext, useMemo, useState } from "react";
 import { useImmer } from "use-immer";
+import { executeQuery } from "~/connection/connection";
 import { useMinimumVersion } from "~/hooks/connection";
 import { useSaveable } from "~/hooks/save";
 import { useTables } from "~/hooks/schema";
 import { useStable } from "~/hooks/stable";
-import { executeQuery } from "~/screens/connectome/connection/connection";
 import { showErrorNotification } from "~/shared/util/helpers";
 import { syncConnectionSchema } from "~/shared/util/schema";
 import { SDB_2_0_0 } from "~/shared/util/versions";

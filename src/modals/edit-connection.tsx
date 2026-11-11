@@ -41,7 +41,7 @@ function ConnectionEditor({ value }: ConnectionEditorProps) {
 		// Only an active inherited connection is reopened. Its client loads on
 		// demand, so the RRFlow pages that open this editor never load it.
 		if (getActiveConnection() === connection.id) {
-			import("~/screens/connectome/connection/connection").then(({ openConnection }) =>
+			import("~/connection/connection").then(({ openConnection }) =>
 				openConnection({ connection }),
 			);
 		}

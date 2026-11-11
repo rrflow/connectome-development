@@ -1,7 +1,7 @@
 import { omit } from "radash";
 import { create } from "zustand";
+import type { GraphqlResponse } from "~/connection/connection";
 import { applyInstance, applyStatus, firstServed, type InstanceMap } from "~/rrflow/instances";
-import type { GraphqlResponse } from "~/screens/connectome/connection/connection";
 import { createConnectionSchema } from "~/shared/util/defaults";
 import type {
 	ConnectionSchema,
