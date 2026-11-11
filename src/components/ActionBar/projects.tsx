@@ -6,7 +6,6 @@ import {
 	Loader,
 	Modal,
 	Paper,
-	ScrollArea,
 	Select,
 	Stack,
 	Text,
@@ -32,6 +31,8 @@ import type {
 } from "~/shared/types";
 import { useConfigStore } from "~/shell/stores/config";
 import { useDatabaseStore } from "~/stores/database";
+import { displayPath, refusedAsFresh } from "./installation-facts";
+import { InstallationSummary } from "./installation-summary";
 import { resolveServedConnection } from "./served-connection";
 
 /** How often instances are looked at: while the dialog is open, and otherwise. */
@@ -247,12 +248,12 @@ export function DatabaseServing() {
 						Each engine uses its configured resources. This desktop limit does not
 						reserve combined CPU or memory for your machine.
 					</Text>
-					{(error || status.error) && (
+					{status.error && (
 						<Alert
 							color="red"
 							title="Project operation failed"
 						>
-							{error ?? describeRrdError(status.error)}
+							{describeRrdError(status.error)}
 						</Alert>
 					)}
 					{rows.map(({ project, name, instance }) => (
@@ -294,7 +295,7 @@ export function DatabaseServing() {
 								c="dimmed"
 								style={{ overflowWrap: "anywhere" }}
 							>
-								{project}
+								{displayPath(project)}
 							</Text>
 							<Text
 								size="sm"
@@ -386,7 +387,7 @@ export function DatabaseServing() {
 						<>
 							<Text fw={700}>Review your local RRFlow installation</Text>
 							<Text style={{ overflowWrap: "anywhere" }}>
-								{preview.value.project}
+								{displayPath(preview.value.project)}
 							</Text>
 							{preview.selection.endpointCredentialMapping && (
 								<Text
@@ -397,22 +398,15 @@ export function DatabaseServing() {
 									{preview.selection.endpointCredentialMapping}
 								</Text>
 							)}
-							<Alert title="Exact installation preview">
-								Review the paths, permissions and configuration. Installing creates
-								project-local data and credentials. It enables no cloud upload or
-								training.
-							</Alert>
-							<ScrollArea h={260}>
-								<pre
-									style={{
-										whiteSpace: "pre-wrap",
-										overflowWrap: "anywhere",
-										fontSize: 12,
-									}}
+							<InstallationSummary preview={preview.value.installation} />
+							{error && (
+								<Alert
+									color="red"
+									title="Installation failed"
 								>
-									{JSON.stringify(preview.value.installation, null, 2)}
-								</pre>
-							</ScrollArea>
+									{error}
+								</Alert>
+							)}
 							<Group>
 								<Button
 									variant="subtle"
@@ -523,6 +517,43 @@ export function DatabaseServing() {
 							>
 								Choose mapping file
 							</Button>
+							{refusedAsFresh(error, selection.mode) ? (
+								<Alert
+									color="yellow"
+									title="This folder already holds files"
+								>
+									<Stack gap="xs">
+										<Text size="sm">
+											A fresh project starts in an empty folder. To add RRFlow
+											beside the files already here and keep them, use
+											Existing project.
+										</Text>
+										<Button
+											variant="light"
+											loading={pending}
+											onClick={() => {
+												const existing = {
+													...selection,
+													mode: "existing" as const,
+												};
+												setSelection(existing);
+												prepare(existing);
+											}}
+										>
+											Use Existing project
+										</Button>
+									</Stack>
+								</Alert>
+							) : (
+								error && (
+									<Alert
+										color="red"
+										title="Project operation failed"
+									>
+										{error}
+									</Alert>
+								)
+							)}
 							<Button
 								loading={pending}
 								disabled={!adapter.isServeSupported || owned >= 4}

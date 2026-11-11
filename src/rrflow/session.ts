@@ -193,6 +193,9 @@ export interface RrdGraphView {
 	known_at_cursor: number;
 	nodes: RrdNodeView[];
 	edges: RrdEdgeView[];
+	/** Records and relations the engine holds; it may send fewer, the most linked first. */
+	records_total?: number;
+	relations_total?: number;
 	/** Largest first. */
 	clusters: RrdClusterView[];
 }
