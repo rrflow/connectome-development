@@ -2,7 +2,6 @@ import { omit } from "radash";
 import { create } from "zustand";
 import type { GraphqlResponse } from "~/connection/connection";
 import { applyInstance, applyStatus, firstServed, type InstanceMap } from "~/rrflow/instances";
-import { createConnectionSchema } from "~/shared/util/defaults";
 import type {
 	ConnectionSchema,
 	EstateStage,
@@ -10,7 +9,8 @@ import type {
 	ProjectInstance,
 	QueryResponse,
 	ServedEstate,
-} from "~/types";
+} from "~/shared/types";
+import { createConnectionSchema } from "~/shared/util/config/defaults";
 import type { Diagnostic } from "~/vendor/rrflow-client";
 
 export type State = "disconnected" | "connecting" | "retrying" | "connected";

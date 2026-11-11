@@ -1,4 +1,4 @@
-import type { WorkbenchDatasetTemplate, WorkbenchRemoteSource } from "~/types";
+import type { WorkbenchDatasetTemplate, WorkbenchRemoteSource } from "~/shared/types";
 
 export interface DatasetBuildArtifact {
 	fileName: string;

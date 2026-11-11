@@ -2,7 +2,7 @@ import { type BoxProps, Group } from "@mantine/core";
 import clsx from "clsx";
 import type { HTMLAttributes, PropsWithChildren } from "react";
 import { Icon } from "~/components/Icon";
-import { iconHelp } from "~/icons";
+import { iconHelp } from "~/shared/assets/icons";
 import { Link } from "../Link";
 import classes from "./style.module.scss";
 

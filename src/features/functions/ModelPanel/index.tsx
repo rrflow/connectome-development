@@ -3,8 +3,8 @@ import { useMemo } from "react";
 import { adapter } from "~/adapter";
 import { Icon } from "~/components/Icon";
 import { Introduction } from "~/components/Introduction";
-import { iconDownload, iconModuleML, iconOpen } from "~/icons";
-import type { SchemaModel } from "~/types";
+import { iconDownload, iconModuleML, iconOpen } from "~/shared/assets/icons";
+import type { SchemaModel } from "~/shared/types";
 
 export interface ModelPanelProps {
 	details: SchemaModel;

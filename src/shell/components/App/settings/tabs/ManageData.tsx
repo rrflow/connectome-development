@@ -3,14 +3,14 @@ import { assign } from "radash";
 import { useMemo, useState } from "react";
 import { adapter } from "~/adapter";
 import { Icon } from "~/components/Icon";
-import { JSON_FILTER } from "~/constants";
-import { useConnectionList } from "~/hooks/connection";
-import { useCheckbox } from "~/hooks/events";
-import { useStable } from "~/hooks/stable";
-import { iconCheck, iconDownload, iconUpload } from "~/icons";
-import { backupConfig } from "~/shared/util/config";
-import { showErrorNotification, showInfo } from "~/shared/util/helpers";
-import { applyMigrations } from "~/shared/util/migrator";
+import { useConnectionList } from "~/hooks/connection/connection";
+import { useCheckbox } from "~/hooks/state/events";
+import { useStable } from "~/hooks/state/stable";
+import { iconCheck, iconDownload, iconUpload } from "~/shared/assets/icons";
+import { JSON_FILTER } from "~/shared/config/constants";
+import { backupConfig } from "~/shared/util/config/config";
+import { applyMigrations } from "~/shared/util/config/migrator";
+import { showErrorNotification, showInfo } from "~/shared/util/text/helpers";
 import { useConfigStore } from "~/shell/stores/config";
 
 export function ManageDataTab() {

@@ -21,20 +21,20 @@ import { skipToken, useInfiniteQuery, useQuery, useQueryClient } from "@tanstack
 import { useMemo, useState } from "react";
 import { Icon } from "~/components/Icon";
 import { Label } from "~/components/Label";
-import { Section } from "~/components/Section";
-import {
-	iconChevronDown,
-	iconChevronUp,
-	iconErrorCircle,
-	iconRefresh,
-	iconRelation,
-} from "~/icons";
+import { Section } from "~/features/runtime/components/Section";
 import type {
 	RrdMapPointView,
 	RrdNodeView,
 	RrdReference,
 	RrdVectorMapProgressView,
 } from "~/rrflow/session";
+import {
+	iconChevronDown,
+	iconChevronUp,
+	iconErrorCircle,
+	iconRefresh,
+	iconRelation,
+} from "~/shared/assets/icons";
 import { databaseQuery, quantizationsQuery } from "../api/queries";
 import { Term } from "../components/glossary";
 import { InspectorObject, InspectorPanel } from "../components/inspector";

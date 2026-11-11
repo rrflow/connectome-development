@@ -21,11 +21,11 @@ import { LearnMore } from "~/components/LearnMore";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";
 import { executeQuery } from "~/connection/connection";
-import { useStable } from "~/hooks/stable";
-import { iconPlus } from "~/icons";
-import { showErrorNotification } from "~/shared/util/helpers";
-import { readBlock, syncConnectionSchema } from "~/shared/util/schema";
-import type { AccessType, Base, SchemaAccess } from "~/types";
+import { useStable } from "~/hooks/state/stable";
+import { iconPlus } from "~/shared/assets/icons";
+import type { AccessType, Base, SchemaAccess } from "~/shared/types";
+import { readBlock, syncConnectionSchema } from "~/shared/util/connection/schema";
+import { showErrorNotification } from "~/shared/util/text/helpers";
 import { escapeIdent } from "~/vendor/rrflow-client";
 
 type VerifyMode = "url" | "keyalg";

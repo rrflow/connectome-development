@@ -1,8 +1,8 @@
 import { Alert, Group, Select, Text } from "@mantine/core";
 import { useMemo } from "react";
 import { Icon } from "~/components/Icon";
-import { useTableNames } from "~/hooks/schema";
-import { iconWarning } from "~/icons";
+import { useTableNames } from "~/hooks/connection/schema";
+import { iconWarning } from "~/shared/assets/icons";
 import { useInterfaceStore } from "~/shell/stores/interface";
 import { Article } from "../../components";
 

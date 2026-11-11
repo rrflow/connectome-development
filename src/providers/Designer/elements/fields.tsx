@@ -1,8 +1,8 @@
 import { Accordion, Checkbox, Flex, Text, TextInput } from "@mantine/core";
 import { CodeInput, FieldKindInput, PermissionInput } from "~/components/Inputs";
-import { useStable } from "~/hooks/stable";
-import { iconBraces } from "~/icons";
-import type { SchemaField } from "~/types";
+import { useStable } from "~/hooks/state/stable";
+import { iconBraces } from "~/shared/assets/icons";
+import type { SchemaField } from "~/shared/types";
 import { type ElementProps, SectionTitle } from "../helpers";
 import { Lister } from "../lister";
 import classes from "../style.module.scss";

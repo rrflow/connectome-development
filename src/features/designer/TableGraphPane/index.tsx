@@ -40,22 +40,13 @@ import { Icon } from "~/components/Icon";
 import { Label } from "~/components/Label";
 import { Link } from "~/components/Link";
 import { ContentPane } from "~/components/Pane";
-import {
-	DESIGNER_ALGORITHMS,
-	DESIGNER_DIRECTIONS,
-	DESIGNER_HOVER_FOCUS,
-	DESIGNER_LINE_STYLES,
-	DESIGNER_LINKS,
-	DESIGNER_NODE_MODES,
-	DESIGNER_STRATEGIES,
-} from "~/constants";
 import { DiagramContext } from "~/features/designer/TableGraphPane/nodes/BaseTableNode";
-import { useSetting } from "~/hooks/config";
-import { useConnection, useIsConnected } from "~/hooks/connection";
-import { useConnectionAndView, useIntent } from "~/hooks/routing";
-import { useDatabaseSchema } from "~/hooks/schema";
-import { useStable } from "~/hooks/stable";
-import { useIsLight } from "~/hooks/theme";
+import { useSetting } from "~/hooks/app/config";
+import { useConnectionAndView, useIntent } from "~/hooks/app/routing";
+import { useConnection, useIsConnected } from "~/hooks/connection/connection";
+import { useDatabaseSchema } from "~/hooks/connection/schema";
+import { useStable } from "~/hooks/state/stable";
+import { useIsLight } from "~/hooks/ui/theme";
 import {
 	iconAPI,
 	iconChevronRight,
@@ -69,11 +60,16 @@ import {
 	iconRefresh,
 	iconRelation,
 	iconReset,
-} from "~/icons";
-import { showInfo } from "~/shared/util/helpers";
-import { themeColor } from "~/shared/util/mantine";
-import { useConfigStore } from "~/shell/stores/config";
-import { useInterfaceStore } from "~/shell/stores/interface";
+} from "~/shared/assets/icons";
+import {
+	DESIGNER_ALGORITHMS,
+	DESIGNER_DIRECTIONS,
+	DESIGNER_HOVER_FOCUS,
+	DESIGNER_LINE_STYLES,
+	DESIGNER_LINKS,
+	DESIGNER_NODE_MODES,
+	DESIGNER_STRATEGIES,
+} from "~/shared/config/constants";
 import type {
 	DiagramAlgorithm,
 	DiagramDirection,
@@ -83,7 +79,11 @@ import type {
 	DiagramMode,
 	DiagramStrategy,
 	TableInfo,
-} from "~/types";
+} from "~/shared/types";
+import { showInfo } from "~/shared/util/text/helpers";
+import { themeColor } from "~/shared/util/ui/mantine";
+import { useConfigStore } from "~/shell/stores/config";
+import { useInterfaceStore } from "~/shell/stores/interface";
 import { GraphWarningLine } from "./components";
 import {
 	applyDefault,

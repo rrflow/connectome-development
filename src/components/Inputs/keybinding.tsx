@@ -1,7 +1,7 @@
 import { TextInput, type TextInputProps } from "@mantine/core";
 import { useUncontrolled } from "@mantine/hooks";
 import { type KeyboardEvent, useRef } from "react";
-import { useStable } from "~/hooks/stable";
+import { useStable } from "~/hooks/state/stable";
 import { formatBinding, isModifierKey, sanitizeKey } from "~/providers/Commands/keybindings";
 
 export interface KeybindInputProps extends Omit<TextInputProps, "value" | "onChange"> {

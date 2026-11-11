@@ -18,20 +18,20 @@ import { useEffect, useMemo, useState } from "react";
 import { adapter } from "~/adapter";
 import { ActionButton } from "~/components/ActionButton";
 import { Icon } from "~/components/Icon";
-import { useConnectionNavigator, useIntent } from "~/hooks/routing";
-import { iconPlay } from "~/icons";
+import { useConnectionNavigator, useIntent } from "~/hooks/app/routing";
 import { connectionProject } from "~/rrflow/instances";
 import { describeRrdError } from "~/rrflow/runtime";
 import { RrdSessionClient, sessionQueryKey } from "~/rrflow/session";
-import { useConfigStore } from "~/shell/stores/config";
-import { useDatabaseStore } from "~/stores/database";
+import { iconPlay } from "~/shared/assets/icons";
 import type {
 	EstatePreview,
 	EstateSelection,
 	InstanceState,
 	ProjectInstance,
 	ServedEstate,
-} from "~/types";
+} from "~/shared/types";
+import { useConfigStore } from "~/shell/stores/config";
+import { useDatabaseStore } from "~/stores/database";
 import { resolveServedConnection } from "./served-connection";
 
 /** How often instances are looked at: while the dialog is open, and otherwise. */

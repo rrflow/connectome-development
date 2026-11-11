@@ -18,8 +18,7 @@ import { Icon } from "~/components/Icon";
 import { RecordLink } from "~/components/RecordLink";
 import { Spacer } from "~/components/Spacer";
 import { getRRFlowQL } from "~/connection/connection";
-import { RRFLOWQL_FILTER } from "~/constants";
-import { useIsLight } from "~/hooks/theme";
+import { useIsLight } from "~/hooks/ui/theme";
 import {
 	iconArrowLeft,
 	iconArrowUpRight,
@@ -28,8 +27,9 @@ import {
 	iconChevronLeft,
 	iconClose,
 	iconDownload,
-} from "~/icons";
-import { MigrationKind, MigrationResourceType, MigrationSeverity } from "~/types";
+} from "~/shared/assets/icons";
+import { RRFLOWQL_FILTER } from "~/shared/config/constants";
+import { MigrationKind, MigrationResourceType, MigrationSeverity } from "~/shared/types";
 import { kindMeta } from "../MigrationView/kinds";
 import { DiagnosticEntry, DiagnosticResource } from "../MigrationView/organizer";
 import { severityMeta } from "../MigrationView/severities";

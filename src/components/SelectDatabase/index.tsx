@@ -1,7 +1,7 @@
 import { type BoxProps, Group } from "@mantine/core";
 import { Icon } from "~/components/Icon";
-import { useConnection, useIsConnected } from "~/hooks/connection";
-import { iconChevronRight } from "~/icons";
+import { useConnection, useIsConnected } from "~/hooks/connection/connection";
+import { iconChevronRight } from "~/shared/assets/icons";
 import { DatabaseList } from "../DatabaseList";
 import { NamespaceList } from "../NamespaceList";
 

@@ -24,11 +24,12 @@ import { usePagination } from "~/components/Pagination/hook";
 import { ContentPane } from "~/components/Pane";
 import { RecordLink } from "~/components/RecordLink";
 import { executeQuery, executeQueryFirst, getRRFlowQL } from "~/connection/connection";
-import { useConnection } from "~/hooks/connection";
-import { useEventSubscription } from "~/hooks/event";
-import { useConnectionAndView, useConnectionNavigator } from "~/hooks/routing";
-import { useTables } from "~/hooks/schema";
-import { useStable } from "~/hooks/stable";
+import { useConnectionAndView, useConnectionNavigator } from "~/hooks/app/routing";
+import { useConnection } from "~/hooks/connection/connection";
+import { useTables } from "~/hooks/connection/schema";
+import { useEventSubscription } from "~/hooks/state/event";
+import { useStable } from "~/hooks/state/stable";
+import { useConfirmation } from "~/providers/Confirmation";
 import {
 	iconChevronDown,
 	iconChevronRight,
@@ -39,11 +40,10 @@ import {
 	iconRefresh,
 	iconServer,
 	iconTable,
-} from "~/icons";
-import { useConfirmation } from "~/providers/Confirmation";
-import { RecordsChangedEvent } from "~/shared/util/global-events";
-import { showInfo } from "~/shared/util/helpers";
-import { getTableVariant } from "~/shared/util/schema";
+} from "~/shared/assets/icons";
+import { getTableVariant } from "~/shared/util/connection/schema";
+import { RecordsChangedEvent } from "~/shared/util/platform/global-events";
+import { showInfo } from "~/shared/util/text/helpers";
 import { useConfigStore } from "~/shell/stores/config";
 import { escapeIdent, RecordId, StringRecordId } from "~/vendor/rrflow-client";
 import { type SortMode, usePaginationQuery, useRecordQuery } from "./hooks";

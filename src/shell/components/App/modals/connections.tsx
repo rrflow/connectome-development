@@ -13,15 +13,15 @@ import clsx from "clsx";
 import { useState } from "react";
 import { Entry, type EntryProps } from "~/components/Entry";
 import { Icon } from "~/components/Icon";
-import { useBoolean } from "~/hooks/boolean";
-import { useConnectionLabels, useConnectionOverview } from "~/hooks/connection";
-import { useKeyNavigation } from "~/hooks/keys";
-import { useConnectionAndView, useConnectionNavigator, useIntent } from "~/hooks/routing";
-import { useStable } from "~/hooks/stable";
-import { iconServer } from "~/icons";
-import { Y_SLIDE_TRANSITION } from "~/shared/util/helpers";
-import { USER_ICONS } from "~/shared/util/user-icons";
-import type { Connection } from "~/types";
+import { useConnectionAndView, useConnectionNavigator, useIntent } from "~/hooks/app/routing";
+import { useConnectionLabels, useConnectionOverview } from "~/hooks/connection/connection";
+import { useBoolean } from "~/hooks/state/boolean";
+import { useKeyNavigation } from "~/hooks/state/keys";
+import { useStable } from "~/hooks/state/stable";
+import { iconServer } from "~/shared/assets/icons";
+import type { Connection } from "~/shared/types";
+import { Y_SLIDE_TRANSITION } from "~/shared/util/text/helpers";
+import { USER_ICONS } from "~/shared/util/ui/user-icons";
 import classes from "../style.module.scss";
 
 export function ConnectionsModal() {

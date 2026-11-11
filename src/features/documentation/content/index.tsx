@@ -1,6 +1,6 @@
-import { iconAuth, iconBook, iconDesigner, iconStar, iconTable } from "~/icons";
-import { newId } from "~/shared/util/helpers";
-import type { ConnectionSchema } from "~/types";
+import { iconAuth, iconBook, iconDesigner, iconStar, iconTable } from "~/shared/assets/icons";
+import type { ConnectionSchema } from "~/shared/types";
+import { newId } from "~/shared/util/text/helpers";
 import { DocsAuthAccessUserData } from "./topics/authentication/access-user-data";
 import { DocsAuthSignIn } from "./topics/authentication/sign-in";
 // import {DocsGlobalAuthentication} from "./topics/global/authentication";

@@ -5,12 +5,12 @@ import type { Updater } from "use-immer";
 import { CodeEditor } from "~/components/CodeEditor";
 import { Icon } from "~/components/Icon";
 import { ContentPane } from "~/components/Pane";
-import { rrflowqlLinting } from "~/editor/rrflowql";
-import { rrflowqlTableCompletion } from "~/editor/tables";
-import { useDatabaseVersionLinter } from "~/hooks/editor";
-import { useStable } from "~/hooks/stable";
-import { iconTune, iconWarning } from "~/icons";
-import type { SchemaParameter } from "~/types";
+import { rrflowqlLinting } from "~/editor/languages/rrflowql";
+import { rrflowqlTableCompletion } from "~/editor/languages/tables";
+import { useStable } from "~/hooks/state/stable";
+import { useDatabaseVersionLinter } from "~/hooks/ui/editor";
+import { iconTune, iconWarning } from "~/shared/assets/icons";
+import type { SchemaParameter } from "~/shared/types";
 import { rrflowql } from "~/vendor/rrflowql-editor";
 
 export interface ParameterEditorPanelProps {

@@ -7,18 +7,18 @@ import { Icon } from "~/components/Icon";
 import { PreferenceInput } from "~/components/Inputs/preference";
 import { Shortcut } from "~/components/Shortcut";
 import { Spacer } from "~/components/Spacer";
-import { useBoolean } from "~/hooks/boolean";
-import { useKeyNavigation } from "~/hooks/keys";
-import { useIntent } from "~/hooks/routing";
-import { useStable } from "~/hooks/stable";
-import { iconSearch } from "~/icons";
+import { useIntent } from "~/hooks/app/routing";
+import { useBoolean } from "~/hooks/state/boolean";
+import { useKeyNavigation } from "~/hooks/state/keys";
+import { useStable } from "~/hooks/state/stable";
 import {
 	type Command,
 	useCommandCategories,
 	useCommandDispatcher,
 	useCommandKeybinds,
 } from "~/providers/Commands";
-import { fuzzyMatch, ON_STOP_PROPAGATION, Y_SLIDE_TRANSITION } from "~/shared/util/helpers";
+import { iconSearch } from "~/shared/assets/icons";
+import { fuzzyMatch, ON_STOP_PROPAGATION, Y_SLIDE_TRANSITION } from "~/shared/util/text/helpers";
 import { useConfigStore } from "~/shell/stores/config";
 import classes from "../style.module.scss";
 

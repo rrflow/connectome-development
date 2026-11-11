@@ -16,10 +16,10 @@ import { Entry } from "~/components/Entry";
 import { Icon } from "~/components/Icon";
 import { Spacer } from "~/components/Spacer";
 import { Wordmark } from "~/components/Wordmark";
-import { useBoolean } from "~/hooks/boolean";
-import { useIntent } from "~/hooks/routing";
-import { useStable } from "~/hooks/stable";
-import { useDesktopUpdater } from "~/hooks/updater";
+import { useIntent } from "~/hooks/app/routing";
+import { useDesktopUpdater } from "~/hooks/app/updater";
+import { useBoolean } from "~/hooks/state/boolean";
+import { useStable } from "~/hooks/state/stable";
 import {
 	iconBalance,
 	iconChevronRight,
@@ -32,10 +32,10 @@ import {
 	iconServer,
 	iconTransfer,
 	iconTune,
-} from "~/icons";
-import { useFeatureFlags } from "~/shared/util/feature-flags";
+} from "~/shared/assets/icons";
+import type { Assign, FeatureCondition } from "~/shared/types";
+import { useFeatureFlags } from "~/shared/util/config/feature-flags";
 import { useInterfaceStore } from "~/shell/stores/interface";
-import type { Assign, FeatureCondition } from "~/types";
 import classes from "./style.module.scss";
 import { AboutTab } from "./tabs/About";
 import { FeatureFlagsTab } from "./tabs/FeatureFlags";

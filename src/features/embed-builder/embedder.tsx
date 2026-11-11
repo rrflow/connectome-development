@@ -13,10 +13,10 @@ import { useImmer } from "use-immer";
 import { Icon } from "~/components/Icon";
 import { CodeInput } from "~/components/Inputs";
 import { Spacer } from "~/components/Spacer";
-import { ORIENTATIONS, RESULT_MODES, THEMES } from "~/constants";
-import { iconHelp } from "~/icons";
-import { isDevelopment, isProduction } from "~/shared/util/environment";
-import type { ColorScheme, Orientation, ResultMode } from "~/types";
+import { iconHelp } from "~/shared/assets/icons";
+import { ORIENTATIONS, RESULT_MODES, THEMES } from "~/shared/config/constants";
+import type { ColorScheme, Orientation, ResultMode } from "~/shared/types";
+import { isDevelopment, isProduction } from "~/shared/util/config/environment";
 import { rrflowql } from "~/vendor/rrflowql-editor";
 
 export const DEFAULT_STATE: EmbedState = {

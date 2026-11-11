@@ -19,13 +19,20 @@ import { CodeBlock } from "~/components/CodeBlock";
 import { Icon } from "~/components/Icon";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";
-import { setEditorText } from "~/editor/helpers";
-import { useConnection } from "~/hooks/connection";
-import { useConnectionAndView } from "~/hooks/routing";
-import { useStable } from "~/hooks/stable";
-import { iconClose, iconDelete, iconDotsVertical, iconQuery, iconSearch, iconText } from "~/icons";
+import { setEditorText } from "~/features/query/utils/helpers";
+import { useConnectionAndView } from "~/hooks/app/routing";
+import { useConnection } from "~/hooks/connection/connection";
+import { useStable } from "~/hooks/state/stable";
+import {
+	iconClose,
+	iconDelete,
+	iconDotsVertical,
+	iconQuery,
+	iconSearch,
+	iconText,
+} from "~/shared/assets/icons";
+import type { HistoryQuery } from "~/shared/types";
 import { useConfigStore } from "~/shell/stores/config";
-import type { HistoryQuery } from "~/types";
 
 const MAX_PREVIEW_LENGTH = 500;
 

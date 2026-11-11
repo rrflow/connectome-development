@@ -1,7 +1,7 @@
 import { Group, Text } from "@mantine/core";
 import { Icon } from "~/components/Icon";
-import { useIsLight } from "~/hooks/theme";
-import { iconBraces, iconRelation } from "~/icons";
+import { useIsLight } from "~/hooks/ui/theme";
+import { iconBraces, iconRelation } from "~/shared/assets/icons";
 import type { GraphWarning } from "./helpers";
 
 export interface GraphWarningProps {

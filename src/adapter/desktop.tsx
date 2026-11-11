@@ -10,16 +10,7 @@ import { arch, type } from "@tauri-apps/plugin-os";
 import { open as openURL } from "@tauri-apps/plugin-shell";
 import { check } from "@tauri-apps/plugin-updater";
 import { compareVersions } from "compare-versions";
-import { VIEW_PAGES } from "~/constants";
-import { getSetting, overwriteConfig, watchStore } from "~/shared/util/config";
-import { getConnection } from "~/shared/util/connection";
-import { openAndReadFiles, openAndWriteFile } from "~/shared/util/file-system";
-import { NavigateViewEvent } from "~/shared/util/global-events";
-import { showErrorNotification, showInfo } from "~/shared/util/helpers";
-import { dispatchIntent, handleIntentRequest } from "~/shared/util/intents";
-import { ConfigStore, useConfigStore } from "~/shell/stores/config";
-import { useInterfaceStore } from "~/shell/stores/interface";
-import { useDatabaseStore } from "~/stores/database";
+import { VIEW_PAGES } from "~/shared/config/constants";
 import type {
 	ConnectomeConfig,
 	EstatePreview,
@@ -31,7 +22,16 @@ import type {
 	QueryTab,
 	ServedEstate,
 	ViewPage,
-} from "~/types";
+} from "~/shared/types";
+import { getSetting, overwriteConfig, watchStore } from "~/shared/util/config/config";
+import { getConnection } from "~/shared/util/connection/connection";
+import { openAndReadFiles, openAndWriteFile } from "~/shared/util/platform/file-system";
+import { NavigateViewEvent } from "~/shared/util/platform/global-events";
+import { dispatchIntent, handleIntentRequest } from "~/shared/util/platform/intents";
+import { showErrorNotification, showInfo } from "~/shared/util/text/helpers";
+import { ConfigStore, useConfigStore } from "~/shell/stores/config";
+import { useInterfaceStore } from "~/shell/stores/interface";
+import { useDatabaseStore } from "~/stores/database";
 import { adapter } from ".";
 import type { ConnectomeAdapter, FileFilter } from "./base";
 

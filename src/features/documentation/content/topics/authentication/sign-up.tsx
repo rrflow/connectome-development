@@ -2,7 +2,7 @@ import { Box } from "@mantine/core";
 import { useMemo } from "react";
 import { Article, DocsPreview } from "~/features/documentation/content/components";
 import type { Snippets, TopicProps } from "~/features/documentation/content/types";
-import { useConnection } from "~/hooks/connection";
+import { useConnection } from "~/hooks/connection/connection";
 
 export function DocsAuthSignUp({ language }: TopicProps) {
 	const [namespace, database] = useConnection((c) => [

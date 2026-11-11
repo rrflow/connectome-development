@@ -9,12 +9,12 @@ import { Icon } from "~/components/Icon";
 import { ContentPane } from "~/components/Pane";
 import { getRRFlowQL } from "~/connection/connection";
 import { rrflowqlLinting, runQueryKeymap } from "~/editor";
-import { queryEditorField, setQueryEditor } from "~/editor/query";
-import { useActiveQuery } from "~/hooks/connection";
-import { useDebouncedFunction } from "~/hooks/debounce";
-import { useConnectionAndView } from "~/hooks/routing";
-import { useStable } from "~/hooks/stable";
-import { iconClose, iconDollar, iconReset } from "~/icons";
+import { queryEditorField, setQueryEditor } from "~/editor/languages/query";
+import { useConnectionAndView } from "~/hooks/app/routing";
+import { useActiveQuery } from "~/hooks/connection/connection";
+import { useDebouncedFunction } from "~/hooks/state/debounce";
+import { useStable } from "~/hooks/state/stable";
+import { iconClose, iconDollar, iconReset } from "~/shared/assets/icons";
 import { useConfigStore } from "~/shell/stores/config";
 import { rrflowql } from "~/vendor/rrflowql-editor";
 

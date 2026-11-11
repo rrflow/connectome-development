@@ -8,9 +8,9 @@ import { Icon } from "~/components/Icon";
 import { LearnMore } from "~/components/LearnMore";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { activateDatabase, executeQuery } from "~/connection/connection";
-import { useRootSchema } from "~/hooks/schema";
-import { useStable } from "~/hooks/stable";
-import { iconPlus } from "~/icons";
+import { useRootSchema } from "~/hooks/connection/schema";
+import { useStable } from "~/hooks/state/stable";
+import { iconPlus } from "~/shared/assets/icons";
 import { escapeIdent } from "~/vendor/rrflow-client";
 
 export function openCreateNamespaceModal() {

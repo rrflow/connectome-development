@@ -1,5 +1,5 @@
-import { iconErrorCircle, iconHelp, iconWarning } from "~/icons";
-import { MigrationSeverity } from "~/types";
+import { iconErrorCircle, iconHelp, iconWarning } from "~/shared/assets/icons";
+import { MigrationSeverity } from "~/shared/types";
 
 export const severityMeta: Record<
 	MigrationSeverity,

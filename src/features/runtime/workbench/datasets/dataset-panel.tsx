@@ -10,7 +10,7 @@ import {
 	TextInput,
 	Title,
 } from "@mantine/core";
-import type { WorkbenchDatasetTemplate } from "~/types";
+import type { WorkbenchDatasetTemplate } from "~/shared/types";
 import type { BenchmarkWorkloadProfile, DatasetBuildResult } from "./dataset";
 
 interface DatasetLaneReadiness {

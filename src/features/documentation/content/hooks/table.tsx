@@ -1,6 +1,6 @@
-import { useTables } from "~/hooks/schema";
+import { useTables } from "~/hooks/connection/schema";
+import { TableInfo } from "~/shared/types";
 import { useInterfaceStore } from "~/shell/stores/interface";
-import { TableInfo } from "~/types";
 
 const EXAMPLE_TABLE: TableInfo = {
 	schema: {

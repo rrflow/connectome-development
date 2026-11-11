@@ -4,7 +4,7 @@ import type {
 	WorkbenchLearningEvent,
 	WorkbenchLearningTrigger,
 	WorkbenchLinkedPath,
-} from "~/types";
+} from "~/shared/types";
 
 export function WorkbenchTemplateLibraryPanel({
 	eventExecutionError,

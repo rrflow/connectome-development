@@ -22,12 +22,12 @@ import { Redirect } from "wouter";
 import { Icon } from "~/components/Icon";
 import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
-import { iconErrorCircle, iconRefresh } from "~/icons";
 import {
 	type LaunchVyrmFlight,
 	VyrmDiagnosticsClient,
 	type VyrmFlight,
 } from "~/rrflow/diagnostics";
+import { iconErrorCircle, iconRefresh } from "~/shared/assets/icons";
 import { useConfigStore } from "~/shell/stores/config";
 import classes from "./style.module.scss";
 

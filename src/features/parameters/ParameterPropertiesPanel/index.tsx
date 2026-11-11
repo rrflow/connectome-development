@@ -17,9 +17,9 @@ import { PermissionInput } from "~/components/Inputs";
 import { ContentPane } from "~/components/Pane";
 import { SaveBox } from "~/components/SaveBox";
 import { Spacer } from "~/components/Spacer";
-import { SaveableHandle } from "~/hooks/save";
-import { iconCheck, iconCopy, iconDelete, iconList, iconPlus } from "~/icons";
-import { SchemaParameter } from "~/types";
+import { SaveableHandle } from "~/hooks/state/save";
+import { iconCheck, iconCopy, iconDelete, iconList, iconPlus } from "~/shared/assets/icons";
+import { SchemaParameter } from "~/shared/types";
 import classes from "./style.module.scss";
 
 export interface ParameterPropertiesPanelProps {

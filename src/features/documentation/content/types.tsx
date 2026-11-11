@@ -1,7 +1,7 @@
 import type { FC } from "react";
-import type { CodeLang } from "~/types";
+import type { CodeLang } from "~/shared/types";
 
-export type { Snippets } from "~/types";
+export type { Snippets } from "~/shared/types";
 
 interface BaseDocsTopic {
 	id: string;

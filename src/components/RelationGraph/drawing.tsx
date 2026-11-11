@@ -1,6 +1,6 @@
 import type { Settings } from "sigma/settings";
 import type { NodeDisplayData, PartialButFor } from "sigma/types";
-import { getIsLight } from "~/hooks/theme";
+import { getIsLight } from "~/hooks/ui/theme";
 
 /** Display data sigma passes to label and hover renderers for any graph. */
 type LabelData = PartialButFor<NodeDisplayData, "x" | "y" | "size" | "label" | "color">;

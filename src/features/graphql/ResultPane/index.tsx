@@ -3,8 +3,8 @@ import { useMemo } from "react";
 import { CodeEditor } from "~/components/CodeEditor";
 import { Icon } from "~/components/Icon";
 import { ContentPane } from "~/components/Pane";
-import { useConnectionAndView } from "~/hooks/routing";
-import { iconQuery } from "~/icons";
+import { useConnectionAndView } from "~/hooks/app/routing";
+import { iconQuery } from "~/shared/assets/icons";
 import { useDatabaseStore } from "~/stores/database";
 import { rrflowql } from "~/vendor/rrflowql-editor";
 

@@ -1,11 +1,11 @@
 import { Box, Button, Paper, Text, Title } from "@mantine/core";
 import { adapter } from "~/adapter";
-import { DriverSelector } from "~/components/DriverSelector";
 import { Icon } from "~/components/Icon";
-import { DRIVERS } from "~/constants";
+import { DriverSelector } from "~/features/documentation/components/DriverSelector";
 import { Article } from "~/features/documentation/content/components";
-import { useSetting } from "~/hooks/config";
-import { iconOpen } from "~/icons";
+import { useSetting } from "~/hooks/app/config";
+import { iconOpen } from "~/shared/assets/icons";
+import { DRIVERS } from "~/shared/config/constants";
 
 export function DocsGlobalIntroduction() {
 	const [language, setLanguage] = useSetting("behavior", "docsLanguage");

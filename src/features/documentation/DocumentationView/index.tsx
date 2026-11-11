@@ -1,9 +1,9 @@
 import { Group } from "@mantine/core";
 import { memo, useMemo, useRef, useState } from "react";
 import { buildDocumentation } from "~/features/documentation/content";
-import { useSetting } from "~/hooks/config";
-import { useViewFocus } from "~/hooks/routing";
-import { syncConnectionSchema } from "~/shared/util/schema";
+import { useSetting } from "~/hooks/app/config";
+import { useViewFocus } from "~/hooks/app/routing";
+import { syncConnectionSchema } from "~/shared/util/connection/schema";
 import { useDatabaseStore } from "~/stores/database";
 import { ArticlePane } from "../ArticlePane";
 import { TocPane } from "../TopicsPane";

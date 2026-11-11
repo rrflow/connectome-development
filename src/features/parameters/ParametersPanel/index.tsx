@@ -6,9 +6,9 @@ import { ActionButton } from "~/components/ActionButton";
 import { Entry } from "~/components/Entry";
 import { Icon } from "~/components/Icon";
 import { ContentPane } from "~/components/Pane";
-import { useIsConnected } from "~/hooks/connection";
-import { iconCopy, iconDelete, iconPlus, iconSearch, iconVariable } from "~/icons";
-import type { SchemaParameter } from "~/types";
+import { useIsConnected } from "~/hooks/connection/connection";
+import { iconCopy, iconDelete, iconPlus, iconSearch, iconVariable } from "~/shared/assets/icons";
+import type { SchemaParameter } from "~/shared/types";
 import classes from "./style.module.scss";
 
 export interface ParametersPanelProps {

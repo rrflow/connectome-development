@@ -14,15 +14,21 @@ import {
 import { PropsWithChildren, useRef } from "react";
 import { Icon } from "~/components/Icon";
 import { Spacer } from "~/components/Spacer";
-import { SANDBOX } from "~/constants";
-import { useStable } from "~/hooks/stable";
-import { iconCopy, iconDatabase, iconDelete, iconDotsVertical, iconEdit } from "~/icons";
+import { useStable } from "~/hooks/state/stable";
 import { openConnectionEditModal } from "~/modals/edit-connection";
 import { useConfirmation } from "~/providers/Confirmation";
-import { newId, ON_STOP_PROPAGATION } from "~/shared/util/helpers";
-import { USER_ICONS } from "~/shared/util/user-icons";
+import {
+	iconCopy,
+	iconDatabase,
+	iconDelete,
+	iconDotsVertical,
+	iconEdit,
+} from "~/shared/assets/icons";
+import { SANDBOX } from "~/shared/config/constants";
+import { Connection } from "~/shared/types";
+import { newId, ON_STOP_PROPAGATION } from "~/shared/util/text/helpers";
+import { USER_ICONS } from "~/shared/util/ui/user-icons";
 import { useConfigStore } from "~/shell/stores/config";
-import { Connection } from "~/types";
 
 export interface StartConnectionProps extends BoxProps {
 	connection: Connection;

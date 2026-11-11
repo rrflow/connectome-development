@@ -1,38 +1,7 @@
 import { compareVersions } from "compare-versions";
 import { adapter } from "~/adapter";
-import { MAX_HISTORY_QUERY_LENGTH, SANDBOX } from "~/constants";
-import { hasCompletedOnboarding } from "~/hooks/onboarding";
-import { getSetting } from "~/shared/util/config";
-import { getActiveConnection, getAuthDB, getAuthNS, getConnection } from "~/shared/util/connection";
-import {
-	RRFLOW_START_BASICS,
-	RRFLOW_START_GRAPH_V2,
-	RRFLOW_START_GRAPH_V3,
-	RRFLOW_START_VECTOR_V2,
-	RRFLOW_START_VECTOR_V3,
-} from "~/shared/util/dataset";
-import { createBaseQuery } from "~/shared/util/defaults";
-import {
-	ActivateDatabaseEvent,
-	ConnectedEvent,
-	DisconnectedEvent,
-} from "~/shared/util/global-events";
-import {
-	__throw,
-	connectionUri,
-	exposeDebug,
-	newId,
-	showErrorNotification,
-	showWarning,
-} from "~/shared/util/helpers";
-import { parseIdent } from "~/shared/util/language";
-import { createRRFlowQL } from "~/shared/util/rrflowql";
-import { RRFlowQL } from "~/shared/util/rrflowql/contract";
-import { syncConnectionSchema } from "~/shared/util/schema";
-import { useConfigStore } from "~/shell/stores/config";
-import { useInterfaceStore } from "~/shell/stores/interface";
-import { State, useDatabaseStore } from "~/stores/database";
-import { useQueryStore } from "~/stores/query";
+import { hasCompletedOnboarding } from "~/hooks/ui/onboarding";
+import { MAX_HISTORY_QUERY_LENGTH, SANDBOX } from "~/shared/config/constants";
 import type {
 	Authentication,
 	Connection,
@@ -40,7 +9,43 @@ import type {
 	QueryResponse,
 	SchemaInfoKV,
 	SchemaInfoNS,
-} from "~/types";
+} from "~/shared/types";
+import { getSetting } from "~/shared/util/config/config";
+import { createBaseQuery } from "~/shared/util/config/defaults";
+import {
+	getActiveConnection,
+	getAuthDB,
+	getAuthNS,
+	getConnection,
+} from "~/shared/util/connection/connection";
+import {
+	RRFLOW_START_BASICS,
+	RRFLOW_START_GRAPH_V2,
+	RRFLOW_START_GRAPH_V3,
+	RRFLOW_START_VECTOR_V2,
+	RRFLOW_START_VECTOR_V3,
+} from "~/shared/util/connection/dataset";
+import { syncConnectionSchema } from "~/shared/util/connection/schema";
+import {
+	ActivateDatabaseEvent,
+	ConnectedEvent,
+	DisconnectedEvent,
+} from "~/shared/util/platform/global-events";
+import { createRRFlowQL } from "~/shared/util/rrflowql";
+import { RRFlowQL } from "~/shared/util/rrflowql/contract";
+import {
+	__throw,
+	connectionUri,
+	exposeDebug,
+	newId,
+	showErrorNotification,
+	showWarning,
+} from "~/shared/util/text/helpers";
+import { parseIdent } from "~/shared/util/text/language";
+import { useConfigStore } from "~/shell/stores/config";
+import { useInterfaceStore } from "~/shell/stores/interface";
+import { State, useDatabaseStore } from "~/stores/database";
+import { useQueryStore } from "~/stores/query";
 import {
 	type AccessRecordAuth,
 	Features,

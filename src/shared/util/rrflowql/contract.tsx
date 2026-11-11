@@ -1,4 +1,4 @@
-import { QueryResponse } from "~/types";
+import { QueryResponse } from "~/shared/types";
 
 /**
  * An interface providing RRFlowQL functionality

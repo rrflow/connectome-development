@@ -2,9 +2,9 @@ import { Box, Divider, Modal, Stack, Text, TypographyStylesProvider } from "@man
 import dayjs from "dayjs";
 import { Fragment } from "react";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
-import { useBoolean } from "~/hooks/boolean";
-import { useIntent } from "~/hooks/routing";
-import { changelogs } from "~/shared/util/changelogs";
+import { useIntent } from "~/hooks/app/routing";
+import { useBoolean } from "~/hooks/state/boolean";
+import { changelogs } from "~/shared/util/ui/changelogs";
 import classes from "../style.module.scss";
 
 export function ChangelogModal() {

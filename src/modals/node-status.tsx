@@ -4,8 +4,8 @@ import dayjs from "dayjs";
 import { Icon } from "~/components/Icon";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { executeQuerySingle } from "~/connection/connection";
-import { iconCircleFilled } from "~/icons";
-import { showErrorNotification } from "~/shared/util/helpers";
+import { iconCircleFilled } from "~/shared/assets/icons";
+import { showErrorNotification } from "~/shared/util/text/helpers";
 import type { Uuid } from "~/vendor/rrflow-client";
 
 interface Node {

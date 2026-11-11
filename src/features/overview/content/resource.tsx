@@ -1,8 +1,8 @@
 import { Anchor, Box, BoxProps, Group, Image, Paper, Text, UnstyledButton } from "@mantine/core";
 import { useRef } from "react";
-import { Faint } from "~/components/Faint";
 import { Icon } from "~/components/Icon";
-import { iconChevronRight } from "~/icons";
+import { Faint } from "~/features/overview/components/Faint";
+import { iconChevronRight } from "~/shared/assets/icons";
 
 export interface StartResourceProps extends BoxProps {
 	title: string;

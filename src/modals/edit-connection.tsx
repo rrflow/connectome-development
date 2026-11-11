@@ -8,10 +8,10 @@ import { ConnectionNameDetails } from "~/components/ConnectionDetails/connection
 import { ConnectionLabelsDetails } from "~/components/ConnectionDetails/labels";
 import { Form } from "~/components/Form";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
-import { useStable } from "~/hooks/stable";
-import { getActiveConnection, isConnectionValid } from "~/shared/util/connection";
+import { useStable } from "~/hooks/state/stable";
+import { Connection } from "~/shared/types";
+import { getActiveConnection, isConnectionValid } from "~/shared/util/connection/connection";
 import { useConfigStore } from "~/shell/stores/config";
-import { Connection } from "~/types";
 
 export function openConnectionEditModal(connection: Connection) {
 	openModal({

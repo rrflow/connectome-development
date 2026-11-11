@@ -8,20 +8,20 @@ import { CodeEditor } from "~/components/CodeEditor";
 import { Icon } from "~/components/Icon";
 import { ContentPane } from "~/components/Pane";
 import { getRRFlowQL } from "~/connection/connection";
-import { RRFLOWQL_FILTER } from "~/constants";
 import {
 	rrflowqlCustomFunctionCompletion,
 	rrflowqlLinting,
 	rrflowqlTableCompletion,
 	rrflowqlVariableCompletion,
 } from "~/editor";
-import { useSetting } from "~/hooks/config";
-import { useDatabaseVersionLinter } from "~/hooks/editor";
-import { useStable } from "~/hooks/stable";
-import { iconDownload, iconJSON, iconText, iconWarning } from "~/icons";
-import { showErrorNotification } from "~/shared/util/helpers";
-import { buildFunctionDefinition } from "~/shared/util/schema";
-import type { FunctionDetails, SchemaFunction } from "~/types";
+import { useSetting } from "~/hooks/app/config";
+import { useStable } from "~/hooks/state/stable";
+import { useDatabaseVersionLinter } from "~/hooks/ui/editor";
+import { iconDownload, iconJSON, iconText, iconWarning } from "~/shared/assets/icons";
+import { RRFLOWQL_FILTER } from "~/shared/config/constants";
+import type { FunctionDetails, SchemaFunction } from "~/shared/types";
+import { buildFunctionDefinition } from "~/shared/util/connection/schema";
+import { showErrorNotification } from "~/shared/util/text/helpers";
 import { rrflowql } from "~/vendor/rrflowql-editor";
 
 export interface FunctionEditorPanelProps {

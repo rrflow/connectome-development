@@ -1,5 +1,5 @@
 import { Accordion, Stack, TextInput } from "@mantine/core";
-import { iconClock } from "~/icons";
+import { iconClock } from "~/shared/assets/icons";
 import { type ElementProps, SectionTitle } from "../helpers";
 
 export function ChangefeedElement({ data, setData }: ElementProps) {

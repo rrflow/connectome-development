@@ -10,23 +10,23 @@ import { Introduction } from "~/components/Introduction";
 import { PanelDragger } from "~/components/Pane/dragger";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { composeHttpConnection, executeQuery, getRRFlowQL } from "~/connection/connection";
-import { useConnection, useIsConnected } from "~/hooks/connection";
-import { usePanelMinSize } from "~/hooks/panels";
-import { useViewFocus } from "~/hooks/routing";
-import { useSaveable } from "~/hooks/save";
-import { useDatabaseSchema } from "~/hooks/schema";
-import { useStable } from "~/hooks/stable";
-import { iconChevronRight, iconFunction, iconOpen, iconPlus } from "~/icons";
+import { useViewFocus } from "~/hooks/app/routing";
+import { useConnection, useIsConnected } from "~/hooks/connection/connection";
+import { useDatabaseSchema } from "~/hooks/connection/schema";
+import { useSaveable } from "~/hooks/state/save";
+import { useStable } from "~/hooks/state/stable";
+import { usePanelMinSize } from "~/hooks/ui/panels";
 import { useRequireDatabase } from "~/modals/require-database";
 import { useConfirmation } from "~/providers/Confirmation";
-import { createBaseAuthentication } from "~/shared/util/defaults";
-import { showErrorNotification } from "~/shared/util/helpers";
+import { iconChevronRight, iconFunction, iconOpen, iconPlus } from "~/shared/assets/icons";
+import type { FunctionDetails, SchemaFunction, SchemaModel } from "~/shared/types";
+import { createBaseAuthentication } from "~/shared/util/config/defaults";
 import {
 	buildFunctionDefinition,
 	buildModelDefinition,
 	syncConnectionSchema,
-} from "~/shared/util/schema";
-import type { FunctionDetails, SchemaFunction, SchemaModel } from "~/types";
+} from "~/shared/util/connection/schema";
+import { showErrorNotification } from "~/shared/util/text/helpers";
 import { FunctionEditorPanel } from "../FunctionEditorPanel";
 import { FunctionPropertiesPanel } from "../FunctionPropertiesPanel";
 import { FunctionsPanel } from "../FunctionsPanel";

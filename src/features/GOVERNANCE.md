@@ -27,7 +27,7 @@ Only add the folders a feature needs. Name files for what they are inside their 
 - Code flows one way: shared code, then features, then the composition root.
 - A feature does not import another feature. Compose them at the root, or move what they share into shared code.
 - Shared code does not import a feature.
-- No folder inside a feature holds more than 12 source files.
+- No folder under `src` holds more than 12 source files, except vendored code.
 
 Import files directly. Do not add barrel files.
 

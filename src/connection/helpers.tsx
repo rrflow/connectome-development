@@ -1,7 +1,7 @@
 import { objectify } from "radash";
-import { getSetting } from "~/shared/util/config";
-import { featureFlags } from "~/shared/util/feature-flags";
-import type { Authentication } from "~/types";
+import type { Authentication } from "~/shared/types";
+import { getSetting } from "~/shared/util/config/config";
+import { featureFlags } from "~/shared/util/config/feature-flags";
 import type { AccessRecordAuth, ProvidedAuth } from "~/vendor/rrflow-client";
 
 export async function composeAuthentication(connection: Authentication): Promise<ProvidedAuth> {

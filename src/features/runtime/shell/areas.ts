@@ -1,4 +1,4 @@
-import { iconBrain, iconHome, iconRelation, iconServer } from "~/icons";
+import { iconBrain, iconHome, iconRelation, iconServer } from "~/shared/assets/icons";
 
 export interface WorkspaceTab {
 	route: string;

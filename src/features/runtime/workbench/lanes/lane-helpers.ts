@@ -4,7 +4,7 @@ import type {
 	WorkbenchLearningEvent,
 	WorkbenchLinkedPath,
 	WorkbenchRemoteSource,
-} from "~/types";
+} from "~/shared/types";
 import {
 	type BenchmarkWorkloadProfile,
 	benchmarkWorkloadProfiles,

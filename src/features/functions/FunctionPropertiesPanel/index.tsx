@@ -21,13 +21,13 @@ import { Label } from "~/components/Label";
 import { ContentPane } from "~/components/Pane";
 import { SaveBox } from "~/components/SaveBox";
 import { Spacer } from "~/components/Spacer";
-import { useMinimumVersion } from "~/hooks/connection";
-import { SaveableHandle } from "~/hooks/save";
-import { useStable } from "~/hooks/stable";
-import { useIsLight } from "~/hooks/theme";
-import { iconCheck, iconCopy, iconDelete, iconList, iconPlus } from "~/icons";
-import { SDB_2_0_0 } from "~/shared/util/versions";
-import { FunctionDetails, SchemaFunction } from "~/types";
+import { useMinimumVersion } from "~/hooks/connection/connection";
+import { SaveableHandle } from "~/hooks/state/save";
+import { useStable } from "~/hooks/state/stable";
+import { useIsLight } from "~/hooks/ui/theme";
+import { iconCheck, iconCopy, iconDelete, iconList, iconPlus } from "~/shared/assets/icons";
+import { FunctionDetails, SchemaFunction } from "~/shared/types";
+import { SDB_2_0_0 } from "~/shared/util/config/versions";
 import classes from "./style.module.scss";
 
 export interface FunctionPropertiesPanelProps {

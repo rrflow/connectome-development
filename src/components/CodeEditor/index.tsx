@@ -6,12 +6,12 @@ import { Box, type BoxProps } from "@mantine/core";
 import clsx from "clsx";
 import equal from "fast-deep-equal";
 import { useEffect, useMemo, useRef } from "react";
-import { editorBase } from "~/editor/base";
-import { applyAutoFolding } from "~/editor/folding";
-import { editorTheme } from "~/editor/theme";
-import { useSetting } from "~/hooks/config";
-import { useStable } from "~/hooks/stable";
-import { useTheme } from "~/hooks/theme";
+import { editorBase } from "~/editor/core/base";
+import { applyAutoFolding } from "~/editor/core/folding";
+import { editorTheme } from "~/editor/core/theme";
+import { useSetting } from "~/hooks/app/config";
+import { useStable } from "~/hooks/state/stable";
+import { useTheme } from "~/hooks/ui/theme";
 import { useConfigStore } from "~/shell/stores/config";
 import classes from "./style.module.scss";
 

@@ -3,7 +3,7 @@ import { openModal } from "@mantine/modals";
 import { CodeBlock } from "~/components/CodeBlock";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { executeQuerySingle } from "~/connection/connection";
-import { showErrorNotification } from "~/shared/util/helpers";
+import { showErrorNotification } from "~/shared/util/text/helpers";
 import { escapeIdent } from "~/vendor/rrflow-client";
 
 function header(name: string) {

@@ -1,6 +1,6 @@
 import { tryit } from "radash";
-import type { Formatter } from "~/hooks/rrflowql";
-import type { QueryResponse, QueryTab } from "~/types";
+import type { Formatter } from "~/hooks/connection/rrflowql";
+import type { QueryResponse, QueryTab } from "~/shared/types";
 
 export interface PreviewProps {
 	responses: QueryResponse[];

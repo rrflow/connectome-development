@@ -5,11 +5,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ContextMenuProvider } from "mantine-contextmenu";
 import type { PropsWithChildren } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { useIsLight, useThemePreference } from "~/hooks/theme";
+import { useIsLight, useThemePreference } from "~/hooks/ui/theme";
 import { CommandsProvider } from "~/providers/Commands";
 import { ConfirmationProvider } from "~/providers/Confirmation";
 import { FeatureFlagsProvider } from "~/providers/FeatureFlags";
-import { CONNECTOME_THEME } from "~/shared/util/mantine";
+import { CONNECTOME_THEME } from "~/shared/util/ui/mantine";
 import { ScaffoldErrorHandler } from "./error";
 
 const QUERY_CLIENT = new QueryClient();

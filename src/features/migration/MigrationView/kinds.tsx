@@ -1,4 +1,4 @@
-import { MigrationKind } from "~/types";
+import { MigrationKind } from "~/shared/types";
 
 export const kindMeta: Record<
 	MigrationKind,

@@ -2,10 +2,13 @@ import { Box, Button, Indicator, Loader, Menu, Text } from "@mantine/core";
 import { useState } from "react";
 import { Icon } from "~/components/Icon";
 import { closeConnection, openConnection } from "~/connection/connection";
-import { SANDBOX } from "~/constants";
-import { useConnection } from "~/hooks/connection";
-import { useConnectionAndView } from "~/hooks/routing";
-import { useStable } from "~/hooks/stable";
+import { useConnectionAndView } from "~/hooks/app/routing";
+import { useConnection } from "~/hooks/connection/connection";
+import { useStable } from "~/hooks/state/stable";
+import { openConnectionDiagnosticsModal } from "~/modals/connection-diagnostics";
+import { openConnectionEditModal } from "~/modals/edit-connection";
+import { showNodeStatus } from "~/modals/node-status";
+import { useRequireDatabase } from "~/modals/require-database";
 import {
 	iconClose,
 	iconDownload,
@@ -16,15 +19,12 @@ import {
 	iconSandbox,
 	iconUpload,
 	iconWrench,
-} from "~/icons";
-import { openConnectionDiagnosticsModal } from "~/modals/connection-diagnostics";
-import { openConnectionEditModal } from "~/modals/edit-connection";
-import { showNodeStatus } from "~/modals/node-status";
-import { useRequireDatabase } from "~/modals/require-database";
-import { getConnectionById } from "~/shared/util/connection";
-import { dispatchIntent } from "~/shared/util/intents";
-import { syncConnectionSchema } from "~/shared/util/schema";
-import { USER_ICONS } from "~/shared/util/user-icons";
+} from "~/shared/assets/icons";
+import { SANDBOX } from "~/shared/config/constants";
+import { getConnectionById } from "~/shared/util/connection/connection";
+import { syncConnectionSchema } from "~/shared/util/connection/schema";
+import { dispatchIntent } from "~/shared/util/platform/intents";
+import { USER_ICONS } from "~/shared/util/ui/user-icons";
 import { useDatabaseStore } from "~/stores/database";
 
 export function ConnectionStatus() {

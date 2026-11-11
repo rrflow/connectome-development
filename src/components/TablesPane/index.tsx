@@ -9,11 +9,13 @@ import { Icon } from "~/components/Icon";
 import { ContentPane } from "~/components/Pane";
 import { Spacer } from "~/components/Spacer";
 import { executeQuery } from "~/connection/connection";
-import { TABLE_VARIANT_ICONS } from "~/constants";
-import { useConnection, useIsConnected } from "~/hooks/connection";
-import { useConnectionAndView } from "~/hooks/routing";
-import { useHasSchemaAccess, useTables } from "~/hooks/schema";
-import { useStable } from "~/hooks/stable";
+import { useConnectionAndView } from "~/hooks/app/routing";
+import { useConnection, useIsConnected } from "~/hooks/connection/connection";
+import { useHasSchemaAccess, useTables } from "~/hooks/connection/schema";
+import { useStable } from "~/hooks/state/stable";
+import { useRequireDatabase } from "~/modals/require-database";
+import { showTableDefinitionModal } from "~/modals/table-definition";
+import { useConfirmation } from "~/providers/Confirmation";
 import {
 	iconAPI,
 	iconChevronLeft,
@@ -23,16 +25,14 @@ import {
 	iconPlus,
 	iconReset,
 	iconSearch,
-} from "~/icons";
-import { useRequireDatabase } from "~/modals/require-database";
-import { showTableDefinitionModal } from "~/modals/table-definition";
-import { useConfirmation } from "~/providers/Confirmation";
-import { RecordsChangedEvent } from "~/shared/util/global-events";
-import { fuzzyMultiMatch } from "~/shared/util/helpers";
-import { getTableVariant, syncConnectionSchema } from "~/shared/util/schema";
+} from "~/shared/assets/icons";
+import { TABLE_VARIANT_ICONS } from "~/shared/config/constants";
+import { TableVariant } from "~/shared/types";
+import { getTableVariant, syncConnectionSchema } from "~/shared/util/connection/schema";
+import { RecordsChangedEvent } from "~/shared/util/platform/global-events";
+import { fuzzyMultiMatch } from "~/shared/util/text/helpers";
 import { useConfigStore } from "~/shell/stores/config";
 import { useInterfaceStore } from "~/shell/stores/interface";
-import { TableVariant } from "~/types";
 import { escapeIdent } from "~/vendor/rrflow-client";
 import classes from "./style.module.scss";
 

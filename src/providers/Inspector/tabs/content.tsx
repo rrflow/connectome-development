@@ -4,9 +4,9 @@ import { CodeEditor } from "~/components/CodeEditor";
 import { Icon } from "~/components/Icon";
 import { SaveBox } from "~/components/SaveBox";
 import { rrflowqlLinting, rrflowqlRecordLinks } from "~/editor";
-import { useSetting } from "~/hooks/config";
-import type { SaveableHandle } from "~/hooks/save";
-import { iconWarning } from "~/icons";
+import { useSetting } from "~/hooks/app/config";
+import type { SaveableHandle } from "~/hooks/state/save";
+import { iconWarning } from "~/shared/assets/icons";
 import { rrflowql } from "~/vendor/rrflowql-editor";
 import { useInspector } from "..";
 

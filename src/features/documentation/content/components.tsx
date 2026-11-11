@@ -4,7 +4,7 @@ import classes from "./style.module.scss";
 export {
 	CodeSnippet as DocsPreview,
 	type CodeSnippetProps as DocsPreviewProps,
-} from "~/components/CodeSnippet";
+} from "~/features/documentation/components/CodeSnippet";
 
 export interface ArticleProps {
 	title?: React.ReactNode;

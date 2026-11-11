@@ -2,9 +2,8 @@ import { Box, Group, ScrollArea, Select, Title } from "@mantine/core";
 import { type RefObject, useMemo } from "react";
 import { Icon } from "~/components/Icon";
 import { ContentPane } from "~/components/Pane";
-import { ScrollFader } from "~/components/ScrollFader";
 import { Spacer } from "~/components/Spacer";
-import { DRIVERS } from "~/constants";
+import { ScrollFader } from "~/features/documentation/components/ScrollFader";
 import {
 	type DocsArticleTopic,
 	type DocsSectionTopic,
@@ -13,11 +12,12 @@ import {
 	isLink,
 	isSection,
 } from "~/features/documentation/content/types";
-import { useIntent } from "~/hooks/routing";
-import { useStable } from "~/hooks/stable";
-import { useIsLight } from "~/hooks/theme";
-import { iconCheck, iconList } from "~/icons";
-import type { CodeLang } from "~/types";
+import { useIntent } from "~/hooks/app/routing";
+import { useStable } from "~/hooks/state/stable";
+import { useIsLight } from "~/hooks/ui/theme";
+import { iconCheck, iconList } from "~/shared/assets/icons";
+import { DRIVERS } from "~/shared/config/constants";
+import type { CodeLang } from "~/shared/types";
 
 type ReadableArticle = DocsArticleTopic | DocsSectionTopic;
 

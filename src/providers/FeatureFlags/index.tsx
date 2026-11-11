@@ -1,7 +1,7 @@
 import { FeatureFlagProvider } from "@theopensource-company/feature-flags/react";
 import { type PropsWithChildren, useEffect } from "react";
-import { featureFlags } from "~/shared/util/feature-flags";
-import { createLock } from "~/shared/util/lock";
+import { featureFlags } from "~/shared/util/config/feature-flags";
+import { createLock } from "~/shared/util/platform/lock";
 import { useConfigStore } from "~/shell/stores/config";
 
 const { lock: featureFlagsLock, Resolve } = createLock();

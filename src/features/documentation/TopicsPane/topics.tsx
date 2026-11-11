@@ -15,9 +15,9 @@ import {
 	isLink,
 	isSection,
 } from "~/features/documentation/content/types";
-import { useStable } from "~/hooks/stable";
-import { iconChevronDown, iconChevronUp, iconOpen } from "~/icons";
-import type { CodeLang } from "~/types";
+import { useStable } from "~/hooks/state/stable";
+import { iconChevronDown, iconChevronUp, iconOpen } from "~/shared/assets/icons";
+import type { CodeLang } from "~/shared/types";
 import classes from "./style.module.scss";
 
 interface TopicProps<T> {

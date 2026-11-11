@@ -3,8 +3,8 @@ import type { FallbackProps } from "react-error-boundary";
 import { adapter } from "~/adapter";
 import { CodeBlock } from "~/components/CodeBlock";
 import { Icon } from "~/components/Icon";
-import { useVersionCopy } from "~/hooks/debug";
-import { iconBug, iconCheck, iconCopy, iconRefresh, iconWarning } from "~/icons";
+import { useVersionCopy } from "~/hooks/app/debug";
+import { iconBug, iconCheck, iconCopy, iconRefresh, iconWarning } from "~/shared/assets/icons";
 
 export function ScaffoldErrorHandler({ error, resetErrorBoundary }: FallbackProps) {
 	const [copyDebug, clipboard] = useVersionCopy();
