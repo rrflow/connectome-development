@@ -251,6 +251,22 @@ impl EstateRegistry {
         }
     }
 
+    /// Whether one more project can be tracked. A failed project holds no
+    /// engine, so the oldest one gives up its slot: otherwise saved projects
+    /// whose engines are gone lock a new project out with nothing running.
+    fn make_room(&mut self) -> bool {
+        if self.projects.len() < MAX_TRACKED {
+            return true;
+        }
+        let oldest_failed = self
+            .projects
+            .iter()
+            .filter(|(_, tracked)| matches!(tracked.entry, Entry::Failed { .. }))
+            .min_by_key(|(_, tracked)| tracked.revision)
+            .map(|(project, _)| project.clone());
+        oldest_failed.is_some_and(|project| self.projects.remove(&project).is_some())
+    }
+
     /// Local engine slots held by projects other than `except`.
     fn owned_engines(&self, except: &Path) -> usize {
         self.projects
@@ -432,7 +448,7 @@ impl EstateState {
                     "four local project engines are already running; stop one first".into(),
                 );
             }
-            if !replacing && registry.projects.len() >= MAX_TRACKED {
+            if !replacing && !registry.make_room() {
                 return Err("eight project instances are already open; stop one first".into());
             }
             registry.set(
@@ -994,6 +1010,37 @@ mod registry_tests {
             engine: None,
             endpoint_credentials: None,
         }
+    }
+
+    fn tracked(entry: impl Fn() -> Entry) -> EstateRegistry {
+        let mut registry = EstateRegistry::default();
+        for index in 0..MAX_TRACKED {
+            registry.set(Path::new(&format!("project-{index}")), entry());
+        }
+        registry
+    }
+
+    #[test]
+    fn saved_projects_that_failed_do_not_lock_out_a_new_one() {
+        let mut registry = tracked(|| Entry::Failed {
+            origin: Origin::Connectome,
+            stage: "attach",
+            detail: String::new(),
+        });
+        assert!(registry.make_room());
+        assert_eq!(registry.projects.len(), MAX_TRACKED - 1);
+        assert!(!registry.projects.contains_key(Path::new("project-0")));
+    }
+
+    #[test]
+    fn the_tracking_limit_still_holds_for_projects_in_use() {
+        let mut registry = tracked(|| Entry::Starting {
+            origin: Origin::Connectome,
+            stage: None,
+            detail: String::new(),
+        });
+        assert!(!registry.make_room());
+        assert_eq!(registry.projects.len(), MAX_TRACKED);
     }
 
     #[test]
