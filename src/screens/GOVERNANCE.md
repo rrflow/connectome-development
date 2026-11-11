@@ -46,7 +46,7 @@ Deleted 2026-10-18: `dashboard` and `monitor` (the vendor's hosted-instance dash
 | NewEmbed | Mini embed generator |
 | Overview | Hero, runtime profiles, resources |
 | Placeholder | Empty-state placeholder |
-| RuntimeConnection | RRD handshake and session |
+| RuntimeConnection | RRD handshake and session; moved to `src/features/runtime` |
 | RuntimeDiagnostics | RRD diagnostics lenses |
 
 Deleted 2026-10-18: CreateOrganization, OrganizationDeploy, OrganizationManage, Organizations, Referral, Signin, Support, SupportPlans — the vendor's hosted-cloud account, billing, support and referral pages, none of which was routed.

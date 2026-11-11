@@ -22,8 +22,7 @@ import { useConnectionNavigator, useIntent } from "~/hooks/routing";
 import { iconPlay } from "~/icons";
 import { connectionProject } from "~/rrflow/instances";
 import { describeRrdError } from "~/rrflow/runtime";
-import { RrdSessionClient } from "~/rrflow/session";
-import { sessionQueryKey } from "~/screens/connectome/pages/RuntimeConnection/session";
+import { RrdSessionClient, sessionQueryKey } from "~/rrflow/session";
 import { useConfigStore } from "~/shell/stores/config";
 import { useDatabaseStore } from "~/stores/database";
 import type {

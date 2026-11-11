@@ -2,8 +2,8 @@ import { Badge, Box, Group, Paper, Progress, SimpleGrid, Stack, Table, Text } fr
 import { useEffect, useMemo, useRef } from "react";
 import { Label } from "~/components/Label";
 import type { RrdMetricView, RrdPhysicalStorageView } from "~/rrflow/session";
-import { formatCount, formatSize } from "./format";
-import classes from "./style.module.scss";
+import classes from "../style.module.scss";
+import { formatCount, formatSize } from "../utils/format";
 
 export function formatMetric(unit: RrdMetricView["unit"], value: number): string {
 	switch (unit) {

@@ -29,8 +29,12 @@ import {
 	buildDatasetArtifacts,
 	type DatasetBuildArtifact,
 	type DatasetBuildResult,
-} from "./workbenchDataset";
-import { WorkbenchDatasetPanel } from "./workbenchDatasetPanel";
+} from "../datasets/dataset";
+import { WorkbenchDatasetPanel } from "../datasets/dataset-panel";
+import { WorkbenchLinkedCloudPanel } from "../linked-cloud/linked-cloud-panel";
+import { WorkbenchMcplLanePanel } from "../mcpl/mcpl-lane-panel";
+import { WorkbenchTemplateAuthoringPanel } from "../templates/template-authoring-panel";
+import { WorkbenchTemplateLibraryPanel } from "../templates/template-library-panel";
 import {
 	buildDatasetCompareReadiness,
 	buildDatasetFlowReadiness,
@@ -42,11 +46,7 @@ import {
 	getSelectedWorkloadProfile,
 	getWorkbenchLaneVisibility,
 	type WorkbenchLane,
-} from "./workbenchLaneHelpers";
-import { WorkbenchLinkedCloudPanel } from "./workbenchLinkedCloudPanel";
-import { WorkbenchMcplLanePanel } from "./workbenchMcplLanePanel";
-import { WorkbenchTemplateAuthoringPanel } from "./workbenchTemplateAuthoringPanel";
-import { WorkbenchTemplateLibraryPanel } from "./workbenchTemplateLibraryPanel";
+} from "./lane-helpers";
 
 /**
  * The Workbench lanes beside the prompt workbench: dataset authoring, MCPL

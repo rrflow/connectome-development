@@ -3,7 +3,7 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import { Icon } from "~/components/Icon";
 import { iconErrorCircle } from "~/icons";
 import { isRetryable } from "~/rrflow/session";
-import { formatMoment } from "./format";
+import { formatMoment } from "../utils/format";
 
 export interface ReadNoticeProps {
 	/** A read retried with `busyRetry`. */

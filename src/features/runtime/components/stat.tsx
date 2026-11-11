@@ -1,6 +1,6 @@
 import { Paper, Text } from "@mantine/core";
 import type { ReactNode } from "react";
-import classes from "./style.module.scss";
+import classes from "../style.module.scss";
 
 export interface StatProps {
 	label: string;

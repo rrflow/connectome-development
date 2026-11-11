@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import { ActionButton } from "~/components/ActionButton";
 import { Icon } from "~/components/Icon";
 import { iconClose } from "~/icons";
-import { useGuideState } from "./guides/engine";
+import { useGuideState } from "../guides/engine";
 
 interface InspectorHost {
 	target: HTMLElement | null;

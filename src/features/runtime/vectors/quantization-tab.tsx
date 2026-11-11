@@ -49,11 +49,11 @@ import {
 	type RrdReference,
 	type RrdSessionClient,
 } from "~/rrflow/session";
-import { formatCount, formatSize, formatTime, shortDigest } from "../format";
-import { Term } from "../glossary";
-import { quantizationsQuery } from "../queries";
-import { Stat } from "../stat";
+import { quantizationsQuery } from "../api/queries";
+import { Term } from "../components/glossary";
+import { Stat } from "../components/stat";
 import classes from "../style.module.scss";
+import { formatCount, formatSize, formatTime, shortDigest } from "../utils/format";
 
 /** The bit widths TurboQuant offers, with the packed-vector ratio each gives. */
 const TURBOQUANT_BITS: { value: TurboQuantBits; label: string; ratio: number }[] = [

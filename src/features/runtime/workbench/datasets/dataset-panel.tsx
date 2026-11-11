@@ -11,7 +11,7 @@ import {
 	Title,
 } from "@mantine/core";
 import type { WorkbenchDatasetTemplate } from "~/types";
-import type { BenchmarkWorkloadProfile, DatasetBuildResult } from "./workbenchDataset";
+import type { BenchmarkWorkloadProfile, DatasetBuildResult } from "./dataset";
 
 interface DatasetLaneReadiness {
 	id: string;

@@ -1,10 +1,10 @@
 import { Box, Button, ScrollArea, Stack, UnstyledButton } from "@mantine/core";
 import { type ReactNode, useMemo, useState } from "react";
 import { Icon } from "~/components/Icon";
+import { InspectorContext } from "../components/inspector";
+import { GuideProvider } from "../guides/engine";
+import classes from "../style.module.scss";
 import { WORKSPACE_AREAS, workspaceArea } from "./areas";
-import { GuideProvider } from "./guides/engine";
-import { InspectorContext } from "./inspector";
-import classes from "./style.module.scss";
 
 export interface WorkspaceShellProps {
 	route: string;
