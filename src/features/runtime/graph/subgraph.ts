@@ -1,6 +1,6 @@
 import type { RrdGraphView } from "~/rrflow/session";
 
-export type GraphScope = "engram" | "neighbourhood";
+export type GraphScope = "engram" | "neighbourhood" | "clusters";
 export type GraphDirection = "both" | "outgoing" | "incoming";
 
 export interface GraphLens {
