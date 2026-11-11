@@ -25,27 +25,27 @@ import {
 	iconTarget,
 } from "~/icons";
 import { describeRrdError, RrdRuntimeClient } from "~/rrflow/runtime";
-import { RrdSessionClient } from "~/rrflow/session";
+import { RrdSessionClient, sessionQueryKey } from "~/rrflow/session";
 import { dispatchIntent } from "~/shared/util/intents";
 import { useConfigStore } from "~/shell/stores/config";
-import { ApiReference } from "./api";
-import { workspaceRoute } from "./areas";
-import { formatCount } from "./format";
-import { GlossaryDrawer, Term } from "./glossary";
+import { databaseQuery } from "./api/queries";
+import { ApiReference } from "./api-reference";
+import { GlossaryDrawer, Term } from "./components/glossary";
 import { GuideCards } from "./guides/cards";
-import { ProjectPlanPanel } from "./plan";
-import { databaseQuery } from "./queries";
-import { SessionPanel, sessionQueryKey } from "./session";
-import { WorkspaceShell } from "./shell";
+import { ModelsTab } from "./models/models-tab";
+import { ProjectPlanPanel } from "./plan/plan";
+import { RecordsTab } from "./records/records-tab";
+import { SessionPanel } from "./session/session";
+import { workspaceRoute } from "./shell/areas";
+import { WorkspaceShell } from "./shell/shell";
+import { ProjectOverview } from "./shell/workspace";
+import { StorageTab } from "./storage/storage-tab";
 import classes from "./style.module.scss";
-import { ModelsTab } from "./tabs/models";
-import { RecordsTab } from "./tabs/records";
-import { StorageTab } from "./tabs/storage";
-import { VectorsTab } from "./tabs/vectors";
-import { TasksPanel } from "./tasks";
+import { TasksPanel } from "./tasks/tasks";
 import type { RuntimeLens } from "./types";
-import { WorkbenchPanel } from "./workbench";
-import { ProjectOverview } from "./workspace";
+import { formatCount } from "./utils/format";
+import { VectorsTab } from "./vectors/vectors-tab";
+import { WorkbenchPanel } from "./workbench/workbench";
 
 interface LensCardProps {
 	icon: string;

@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
  */
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const pages = join(root, "src/screens/connectome/pages/RuntimeConnection");
+const pages = join(root, "src/features/runtime");
 const folder = join(pages, "guides");
 
 function sources(directory) {

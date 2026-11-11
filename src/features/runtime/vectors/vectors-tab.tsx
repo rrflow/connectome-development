@@ -35,15 +35,15 @@ import type {
 	RrdReference,
 	RrdVectorMapProgressView,
 } from "~/rrflow/session";
-import { formatCount, formatTime } from "../format";
-import { Term } from "../glossary";
-import { type CanvasEdge, type CanvasNode, GraphCanvas } from "../graph";
-import { type ColorGroup, colorOptions, grouping } from "../groups";
-import { InspectorObject, InspectorPanel } from "../inspector";
-import { databaseQuery, quantizationsQuery } from "../queries";
+import { databaseQuery, quantizationsQuery } from "../api/queries";
+import { Term } from "../components/glossary";
+import { InspectorObject, InspectorPanel } from "../components/inspector";
+import { type CanvasEdge, type CanvasNode, GraphCanvas } from "../graph/graph";
+import { type ColorGroup, colorOptions, grouping } from "../graph/groups";
 import classes from "../style.module.scss";
 import type { RecordFocusProps, RuntimeLensProps } from "../types";
-import { activeGenerations, methodLabel, SearchGenerations } from "./quantization";
+import { formatCount, formatTime } from "../utils/format";
+import { activeGenerations, methodLabel, SearchGenerations } from "./quantization-tab";
 
 /** Points requested per page while browsing; the contract bounds the maximum natively. */
 const POINT_PAGE_SIZE = 50;

@@ -4,6 +4,7 @@ import { createHtmlPortalNode, HtmlPortalNode, InPortal, OutPortal } from "react
 import { Redirect, Route, Switch, useLocation } from "wouter";
 import { adapter, isDesktop } from "~/adapter";
 import { TopGlow } from "~/components/TopGlow";
+import { RuntimeConnectionPage } from "~/features/runtime";
 import { useSetting } from "~/hooks/config";
 import { useAvailableViews } from "~/hooks/connection";
 import { useGlowOffset } from "~/hooks/glow";
@@ -16,7 +17,6 @@ import { ControlPlanePage } from "./pages/ControlPlane";
 import { CreateConnectionPage } from "./pages/CreateConnection";
 import { NewEmbedPage } from "./pages/NewEmbed";
 import { OverviewPage } from "./pages/Overview";
-import { RuntimeConnectionPage } from "./pages/RuntimeConnection";
 import { RuntimeDiagnosticsPage } from "./pages/RuntimeDiagnostics";
 import { ConnectomeSidebar } from "./sidebar";
 import classes from "./style.module.scss";

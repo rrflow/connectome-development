@@ -19,10 +19,10 @@ import type { RrdSessionClient } from "~/rrflow/session";
 import { newId } from "~/shared/util/helpers";
 import { useConfigStore } from "~/shell/stores/config";
 import type { WorkbenchRunKind } from "~/types";
-import { formatTime } from "./format";
+import { formatTime } from "../utils/format";
+import type { WorkbenchLane } from "./lanes/lane-helpers";
+import { WorkbenchLanes, workbenchLaneOptions } from "./lanes/lanes";
 import { FlightEventMap, ProjectVisuals } from "./visuals";
-import type { WorkbenchLane } from "./workbenchLaneHelpers";
-import { WorkbenchLanes, workbenchLaneOptions } from "./workbenchLanes";
 
 /** Engine flight readback is the source of the timeline; local notes are separate. */
 export function WorkbenchPanel({

@@ -2,10 +2,10 @@ import { Badge, Box, Group, Paper, Progress, Stack, Text } from "@mantine/core";
 import { Icon } from "~/components/Icon";
 import { iconChevronRight } from "~/icons";
 import type { RrdMetricView, RrdPhysicalStorageView } from "~/rrflow/session";
-import { formatCount } from "./format";
-import { type GlossaryTerm, Term } from "./glossary";
+import { type GlossaryTerm, Term } from "../components/glossary";
+import classes from "../style.module.scss";
+import { formatCount } from "../utils/format";
 import { fill, fillColor, formatMetric } from "./physical";
-import classes from "./style.module.scss";
 
 /*
  * rrflowKV's data path drawn as four stages, fed by the engine's storage

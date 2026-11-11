@@ -32,7 +32,7 @@ export const entries = [
 	"src/screens/connectome/pages/ControlPlane/index.tsx",
 	"src/screens/connectome/pages/CreateConnection/index.tsx",
 	"src/screens/connectome/pages/Overview/index.tsx",
-	"src/screens/connectome/pages/RuntimeConnection/index.tsx",
+	"src/features/runtime/index.tsx",
 	"src/screens/connectome/pages/RuntimeDiagnostics/index.tsx",
 ];
 

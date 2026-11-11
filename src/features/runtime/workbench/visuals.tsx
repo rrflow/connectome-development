@@ -15,14 +15,14 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { describeRrdError } from "~/rrflow/runtime";
 import type { RrdPromptFlightDetailView, RrdSessionClient } from "~/rrflow/session";
-import { formatCount, formatTime } from "./format";
-import { GraphCanvas } from "./graph";
-import { grouping } from "./groups";
-import { InventoryNeighborhood } from "./inventory-neighborhood-view";
-import { ReadNotice } from "./notice";
-import { StoragePipeline } from "./pipeline";
-import { databaseQuery } from "./queries";
-import classes from "./style.module.scss";
+import { databaseQuery } from "../api/queries";
+import { ReadNotice } from "../components/notice";
+import { GraphCanvas } from "../graph/graph";
+import { grouping } from "../graph/groups";
+import { InventoryNeighborhood } from "../graph/inventory-neighborhood-view";
+import { StoragePipeline } from "../storage/pipeline";
+import classes from "../style.module.scss";
+import { formatCount, formatTime } from "../utils/format";
 
 /** The preview is bounded independently of the full graph lens. */
 const PREVIEW_LIMITS = ["20", "40", "80"];

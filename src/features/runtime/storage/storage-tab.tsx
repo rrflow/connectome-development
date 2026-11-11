@@ -17,14 +17,14 @@ import { useState } from "react";
 import { Icon } from "~/components/Icon";
 import { Section } from "~/components/Section";
 import { iconChevronDown, iconChevronUp, iconErrorCircle, iconRefresh } from "~/icons";
-import { formatCount, formatSize, formatTime, shortDigest } from "../format";
-import { Term } from "../glossary";
-import { ReadNotice } from "../notice";
-import { PhysicalStorage } from "../physical";
-import { StoragePipeline } from "../pipeline";
-import { busyRetry } from "../queries";
-import { Stat } from "../stat";
+import { busyRetry } from "../api/queries";
+import { Term } from "../components/glossary";
+import { ReadNotice } from "../components/notice";
+import { Stat } from "../components/stat";
 import type { RuntimeLensProps } from "../types";
+import { formatCount, formatSize, formatTime, shortDigest } from "../utils/format";
+import { PhysicalStorage } from "./physical";
+import { StoragePipeline } from "./pipeline";
 
 /** The Storage lens follows the live engine while it is open. */
 const STORAGE_REFRESH_MS = 5_000;

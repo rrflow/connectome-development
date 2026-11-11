@@ -1,6 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import { isRetryable, type RrdSessionClient } from "~/rrflow/session";
-import { databaseQueryKey } from "./types";
+import { databaseQueryKey } from "../types";
 
 /** Longest wait between asks while the engine reports itself busy. */
 const MAX_BUSY_RETRY_MS = 8_000;

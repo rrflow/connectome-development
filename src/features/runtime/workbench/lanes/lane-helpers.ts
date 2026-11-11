@@ -9,7 +9,7 @@ import {
 	type BenchmarkWorkloadProfile,
 	benchmarkWorkloadProfiles,
 	type DatasetBuildResult,
-} from "./workbenchDataset";
+} from "../datasets/dataset";
 
 export interface WorkbenchLearningEventEntry {
 	templateId: string;

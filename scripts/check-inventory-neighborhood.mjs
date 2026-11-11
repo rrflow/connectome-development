@@ -3,7 +3,7 @@ import {
 	inventoryCheckpoint,
 	inventoryNeighborhood,
 	inventoryRoot,
-} from "../src/screens/connectome/pages/RuntimeConnection/inventory-neighborhood.ts";
+} from "../src/features/runtime/graph/inventory-neighborhood.ts";
 
 const snapshot = "a".repeat(64),
 	root = "b".repeat(64),

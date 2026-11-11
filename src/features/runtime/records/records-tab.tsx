@@ -41,17 +41,17 @@ import {
 import { rrflowql, showRefusal } from "~/rrflow/editor";
 import { queryRefusal, type RrdEdgeView, type RrdNodeView } from "~/rrflow/session";
 import { plural } from "~/shared/util/helpers";
-import { formatCount, formatSize, formatTime } from "../format";
-import { Term } from "../glossary";
-import { type CanvasEdge, type CanvasNode, GraphCanvas } from "../graph";
-import { colorOptions, degrees, grouping } from "../groups";
+import { databaseQuery } from "../api/queries";
+import { Term } from "../components/glossary";
+import { InspectorObject, InspectorPanel } from "../components/inspector";
+import { ReadNotice } from "../components/notice";
+import { type CanvasEdge, type CanvasNode, GraphCanvas } from "../graph/graph";
+import { colorOptions, degrees, grouping } from "../graph/groups";
+import { type GraphDirection, type GraphScope, kinds, selectSubgraph } from "../graph/subgraph";
 import { useGuideSignal, useGuideState } from "../guides/engine";
-import { InspectorObject, InspectorPanel } from "../inspector";
-import { ReadNotice } from "../notice";
-import { databaseQuery } from "../queries";
 import classes from "../style.module.scss";
-import { type GraphDirection, type GraphScope, kinds, selectSubgraph } from "../subgraph";
 import type { RecordFocusProps, RuntimeLensProps } from "../types";
+import { formatCount, formatSize, formatTime } from "../utils/format";
 
 /** Default row bound for console queries; the engram's query budget still applies. */
 const CONSOLE_ROW_LIMIT = 50;

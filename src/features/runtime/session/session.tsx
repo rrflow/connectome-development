@@ -7,13 +7,12 @@ import { Icon } from "~/components/Icon";
 import { iconErrorCircle, iconKey, iconOpenFolder, iconPower } from "~/icons";
 import type { RrdHandshake } from "~/rrflow/runtime";
 import type { RrdConnectionView, RrdSessionClient } from "~/rrflow/session";
+import { sessionQueryKey } from "~/rrflow/session";
 import { useConfigStore } from "~/shell/stores/config";
 import type { Connection } from "~/types";
-import { formatMoment, formatSpan } from "./format";
-import { Hint, Term } from "./glossary";
-import classes from "./style.module.scss";
-
-export const sessionQueryKey = (profile: string) => ["rrd-session", profile] as const;
+import { Hint, Term } from "../components/glossary";
+import classes from "../style.module.scss";
+import { formatMoment, formatSpan } from "../utils/format";
 
 /**
  * Connections whose session the operator closed in this app run. A saved
