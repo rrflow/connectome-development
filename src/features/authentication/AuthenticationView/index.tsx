@@ -2,11 +2,11 @@ import { Box } from "@mantine/core";
 import { memo, useMemo } from "react";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { PanelDragger } from "~/components/Pane/dragger";
-import { useConnection } from "~/hooks/connection";
-import { useViewFocus } from "~/hooks/routing";
-import { useDatabaseSchema, useNamespaceSchema, useRootSchema } from "~/hooks/schema";
-import { iconDatabaseSecure, iconFolderSecure, iconServerSecure } from "~/icons";
-import { syncConnectionSchema } from "~/shared/util/schema";
+import { useViewFocus } from "~/hooks/app/routing";
+import { useConnection } from "~/hooks/connection/connection";
+import { useDatabaseSchema, useNamespaceSchema, useRootSchema } from "~/hooks/connection/schema";
+import { iconDatabaseSecure, iconFolderSecure, iconServerSecure } from "~/shared/assets/icons";
+import { syncConnectionSchema } from "~/shared/util/connection/schema";
 import { LevelPanel } from "../LevelPanel";
 
 const LevelPanelLazy = memo(LevelPanel);

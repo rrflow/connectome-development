@@ -20,11 +20,11 @@ import { CodeInput } from "~/components/Inputs";
 import { LearnMore } from "~/components/LearnMore";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { executeQuery } from "~/connection/connection";
-import { useStable } from "~/hooks/stable";
-import { iconCheck, iconPlus } from "~/icons";
-import { showErrorNotification } from "~/shared/util/helpers";
-import { syncConnectionSchema } from "~/shared/util/schema";
-import type { Base, SchemaUser } from "~/types";
+import { useStable } from "~/hooks/state/stable";
+import { iconCheck, iconPlus } from "~/shared/assets/icons";
+import type { Base, SchemaUser } from "~/shared/types";
+import { syncConnectionSchema } from "~/shared/util/connection/schema";
+import { showErrorNotification } from "~/shared/util/text/helpers";
 import { escapeIdent } from "~/vendor/rrflow-client";
 
 const ROLES = [

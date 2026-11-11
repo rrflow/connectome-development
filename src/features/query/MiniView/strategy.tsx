@@ -1,9 +1,9 @@
 import { adapter } from "~/adapter";
 import { DesktopAdapter } from "~/adapter/desktop";
-import { getActiveConnection } from "~/shared/util/connection";
-import { showErrorNotification } from "~/shared/util/helpers";
+import type { QueryTab } from "~/shared/types";
+import { getActiveConnection } from "~/shared/util/connection/connection";
+import { showErrorNotification } from "~/shared/util/text/helpers";
 import { useConfigStore } from "~/shell/stores/config";
-import type { QueryTab } from "~/types";
 
 export interface SaveStrategy {
 	read: (tab: QueryTab) => Result<string>;

@@ -1,6 +1,6 @@
 import { createWasmWorkerEngines } from "@surrealdb/wasm";
 import WasmWorker from "@surrealdb/wasm/worker?worker";
-import { getSetting } from "~/shared/util/config";
+import { getSetting } from "~/shared/util/config/config";
 import { useDatabaseStore } from "~/stores/database";
 import { applyDiagnostics, createRemoteEngines, RRFlow } from "~/vendor/rrflow-client";
 

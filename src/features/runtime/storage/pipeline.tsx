@@ -1,7 +1,7 @@
 import { Badge, Box, Group, Paper, Progress, Stack, Text } from "@mantine/core";
 import { Icon } from "~/components/Icon";
-import { iconChevronRight } from "~/icons";
 import type { RrdMetricView, RrdPhysicalStorageView } from "~/rrflow/session";
+import { iconChevronRight } from "~/shared/assets/icons";
 import { type GlossaryTerm, Term } from "../components/glossary";
 import classes from "../style.module.scss";
 import { formatCount } from "../utils/format";

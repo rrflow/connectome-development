@@ -8,8 +8,8 @@ import {
 	iconIndex,
 	iconJSON,
 	iconTable,
-} from "~/icons";
-import { MigrationDiagnosticResult, MigrationResourceType } from "~/types";
+} from "~/shared/assets/icons";
+import { MigrationDiagnosticResult, MigrationResourceType } from "~/shared/types";
 
 type ResourceTypeMeta = {
 	label: string;

@@ -4,9 +4,10 @@ import { useMemo } from "react";
 import { adapter, isDesktop } from "~/adapter";
 import type { DesktopAdapter } from "~/adapter/desktop";
 import { closeConnection, openConnection, resetConnection } from "~/connection/connection";
-import { DRIVERS, SANDBOX } from "~/constants";
-import { useAvailableViews, useConnectionList } from "~/hooks/connection";
-import { useConnectionAndView, useConnectionNavigator } from "~/hooks/routing";
+import { useConnectionAndView, useConnectionNavigator } from "~/hooks/app/routing";
+import { useAvailableViews, useConnectionList } from "~/hooks/connection/connection";
+import { openConnectionDiagnosticsModal } from "~/modals/connection-diagnostics";
+import { showNodeStatus } from "~/modals/node-status";
 import {
 	iconAccountPlus,
 	iconAccountSecure,
@@ -51,18 +52,17 @@ import {
 	iconTune,
 	iconUpload,
 	iconWrench,
-} from "~/icons";
-import { openConnectionDiagnosticsModal } from "~/modals/connection-diagnostics";
-import { showNodeStatus } from "~/modals/node-status";
-import { featureFlags } from "~/shared/util/feature-flags";
-import { optional } from "~/shared/util/helpers";
-import type { IntentPayload, IntentType } from "~/shared/util/intents";
+} from "~/shared/assets/icons";
+import { DRIVERS, SANDBOX } from "~/shared/config/constants";
+import { featureFlags } from "~/shared/util/config/feature-flags";
 import {
 	FlagSetController,
 	type PreferenceController,
 	useComputedPreferences,
-} from "~/shared/util/preferences";
-import { syncConnectionSchema } from "~/shared/util/schema";
+} from "~/shared/util/config/preferences";
+import { syncConnectionSchema } from "~/shared/util/connection/schema";
+import type { IntentPayload, IntentType } from "~/shared/util/platform/intents";
+import { optional } from "~/shared/util/text/helpers";
 import { useConfigStore } from "~/shell/stores/config";
 import { useDatabaseStore } from "~/stores/database";
 import type { CommandCategory } from "./types";

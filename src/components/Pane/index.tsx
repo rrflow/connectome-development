@@ -2,7 +2,7 @@ import { Box, Divider, Group, MantineSize, Paper, type PaperProps, Text } from "
 import clsx from "clsx";
 import type { HTMLAttributes } from "react";
 import { Icon } from "~/components/Icon";
-import { useIsLight } from "~/hooks/theme";
+import { useIsLight } from "~/hooks/ui/theme";
 import { Spacer } from "../Spacer";
 import classes from "./style.module.scss";
 

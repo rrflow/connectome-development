@@ -16,7 +16,7 @@ import type {
 	WorkbenchRemoteSource,
 	WorkbenchRemoteSourceMode,
 	WorkbenchRemoteSourceProvider,
-} from "~/types";
+} from "~/shared/types";
 
 export function WorkbenchLinkedCloudPanel({
 	connectionAvailable,

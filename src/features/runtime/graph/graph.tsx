@@ -18,8 +18,8 @@ import Sigma from "sigma";
 import type { EdgeDisplayData, NodeDisplayData } from "sigma/types";
 import { ActionButton } from "~/components/ActionButton";
 import { Icon } from "~/components/Icon";
-import { useStable } from "~/hooks/stable";
-import { getIsLight, useIsLight } from "~/hooks/theme";
+import { useStable } from "~/hooks/state/stable";
+import { getIsLight, useIsLight } from "~/hooks/ui/theme";
 import {
 	iconChevronDown,
 	iconChevronUp,
@@ -28,7 +28,7 @@ import {
 	iconMagnifyPlus,
 	iconMaximize,
 	iconMinimize,
-} from "~/icons";
+} from "~/shared/assets/icons";
 import type { ColorGroup } from "./groups";
 import { createLabelLayer, type ScreenBox } from "./labels";
 

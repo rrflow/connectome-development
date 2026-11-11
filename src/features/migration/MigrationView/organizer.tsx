@@ -1,4 +1,4 @@
-import { MigrationDiagnosticResult, MigrationResourceType } from "~/types";
+import { MigrationDiagnosticResult, MigrationResourceType } from "~/shared/types";
 import { RecordId } from "~/vendor/rrflow-client";
 
 /*

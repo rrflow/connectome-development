@@ -1,6 +1,6 @@
-import { useEventSubscription } from "~/hooks/event";
-import { useConnectionAndView, useConnectionNavigator } from "~/hooks/routing";
-import { NavigateViewEvent } from "~/shared/util/global-events";
+import { useConnectionAndView, useConnectionNavigator } from "~/hooks/app/routing";
+import { useEventSubscription } from "~/hooks/state/event";
+import { NavigateViewEvent } from "~/shared/util/platform/global-events";
 
 export function useViewSync() {
 	const [connection] = useConnectionAndView();

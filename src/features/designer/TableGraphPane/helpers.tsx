@@ -10,7 +10,6 @@ import {
 } from "@xyflow/react";
 import { elementToSVG, inlineResources } from "dom-to-svg";
 import { getRRFlowQL } from "~/connection/connection";
-import { extractEdgeRecords, getTableVariant } from "~/shared/util/schema";
 import type {
 	DiagramAlgorithm,
 	DiagramDirection,
@@ -20,7 +19,8 @@ import type {
 	DiagramStrategy,
 	TableInfo,
 	TableVariant,
-} from "~/types";
+} from "~/shared/types";
+import { extractEdgeRecords, getTableVariant } from "~/shared/util/connection/schema";
 import { ElkStepEdge } from "./edges/ElkEdge";
 import { NormalTableNode } from "./nodes/NormalTableNode";
 import { RelationTableNode } from "./nodes/RelationTableNode";

@@ -24,9 +24,9 @@ import { ConnectionLabelsDetails } from "~/components/ConnectionDetails/labels";
 import { Icon } from "~/components/Icon";
 import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
-import { useLastSavepoint } from "~/hooks/overview";
-import { useConnectionNavigator } from "~/hooks/routing";
-import { useStable } from "~/hooks/stable";
+import { useConnectionNavigator } from "~/hooks/app/routing";
+import { useLastSavepoint } from "~/hooks/connection/overview";
+import { useStable } from "~/hooks/state/stable";
 import {
 	iconChart,
 	iconChevronDown,
@@ -35,14 +35,14 @@ import {
 	iconHomePlus,
 	iconQuery,
 	iconRelation,
-} from "~/icons";
-import { isConnectionValid } from "~/shared/util/connection";
-import { createBaseConnection } from "~/shared/util/defaults";
-import { dispatchIntent } from "~/shared/util/intents";
-import { USER_ICONS } from "~/shared/util/user-icons";
+} from "~/shared/assets/icons";
+import { Template } from "~/shared/types";
+import { createBaseConnection } from "~/shared/util/config/defaults";
+import { isConnectionValid } from "~/shared/util/connection/connection";
+import { dispatchIntent } from "~/shared/util/platform/intents";
+import { USER_ICONS } from "~/shared/util/ui/user-icons";
 import { useConfigStore } from "~/shell/stores/config";
 import { useDatabaseStore } from "~/stores/database";
-import { Template } from "~/types";
 import classes from "./style.module.scss";
 
 function parseRuntimeEndpoint(value: string | null) {

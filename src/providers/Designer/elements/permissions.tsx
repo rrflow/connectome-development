@@ -1,6 +1,6 @@
 import { Accordion, Stack } from "@mantine/core";
 import { PermissionInput } from "~/components/Inputs";
-import { iconKey } from "~/icons";
+import { iconKey } from "~/shared/assets/icons";
 import { type ElementProps, SectionTitle } from "../helpers";
 
 export function PermissionsElement({ data, setData }: ElementProps) {

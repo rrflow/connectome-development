@@ -3,7 +3,7 @@ import { createContext, type ReactNode, useContext, useEffect, useState } from "
 import { createPortal } from "react-dom";
 import { ActionButton } from "~/components/ActionButton";
 import { Icon } from "~/components/Icon";
-import { iconClose } from "~/icons";
+import { iconClose } from "~/shared/assets/icons";
 import { useGuideState } from "../guides/engine";
 
 interface InspectorHost {

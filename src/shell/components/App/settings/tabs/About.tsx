@@ -5,11 +5,11 @@ import { adapter, isDesktop } from "~/adapter";
 import type { DesktopAdapter } from "~/adapter/desktop";
 import { Icon } from "~/components/Icon";
 import { LearnMore } from "~/components/LearnMore";
-import { useVersionCopy } from "~/hooks/debug";
-import { useStable } from "~/hooks/stable";
-import { iconCheck, iconReset, iconWrench } from "~/icons";
+import { useVersionCopy } from "~/hooks/app/debug";
+import { useStable } from "~/hooks/state/stable";
 import { RRD_PROTOCOL, RRD_PROTOCOL_VERSION } from "~/rrflow/runtime";
-import { isDevelopment, isPreview } from "~/shared/util/environment";
+import { iconCheck, iconReset, iconWrench } from "~/shared/assets/icons";
+import { isDevelopment, isPreview } from "~/shared/util/config/environment";
 import classes from "../style.module.scss";
 
 export function AboutTab() {

@@ -1,6 +1,6 @@
 import Wasm, { Value } from "@surrealdb/ql-wasm-v3";
 import { adapter } from "~/adapter";
-import { QueryResponse } from "~/types";
+import { QueryResponse } from "~/shared/types";
 import { CborCodec } from "~/vendor/rrflow-client";
 import { RRFlowQL } from "./contract";
 

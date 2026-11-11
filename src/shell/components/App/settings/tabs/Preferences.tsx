@@ -4,9 +4,13 @@ import { Fragment, useMemo } from "react";
 import { Icon } from "~/components/Icon";
 import { PreferenceInput } from "~/components/Inputs/preference";
 import { Spacer } from "~/components/Spacer";
-import { iconSearch } from "~/icons";
-import { fuzzyMatch } from "~/shared/util/helpers";
-import { FlagSetController, Preference, useComputedPreferences } from "~/shared/util/preferences";
+import { iconSearch } from "~/shared/assets/icons";
+import {
+	FlagSetController,
+	Preference,
+	useComputedPreferences,
+} from "~/shared/util/config/preferences";
+import { fuzzyMatch } from "~/shared/util/text/helpers";
 
 function isTallInput(preference: Preference) {
 	return preference.controller instanceof FlagSetController;

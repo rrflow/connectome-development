@@ -2,8 +2,8 @@ import { ActionIcon, Box, Group, Popover, SimpleGrid, TextInput, Tooltip } from 
 import { useDisclosure } from "@mantine/hooks";
 import { Updater } from "use-immer";
 import { Icon } from "~/components/Icon";
-import { USER_ICONS } from "~/shared/util/user-icons";
-import { Connection } from "~/types";
+import { Connection } from "~/shared/types";
+import { USER_ICONS } from "~/shared/util/ui/user-icons";
 
 export interface ConnectionNameDetailsProps {
 	value: Connection;

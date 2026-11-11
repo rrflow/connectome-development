@@ -8,7 +8,7 @@ import {
 	type PreferenceController,
 	SelectionController,
 	TextController,
-} from "~/shared/util/preferences";
+} from "~/shared/util/config/preferences";
 import { useConfigStore } from "~/shell/stores/config";
 import { Option } from "../Option";
 

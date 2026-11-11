@@ -2,11 +2,11 @@ import { Box, Button, Divider, Modal, Paper, Stack, Text } from "@mantine/core";
 import { useEffect } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { Icon } from "~/components/Icon";
-import { SANDBOX } from "~/constants";
-import { useBoolean } from "~/hooks/boolean";
-import { useOnboarding } from "~/hooks/onboarding";
-import { useConnectionAndView } from "~/hooks/routing";
-import { iconChevronRight, iconClose } from "~/icons";
+import { useConnectionAndView } from "~/hooks/app/routing";
+import { useBoolean } from "~/hooks/state/boolean";
+import { useOnboarding } from "~/hooks/ui/onboarding";
+import { iconChevronRight, iconClose } from "~/shared/assets/icons";
+import { SANDBOX } from "~/shared/config/constants";
 
 export function SandboxModal() {
 	const [isOpen, openHandle] = useBoolean();

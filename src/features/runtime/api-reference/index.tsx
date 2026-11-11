@@ -16,15 +16,15 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CodeBlock } from "~/components/CodeBlock";
 import { Label } from "~/components/Label";
-import { Section } from "~/components/Section";
-import { useSetting } from "~/hooks/config";
+import { Section } from "~/features/runtime/components/Section";
+import { useSetting } from "~/hooks/app/config";
 import {
 	describeRrdError,
 	type RrdOperation,
 	type RrdOperationFamily,
 	RrdRuntimeClient,
 } from "~/rrflow/runtime";
-import type { CodeLang } from "~/types";
+import type { CodeLang } from "~/shared/types";
 import classes from "../style.module.scss";
 import { EXAMPLE_LANGUAGES, exampleLanguage, operationExamples } from "./examples";
 

@@ -2,9 +2,9 @@ import { Box } from "@mantine/core";
 import { useMemo } from "react";
 import { Article, DocsPreview } from "~/features/documentation/content/components";
 import type { Snippets, TopicProps } from "~/features/documentation/content/types";
-import { useConnection } from "~/hooks/connection";
-import { createBaseAuthentication } from "~/shared/util/defaults";
-import { connectionUri } from "~/shared/util/helpers";
+import { useConnection } from "~/hooks/connection/connection";
+import { createBaseAuthentication } from "~/shared/util/config/defaults";
+import { connectionUri } from "~/shared/util/text/helpers";
 
 export function DocsGlobalConnecting({ language }: TopicProps) {
 	const auth = useConnection((c) => c?.authentication ?? createBaseAuthentication());

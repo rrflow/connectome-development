@@ -1,12 +1,12 @@
 import { ScrollArea, Stack } from "@mantine/core";
 import type { RefObject } from "react";
 import { ContentPane } from "~/components/Pane";
-import { ScrollFader } from "~/components/ScrollFader";
+import { ScrollFader } from "~/features/documentation/components/ScrollFader";
 import type { DocsTopic } from "~/features/documentation/content/types";
-import { useSetting } from "~/hooks/config";
-import { useStable } from "~/hooks/stable";
-import { iconAPI } from "~/icons";
-import type { CodeLang } from "~/types";
+import { useSetting } from "~/hooks/app/config";
+import { useStable } from "~/hooks/state/stable";
+import { iconAPI } from "~/shared/assets/icons";
+import type { CodeLang } from "~/shared/types";
 import { renderTopics } from "./topics";
 
 export interface TocPaneProps {

@@ -18,9 +18,9 @@ import { useMemo, useRef, useState } from "react";
 import { Icon } from "~/components/Icon";
 import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
-import { useStable } from "~/hooks/stable";
-import { iconCheck, iconClose, iconTransfer, iconXml } from "~/icons";
-import { dedent } from "~/shared/util/dedent";
+import { useStable } from "~/hooks/state/stable";
+import { iconCheck, iconClose, iconTransfer, iconXml } from "~/shared/assets/icons";
+import { dedent } from "~/shared/util/text/dedent";
 import { DEFAULT_STATE, Embedder, EmbedState } from "./embedder";
 import classes from "./style.module.scss";
 

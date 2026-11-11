@@ -1,6 +1,6 @@
 import { Icon } from "~/components/Icon";
-import { useStable } from "~/hooks/stable";
-import { iconChevronRight } from "~/icons";
+import { useStable } from "~/hooks/state/stable";
+import { iconChevronRight } from "~/shared/assets/icons";
 import { useInterfaceStore } from "~/shell/stores/interface";
 import { ActionButton } from "../ActionButton";
 

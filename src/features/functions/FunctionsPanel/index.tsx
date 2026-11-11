@@ -6,7 +6,7 @@ import { ActionButton } from "~/components/ActionButton";
 import { Entry } from "~/components/Entry";
 import { Icon } from "~/components/Icon";
 import { ContentPane } from "~/components/Pane";
-import { useIsConnected } from "~/hooks/connection";
+import { useIsConnected } from "~/hooks/connection/connection";
 import {
 	iconCopy,
 	iconDelete,
@@ -16,8 +16,8 @@ import {
 	iconPlus,
 	iconSearch,
 	iconUpload,
-} from "~/icons";
-import type { FunctionDetails, SchemaModel } from "~/types";
+} from "~/shared/assets/icons";
+import type { FunctionDetails, SchemaModel } from "~/shared/types";
 import classes from "./style.module.scss";
 
 export interface FunctionsPanelProps {

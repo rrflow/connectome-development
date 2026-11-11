@@ -15,18 +15,22 @@ import { Fragment, useMemo } from "react";
 import { NavigationIcon } from "~/components/NavigationIcon";
 import { Shortcut } from "~/components/Shortcut";
 import { Spacer } from "~/components/Spacer";
-import { useBoolean } from "~/hooks/boolean";
-import { useAvailablePages, useAvailableViews } from "~/hooks/connection";
-import { useAbsoluteLocation, useConnectionAndView, useConnectionNavigator } from "~/hooks/routing";
-import { useStable } from "~/hooks/stable";
-import { useIsLight } from "~/hooks/theme";
-import { iconArrowLeft, iconCog, iconSearch } from "~/icons";
-import { pictoBrain } from "~/pictograms";
-import { isMobile } from "~/shared/util/helpers";
-import { dispatchIntent } from "~/shared/util/intents";
+import {
+	useAbsoluteLocation,
+	useConnectionAndView,
+	useConnectionNavigator,
+} from "~/hooks/app/routing";
+import { useAvailablePages, useAvailableViews } from "~/hooks/connection/connection";
+import { useBoolean } from "~/hooks/state/boolean";
+import { useStable } from "~/hooks/state/stable";
+import { useIsLight } from "~/hooks/ui/theme";
+import { iconArrowLeft, iconCog, iconSearch } from "~/shared/assets/icons";
+import { pictoBrain } from "~/shared/assets/pictograms";
+import type { GlobalPage, SidebarMode, ViewPage } from "~/shared/types";
+import { dispatchIntent } from "~/shared/util/platform/intents";
+import { isMobile } from "~/shared/util/text/helpers";
 import { useConfigStore } from "~/shell/stores/config";
 import { useInterfaceStore } from "~/shell/stores/interface";
-import type { GlobalPage, SidebarMode, ViewPage } from "~/types";
 import classes from "./style.module.scss";
 
 const GLOBAL_NAVIGATION: GlobalPage[][] = [["/overview"], ["/mini/new"]];

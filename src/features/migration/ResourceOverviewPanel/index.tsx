@@ -14,9 +14,9 @@ import {
 import { useMemo } from "react";
 import { Icon } from "~/components/Icon";
 import { Spacer } from "~/components/Spacer";
-import { useIsLight } from "~/hooks/theme";
-import { iconRefresh, iconReset, iconTransfer } from "~/icons";
-import { MigrationResourceType } from "~/types";
+import { useIsLight } from "~/hooks/ui/theme";
+import { iconRefresh, iconReset, iconTransfer } from "~/shared/assets/icons";
+import { MigrationResourceType } from "~/shared/types";
 import { DiagnosticResource, ResourceMap } from "../MigrationView/organizer";
 import { resourceTypeMeta } from "../MigrationView/types";
 import { UnresolvedBadge } from "../MigrationView/unresolved";

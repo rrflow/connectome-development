@@ -1,6 +1,6 @@
 import { Badge, Button, Group, Paper, Select, Stack, Text, Title } from "@mantine/core";
 import { useMemo, useState } from "react";
-import type { WorkbenchLearningEvent } from "~/types";
+import type { WorkbenchLearningEvent } from "~/shared/types";
 
 interface WorkbenchLearningEventEntry {
 	templateId: string;

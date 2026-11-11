@@ -10,7 +10,7 @@ import {
 	useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { useStable } from "~/hooks/stable";
+import { useStable } from "~/hooks/state/stable";
 import classes from "../style.module.scss";
 import exploreGraph from "./explore-graph.v1.json";
 

@@ -6,8 +6,6 @@ import type { ChangeEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { RrdSessionClient, RrdStorageView } from "~/rrflow/session";
 import { probeExternalPath, writeExternalTextFile } from "~/rrflow/session";
-import { newId } from "~/shared/util/helpers";
-import { useConfigStore } from "~/shell/stores/config";
 import type {
 	ConnectionWorkbenchState,
 	WorkbenchDatasetTemplate,
@@ -23,7 +21,9 @@ import type {
 	WorkbenchRemoteSourceMode,
 	WorkbenchRemoteSourceProvider,
 	WorkbenchTemplateStep,
-} from "~/types";
+} from "~/shared/types";
+import { newId } from "~/shared/util/text/helpers";
+import { useConfigStore } from "~/shell/stores/config";
 import {
 	benchmarkWorkloadProfiles,
 	buildDatasetArtifacts,

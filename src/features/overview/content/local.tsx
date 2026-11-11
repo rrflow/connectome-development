@@ -1,7 +1,7 @@
 import { Alert, Button, Group, Paper, SimpleGrid, Stack, Text } from "@mantine/core";
 import { useState } from "react";
 import { adapter } from "~/adapter";
-import { dispatchIntent } from "~/shared/util/intents";
+import { dispatchIntent } from "~/shared/util/platform/intents";
 import { useDatabaseStore } from "~/stores/database";
 
 export function LocalStart() {

@@ -2,7 +2,7 @@ import { type HotkeyItem, useHotkeys } from "@mantine/hooks";
 import { useEffect } from "react";
 import { useCommandDispatcher, useCommandKeybinds } from "~/providers/Commands";
 import { translateBinding } from "~/providers/Commands/keybindings";
-import { isModKey } from "~/shared/util/helpers";
+import { isModKey } from "~/shared/util/text/helpers";
 
 /**
  * Track the state of the mod key

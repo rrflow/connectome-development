@@ -25,8 +25,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { CodeEditor } from "~/components/CodeEditor";
 import { Icon } from "~/components/Icon";
 import { Label } from "~/components/Label";
-import { Section } from "~/components/Section";
-import { useStable } from "~/hooks/stable";
+import { Section } from "~/features/runtime/components/Section";
+import { useStable } from "~/hooks/state/stable";
+import { rrflowql, showRefusal } from "~/rrflow/editor";
+import { queryRefusal, type RrdEdgeView, type RrdNodeView } from "~/rrflow/session";
 import {
 	iconChevronDown,
 	iconChevronUp,
@@ -37,10 +39,8 @@ import {
 	iconRelation,
 	iconSearch,
 	iconTarget,
-} from "~/icons";
-import { rrflowql, showRefusal } from "~/rrflow/editor";
-import { queryRefusal, type RrdEdgeView, type RrdNodeView } from "~/rrflow/session";
-import { plural } from "~/shared/util/helpers";
+} from "~/shared/assets/icons";
+import { plural } from "~/shared/util/text/helpers";
 import { databaseQuery } from "../api/queries";
 import { Term } from "../components/glossary";
 import { InspectorObject, InspectorPanel } from "../components/inspector";

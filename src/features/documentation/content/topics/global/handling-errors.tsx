@@ -2,7 +2,7 @@ import { Box } from "@mantine/core";
 import { useMemo } from "react";
 import { Article, DocsPreview } from "~/features/documentation/content/components";
 import type { Snippets, TopicProps } from "~/features/documentation/content/types";
-import { useDatabaseSchema } from "~/hooks/schema";
+import { useDatabaseSchema } from "~/hooks/connection/schema";
 
 export function DocsGlobalHandlingErrors({ language, topic }: TopicProps) {
 	const schema = useDatabaseSchema();

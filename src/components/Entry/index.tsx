@@ -1,7 +1,7 @@
 import { Button, type ButtonProps, createPolymorphicComponent } from "@mantine/core";
 import clsx from "clsx";
 import { forwardRef } from "react";
-import { useIsLight } from "~/hooks/theme";
+import { useIsLight } from "~/hooks/ui/theme";
 import classes from "./style.module.scss";
 
 export interface EntryProps extends ButtonProps {

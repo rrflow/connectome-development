@@ -3,7 +3,7 @@ import { adapter } from "~/adapter";
 import type { MiniAdapter } from "~/adapter/mini";
 import { Scaffold } from "~/components/Scaffold";
 import MiniQueryView from "~/features/query/MiniView";
-import { useIsLight } from "~/hooks/theme";
+import { useIsLight } from "~/hooks/ui/theme";
 import { CommandsProvider } from "~/providers/Commands";
 
 export function MiniRunScreen() {

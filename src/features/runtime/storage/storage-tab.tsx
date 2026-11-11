@@ -15,8 +15,13 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Icon } from "~/components/Icon";
-import { Section } from "~/components/Section";
-import { iconChevronDown, iconChevronUp, iconErrorCircle, iconRefresh } from "~/icons";
+import { Section } from "~/features/runtime/components/Section";
+import {
+	iconChevronDown,
+	iconChevronUp,
+	iconErrorCircle,
+	iconRefresh,
+} from "~/shared/assets/icons";
 import { busyRetry } from "../api/queries";
 import { Term } from "../components/glossary";
 import { ReadNotice } from "../components/notice";

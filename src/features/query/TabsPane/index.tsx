@@ -5,18 +5,18 @@ import { useState } from "react";
 import { adapter } from "~/adapter";
 import { DesktopAdapter } from "~/adapter/desktop";
 import { ActionButton } from "~/components/ActionButton";
-import { EditableText } from "~/components/EditableText";
 import { Entry } from "~/components/Entry";
 import { Icon } from "~/components/Icon";
-import { LiveIndicator } from "~/components/LiveIndicator";
 import { ContentPane } from "~/components/Pane";
-import { Sortable } from "~/components/Sortable";
 import { cancelLiveQueries } from "~/connection/connection";
-import { useSetting } from "~/hooks/config";
-import { useConnection } from "~/hooks/connection";
-import { useConnectionAndView, useIntent } from "~/hooks/routing";
-import { useStable } from "~/hooks/stable";
-import { useIsLight } from "~/hooks/theme";
+import { EditableText } from "~/features/query/components/EditableText";
+import { LiveIndicator } from "~/features/query/components/LiveIndicator";
+import { Sortable } from "~/features/query/components/Sortable";
+import { useSetting } from "~/hooks/app/config";
+import { useConnectionAndView, useIntent } from "~/hooks/app/routing";
+import { useConnection } from "~/hooks/connection/connection";
+import { useStable } from "~/hooks/state/stable";
+import { useIsLight } from "~/hooks/ui/theme";
 import {
 	iconArrowUpRight,
 	iconChevronLeft,
@@ -31,12 +31,12 @@ import {
 	iconSearch,
 	iconStar,
 	iconText,
-} from "~/icons";
-import { uniqueName } from "~/shared/util/helpers";
+} from "~/shared/assets/icons";
+import type { QueryTab, QueryType } from "~/shared/types";
+import { uniqueName } from "~/shared/util/text/helpers";
 import { useConfigStore } from "~/shell/stores/config";
 import { useInterfaceStore } from "~/shell/stores/interface";
 import { useQueryStore } from "~/stores/query";
-import type { QueryTab, QueryType } from "~/types";
 import classes from "./style.module.scss";
 
 const TYPE_ICONS: Record<QueryType, string> = {

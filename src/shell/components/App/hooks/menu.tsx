@@ -9,8 +9,8 @@ import {
 	useCommandDispatcher,
 	useCommandKeybinds,
 } from "~/providers/Commands";
-import { optional } from "~/shared/util/helpers";
-import { AppMenu, AppMenuItem } from "~/types";
+import { AppMenu, AppMenuItem } from "~/shared/types";
+import { optional } from "~/shared/util/text/helpers";
 
 const SEPARATOR: AppMenuItem = {
 	id: "separator",

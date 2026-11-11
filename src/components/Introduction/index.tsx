@@ -2,7 +2,7 @@ import { Box, Center, Divider, Group, Paper, Stack, Text } from "@mantine/core";
 import { type PropsWithChildren, type ReactNode, useMemo } from "react";
 import { CodeBlock } from "~/components/CodeBlock";
 import { Icon } from "~/components/Icon";
-import { dedent } from "~/shared/util/dedent";
+import { dedent } from "~/shared/util/text/dedent";
 import { Spacer } from "../Spacer";
 
 export interface IntroductionProps {

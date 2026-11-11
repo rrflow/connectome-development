@@ -1,6 +1,6 @@
 import type { Update } from "@tauri-apps/plugin-updater";
 import { create } from "zustand";
-import type { ColorScheme, LiveMessage } from "~/types";
+import type { ColorScheme, LiveMessage } from "~/shared/types";
 
 export type InterfaceStore = {
 	title: string;

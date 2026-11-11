@@ -1,7 +1,7 @@
 import { Accordion, Checkbox, MultiSelect, Select, Stack } from "@mantine/core";
-import { useTableNames } from "~/hooks/schema";
-import { iconCog } from "~/icons";
-import type { Selectable, TableType } from "~/types";
+import { useTableNames } from "~/hooks/connection/schema";
+import { iconCog } from "~/shared/assets/icons";
+import type { Selectable, TableType } from "~/shared/types";
 import { type ElementProps, SectionTitle } from "../helpers";
 
 const TABLE_TYPES: Selectable<TableType>[] = [

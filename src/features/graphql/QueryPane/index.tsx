@@ -16,12 +16,19 @@ import {
 	handleFillFields,
 	runGraphqlQueryKeymap,
 } from "~/editor";
-import { useConnection } from "~/hooks/connection";
-import { useDebouncedFunction } from "~/hooks/debounce";
-import { useConnectionAndView, useIntent } from "~/hooks/routing";
-import { useStable } from "~/hooks/stable";
-import { iconAutoFix, iconDollar, iconGraphql, iconOpen, iconRefresh, iconText } from "~/icons";
-import { showErrorNotification, showInfo } from "~/shared/util/helpers";
+import { useConnectionAndView, useIntent } from "~/hooks/app/routing";
+import { useConnection } from "~/hooks/connection/connection";
+import { useDebouncedFunction } from "~/hooks/state/debounce";
+import { useStable } from "~/hooks/state/stable";
+import {
+	iconAutoFix,
+	iconDollar,
+	iconGraphql,
+	iconOpen,
+	iconRefresh,
+	iconText,
+} from "~/shared/assets/icons";
+import { showErrorNotification, showInfo } from "~/shared/util/text/helpers";
 import { useConfigStore } from "~/shell/stores/config";
 import classes from "./style.module.scss";
 

@@ -1,5 +1,5 @@
-import type { IntentPayload, IntentType } from "~/shared/util/intents";
-import type { PreferenceController } from "~/shared/util/preferences";
+import type { PreferenceController } from "~/shared/util/config/preferences";
+import type { IntentPayload, IntentType } from "~/shared/util/platform/intents";
 
 export type CommandPayload = Record<string, string>;
 

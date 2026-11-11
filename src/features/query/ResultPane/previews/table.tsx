@@ -5,8 +5,8 @@ import { DataTable } from "~/components/DataTable";
 import { Icon } from "~/components/Icon";
 import { Pagination } from "~/components/Pagination";
 import { usePagination } from "~/components/Pagination/hook";
-import { useSetting } from "~/hooks/config";
-import { iconTable } from "~/icons";
+import { useSetting } from "~/hooks/app/config";
+import { iconTable } from "~/shared/assets/icons";
 import type { PreviewProps } from ".";
 
 export function TablePreview({ responses, selected }: PreviewProps) {

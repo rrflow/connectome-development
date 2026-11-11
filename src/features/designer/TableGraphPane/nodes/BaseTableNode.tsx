@@ -12,15 +12,15 @@ import {
 import { Icon } from "~/components/Icon";
 import { Spacer } from "~/components/Spacer";
 import { getRRFlowQL } from "~/connection/connection";
-import { TABLE_VARIANT_ICONS } from "~/constants";
 import { GraphWarning } from "~/features/designer/TableGraphPane/helpers";
-import { useStable } from "~/hooks/stable";
-import { useIsLight } from "~/hooks/theme";
-import { iconBullhorn, iconIndex, iconJSON } from "~/icons";
-import { ON_STOP_PROPAGATION } from "~/shared/util/helpers";
-import { themeColor } from "~/shared/util/mantine";
-import { getTableVariant } from "~/shared/util/schema";
-import type { DiagramDirection, DiagramMode, TableInfo } from "~/types";
+import { useStable } from "~/hooks/state/stable";
+import { useIsLight } from "~/hooks/ui/theme";
+import { iconBullhorn, iconIndex, iconJSON } from "~/shared/assets/icons";
+import { TABLE_VARIANT_ICONS } from "~/shared/config/constants";
+import type { DiagramDirection, DiagramMode, TableInfo } from "~/shared/types";
+import { getTableVariant } from "~/shared/util/connection/schema";
+import { ON_STOP_PROPAGATION } from "~/shared/util/text/helpers";
+import { themeColor } from "~/shared/util/ui/mantine";
 import classes from "../style.module.scss";
 
 export type DiagramContextProps = {

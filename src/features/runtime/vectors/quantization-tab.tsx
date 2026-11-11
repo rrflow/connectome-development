@@ -25,15 +25,7 @@ import { CodeBlock } from "~/components/CodeBlock";
 import { Icon } from "~/components/Icon";
 import { Label } from "~/components/Label";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
-import { Section } from "~/components/Section";
-import {
-	iconCheck,
-	iconChevronDown,
-	iconChevronUp,
-	iconErrorCircle,
-	iconPlus,
-	iconRefresh,
-} from "~/icons";
+import { Section } from "~/features/runtime/components/Section";
 import type { TurboQuantBits, VectorQuantizationMethod } from "~/rrflow/model";
 import {
 	isRetryable,
@@ -49,6 +41,14 @@ import {
 	type RrdReference,
 	type RrdSessionClient,
 } from "~/rrflow/session";
+import {
+	iconCheck,
+	iconChevronDown,
+	iconChevronUp,
+	iconErrorCircle,
+	iconPlus,
+	iconRefresh,
+} from "~/shared/assets/icons";
 import { quantizationsQuery } from "../api/queries";
 import { Term } from "../components/glossary";
 import { Stat } from "../components/stat";

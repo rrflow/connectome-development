@@ -18,10 +18,10 @@ import { CodeBlock } from "~/components/CodeBlock";
 import { Icon } from "~/components/Icon";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";
-import { setEditorText } from "~/editor/helpers";
-import { useSavedQueryTags } from "~/hooks/connection";
-import { useConnectionAndView } from "~/hooks/routing";
-import { useStable } from "~/hooks/stable";
+import { setEditorText } from "~/features/query/utils/helpers";
+import { useConnectionAndView } from "~/hooks/app/routing";
+import { useSavedQueryTags } from "~/hooks/connection/connection";
+import { useStable } from "~/hooks/state/stable";
 import {
 	iconClose,
 	iconDelete,
@@ -30,9 +30,9 @@ import {
 	iconQuery,
 	iconSearch,
 	iconText,
-} from "~/icons";
+} from "~/shared/assets/icons";
+import type { SavedQuery } from "~/shared/types";
 import { useConfigStore } from "~/shell/stores/config";
-import type { SavedQuery } from "~/types";
 import classes from "./style.module.scss";
 
 export interface SavesDrawerProps {

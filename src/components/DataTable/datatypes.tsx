@@ -4,8 +4,15 @@ import { convert } from "geo-coordinates-parser";
 import { useEffect, useState } from "react";
 import { Icon } from "~/components/Icon";
 import { getRRFlowQL } from "~/connection/connection";
-import { iconCheck, iconClock, iconClose, iconExplorer, iconFile, iconXml } from "~/icons";
-import { TRUNCATE_STYLE } from "~/shared/util/helpers";
+import {
+	iconCheck,
+	iconClock,
+	iconClose,
+	iconExplorer,
+	iconFile,
+	iconXml,
+} from "~/shared/assets/icons";
+import { TRUNCATE_STYLE } from "~/shared/util/text/helpers";
 import {
 	DateTime,
 	Decimal,

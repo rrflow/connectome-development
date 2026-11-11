@@ -4,11 +4,12 @@ import { useContextMenu } from "mantine-contextmenu";
 import { useEffect, useMemo, useState } from "react";
 import { CodeEditor } from "~/components/CodeEditor";
 import { Icon } from "~/components/Icon";
-import { RelativeTime } from "~/components/RelativeTime";
 import { executeQuery } from "~/connection/connection";
 import { rrflowqlRecordLinks } from "~/editor";
-import { type Formatter, useResultFormatter } from "~/hooks/rrflowql";
-import { useRefreshTimer } from "~/hooks/timer";
+import { RelativeTime } from "~/features/query/components/RelativeTime";
+import { useRefreshTimer } from "~/features/query/hooks/timer";
+import { type Formatter, useResultFormatter } from "~/hooks/connection/rrflowql";
+import { useInspector } from "~/providers/Inspector";
 import {
 	iconBroadcastOff,
 	iconBroadcastOn,
@@ -18,11 +19,10 @@ import {
 	iconHammer,
 	iconHelp,
 	iconPlus,
-} from "~/icons";
-import { useInspector } from "~/providers/Inspector";
-import { ON_FOCUS_SELECT } from "~/shared/util/helpers";
+} from "~/shared/assets/icons";
+import type { LiveMessage } from "~/shared/types";
+import { ON_FOCUS_SELECT } from "~/shared/util/text/helpers";
 import { useInterfaceStore } from "~/shell/stores/interface";
-import type { LiveMessage } from "~/types";
 import { rrflowql } from "~/vendor/rrflowql-editor";
 import { attemptFormat, type PreviewProps } from ".";
 

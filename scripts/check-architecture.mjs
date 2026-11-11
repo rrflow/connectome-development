@@ -63,7 +63,7 @@ for (const path of files) {
 const counts = new Map();
 for (const path of files) {
 	const file = repoPath(path);
-	if (!featureOf(file)) continue;
+	if (file.startsWith("src/vendor/")) continue;
 	const folder = posix.dirname(file);
 	counts.set(folder, (counts.get(folder) ?? 0) + 1);
 }
@@ -77,4 +77,4 @@ if (problems.length > 0) {
 	console.error(`Architecture gate failed:\n  ${problems.join("\n  ")}`);
 	process.exit(1);
 }
-console.log(`Architecture holds: ${files.length} source files, ${counts.size} feature folders.`);
+console.log(`Architecture holds: ${files.length} source files, ${counts.size} folders.`);

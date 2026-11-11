@@ -16,6 +16,8 @@ import { type ReactNode, useMemo, useState } from "react";
 import { Redirect, useLocation } from "wouter";
 import { Icon } from "~/components/Icon";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
+import { describeRrdError, RrdRuntimeClient } from "~/rrflow/runtime";
+import { RrdSessionClient, sessionQueryKey } from "~/rrflow/session";
 import {
 	iconBook,
 	iconErrorCircle,
@@ -23,10 +25,8 @@ import {
 	iconRefresh,
 	iconRelation,
 	iconTarget,
-} from "~/icons";
-import { describeRrdError, RrdRuntimeClient } from "~/rrflow/runtime";
-import { RrdSessionClient, sessionQueryKey } from "~/rrflow/session";
-import { dispatchIntent } from "~/shared/util/intents";
+} from "~/shared/assets/icons";
+import { dispatchIntent } from "~/shared/util/platform/intents";
 import { useConfigStore } from "~/shell/stores/config";
 import { databaseQuery } from "./api/queries";
 import { ApiReference } from "./api-reference";

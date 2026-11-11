@@ -20,7 +20,7 @@ import type {
 	WorkbenchLearningTrigger,
 	WorkbenchLearningTriggerKind,
 	WorkbenchTemplateStep,
-} from "~/types";
+} from "~/shared/types";
 
 export function WorkbenchTemplateAuthoringPanel({
 	connectionAvailable,

@@ -8,11 +8,13 @@ import { Icon } from "~/components/Icon";
 import { Introduction } from "~/components/Introduction";
 import { PanelDragger } from "~/components/Pane/dragger";
 import { TablesPane } from "~/components/TablesPane";
-import { useConnection, useIsConnected } from "~/hooks/connection";
-import { useEventSubscription } from "~/hooks/event";
-import { usePanelMinSize } from "~/hooks/panels";
-import { useConnectionAndView, useIntent, useViewFocus } from "~/hooks/routing";
-import { useStable } from "~/hooks/stable";
+import { useConnectionAndView, useIntent, useViewFocus } from "~/hooks/app/routing";
+import { useConnection, useIsConnected } from "~/hooks/connection/connection";
+import { useEventSubscription } from "~/hooks/state/event";
+import { useStable } from "~/hooks/state/stable";
+import { usePanelMinSize } from "~/hooks/ui/panels";
+import { useRequireDatabase } from "~/modals/require-database";
+import { useDesigner } from "~/providers/Designer";
 import {
 	iconChevronRight,
 	iconDesigner,
@@ -22,12 +24,10 @@ import {
 	iconPlus,
 	iconTable,
 	iconUpload,
-} from "~/icons";
-import { useRequireDatabase } from "~/modals/require-database";
-import { useDesigner } from "~/providers/Designer";
-import { ActivateDatabaseEvent, DisconnectedEvent } from "~/shared/util/global-events";
-import { dispatchIntent } from "~/shared/util/intents";
-import { syncConnectionSchema } from "~/shared/util/schema";
+} from "~/shared/assets/icons";
+import { syncConnectionSchema } from "~/shared/util/connection/schema";
+import { ActivateDatabaseEvent, DisconnectedEvent } from "~/shared/util/platform/global-events";
+import { dispatchIntent } from "~/shared/util/platform/intents";
 import { useConfigStore } from "~/shell/stores/config";
 import { useInterfaceStore } from "~/shell/stores/interface";
 import { CreatorDrawer } from "../CreatorDrawer";

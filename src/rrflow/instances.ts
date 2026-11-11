@@ -1,4 +1,4 @@
-import type { Connection, InstanceStatus, ProjectInstance } from "~/types";
+import type { Connection, InstanceStatus, ProjectInstance } from "~/shared/types";
 
 /**
  * Each project's RRFlow instance in the webview (sprint 009, decision 19).

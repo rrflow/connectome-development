@@ -2,10 +2,7 @@ import type { FeatureFlag, FeatureFlagOption } from "@theopensource-company/feat
 import { unique } from "radash";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import { MAX_HISTORY_SIZE, SANDBOX } from "~/constants";
-import { createBaseConfig, createBaseQuery } from "~/shared/util/defaults";
-import type { schema } from "~/shared/util/feature-flags";
-import { newId, uniqueName } from "~/shared/util/helpers";
+import { MAX_HISTORY_SIZE, SANDBOX } from "~/shared/config/constants";
 import type {
 	Connection,
 	ConnectomeAppearanceSettings,
@@ -18,7 +15,10 @@ import type {
 	QueryTab,
 	QueryType,
 	SavedQuery,
-} from "~/types";
+} from "~/shared/types";
+import { createBaseConfig, createBaseQuery } from "~/shared/util/config/defaults";
+import type { schema } from "~/shared/util/config/feature-flags";
+import { newId, uniqueName } from "~/shared/util/text/helpers";
 
 type ConnectionUpdater = (value: Connection) => Partial<Connection>;
 

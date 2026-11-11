@@ -1,8 +1,8 @@
 import { Accordion, TextInput } from "@mantine/core";
 import { CodeInput } from "~/components/Inputs";
-import { useStable } from "~/hooks/stable";
-import { iconBullhorn } from "~/icons";
-import type { SchemaEvent } from "~/types";
+import { useStable } from "~/hooks/state/stable";
+import { iconBullhorn } from "~/shared/assets/icons";
+import type { SchemaEvent } from "~/shared/types";
 import { type ElementProps, SectionTitle } from "../helpers";
 import { Lister } from "../lister";
 

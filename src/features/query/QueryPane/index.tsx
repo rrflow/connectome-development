@@ -12,7 +12,6 @@ import { Icon } from "~/components/Icon";
 import { ContentPane } from "~/components/Pane";
 import { Spacer } from "~/components/Spacer";
 import { getRRFlowQL, tryParseParams } from "~/connection/connection";
-import { MAX_HISTORY_QUERY_LENGTH } from "~/constants";
 import {
 	rrflowqlCustomFunctionCompletion,
 	rrflowqlLinting,
@@ -21,13 +20,14 @@ import {
 	rrflowqlVariableCompletion,
 	runQueryKeymap,
 } from "~/editor";
-import { setEditorText } from "~/editor/helpers";
-import { useSetting } from "~/hooks/config";
-import { useConnection } from "~/hooks/connection";
-import { useDatabaseVersionLinter } from "~/hooks/editor";
-import { useConnectionAndView, useIntent } from "~/hooks/routing";
-import { useStable } from "~/hooks/stable";
-import { useIsLight } from "~/hooks/theme";
+import { setEditorText } from "~/features/query/utils/helpers";
+import { useSetting } from "~/hooks/app/config";
+import { useConnectionAndView, useIntent } from "~/hooks/app/routing";
+import { useConnection } from "~/hooks/connection/connection";
+import { useStable } from "~/hooks/state/stable";
+import { useDatabaseVersionLinter } from "~/hooks/ui/editor";
+import { useIsLight } from "~/hooks/ui/theme";
+import { useInspector } from "~/providers/Inspector";
 import {
 	iconAutoFix,
 	iconChevronRight,
@@ -36,14 +36,14 @@ import {
 	iconStar,
 	iconText,
 	iconWarning,
-} from "~/icons";
-import { useInspector } from "~/providers/Inspector";
-import { showErrorNotification } from "~/shared/util/helpers";
-import { dispatchIntent } from "~/shared/util/intents";
-import { parseVariables } from "~/shared/util/language";
+} from "~/shared/assets/icons";
+import { MAX_HISTORY_QUERY_LENGTH } from "~/shared/config/constants";
+import type { QueryTab } from "~/shared/types";
+import { dispatchIntent } from "~/shared/util/platform/intents";
+import { showErrorNotification } from "~/shared/util/text/helpers";
+import { parseVariables } from "~/shared/util/text/language";
 import { useConfigStore } from "~/shell/stores/config";
 import { useQueryStore } from "~/stores/query";
-import type { QueryTab } from "~/types";
 import { rrflowql } from "~/vendor/rrflowql-editor";
 import { readQuery, writeQuery } from "../QueryView/strategy";
 

@@ -15,15 +15,15 @@ import { Icon } from "~/components/Icon";
 import { CodeInput } from "~/components/Inputs";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { executeQuery } from "~/connection/connection";
-import { SCHEMA_MODES } from "~/constants";
-import { useConnectionAndView, useIntent } from "~/hooks/routing";
-import { useTableNames } from "~/hooks/schema";
-import { useStable } from "~/hooks/stable";
-import { iconPlus, iconRelation, iconSearch, iconTable } from "~/icons";
-import { dispatchIntent } from "~/shared/util/intents";
-import { syncConnectionSchema } from "~/shared/util/schema";
+import { useConnectionAndView, useIntent } from "~/hooks/app/routing";
+import { useTableNames } from "~/hooks/connection/schema";
+import { useStable } from "~/hooks/state/stable";
+import { iconPlus, iconRelation, iconSearch, iconTable } from "~/shared/assets/icons";
+import { SCHEMA_MODES } from "~/shared/config/constants";
+import { type SchemaMode, TableVariant } from "~/shared/types";
+import { syncConnectionSchema } from "~/shared/util/connection/schema";
+import { dispatchIntent } from "~/shared/util/platform/intents";
 import { useInterfaceStore } from "~/shell/stores/interface";
-import { type SchemaMode, TableVariant } from "~/types";
 import { escapeIdent } from "~/vendor/rrflow-client";
 
 export function TableCreatorModal() {

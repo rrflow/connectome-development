@@ -8,14 +8,13 @@ import { useLayoutEffect, useMemo, useState } from "react";
 import { adapter, isMini } from "~/adapter";
 import { ActionButton } from "~/components/ActionButton";
 import { Icon } from "~/components/Icon";
-import { ListMenu } from "~/components/ListMenu";
 import { ContentPane } from "~/components/Pane";
 import { cancelLiveQueries } from "~/connection/connection";
-import { CSV_FILTER, NONE_RESULT_MODES, RESULT_FORMATS, RESULT_MODES } from "~/constants";
-import { executeEditorQuery } from "~/editor/query";
-import { useSetting } from "~/hooks/config";
-import { useConnectionAndView } from "~/hooks/routing";
-import { useStable } from "~/hooks/stable";
+import { executeEditorQuery } from "~/editor/languages/query";
+import { ListMenu } from "~/features/query/components/ListMenu";
+import { useSetting } from "~/hooks/app/config";
+import { useConnectionAndView } from "~/hooks/app/routing";
+import { useStable } from "~/hooks/state/stable";
 import {
 	iconBroadcastOff,
 	iconCursor,
@@ -24,12 +23,13 @@ import {
 	iconLive,
 	iconQuery,
 	iconUpload,
-} from "~/icons";
-import { showInfo, slugify } from "~/shared/util/helpers";
-import { useConfigStore } from "~/shell/stores/config";
-import { useInterfaceStore } from "~/shell/stores/interface";
-import { useDatabaseStore } from "~/stores/database";
-import { useQueryStore } from "~/stores/query";
+} from "~/shared/assets/icons";
+import {
+	CSV_FILTER,
+	NONE_RESULT_MODES,
+	RESULT_FORMATS,
+	RESULT_MODES,
+} from "~/shared/config/constants";
 import type {
 	Listable,
 	NoneResultMode,
@@ -37,7 +37,12 @@ import type {
 	QueryTab,
 	ResultFormat,
 	ResultMode,
-} from "~/types";
+} from "~/shared/types";
+import { showInfo, slugify } from "~/shared/util/text/helpers";
+import { useConfigStore } from "~/shell/stores/config";
+import { useInterfaceStore } from "~/shell/stores/interface";
+import { useDatabaseStore } from "~/stores/database";
+import { useQueryStore } from "~/stores/query";
 import type { PreviewProps } from "./previews";
 import { CombinedPreview } from "./previews/combined";
 import { GraphPreview } from "./previews/graph";
