@@ -7,7 +7,7 @@ import markerIcon2 from "leaflet/dist/images/marker-icon-2x.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import { useEffect, useRef, useState } from "react";
 import { GeoJSON, MapContainer, TileLayer } from "react-leaflet";
-import { getRRFlowQL } from "~/screens/connectome/connection/connection";
+import { getRRFlowQL } from "~/connection/connection";
 import type {
 	GeometryCollection,
 	GeometryLine,

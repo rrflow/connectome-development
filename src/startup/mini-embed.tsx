@@ -14,7 +14,7 @@ import "../adapter";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { createRoot } from "react-dom/client";
-import { openConnection } from "~/screens/connectome/connection/connection";
+import { openConnection } from "~/connection/connection";
 import { MiniRunScreen } from "~/screens/mini-embed";
 import { startConfigSync } from "~/shared/util/config";
 import { handleWindowMessage } from "~/shared/util/messaging";

@@ -1,10 +1,10 @@
 import { Button, Group, Stack, Text } from "@mantine/core";
 import { closeModal, openModal } from "@mantine/modals";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
+import { SelectDatabase } from "~/components/SelectDatabase";
 import { Spacer } from "~/components/Spacer";
 import { useConnection } from "~/hooks/connection";
 import { useStable } from "~/hooks/stable";
-import { SelectDatabase } from "~/screens/connectome/components/SelectDatabase";
 
 /**
  * Requires a selected database before executing a callback. The namespace and

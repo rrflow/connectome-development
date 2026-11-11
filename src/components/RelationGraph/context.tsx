@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ContextMenuDivider, ContextMenuItem } from "mantine-contextmenu";
 import { unique } from "radash";
 import { Icon } from "~/components/Icon";
+import { getRRFlow } from "~/connection/connection";
 import { useIsLight } from "~/hooks/theme";
 import {
 	iconCopy,
@@ -13,7 +14,6 @@ import {
 	iconRelationOut,
 	iconSearch,
 } from "~/icons";
-import { getRRFlow } from "~/screens/connectome/connection/connection";
 import { QueryResponse } from "~/types";
 import { RecordId } from "~/vendor/rrflow-client";
 import { NodeCircle } from "./node";

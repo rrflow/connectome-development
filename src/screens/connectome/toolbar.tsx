@@ -12,11 +12,15 @@ import {
 import { useState } from "react";
 import { ActionBar } from "~/components/ActionBar";
 import { ActionButton } from "~/components/ActionButton";
+import { ConnectionStatus } from "~/components/ConnectionStatus";
+import { DatabaseList } from "~/components/DatabaseList";
 import { Form } from "~/components/Form";
 import { Icon } from "~/components/Icon";
+import { NamespaceList } from "~/components/NamespaceList";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { SidebarToggle } from "~/components/SidebarToggle";
 import { Spacer } from "~/components/Spacer";
+import { resetConnection } from "~/connection/connection";
 import { useBoolean } from "~/hooks/boolean";
 import { useConnection, useIsConnected, useMinimumVersion } from "~/hooks/connection";
 import { useDatasets } from "~/hooks/dataset";
@@ -30,10 +34,6 @@ import { dispatchIntent } from "~/shared/util/intents";
 import { useConfigStore } from "~/shell/stores/config";
 import { useInterfaceStore } from "~/shell/stores/interface";
 import { useDatabaseStore } from "~/stores/database";
-import { ConnectionStatus } from "./components/ConnectionStatus";
-import { DatabaseList } from "./components/DatabaseList";
-import { NamespaceList } from "./components/NamespaceList";
-import { resetConnection } from "./connection/connection";
 
 export function ConnectomeToolbar() {
 	const { readChangelog } = useInterfaceStore.getState();

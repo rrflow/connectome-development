@@ -1,7 +1,7 @@
 import equal from "fast-deep-equal";
 import { klona } from "klona";
 import { adapter } from "~/adapter";
-import { executeQuery, executeQuerySingle } from "~/screens/connectome/connection/connection";
+import { executeQuery, executeQuerySingle } from "~/connection/connection";
 import { useDatabaseStore } from "~/stores/database";
 import type {
 	ConnectionSchema,

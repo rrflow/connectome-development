@@ -22,6 +22,7 @@ import { Icon } from "~/components/Icon";
 import { Option } from "~/components/Option";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";
+import { isStreamingSupported, requestDatabaseExport } from "~/connection/connection";
 import { RRFLOWQL_FILTER } from "~/constants";
 import { useBoolean } from "~/hooks/boolean";
 import { useConnection, useMinimumVersion } from "~/hooks/connection";
@@ -45,10 +46,6 @@ import {
 	iconWarning,
 	iconWrench,
 } from "~/icons";
-import {
-	isStreamingSupported,
-	requestDatabaseExport,
-} from "~/screens/connectome/connection/connection";
 import { fuzzyMatch, slugify } from "~/shared/util/helpers";
 import { syncConnectionSchema } from "~/shared/util/schema";
 import { SqlExportOptions } from "~/vendor/rrflow-client";

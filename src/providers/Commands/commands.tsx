@@ -3,6 +3,7 @@ import { dash } from "radash";
 import { useMemo } from "react";
 import { adapter, isDesktop } from "~/adapter";
 import type { DesktopAdapter } from "~/adapter/desktop";
+import { closeConnection, openConnection, resetConnection } from "~/connection/connection";
 import { DRIVERS, SANDBOX } from "~/constants";
 import { useAvailableViews, useConnectionList } from "~/hooks/connection";
 import { useConnectionAndView, useConnectionNavigator } from "~/hooks/routing";
@@ -53,11 +54,6 @@ import {
 } from "~/icons";
 import { openConnectionDiagnosticsModal } from "~/modals/connection-diagnostics";
 import { showNodeStatus } from "~/modals/node-status";
-import {
-	closeConnection,
-	openConnection,
-	resetConnection,
-} from "~/screens/connectome/connection/connection";
 import { featureFlags } from "~/shared/util/feature-flags";
 import { optional } from "~/shared/util/helpers";
 import type { IntentPayload, IntentType } from "~/shared/util/intents";

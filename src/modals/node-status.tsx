@@ -3,8 +3,8 @@ import { openModal } from "@mantine/modals";
 import dayjs from "dayjs";
 import { Icon } from "~/components/Icon";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
+import { executeQuerySingle } from "~/connection/connection";
 import { iconCircleFilled } from "~/icons";
-import { executeQuerySingle } from "~/screens/connectome/connection/connection";
 import { showErrorNotification } from "~/shared/util/helpers";
 import type { Uuid } from "~/vendor/rrflow-client";
 
