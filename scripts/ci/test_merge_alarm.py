@@ -158,3 +158,5 @@ class MergeAlarmTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+raise SystemExit("deliberate failure: live test of the merge alarm")
