@@ -49,6 +49,8 @@ import { type CanvasEdge, type CanvasNode, GraphCanvas } from "../graph/graph";
 import { colorOptions, degrees, grouping } from "../graph/groups";
 import { type GraphDirection, type GraphScope, kinds, selectSubgraph } from "../graph/subgraph";
 import { useGuideSignal, useGuideState } from "../guides/engine";
+import { LiveActivity } from "../live/live-activity";
+import { useLiveChanges } from "../live/use-live-changes";
 import classes from "../style.module.scss";
 import type { RecordFocusProps, RuntimeLensProps } from "../types";
 import { formatCount, formatSize, formatTime } from "../utils/format";
@@ -257,6 +259,7 @@ export function RecordsTab({
 	onOpenLens,
 }: RuntimeLensProps & RecordFocusProps) {
 	const database = useQuery(databaseQuery(client, sessionKey));
+	const live = useLiveChanges(client, sessionKey);
 	const [scope, setScope] = useState<GraphScope>("engram");
 	const [depth, setDepth] = useState(1);
 	const [direction, setDirection] = useState<GraphDirection>("both");
@@ -527,16 +530,27 @@ export function RecordsTab({
 						</Popover>
 					)}
 				</Group>
-				<Text
-					fz="xs"
-					c="slate"
+				<Group
+					justify="space-between"
+					wrap="nowrap"
 				>
-					Drawing {formatCount(drawn?.nodes.length)} of {formatCount(graph.nodes.length)}{" "}
-					records and {formatCount(drawn?.edges.length)} of{" "}
-					{formatCount(graph.edges.length)} relations
-					{scope === "neighbourhood" && node ? ` around “${node.label}”` : ""}, read at{" "}
-					<Term id="cursor">cursor</Term> {formatCount(graph.known_at_cursor)}.
-				</Text>
+					<Text
+						fz="xs"
+						c="slate"
+					>
+						Drawing {formatCount(drawn?.nodes.length)} of{" "}
+						{formatCount(graph.nodes.length)} records and{" "}
+						{formatCount(drawn?.edges.length)} of {formatCount(graph.edges.length)}{" "}
+						relations
+						{scope === "neighbourhood" && node ? ` around “${node.label}”` : ""}, read
+						at <Term id="cursor">cursor</Term> {formatCount(graph.known_at_cursor)}.
+					</Text>
+					<LiveActivity
+						live={live}
+						isDrawn={(id) => byId.has(id)}
+						onSelect={onSelect}
+					/>
+				</Group>
 
 				<Paper
 					data-guide="graph-canvas"
@@ -576,6 +590,15 @@ export function RecordsTab({
 							groups={groups.groups}
 							legendTitle={`Color: ${colorOption?.label ?? "Kind"}`}
 							selected={selected}
+							changed={live.changed}
+							layoutKey={[
+								scope,
+								focus,
+								depth,
+								direction,
+								recordKinds,
+								relationKinds,
+							].join("|")}
 							dimUnselected={scope === "engram"}
 							onSelect={onSelect}
 							hint="Scroll to zoom · drag to move · click a dot for details"
