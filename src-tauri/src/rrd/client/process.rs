@@ -479,6 +479,7 @@ async fn load_fixture_at(request: RrdConnectRequest, address: SocketAddr) {
                 graph_valid_at_unix_ms: now_unix_ms().expect("clock"),
                 graph_known_at_cursor: None,
                 graph_compare_cursor: 0,
+                graph_max_records: Some(DIAGNOSTIC_GRAPH_RECORDS),
                 runtime_max_scanned_changes: MAX_DIAGNOSTIC_RUNTIME_SCANNED_CHANGES,
                 changes_after_cursor: 0,
                 change_limit: DIAGNOSTIC_CHANGE_PAGE,

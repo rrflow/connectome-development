@@ -96,6 +96,7 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 			let liveNodeCommitted = false;
 			let liveGraphClustered = false;
 			let liveHead = 7;
+			let boundedGraph = false;
 			let liveChannel: { onmessage: (event: unknown) => void } | null = null;
 			let callbackId = 1;
 			let failStorage = false;
@@ -138,6 +139,10 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 					calls: () => calls,
 					showFlight: () => {
 						showFlight = true;
+					},
+					sendBoundedGraph: () => {
+						boundedGraph = true;
+						liveHead = 40;
 					},
 					commitWhileClosed: () => {
 						liveNodeCommitted = true;
@@ -414,6 +419,33 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 							return { handle: "live-1", stream: "changes" };
 						}
 						if (command === "rrd_live_close") return null;
+						if (command === "rrd_database" && boundedGraph)
+							return {
+								observed_at_unix_ms: 4,
+								runtime_cursor: 40,
+								schema_revision: null,
+								tables: [],
+								models: [],
+								sections: [],
+								graph: {
+									valid_at_unix_ms: 4,
+									known_at_cursor: 40,
+									nodes: [
+										{
+											id: "document:hub",
+											kind: "document",
+											key: "hub",
+											label: "hub",
+											properties: {},
+											cluster: 0,
+										},
+									],
+									edges: [],
+									records_total: 40,
+									relations_total: 39,
+									clusters: [],
+								},
+							};
 						if (command === "rrd_database" && liveNodeCommitted && liveGraphClustered)
 							return {
 								observed_at_unix_ms: 3,
@@ -706,6 +738,20 @@ test("a graph cached before the engine moved on is refreshed when the tab opens"
 	);
 	await page.getByRole("tab", { name: "Graph", exact: true }).click();
 	await expect(page.getByText(/Drawing 2 of 2 records/)).toBeVisible();
+});
+
+test("a large engram says how much of it the engine sent", async ({ page }) => {
+	const { profileA, profileB } = await createDiagnosticProfiles(page);
+	await openDiagnosticWorkbench(page, profileA, profileB);
+	await page.evaluate(() =>
+		(
+			window as unknown as { __diagnosticCaptureTest: { sendBoundedGraph: () => void } }
+		).__diagnosticCaptureTest.sendBoundedGraph(),
+	);
+	await page.getByRole("button", { name: "Knowledge", exact: true }).click();
+	await page.getByRole("tab", { name: "Graph", exact: true }).click();
+	await expect(page.getByText(/Drawing 1 of 40 records and 0 of 39 relations/)).toBeVisible();
+	await expect(page.getByText(/The engine sent the 1 most linked of 40 records/)).toBeVisible();
 });
 
 test("the graph opens a cluster and returns to the overview", async ({ page }) => {

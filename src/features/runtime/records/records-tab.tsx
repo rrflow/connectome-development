@@ -49,6 +49,7 @@ import { clusterMembers, clusterOverview, groupAnchor, groupOfRecord } from "../
 import { type CanvasEdge, type CanvasNode, GraphCanvas } from "../graph/graph";
 import { colorOptions, degrees, grouping } from "../graph/groups";
 import { type GraphDirection, type GraphScope, kinds, selectSubgraph } from "../graph/subgraph";
+import { graphTotals } from "../graph/totals";
 import { useGuideSignal, useGuideState } from "../guides/engine";
 import { LiveActivity } from "../live/live-activity";
 import { useLiveChanges } from "../live/use-live-changes";
@@ -285,6 +286,7 @@ export function RecordsTab({
 
 	const view = database.data;
 	const graph = view?.graph;
+	const totals = graph ? graphTotals(graph) : { records: 0, relations: 0 };
 	const options = useMemo(() => (graph ? colorOptions(graph) : []), [graph]);
 	const colorOption = options.find((option) => option.value === colorBy) ?? options[0];
 	const groups = useMemo(
@@ -448,8 +450,8 @@ export function RecordsTab({
 				title="Records & relations"
 				description={
 					<>
-						This <Term id="engram">engram</Term> holds {formatCount(graph.nodes.length)}{" "}
-						<Term id="record">records</Term> linked by {formatCount(graph.edges.length)}{" "}
+						This <Term id="engram">engram</Term> holds {formatCount(totals.records)}{" "}
+						<Term id="record">records</Term> linked by {formatCount(totals.relations)}{" "}
 						<Term id="relation">relations</Term>. Each dot is a record and each arrow a
 						relation; bigger dots have more relations.
 					</>
@@ -586,9 +588,8 @@ export function RecordsTab({
 						c="slate"
 					>
 						{drill ? "Grouping" : "Drawing"} {formatCount(drawn?.nodes.length)} of{" "}
-						{formatCount(graph.nodes.length)} records and{" "}
-						{formatCount(drawn?.edges.length)} of {formatCount(graph.edges.length)}{" "}
-						relations
+						{formatCount(totals.records)} records and {formatCount(drawn?.edges.length)}{" "}
+						of {formatCount(totals.relations)} relations
 						{scope === "neighbourhood" && node ? ` around “${node.label}”` : ""}, read
 						at <Term id="cursor">cursor</Term> {formatCount(graph.known_at_cursor)}.
 					</Text>
@@ -599,6 +600,16 @@ export function RecordsTab({
 					/>
 				</Group>
 
+				{graph.nodes.length < totals.records && (
+					<Text
+						fz="xs"
+						c="slate"
+					>
+						The engine sent the {formatCount(graph.nodes.length)} most linked of{" "}
+						{formatCount(totals.records)} records, so a large engram stays readable.
+						Find a record or draw what is around one to reach the rest.
+					</Text>
+				)}
 				{drill && overview && (
 					<Group
 						gap="sm"

@@ -31,6 +31,7 @@ import { useConfigStore } from "~/shell/stores/config";
 import { databaseQuery } from "./api/queries";
 import { ApiReference } from "./api-reference";
 import { GlossaryDrawer, Term } from "./components/glossary";
+import { graphTotals } from "./graph/totals";
 import { GuideCards } from "./guides/cards";
 import { ModelsTab } from "./models/models-tab";
 import { ProjectPlanPanel } from "./plan/plan";
@@ -355,7 +356,7 @@ export function RuntimeConnectionPage({
 								purpose="What the engram knows and how it links together."
 								reading={
 									graph
-										? `${formatCount(graph.nodes.length)} records in view · ${formatCount(graph.edges.length)} relations`
+										? `${formatCount(graphTotals(graph).records)} records in view · ${formatCount(graph.edges.length)} relations`
 										: session
 											? "Reading..."
 											: "Open a native session to inspect"

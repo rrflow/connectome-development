@@ -84,6 +84,10 @@ const LOOPBACK_PROBE_TIMEOUT: Duration = Duration::from_secs(2);
 /// contract accepts.
 const DIAGNOSTIC_CHANGE_PAGE: u64 = 1;
 const DIAGNOSTIC_AUDIT_PAGE: u16 = 1;
+/// Graph records one diagnostic read asks for, the most linked first. The
+/// views draw at most about a hundred in detail; a real project after
+/// attunement holds thousands, past the client's response limit.
+const DIAGNOSTIC_GRAPH_RECORDS: u64 = 500;
 const MAX_CREDENTIAL_FILE_BYTES: u64 = 16 * 1024;
 /// Points the similarity map draws at most; each costs one exact engine search.
 const MAX_VECTOR_MAP_POINTS: usize = 600;
@@ -825,6 +829,7 @@ impl NativeRrdClient {
             graph_valid_at_unix_ms: now_unix_ms()?,
             graph_known_at_cursor: None,
             graph_compare_cursor: 0,
+            graph_max_records: Some(DIAGNOSTIC_GRAPH_RECORDS),
             runtime_max_scanned_changes: MAX_DIAGNOSTIC_RUNTIME_SCANNED_CHANGES,
             changes_after_cursor: 0,
             change_limit: DIAGNOSTIC_CHANGE_PAGE,
