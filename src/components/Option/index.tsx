@@ -1,7 +1,7 @@
 import { Box, BoxProps, Text, Transition, UnstyledButton } from "@mantine/core";
 import { FC, ReactNode } from "react";
 import { Icon } from "~/components/Icon";
-import { iconCheck } from "~/icons";
+import { iconCheck } from "~/shared/assets/icons";
 import classes from "./style.module.scss";
 
 export interface OptionProps extends BoxProps {

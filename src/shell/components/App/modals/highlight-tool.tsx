@@ -3,15 +3,15 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { CodeEditor } from "~/components/CodeEditor";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { RadioSelect } from "~/components/RadioSelect";
-import { DRIVERS } from "~/constants";
-import { useBoolean } from "~/hooks/boolean";
-import { useIntent } from "~/hooks/routing";
-import { useStable } from "~/hooks/stable";
-import { getRRFlowQL } from "~/screens/connectome/connection/connection";
-import { useFeatureFlags } from "~/shared/util/feature-flags";
-import { renderHighlighting } from "~/shared/util/highlighting";
+import { getRRFlowQL } from "~/connection/connection";
+import { useIntent } from "~/hooks/app/routing";
+import { useBoolean } from "~/hooks/state/boolean";
+import { useStable } from "~/hooks/state/stable";
+import { DRIVERS } from "~/shared/config/constants";
+import { CodeLang, type ColorScheme, type SyntaxTheme } from "~/shared/types";
+import { useFeatureFlags } from "~/shared/util/config/feature-flags";
+import { renderHighlighting } from "~/shared/util/text/highlighting";
 import { useConfigStore } from "~/shell/stores/config";
-import { CodeLang, type ColorScheme, type SyntaxTheme } from "~/types";
 import { rrflowql } from "~/vendor/rrflowql-editor";
 
 function Render({

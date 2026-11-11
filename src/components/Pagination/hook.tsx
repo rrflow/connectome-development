@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useStable } from "~/hooks/stable";
+import { useStable } from "~/hooks/state/stable";
 
 export interface PaginationStore {
 	total: number;

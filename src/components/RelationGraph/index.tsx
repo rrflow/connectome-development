@@ -21,8 +21,9 @@ import Sigma from "sigma";
 import { createEdgeArrowProgram } from "sigma/rendering";
 import { EdgeDisplayData, NodeDisplayData } from "sigma/types";
 import { Icon } from "~/components/Icon";
-import { useStable } from "~/hooks/stable";
-import { getIsLight, useIsLight } from "~/hooks/theme";
+import { useStable } from "~/hooks/state/stable";
+import { getIsLight, useIsLight } from "~/hooks/ui/theme";
+import { useInspector } from "~/providers/Inspector";
 import {
 	iconAPI,
 	iconFullscreen,
@@ -33,8 +34,7 @@ import {
 	iconPlay,
 	iconRelation,
 	iconReset,
-} from "~/icons";
-import { useInspector } from "~/providers/Inspector";
+} from "~/shared/assets/icons";
 import { RecordId } from "~/vendor/rrflow-client";
 import { ActionButton } from "../ActionButton";
 import { NodeContextMenu } from "./context";

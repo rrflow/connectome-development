@@ -1,14 +1,14 @@
 import type { MantineColorScheme } from "@mantine/core";
-import { ORIENTATIONS, RESULT_MODES } from "~/constants";
-import { dedent } from "~/shared/util/dedent";
+import { ORIENTATIONS, RESULT_MODES } from "~/shared/config/constants";
+import type { ConnectomeConfig, MiniAppearance, Orientation, ResultMode } from "~/shared/types";
 import {
 	createBaseQuery,
 	createBaseSettings,
 	createSandboxConnection,
-} from "~/shared/util/defaults";
-import { showErrorNotification } from "~/shared/util/helpers";
-import { getDatasetURL } from "~/shared/util/language";
-import type { ConnectomeConfig, MiniAppearance, Orientation, ResultMode } from "~/types";
+} from "~/shared/util/config/defaults";
+import { dedent } from "~/shared/util/text/dedent";
+import { showErrorNotification } from "~/shared/util/text/helpers";
+import { getDatasetURL } from "~/shared/util/text/language";
 import { BrowserAdapter } from "./browser";
 
 const THEMES = new Set(["light", "dark", "auto"]);
@@ -189,21 +189,19 @@ export class MiniAdapter extends BrowserAdapter {
 		// The inherited query runner loads on demand, in the original order, so
 		// the shared adapter selector that imports this class does not load the
 		// inherited client into every page (sprint 009 Slice D0).
-		import("~/screens/connectome/connection/connection").then(
-			({ executeQuery, executeUserQuery }) => {
-				if (this.#datasetQuery) {
-					executeQuery(this.#datasetQuery);
-				}
+		import("~/connection/connection").then(({ executeQuery, executeUserQuery }) => {
+			if (this.#datasetQuery) {
+				executeQuery(this.#datasetQuery);
+			}
 
-				if (this.#setupQuery) {
-					executeQuery(this.#setupQuery);
-				}
+			if (this.#setupQuery) {
+				executeQuery(this.#setupQuery);
+			}
 
-				if (this.autorun) {
-					executeUserQuery();
-				}
-			},
-		);
+			if (this.autorun) {
+				executeUserQuery();
+			}
+		});
 	}
 
 	public broadcastReady() {
@@ -215,7 +213,7 @@ export class MiniAdapter extends BrowserAdapter {
 
 		// The embed's message channel runs queries through the inherited client,
 		// so it loads on demand with the rest of this adapter's engine code.
-		import("~/shared/util/messaging").then(({ broadcastMessage }) => {
+		import("~/shared/util/platform/messaging").then(({ broadcastMessage }) => {
 			broadcastMessage("ready", opts);
 		});
 	}

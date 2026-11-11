@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { useConnectionAndView } from "~/hooks/routing";
-import { closeConnection, openConnection } from "~/screens/connectome/connection/connection";
+import { closeConnection, openConnection } from "~/connection/connection";
+import { useConnectionAndView } from "~/hooks/app/routing";
 
 /**
  * Watch for connection changes and open the connection

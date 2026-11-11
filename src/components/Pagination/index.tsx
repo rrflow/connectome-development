@@ -2,8 +2,8 @@ import { type ComboboxData, Group, Select, Text, TextInput } from "@mantine/core
 import { useInputState } from "@mantine/hooks";
 import { type FocusEvent, type KeyboardEvent, useLayoutEffect } from "react";
 import { Icon } from "~/components/Icon";
-import { useStable } from "~/hooks/stable";
-import { iconChevronLeft, iconChevronRight } from "~/icons";
+import { useStable } from "~/hooks/state/stable";
+import { iconChevronLeft, iconChevronRight } from "~/shared/assets/icons";
 import { ActionButton } from "../ActionButton";
 import type { PaginationStore } from "./hook";
 

@@ -2,10 +2,10 @@ import { type BoxProps, type ElementProps, Group } from "@mantine/core";
 import type { MouseEvent } from "react";
 import { useEffect, useState } from "react";
 import { Icon } from "~/components/Icon";
-import { useStable } from "~/hooks/stable";
-import { iconArrowUpRight } from "~/icons";
+import { getRRFlowQL } from "~/connection/connection";
+import { useStable } from "~/hooks/state/stable";
 import { useInspector } from "~/providers/Inspector";
-import { getRRFlowQL } from "~/screens/connectome/connection/connection";
+import { iconArrowUpRight } from "~/shared/assets/icons";
 import type { RecordId } from "~/vendor/rrflow-client";
 import { HighlightedText } from "../HighlightedText";
 

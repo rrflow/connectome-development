@@ -795,7 +795,7 @@ fn selected_source_query_projects_typed_inventory_from_installed_engine() {
         let successor_connected = approve(&client, handle).await;
         let (handle, _) = prepare(&client, &successor_connected, Control::Step).await;
         let inventoried = approve(&client, handle).await;
-        assert_eq!(inventoried["status"]["job"]["state"], "running");
+        assert_eq!(inventoried["status"]["job"]["state"], "succeeded");
         assert_eq!(
             inventoried["status"]["job"]["checkpoints"]
                 .as_array()
@@ -910,7 +910,7 @@ fn selected_source_worker_roundtrips_through_installed_ui_adapter() {
         let successor_connected = approve(&client, handle).await;
         let (handle, _) = prepare(&client, &successor_connected, Control::Step).await;
         let inventoried = approve(&client, handle).await;
-        assert_eq!(inventoried["status"]["job"]["state"], "running");
+        assert_eq!(inventoried["status"]["job"]["state"], "succeeded");
         assert_eq!(
             inventoried["status"]["job"]["checkpoints"]
                 .as_array()

@@ -1,0 +1,83 @@
+import { Badge, Group } from "@mantine/core";
+import { useMemo } from "react";
+import { ActionButton } from "~/components/ActionButton";
+import { CodeEditor } from "~/components/CodeEditor";
+import { Icon } from "~/components/Icon";
+import { ContentPane } from "~/components/Pane";
+import { getRRFlowQL } from "~/connection/connection";
+import { rrflowqlLinting } from "~/editor";
+import { useConnectionAndView } from "~/hooks/app/routing";
+import { useConnection } from "~/hooks/connection/connection";
+import { useDebouncedFunction } from "~/hooks/state/debounce";
+import { iconClose, iconDollar } from "~/shared/assets/icons";
+import { useConfigStore } from "~/shell/stores/config";
+import { rrflowql } from "~/vendor/rrflowql-editor";
+
+export interface VariablesPaneProps {
+	isValid: boolean;
+	setIsValid: (isValid: boolean) => void;
+	closeVariables: () => void;
+}
+
+export function VariablesPane(props: VariablesPaneProps) {
+	const { updateConnection } = useConfigStore.getState();
+	const [connection] = useConnectionAndView();
+	const variablesText = useConnection((c) => c?.graphqlVariables ?? "");
+
+	const setVariables = useDebouncedFunction(async (content: string | undefined) => {
+		if (!connection) return;
+
+		try {
+			const json = content || "";
+			const parsed = await getRRFlowQL().parseValue(json);
+
+			if (typeof parsed !== "object" || Array.isArray(parsed)) {
+				throw new TypeError("Must be object");
+			}
+
+			updateConnection({
+				id: connection,
+				graphqlVariables: content,
+			});
+
+			props.setIsValid(true);
+		} catch {
+			props.setIsValid(false);
+		}
+	}, 50);
+
+	const extensions = useMemo(() => [rrflowql(), rrflowqlLinting()], []);
+
+	return (
+		<ContentPane
+			title="Variables"
+			icon={iconDollar}
+			rightSection={
+				<Group gap="xs">
+					{!props.isValid && (
+						<Badge
+							color="red"
+							variant="light"
+						>
+							Invalid syntax
+						</Badge>
+					)}
+					<ActionButton
+						color="obsidian"
+						label="Close panel"
+						onClick={props.closeVariables}
+					>
+						<Icon path={iconClose} />
+					</ActionButton>
+				</Group>
+			}
+		>
+			<CodeEditor
+				value={variablesText}
+				onChange={setVariables}
+				lineNumbers
+				extensions={extensions}
+			/>
+		</ContentPane>
+	);
+}

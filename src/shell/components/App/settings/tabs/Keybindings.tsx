@@ -19,16 +19,16 @@ import { KeybindInput } from "~/components/Inputs/keybinding";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Shortcut } from "~/components/Shortcut";
 import { Spacer } from "~/components/Spacer";
-import { useBoolean } from "~/hooks/boolean";
-import { useStable } from "~/hooks/stable";
-import { iconEdit, iconPlus, iconSearch } from "~/icons";
+import { useBoolean } from "~/hooks/state/boolean";
+import { useStable } from "~/hooks/state/stable";
 import {
 	type Command,
 	useCommandCategories,
 	useCommandKeybinds,
 	useCommandRegistry,
 } from "~/providers/Commands";
-import { fuzzyMatch } from "~/shared/util/helpers";
+import { iconEdit, iconPlus, iconSearch } from "~/shared/assets/icons";
+import { fuzzyMatch } from "~/shared/util/text/helpers";
 import { useConfigStore } from "~/shell/stores/config";
 
 export function KeybindingsTab() {

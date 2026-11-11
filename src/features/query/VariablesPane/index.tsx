@@ -1,0 +1,135 @@
+import { Prec } from "@codemirror/state";
+import { type EditorView, keymap } from "@codemirror/view";
+import { Badge, Group } from "@mantine/core";
+import { useEffect, useMemo, useState } from "react";
+import { type HtmlPortalNode, OutPortal } from "react-reverse-portal";
+import { ActionButton } from "~/components/ActionButton";
+import { CodeEditor } from "~/components/CodeEditor";
+import { Icon } from "~/components/Icon";
+import { ContentPane } from "~/components/Pane";
+import { getRRFlowQL } from "~/connection/connection";
+import { rrflowqlLinting, runQueryKeymap } from "~/editor";
+import { queryEditorField, setQueryEditor } from "~/editor/languages/query";
+import { useConnectionAndView } from "~/hooks/app/routing";
+import { useActiveQuery } from "~/hooks/connection/connection";
+import { useDebouncedFunction } from "~/hooks/state/debounce";
+import { useStable } from "~/hooks/state/stable";
+import { iconClose, iconDollar, iconReset } from "~/shared/assets/icons";
+import { useConfigStore } from "~/shell/stores/config";
+import { rrflowql } from "~/vendor/rrflowql-editor";
+
+export interface VariablesPaneProps {
+	isValid: boolean;
+	switchPortal?: HtmlPortalNode<any>;
+	corners?: string;
+	lineNumbers: boolean;
+	editor: EditorView;
+	setIsValid: (isValid: boolean) => void;
+	closeVariables: () => void;
+}
+
+export function VariablesPane({
+	isValid,
+	switchPortal,
+	corners,
+	lineNumbers,
+	editor,
+	setIsValid,
+	closeVariables,
+}: VariablesPaneProps) {
+	const { updateQueryTab } = useConfigStore.getState();
+	const [connection] = useConnectionAndView();
+	const activeTab = useActiveQuery();
+
+	const [variableEditor, setVariableEditor] = useState<EditorView | null>(null);
+
+	const setVariables = useDebouncedFunction(async (content: string | undefined) => {
+		if (!activeTab || !connection) return;
+
+		const json = content || "";
+
+		updateQueryTab(connection, {
+			id: activeTab.id,
+			variables: json,
+		});
+
+		try {
+			const parsed = await getRRFlowQL().parseValue(json);
+
+			if (typeof parsed !== "object" || Array.isArray(parsed)) {
+				throw new TypeError("Must be object");
+			}
+
+			setIsValid(true);
+		} catch {
+			setIsValid(false);
+		}
+	}, 50);
+
+	const clearVariables = useStable(() => {
+		if (!activeTab || !connection) return;
+		setVariables("{}");
+	});
+
+	useEffect(() => {
+		if (variableEditor && editor) {
+			setQueryEditor(variableEditor, editor);
+		}
+	}, [variableEditor, editor]);
+
+	const extensions = useMemo(
+		() => [
+			rrflowql(),
+			rrflowqlLinting(),
+			queryEditorField,
+			Prec.high(keymap.of(runQueryKeymap)),
+		],
+		[],
+	);
+
+	return (
+		<ContentPane
+			title="Variables"
+			icon={iconDollar}
+			radius={corners}
+			rightSection={
+				switchPortal ? (
+					<OutPortal node={switchPortal} />
+				) : (
+					<Group gap="xs">
+						{!isValid && (
+							<Badge
+								color="red"
+								variant="light"
+							>
+								Invalid syntax
+							</Badge>
+						)}
+						<ActionButton
+							color="obsidian"
+							onClick={clearVariables}
+							label="Clear variables"
+						>
+							<Icon path={iconReset} />
+						</ActionButton>
+						<ActionButton
+							color="obsidian"
+							onClick={closeVariables}
+							label="Close panel"
+						>
+							<Icon path={iconClose} />
+						</ActionButton>
+					</Group>
+				)
+			}
+		>
+			<CodeEditor
+				value={activeTab?.variables || ""}
+				onChange={setVariables}
+				onMount={setVariableEditor}
+				lineNumbers={lineNumbers}
+				extensions={extensions}
+			/>
+		</ContentPane>
+	);
+}

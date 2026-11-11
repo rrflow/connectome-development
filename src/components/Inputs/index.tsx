@@ -29,10 +29,10 @@ import {
 } from "react";
 import { Icon } from "~/components/Icon";
 import { acceptWithTab, editorTheme, inputBase } from "~/editor";
-import { useKindList } from "~/hooks/schema";
-import { useStable } from "~/hooks/stable";
-import { useIsLight, useTheme } from "~/hooks/theme";
-import { iconCancel, iconCheck } from "~/icons";
+import { useKindList } from "~/hooks/connection/schema";
+import { useStable } from "~/hooks/state/stable";
+import { useIsLight, useTheme } from "~/hooks/ui/theme";
+import { iconCancel, iconCheck } from "~/shared/assets/icons";
 import { useConfigStore } from "~/shell/stores/config";
 import { rrflowql } from "~/vendor/rrflowql-editor";
 import { ActionButton } from "../ActionButton";

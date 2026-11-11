@@ -2,9 +2,9 @@ import { Box } from "@mantine/core";
 import { adapter } from "~/adapter";
 import type { MiniAdapter } from "~/adapter/mini";
 import { Scaffold } from "~/components/Scaffold";
-import { useIsLight } from "~/hooks/theme";
+import MiniQueryView from "~/features/query/MiniView";
+import { useIsLight } from "~/hooks/ui/theme";
 import { CommandsProvider } from "~/providers/Commands";
-import MiniQueryView from "../connectome/views/query/MiniView";
 
 export function MiniRunScreen() {
 	const { appearance, transparent } = adapter as MiniAdapter;

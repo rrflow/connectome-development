@@ -1,9 +1,9 @@
 import { adapter } from "~/adapter";
 import { DesktopAdapter } from "~/adapter/desktop";
-import { useSetting } from "~/hooks/config";
-import { useIntent } from "~/hooks/routing";
-import { useStable } from "~/hooks/stable";
-import { clamp } from "~/shared/util/helpers";
+import { useSetting } from "~/hooks/app/config";
+import { useIntent } from "~/hooks/app/routing";
+import { useStable } from "~/hooks/state/stable";
+import { clamp } from "~/shared/util/text/helpers";
 
 export function useWindowSettings() {
 	const [windowScale, setWindowScale] = useSetting("appearance", "windowScale");

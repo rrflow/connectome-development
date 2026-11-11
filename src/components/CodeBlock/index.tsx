@@ -14,7 +14,7 @@ import { useClipboard } from "@mantine/hooks";
 import { useEffect, useMemo, useState } from "react";
 import { CodeEditor } from "~/components/CodeEditor";
 import { Icon } from "~/components/Icon";
-import { iconCheck, iconCopy } from "~/icons";
+import { iconCheck, iconCopy } from "~/shared/assets/icons";
 import classes from "./style.module.scss";
 
 export interface CodeBlockProps extends Omit<PaperProps, "children" | "styles"> {

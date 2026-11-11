@@ -29,14 +29,14 @@ export const entries = [
 	"src/rrflow/session.ts",
 	"src/rrflow/diagnostics.ts",
 	"src/rrflow/control-plane.ts",
-	"src/screens/connectome/pages/ControlPlane/index.tsx",
-	"src/screens/connectome/pages/CreateConnection/index.tsx",
-	"src/screens/connectome/pages/Overview/index.tsx",
-	"src/screens/connectome/pages/RuntimeConnection/index.tsx",
-	"src/screens/connectome/pages/RuntimeDiagnostics/index.tsx",
+	"src/features/control-plane/index.tsx",
+	"src/features/create-connection/index.tsx",
+	"src/features/overview/index.tsx",
+	"src/features/runtime/index.tsx",
+	"src/features/diagnostics/index.tsx",
 ];
 
-const forbiddenFiles = ["src/screens/connectome/connection/connection.tsx"];
+const forbiddenFiles = ["src/connection/connection.tsx"];
 const forbiddenDirectories = ["src/vendor/"];
 const forbiddenPackage = /^(?:surrealdb|@surrealdb\/[^/]+)(?:\/|$)/;
 

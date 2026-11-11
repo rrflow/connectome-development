@@ -20,14 +20,21 @@ import { DrawerResizer } from "~/components/DrawerResizer";
 import { Icon } from "~/components/Icon";
 import { SaveBox } from "~/components/SaveBox";
 import { Spacer } from "~/components/Spacer";
-import { TABLE_VARIANT_ICONS } from "~/constants";
-import type { SaveableHandle } from "~/hooks/save";
-import { iconCheck, iconClose, iconCopy, iconDelete, iconDesigner, iconWarning } from "~/icons";
+import { executeQuery } from "~/connection/connection";
+import type { SaveableHandle } from "~/hooks/state/save";
 import { useConfirmation } from "~/providers/Confirmation";
-import { executeQuery } from "~/screens/connectome/connection/connection";
-import { getTableVariant, syncConnectionSchema } from "~/shared/util/schema";
+import {
+	iconCheck,
+	iconClose,
+	iconCopy,
+	iconDelete,
+	iconDesigner,
+	iconWarning,
+} from "~/shared/assets/icons";
+import { TABLE_VARIANT_ICONS } from "~/shared/config/constants";
+import type { TableInfo } from "~/shared/types";
+import { getTableVariant, syncConnectionSchema } from "~/shared/util/connection/schema";
 import { useConfigStore } from "~/shell/stores/config";
-import type { TableInfo } from "~/types";
 import { escapeIdent } from "~/vendor/rrflow-client";
 import { ChangefeedElement } from "./elements/changefeed";
 import { EventsElement } from "./elements/events";

@@ -1,6 +1,6 @@
 import { Box, type BoxProps } from "@mantine/core";
 import type { PropsWithChildren } from "react";
-import { useStable } from "~/hooks/stable";
+import { useStable } from "~/hooks/state/stable";
 
 export interface FormProps extends BoxProps {
 	onSubmit: () => void;

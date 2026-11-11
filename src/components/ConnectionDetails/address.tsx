@@ -15,11 +15,11 @@ import { useQuery } from "@tanstack/react-query";
 import { fork, sleep } from "radash";
 import { useMemo } from "react";
 import { Updater } from "use-immer";
-import { CONNECTION_PROTOCOLS } from "~/constants";
-import { useStable } from "~/hooks/stable";
-import { useIsLight } from "~/hooks/theme";
-import { connectionUri, isHostLocal } from "~/shared/util/helpers";
-import { Connection, Protocol } from "~/types";
+import { useStable } from "~/hooks/state/stable";
+import { useIsLight } from "~/hooks/ui/theme";
+import { CONNECTION_PROTOCOLS } from "~/shared/config/constants";
+import { Connection, Protocol } from "~/shared/types";
+import { connectionUri, isHostLocal } from "~/shared/util/text/helpers";
 
 const ENDPOINT_PATTERN = /^(.+?):\/\/(.+)$/;
 
@@ -105,7 +105,7 @@ export function ConnectionAddressDetails({
 			// The reachability probe still uses the inherited client (sprint 009 D2
 			// replaces it with RRFlow readiness); it loads on demand so the pages
 			// that open this form do not load that client.
-			const { createRRFlow } = await import("~/screens/connectome/connection/rrflow");
+			const { createRRFlow } = await import("~/connection/rrflow");
 			const test = await createRRFlow();
 
 			await sleep(500);

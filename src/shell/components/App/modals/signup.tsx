@@ -15,13 +15,13 @@ import { useLayoutEffect, useState } from "react";
 import { Icon } from "~/components/Icon";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";
-import { SENSITIVE_ACCESS_FIELDS } from "~/constants";
-import { useConnection } from "~/hooks/connection";
-import { useStable } from "~/hooks/stable";
-import { iconWarning } from "~/icons";
+import { openConnection } from "~/connection/connection";
+import { useConnection } from "~/hooks/connection/connection";
+import { useStable } from "~/hooks/state/stable";
 import { openConnectionEditModal } from "~/modals/edit-connection";
-import { openConnection } from "~/screens/connectome/connection/connection";
-import { getConnection, getConnectionById } from "~/shared/util/connection";
+import { iconWarning } from "~/shared/assets/icons";
+import { SENSITIVE_ACCESS_FIELDS } from "~/shared/config/constants";
+import { getConnection, getConnectionById } from "~/shared/util/connection/connection";
 import { useInterfaceStore } from "~/shell/stores/interface";
 
 export function AccessSignupModal() {

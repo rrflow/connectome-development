@@ -1,7 +1,7 @@
 import { TagsInput } from "@mantine/core";
 import { Updater } from "use-immer";
-import { useConnectionLabels } from "~/hooks/connection";
-import { Connection } from "~/types";
+import { useConnectionLabels } from "~/hooks/connection/connection";
+import { Connection } from "~/shared/types";
 
 export interface ConnectionLabelsDetailsProps {
 	value: Connection;

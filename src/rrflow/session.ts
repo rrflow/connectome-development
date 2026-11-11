@@ -1194,3 +1194,6 @@ export class RrdSessionClient {
 		await this.call<void>("rrd_disconnect");
 	}
 }
+
+/** The query cache key for a profile's engine session. */
+export const sessionQueryKey = (profile: string) => ["rrd-session", profile] as const;

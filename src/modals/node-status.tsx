@@ -3,9 +3,9 @@ import { openModal } from "@mantine/modals";
 import dayjs from "dayjs";
 import { Icon } from "~/components/Icon";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
-import { iconCircleFilled } from "~/icons";
-import { executeQuerySingle } from "~/screens/connectome/connection/connection";
-import { showErrorNotification } from "~/shared/util/helpers";
+import { executeQuerySingle } from "~/connection/connection";
+import { iconCircleFilled } from "~/shared/assets/icons";
+import { showErrorNotification } from "~/shared/util/text/helpers";
 import type { Uuid } from "~/vendor/rrflow-client";
 
 interface Node {

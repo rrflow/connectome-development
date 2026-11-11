@@ -28,7 +28,7 @@ if (!literal) {
 }
 const endpoints = JSON.parse(literal[1]);
 const { operationExamples } = await import(
-	`file://${join(root, "src/screens/connectome/pages/RuntimeConnection/api/examples.ts").replaceAll("\\", "/")}`
+	`file://${join(root, "src/features/runtime/api-reference/examples.ts").replaceAll("\\", "/")}`
 );
 
 const target = { endpoint: "http://127.0.0.1:9477", instance: "local" };

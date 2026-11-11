@@ -1,6 +1,6 @@
 import { useLayoutEffect } from "react";
-import { useAbsoluteLocation, useSearchParams } from "~/hooks/routing";
-import { handleIntentRequest } from "~/shared/util/intents";
+import { useAbsoluteLocation, useSearchParams } from "~/hooks/app/routing";
+import { handleIntentRequest } from "~/shared/util/platform/intents";
 import { useConfigStore } from "~/shell/stores/config";
 
 export function useAppRouter() {

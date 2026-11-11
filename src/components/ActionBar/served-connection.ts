@@ -1,6 +1,6 @@
-import { createBaseConnection } from "~/shared/util/defaults";
+import type { ServedEstate } from "~/shared/types";
+import { createBaseConnection } from "~/shared/util/config/defaults";
 import { useConfigStore } from "~/shell/stores/config";
-import type { ServedEstate } from "~/types";
 
 /**
  * The runtime connection that reaches the served estate. One connection per

@@ -16,11 +16,11 @@ import dayjs from "dayjs";
 import { useMemo } from "react";
 import { Updater } from "use-immer";
 import { Icon } from "~/components/Icon";
-import { AUTH_MODES, SENSITIVE_ACCESS_FIELDS } from "~/constants";
-import { useStable } from "~/hooks/stable";
-import { iconClose, iconPlus, iconWarning } from "~/icons";
-import { fastParseJwt } from "~/shared/util/helpers";
-import { AuthMode, Connection } from "~/types";
+import { useStable } from "~/hooks/state/stable";
+import { iconClose, iconPlus, iconWarning } from "~/shared/assets/icons";
+import { AUTH_MODES, SENSITIVE_ACCESS_FIELDS } from "~/shared/config/constants";
+import { AuthMode, Connection } from "~/shared/types";
+import { fastParseJwt } from "~/shared/util/text/helpers";
 import { ActionButton } from "../ActionButton";
 import { PrimaryTitle } from "../PrimaryTitle";
 

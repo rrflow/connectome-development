@@ -1,7 +1,7 @@
 import { Box, NumberInput, ScrollArea, Select, Text, TextInput } from "@mantine/core";
-import { useSetting } from "~/hooks/config";
-import { useStable } from "~/hooks/stable";
-import type { InstallMode, Selectable } from "~/types";
+import { useSetting } from "~/hooks/app/config";
+import { useStable } from "~/hooks/state/stable";
+import type { InstallMode, Selectable } from "~/shared/types";
 import { SettingsSection } from "../utilities";
 
 const CAT = "serving";

@@ -10,10 +10,10 @@ import {
 } from "react";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";
-import { useSetting } from "~/hooks/config";
-import { useActiveKeys } from "~/hooks/keys";
-import { useStable } from "~/hooks/stable";
-import { isSimilar } from "~/shared/util/helpers";
+import { useSetting } from "~/hooks/app/config";
+import { useActiveKeys } from "~/hooks/state/keys";
+import { useStable } from "~/hooks/state/stable";
+import { isSimilar } from "~/shared/util/text/helpers";
 
 type DynamicNode<T> = ReactNode | ((value: T) => ReactNode);
 

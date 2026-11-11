@@ -4,7 +4,7 @@ import { objectify } from "radash";
 import type { Updater } from "use-immer";
 import { adapter } from "~/adapter";
 import { Icon } from "~/components/Icon";
-import type { TableInfo } from "~/types";
+import type { TableInfo } from "~/shared/types";
 import { escapeIdent } from "~/vendor/rrflow-client";
 
 export interface ElementProps {

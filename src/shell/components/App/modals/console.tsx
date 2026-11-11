@@ -5,10 +5,10 @@ import { ActionButton } from "~/components/ActionButton";
 import { Icon } from "~/components/Icon";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";
-import { useBoolean } from "~/hooks/boolean";
-import { useIntent } from "~/hooks/routing";
-import { useIsLight } from "~/hooks/theme";
-import { iconClose, iconDelete } from "~/icons";
+import { useIntent } from "~/hooks/app/routing";
+import { useBoolean } from "~/hooks/state/boolean";
+import { useIsLight } from "~/hooks/ui/theme";
+import { iconClose, iconDelete } from "~/shared/assets/icons";
 import { useDatabaseStore } from "~/stores/database";
 
 function ConsoleOutputEntry({

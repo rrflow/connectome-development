@@ -6,7 +6,7 @@ import type {
 	Platform,
 	ServedEstate,
 	UrlTarget,
-} from "~/types";
+} from "~/shared/types";
 
 export interface FileFilter {
 	name: string;

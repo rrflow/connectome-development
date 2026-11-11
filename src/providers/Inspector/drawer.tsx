@@ -6,13 +6,19 @@ import { DrawerResizer } from "~/components/DrawerResizer";
 import { Icon } from "~/components/Icon";
 import { CodeInput } from "~/components/Inputs";
 import { Spacer } from "~/components/Spacer";
-import type { HistoryHandle } from "~/hooks/history";
-import { useValueValidator } from "~/hooks/rrflowql";
-import { useSaveable } from "~/hooks/save";
-import { useStable } from "~/hooks/stable";
-import { useIsLight } from "~/hooks/theme";
-import { iconArrowLeftFat, iconClose, iconDelete, iconRefresh, iconSearch } from "~/icons";
-import { executeQuery, getRRFlowQL } from "~/screens/connectome/connection/connection";
+import { executeQuery, getRRFlowQL } from "~/connection/connection";
+import { useValueValidator } from "~/hooks/connection/rrflowql";
+import type { HistoryHandle } from "~/hooks/state/history";
+import { useSaveable } from "~/hooks/state/save";
+import { useStable } from "~/hooks/state/stable";
+import { useIsLight } from "~/hooks/ui/theme";
+import {
+	iconArrowLeftFat,
+	iconClose,
+	iconDelete,
+	iconRefresh,
+	iconSearch,
+} from "~/shared/assets/icons";
 import { RecordId } from "~/vendor/rrflow-client";
 import { useConfirmation } from "../Confirmation";
 import classes from "./style.module.scss";

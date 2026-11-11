@@ -3,7 +3,12 @@ import { capitalize } from "radash";
 import { Fragment } from "react/jsx-runtime";
 import { adapter } from "~/adapter";
 import { Icon } from "~/components/Icon";
-import { iconCommand, iconKeyboardControl, iconKeyboardOption, iconKeyboardShift } from "~/icons";
+import {
+	iconCommand,
+	iconKeyboardControl,
+	iconKeyboardOption,
+	iconKeyboardShift,
+} from "~/shared/assets/icons";
 
 const MODIFIER_KEYS = ["shift", "alt", "meta", "mod", "ctrl"];
 

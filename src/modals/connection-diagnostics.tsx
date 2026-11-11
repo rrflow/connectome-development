@@ -22,10 +22,9 @@ import { Icon } from "~/components/Icon";
 import { Label } from "~/components/Label";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";
-import { JSON_FILTER } from "~/constants";
-import { useSetting } from "~/hooks/config";
-import { useStable } from "~/hooks/stable";
-import { useIsLight } from "~/hooks/theme";
+import { useSetting } from "~/hooks/app/config";
+import { useStable } from "~/hooks/state/stable";
+import { useIsLight } from "~/hooks/ui/theme";
 import {
 	iconArrowLeft,
 	iconAuth,
@@ -35,8 +34,9 @@ import {
 	iconServer,
 	iconTransfer,
 	iconWrench,
-} from "~/icons";
-import { showInfo } from "~/shared/util/helpers";
+} from "~/shared/assets/icons";
+import { JSON_FILTER } from "~/shared/config/constants";
+import { showInfo } from "~/shared/util/text/helpers";
 import { DiagnosticWithTime, useDatabaseStore } from "~/stores/database";
 
 interface DiagnosticEntry {

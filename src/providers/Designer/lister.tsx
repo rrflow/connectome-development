@@ -6,9 +6,9 @@ import { type Updater, useImmer } from "use-immer";
 import { Form } from "~/components/Form";
 import { Icon } from "~/components/Icon";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
-import { useBoolean } from "~/hooks/boolean";
-import { useStable } from "~/hooks/stable";
-import { iconCircleFilled, iconClose, iconPlus } from "~/icons";
+import { useBoolean } from "~/hooks/state/boolean";
+import { useStable } from "~/hooks/state/stable";
+import { iconCircleFilled, iconClose, iconPlus } from "~/shared/assets/icons";
 
 export interface ListerProps<T> {
 	name: string;

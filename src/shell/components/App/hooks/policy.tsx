@@ -2,7 +2,7 @@ import { Box, Button, Text } from "@mantine/core";
 import { hideNotification, showNotification } from "@mantine/notifications";
 import { useEffect } from "react";
 import { Link } from "~/components/Link";
-import { useOnboarding } from "~/hooks/onboarding";
+import { useOnboarding } from "~/hooks/ui/onboarding";
 
 export function usePolicyAlert() {
 	const [completed, complete] = useOnboarding("policy");

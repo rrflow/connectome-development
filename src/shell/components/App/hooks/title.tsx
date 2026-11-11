@@ -1,7 +1,7 @@
 import { useLayoutEffect } from "react";
 import { adapter } from "~/adapter";
-import { useSetting } from "~/hooks/config";
-import { useConnection, useView } from "~/hooks/connection";
+import { useSetting } from "~/hooks/app/config";
+import { useConnection, useView } from "~/hooks/connection/connection";
 import { useInterfaceStore } from "~/shell/stores/interface";
 
 const NAME =

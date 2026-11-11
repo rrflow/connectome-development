@@ -4,9 +4,9 @@ import { useMemo } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { Icon } from "~/components/Icon";
 import { Spacer } from "~/components/Spacer";
-import { iconReset, iconSearch } from "~/icons";
-import { featureFlags, schema, useFeatureFlags } from "~/shared/util/feature-flags";
-import { fuzzyMatch } from "~/shared/util/helpers";
+import { iconReset, iconSearch } from "~/shared/assets/icons";
+import { featureFlags, schema, useFeatureFlags } from "~/shared/util/config/feature-flags";
+import { fuzzyMatch } from "~/shared/util/text/helpers";
 
 export function FeatureFlagsTab() {
 	const [flags, setFlags] = useFeatureFlags();

@@ -2,8 +2,8 @@ import { Group, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import type { ComponentPropsWithoutRef, MouseEvent } from "react";
 import { Icon } from "~/components/Icon";
-import { useStable } from "~/hooks/stable";
-import { iconMarker } from "~/icons";
+import { useStable } from "~/hooks/state/stable";
+import { iconMarker } from "~/shared/assets/icons";
 import { GeographyDrawer } from "../GeographyDrawer";
 import type { GeographyInput } from "../GeographyMap";
 

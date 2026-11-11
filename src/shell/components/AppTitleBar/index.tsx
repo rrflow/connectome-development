@@ -4,8 +4,6 @@ import { useState } from "react";
 import { ActionButton } from "~/components/ActionButton";
 import { Icon } from "~/components/Icon";
 import { Spacer } from "~/components/Spacer";
-import { iconClose, iconMaximize, iconMinimize, iconRestore } from "~/icons";
-import { pictoBrain } from "~/pictograms";
 import {
 	Command,
 	useCommandCategories,
@@ -13,6 +11,8 @@ import {
 	useCommandKeybinds,
 } from "~/providers/Commands";
 import { displayBinding } from "~/providers/Commands/keybindings";
+import { iconClose, iconMaximize, iconMinimize, iconRestore } from "~/shared/assets/icons";
+import { pictoBrain } from "~/shared/assets/pictograms";
 import { getMenuItems } from "~/shell/components/App/hooks/menu";
 import { useInterfaceStore } from "~/shell/stores/interface";
 import classes from "./style.module.scss";

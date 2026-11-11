@@ -16,12 +16,12 @@ import { adapter } from "~/adapter";
 import { Entry } from "~/components/Entry";
 import { Icon } from "~/components/Icon";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
-import { useBoolean } from "~/hooks/boolean";
-import { useKeyNavigation } from "~/hooks/keys";
-import { useIntent } from "~/hooks/routing";
-import { useStable } from "~/hooks/stable";
-import { iconBook } from "~/icons";
-import { Y_SLIDE_TRANSITION } from "~/shared/util/helpers";
+import { useIntent } from "~/hooks/app/routing";
+import { useBoolean } from "~/hooks/state/boolean";
+import { useKeyNavigation } from "~/hooks/state/keys";
+import { useStable } from "~/hooks/state/stable";
+import { iconBook } from "~/shared/assets/icons";
+import { Y_SLIDE_TRANSITION } from "~/shared/util/text/helpers";
 import classes from "../style.module.scss";
 
 const ENDPOINT = "https://github.com/rrflow/connectome-development";

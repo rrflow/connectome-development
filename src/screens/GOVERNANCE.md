@@ -12,14 +12,14 @@ Governs the 2 screen directories and the 9 views + 7 pages within the main conne
 
 ```
 src/screens/
-├── mini-embed/         # Embeddable mini query editor
-└── connectome/         # Main application screen
-    ├── components/     # Screen-specific shared components
-    ├── connection/     # Connection management
-    ├── docs/           # Documentation viewer
-    ├── pages/          # Overview, connection, runtime and embed pages (7)
-    └── views/          # Feature views (9)
+├── mini-embed/         # Embeddable mini query editor; composes the query feature
+└── connectome/         # Composition root: routes between features
+    ├── index.tsx
+    ├── sidebar.tsx
+    └── toolbar.tsx
 ```
+
+On 2026-11-10 the views and pages below moved to `src/features/<feature>`, shared connection code moved to `src/connection`, and these screens' shared components moved to `src/components`. The inventories keep their original names as a record of what each one is. `src/features/GOVERNANCE.md` owns the layout.
 
 ## View Inventory (9) → Slice D disposition
 
@@ -46,7 +46,7 @@ Deleted 2026-10-18: `dashboard` and `monitor` (the vendor's hosted-instance dash
 | NewEmbed | Mini embed generator |
 | Overview | Hero, runtime profiles, resources |
 | Placeholder | Empty-state placeholder |
-| RuntimeConnection | RRD handshake and session |
+| RuntimeConnection | RRD handshake and session; moved to `src/features/runtime` |
 | RuntimeDiagnostics | RRD diagnostics lenses |
 
 Deleted 2026-10-18: CreateOrganization, OrganizationDeploy, OrganizationManage, Organizations, Referral, Signin, Support, SupportPlans — the vendor's hosted-cloud account, billing, support and referral pages, none of which was routed.
