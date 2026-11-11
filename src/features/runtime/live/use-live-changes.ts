@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import type { RrdLiveEventView, RrdSessionClient } from "~/rrflow/session";
+import type { RrdDatabaseView, RrdLiveEventView, RrdSessionClient } from "~/rrflow/session";
 import { databaseQueryKey } from "../types";
 
 /**
@@ -77,8 +77,18 @@ export function useLiveChanges(client: RrdSessionClient, sessionKey: string): Li
 			if (!active) return;
 			if (event.event === "subscribed") {
 				setStatus({ state: "live" });
-				// These attachments cannot show that nothing changed in the gap.
-				if (event.reason === "reconnected" || event.reason === "replaced") void refresh();
+				// The stream reports only what changes from here on. A graph read
+				// before it attached, such as one cached while this tab was closed,
+				// misses whatever the engine committed since; so do these attachments.
+				const known = queryClient.getQueryData<RrdDatabaseView>(
+					databaseQueryKey(sessionKey),
+				)?.graph.known_at_cursor;
+				if (
+					event.reason === "reconnected" ||
+					event.reason === "replaced" ||
+					(known !== undefined && event.head_cursor > known)
+				)
+					void refresh();
 			} else if (event.event === "changes") {
 				pending.push(...event.page.changes.map((change) => change.mutation.target));
 				throughCursor = event.through_cursor;
