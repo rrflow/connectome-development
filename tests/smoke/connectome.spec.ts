@@ -96,6 +96,7 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 			let liveNodeCommitted = false;
 			let liveGraphClustered = false;
 			let liveHead = 7;
+			let unreachable = false;
 			let boundedGraph = false;
 			let liveChannel: { onmessage: (event: unknown) => void } | null = null;
 			let callbackId = 1;
@@ -139,6 +140,9 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 					calls: () => calls,
 					showFlight: () => {
 						showFlight = true;
+					},
+					makeUnreachable: () => {
+						unreachable = true;
 					},
 					sendBoundedGraph: () => {
 						boundedGraph = true;
@@ -274,6 +278,10 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 							};
 							return profileSessions[profile];
 						}
+						if (command === "rrd_public_request" && unreachable)
+							throw new Error(
+								"RRD transport failed: RRD HTTP request failed: error sending request for url (http://localhost:9477/v1/health/live)",
+							);
 						if (command === "rrd_public_request") {
 							const path = args.path ?? "";
 							const instanceId = args.endpoint?.endsWith(":9478")
@@ -738,6 +746,22 @@ test("a graph cached before the engine moved on is refreshed when the tab opens"
 	);
 	await page.getByRole("tab", { name: "Graph", exact: true }).click();
 	await expect(page.getByText(/Drawing 2 of 2 records/)).toBeVisible();
+});
+
+test("an engine that does not answer is explained, not called a rejection", async ({ page }) => {
+	const { profileA, profileB } = await createDiagnosticProfiles(page);
+	await openDiagnosticWorkbench(page, profileA, profileB);
+	await page.evaluate(() =>
+		(
+			window as unknown as { __diagnosticCaptureTest: { makeUnreachable: () => void } }
+		).__diagnosticCaptureTest.makeUnreachable(),
+	);
+	await page.getByRole("button", { name: "Reconnect", exact: true }).click();
+	await expect(
+		page.getByText("Connectome cannot reach this engine", { exact: true }),
+	).toBeVisible();
+	await expect(page.getByText("Unreachable", { exact: true })).toBeVisible();
+	await expect(page.getByText("RRD handshake failed", { exact: true })).toHaveCount(0);
 });
 
 test("a large engram says how much of it the engine sent", async ({ page }) => {

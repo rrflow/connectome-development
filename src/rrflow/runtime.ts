@@ -48,6 +48,13 @@ const DISCOVERY_INSTANCE = "discovery";
  * a native command's `{ message }` rejection, or the plain string a public
  * request rejects with. The UI shows this instead of a generic fallback.
  */
+/** A request that never reached an engine, as opposed to one an engine refused. */
+export function isUnreachable(error: unknown): boolean {
+	return /RRD transport failed|error sending request|connection refused/i.test(
+		describeRrdError(error),
+	);
+}
+
 export function describeRrdError(error: unknown): string {
 	if (error instanceof Error) {
 		return error.message;

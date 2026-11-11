@@ -7,6 +7,7 @@ import {
 	Paper,
 	Select,
 	SimpleGrid,
+	Stack,
 	Text,
 	UnstyledButton,
 } from "@mantine/core";
@@ -16,7 +17,8 @@ import { type ReactNode, useMemo, useState } from "react";
 import { Redirect, useLocation } from "wouter";
 import { Icon } from "~/components/Icon";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
-import { describeRrdError, RrdRuntimeClient } from "~/rrflow/runtime";
+import { connectionProject } from "~/rrflow/instances";
+import { describeRrdError, isUnreachable, RrdRuntimeClient } from "~/rrflow/runtime";
 import { RrdSessionClient, sessionQueryKey } from "~/rrflow/session";
 import {
 	iconBook,
@@ -141,6 +143,8 @@ export function RuntimeConnectionPage({
 	const [glossaryOpen, setGlossaryOpen] = useState(false);
 
 	const handshake = query.data;
+	const unreachable = query.isError && isUnreachable(query.error);
+	const localProject = connection ? connectionProject(connection) : undefined;
 	const current = nativeSession.data ?? null;
 	const ownsSession =
 		current !== null &&
@@ -273,13 +277,24 @@ export function RuntimeConnectionPage({
 						>
 							<Badge
 								variant="dot"
-								color={handshake ? "green" : query.isError ? "red" : "gray"}
+								color={
+									unreachable
+										? "yellow"
+										: handshake
+											? "green"
+											: query.isError
+												? "red"
+												: "gray"
+								}
 							>
-								{handshake
-									? "RRD connected"
-									: query.isError
-										? "Rejected"
-										: "Negotiating"}
+								{/* A cached handshake must not claim a connection the engine no longer answers. */}
+								{unreachable
+									? "Unreachable"
+									: handshake
+										? "RRD connected"
+										: query.isError
+											? "Rejected"
+											: "Negotiating"}
 							</Badge>
 							<Button
 								variant="subtle"
@@ -310,7 +325,46 @@ export function RuntimeConnectionPage({
 					</>
 				}
 			>
-				{query.isError && (
+				{unreachable && (
+					<Alert
+						color="yellow"
+						title={
+							localProject
+								? "This project's engine is not running"
+								: "Connectome cannot reach this engine"
+						}
+						icon={<Icon path={iconErrorCircle} />}
+					>
+						<Stack gap="xs">
+							<Text size="sm">
+								{localProject
+									? "Nothing answered at the address it last served. It usually stops when Connectome or the computer closes. Start it to open this project again."
+									: "Nothing answered at this engine's address. Check that it is running and reachable, then reconnect."}
+							</Text>
+							{localProject && (
+								<Group>
+									<Button
+										size="xs"
+										onClick={() =>
+											dispatchIntent("toggle-serving", {
+												start: localProject,
+											})
+										}
+									>
+										Start the engine
+									</Button>
+								</Group>
+							)}
+							<Text
+								size="xs"
+								c="dimmed"
+							>
+								{describeRrdError(query.error)}
+							</Text>
+						</Stack>
+					</Alert>
+				)}
+				{query.isError && !unreachable && (
 					<Alert
 						color="red"
 						title="RRD handshake failed"
