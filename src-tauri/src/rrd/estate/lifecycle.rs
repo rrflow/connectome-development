@@ -251,20 +251,32 @@ impl EstateRegistry {
         }
     }
 
-    /// Whether one more project can be tracked. A failed project holds no
-    /// engine, so the oldest one gives up its slot: otherwise saved projects
-    /// whose engines are gone lock a new project out with nothing running.
+    /// Whether one more project can be tracked. Neither a failed project nor
+    /// a background check of a saved project's recorded endpoint holds an
+    /// engine, so the oldest such entry gives up its slot, failures first.
+    /// Otherwise saved projects whose engines are gone lock a new project out
+    /// with nothing running. A check whose entry is gone is already ignored.
     fn make_room(&mut self) -> bool {
         if self.projects.len() < MAX_TRACKED {
             return true;
         }
-        let oldest_failed = self
+        let rank = |entry: &Entry| match entry {
+            Entry::Failed { .. } => Some(0),
+            Entry::Starting {
+                origin: Origin::Elsewhere,
+                ..
+            } => Some(1),
+            _ => None,
+        };
+        let oldest = self
             .projects
             .iter()
-            .filter(|(_, tracked)| matches!(tracked.entry, Entry::Failed { .. }))
-            .min_by_key(|(_, tracked)| tracked.revision)
-            .map(|(project, _)| project.clone());
-        oldest_failed.is_some_and(|project| self.projects.remove(&project).is_some())
+            .filter_map(|(project, tracked)| {
+                rank(&tracked.entry).map(|rank| ((rank, tracked.revision), project.clone()))
+            })
+            .min()
+            .map(|(_, project)| project);
+        oldest.is_some_and(|project| self.projects.remove(&project).is_some())
     }
 
     /// Local engine slots held by projects other than `except`.
@@ -1030,6 +1042,17 @@ mod registry_tests {
         assert!(registry.make_room());
         assert_eq!(registry.projects.len(), MAX_TRACKED - 1);
         assert!(!registry.projects.contains_key(Path::new("project-0")));
+    }
+
+    #[test]
+    fn a_background_endpoint_check_gives_way_to_a_start() {
+        let mut registry = tracked(|| Entry::Starting {
+            origin: Origin::Elsewhere,
+            stage: Some("attach"),
+            detail: String::new(),
+        });
+        assert!(registry.make_room());
+        assert_eq!(registry.projects.len(), MAX_TRACKED - 1);
     }
 
     #[test]
