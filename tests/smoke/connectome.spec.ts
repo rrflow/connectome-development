@@ -95,6 +95,7 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 			let emptyGraph = false;
 			let liveNodeCommitted = false;
 			let liveGraphClustered = false;
+			let liveHead = 7;
 			let liveChannel: { onmessage: (event: unknown) => void } | null = null;
 			let callbackId = 1;
 			let failStorage = false;
@@ -137,6 +138,10 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 					calls: () => calls,
 					showFlight: () => {
 						showFlight = true;
+					},
+					commitWhileClosed: () => {
+						liveNodeCommitted = true;
+						liveHead = 8;
 					},
 					commitLiveChange: (clustered = false) => {
 						liveNodeCommitted = true;
@@ -403,8 +408,8 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 								event: "subscribed",
 								reason: "opened",
 								generation: 1,
-								acknowledged_cursor: 7,
-								head_cursor: 7,
+								acknowledged_cursor: liveHead,
+								head_cursor: liveHead,
 							});
 							return { handle: "live-1", stream: "changes" };
 						}
@@ -683,6 +688,24 @@ test("a committed change reaches the graph without a reload", async ({ page }) =
 	await expect(
 		page.getByRole("button", { name: "document:live-node", exact: true }),
 	).toBeVisible();
+});
+
+test("a graph cached before the engine moved on is refreshed when the tab opens", async ({
+	page,
+}) => {
+	const { profileA, profileB } = await createDiagnosticProfiles(page);
+	await openDiagnosticWorkbench(page, profileA, profileB);
+	await page.getByRole("button", { name: "Knowledge", exact: true }).click();
+	await page.getByRole("tab", { name: "Graph", exact: true }).click();
+	await expect(page.getByText(/Drawing 1 of 1 records/)).toBeVisible();
+	await page.getByRole("tab", { name: "Schema", exact: true }).click();
+	await page.evaluate(() =>
+		(
+			window as unknown as { __diagnosticCaptureTest: { commitWhileClosed: () => void } }
+		).__diagnosticCaptureTest.commitWhileClosed(),
+	);
+	await page.getByRole("tab", { name: "Graph", exact: true }).click();
+	await expect(page.getByText(/Drawing 2 of 2 records/)).toBeVisible();
 });
 
 test("the graph opens a cluster and returns to the overview", async ({ page }) => {
