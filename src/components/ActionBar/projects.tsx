@@ -148,7 +148,11 @@ export function DatabaseServing() {
 				instance.state === "ready" ||
 				instance.state === "stopping"),
 	).length;
-	useIntent("toggle-serving", () => setOpened(true));
+	useIntent("toggle-serving", (payload) => {
+		setOpened(true);
+		// A page whose local engine stopped asks for that project to start.
+		if (payload.start) startKnown(payload.start);
+	});
 	const refresh = () => queryClient.invalidateQueries({ queryKey: ["project-instances"] });
 	const run = async (action: () => Promise<void>) => {
 		setPending(true);
