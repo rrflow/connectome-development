@@ -566,6 +566,15 @@ async fn run(
                 });
             }
             Exit::Lost(error) => {
+                // The engine rotates the bearer before this client publishes
+                // the new one, so the old socket can close first. The rotation
+                // holds the lease's write lock; once it is readable, a changed
+                // generation names the real cause.
+                drop(client.lease.read().await);
+                if bearer.has_changed().unwrap_or(false) {
+                    requested = LiveAttachment::Renewed;
+                    continue;
+                }
                 failures += 1;
                 if failures >= RECONNECT_ATTEMPTS {
                     break Some(LiveEventView::Ended {
