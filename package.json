@@ -21,7 +21,7 @@
 		"preview": "vite preview",
 		"test:smoke": "playwright test",
 		"check:types": "tsc --noEmit",
-		"check": "tsc --noEmit && biome check . && node scripts/check-retired-identities.mjs && node scripts/check-rrflow-isolation.mjs && node scripts/check-architecture.mjs && node --experimental-strip-types scripts/check-api-examples.mjs && node --experimental-strip-types scripts/check-value-model.mjs && node --experimental-strip-types scripts/check-rrflowql.mjs && node --experimental-strip-types scripts/check-worker-disclosure.mjs && node --experimental-strip-types scripts/check-inventory-neighborhood.mjs && node --experimental-strip-types scripts/check-live-layout.mjs && node scripts/check-guides.mjs && node scripts/check-dependency-authority.mjs && node scripts/version.mjs --check",
+		"check": "tsc --noEmit && biome check . && node scripts/check-retired-identities.mjs && node scripts/check-rrflow-isolation.mjs && node scripts/check-architecture.mjs && node --experimental-strip-types scripts/check-api-examples.mjs && node --experimental-strip-types scripts/check-value-model.mjs && node --experimental-strip-types scripts/check-rrflowql.mjs && node --experimental-strip-types scripts/check-worker-disclosure.mjs && node --experimental-strip-types scripts/check-inventory-neighborhood.mjs && node --experimental-strip-types scripts/check-live-layout.mjs && node --experimental-strip-types scripts/check-graph-drill.mjs && node scripts/check-guides.mjs && node scripts/check-dependency-authority.mjs && node scripts/version.mjs --check",
 		"check:guides": "node scripts/check-guides.mjs",
 		"check:identity": "node scripts/check-retired-identities.mjs",
 		"check:isolation": "node scripts/check-rrflow-isolation.mjs",

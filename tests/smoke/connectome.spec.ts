@@ -94,6 +94,7 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 			let showFlight = false;
 			let emptyGraph = false;
 			let liveNodeCommitted = false;
+			let liveGraphClustered = false;
 			let liveChannel: { onmessage: (event: unknown) => void } | null = null;
 			let callbackId = 1;
 			let failStorage = false;
@@ -137,8 +138,9 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 					showFlight: () => {
 						showFlight = true;
 					},
-					commitLiveChange: () => {
+					commitLiveChange: (clustered = false) => {
 						liveNodeCommitted = true;
+						liveGraphClustered = clustered;
 						liveChannel?.onmessage({
 							event: "changes",
 							from_cursor: 7,
@@ -407,6 +409,40 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 							return { handle: "live-1", stream: "changes" };
 						}
 						if (command === "rrd_live_close") return null;
+						if (command === "rrd_database" && liveNodeCommitted && liveGraphClustered)
+							return {
+								observed_at_unix_ms: 3,
+								runtime_cursor: 9,
+								schema_revision: null,
+								tables: [],
+								models: [],
+								sections: [],
+								graph: {
+									valid_at_unix_ms: 3,
+									known_at_cursor: 9,
+									nodes: [
+										["document:a1", 0],
+										["document:a2", 0],
+										["document:b1", 1],
+										["document:b2", 1],
+									].map(([id, cluster]) => ({
+										id,
+										kind: "document",
+										key: id,
+										label: id,
+										properties: {},
+										cluster,
+									})),
+									edges: [
+										["e1", "document:a1", "document:a2"],
+										["e2", "document:b1", "document:b2"],
+									].map(([id, from, to]) => ({ id, kind: "links_to", from, to })),
+									clusters: [
+										{ id: 0, size: 2, anchor: "document:a1", label: "Alpha" },
+										{ id: 1, size: 2, anchor: "document:b1", label: "Beta" },
+									],
+								},
+							};
 						if (command === "rrd_database" && liveNodeCommitted)
 							return {
 								observed_at_unix_ms: 2,
@@ -616,6 +652,29 @@ test("a committed change reaches the graph without a reload", async ({ page }) =
 	await expect(
 		page.getByRole("button", { name: "document:live-node", exact: true }),
 	).toBeVisible();
+});
+
+test("the graph opens a cluster and returns to the overview", async ({ page }) => {
+	const { profileA, profileB } = await createDiagnosticProfiles(page);
+	await openDiagnosticWorkbench(page, profileA, profileB);
+	await page.getByRole("button", { name: "Knowledge", exact: true }).click();
+	await page.getByRole("tab", { name: "Graph", exact: true }).click();
+	await page.evaluate(() =>
+		(
+			window as unknown as {
+				__diagnosticCaptureTest: { commitLiveChange: (clustered: boolean) => void };
+			}
+		).__diagnosticCaptureTest.commitLiveChange(true),
+	);
+	await expect(page.getByText(/Drawing 4 of 4 records/)).toBeVisible();
+	await page.getByText("By cluster", { exact: true }).click();
+	await expect(page.getByText(/Grouping 4 of 4 records/)).toBeVisible();
+	await expect(page.getByText("2 clusters", { exact: false })).toBeVisible();
+	await page.getByRole("textbox", { name: "Open a cluster", exact: true }).click();
+	await page.getByRole("option", { name: "Alpha (2)", exact: true }).click();
+	await expect(page.getByText("2 records", { exact: false })).toBeVisible();
+	await page.getByRole("button", { name: "All clusters", exact: true }).click();
+	await expect(page.getByText("2 clusters", { exact: false })).toBeVisible();
 });
 
 test("visualizations expose an empty graph and a failed storage refresh", async ({ page }) => {

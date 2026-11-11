@@ -45,6 +45,7 @@ import { databaseQuery } from "../api/queries";
 import { Term } from "../components/glossary";
 import { InspectorObject, InspectorPanel } from "../components/inspector";
 import { ReadNotice } from "../components/notice";
+import { clusterMembers, clusterOverview, groupAnchor, groupOfRecord } from "../graph/drill";
 import { type CanvasEdge, type CanvasNode, GraphCanvas } from "../graph/graph";
 import { colorOptions, degrees, grouping } from "../graph/groups";
 import { type GraphDirection, type GraphScope, kinds, selectSubgraph } from "../graph/subgraph";
@@ -261,6 +262,7 @@ export function RecordsTab({
 	const database = useQuery(databaseQuery(client, sessionKey));
 	const live = useLiveChanges(client, sessionKey);
 	const [scope, setScope] = useState<GraphScope>("engram");
+	const [drillAnchor, setDrillAnchor] = useState<string | null>(null);
 	const [depth, setDepth] = useState(1);
 	const [direction, setDirection] = useState<GraphDirection>("both");
 	const [recordKinds, setRecordKinds] = useState<string[]>([]);
@@ -309,19 +311,58 @@ export function RecordsTab({
 				: null,
 		[graph, scope, focus, depth, direction, recordKinds, relationKinds],
 	);
-	const canvasNodes = useMemo<CanvasNode[]>(
-		() => drawn?.nodes.map((record) => ({ id: record.id, label: record.label })) ?? [],
-		[drawn],
+	const overview = useMemo(
+		() => (scope === "clusters" && drawn ? clusterOverview(drawn) : null),
+		[scope, drawn],
 	);
-	const canvasEdges = useMemo<CanvasEdge[]>(
+	const drill = useMemo(() => {
+		if (!overview || !drawn) return null;
+		return drillAnchor === null ? overview : clusterMembers(drawn, drillAnchor);
+	}, [overview, drawn, drillAnchor]);
+	const inOverview = drill !== null && drillAnchor === null;
+	// A live update can dissolve the cluster being read.
+	useEffect(() => {
+		if (drillAnchor !== null && drill?.nodes.length === 0) setDrillAnchor(null);
+	}, [drillAnchor, drill]);
+	const canvasNodes = useMemo<CanvasNode[]>(
 		() =>
+			(drill ?? drawn)?.nodes.map((record) => ({ id: record.id, label: record.label })) ?? [],
+		[drill, drawn],
+	);
+	const canvasEdges = useMemo<CanvasEdge[]>(() => {
+		if (drill) return drill.edges;
+		return (
 			drawn?.edges.map((relation) => ({
 				id: relation.id,
 				from: relation.from,
 				to: relation.to,
-			})) ?? [],
-		[drawn],
-	);
+			})) ?? []
+		);
+	}, [drill, drawn]);
+	const overviewGroupOf = useMemo(() => {
+		const map = new Map<string, string>();
+		if (!inOverview || !drawn || !groups) return map;
+		for (const record of drawn.nodes) {
+			const group = groups.groupOf.get(record.id);
+			const id = groupOfRecord(drawn, record);
+			if (group && !map.has(id)) map.set(id, group);
+		}
+		return map;
+	}, [inOverview, drawn, groups]);
+	const overviewChanged = useMemo(() => {
+		if (!inOverview || !drawn) return live.changed;
+		const touched = new Set<string>();
+		for (const target of live.changed) {
+			const record = byId.get(target);
+			if (record) touched.add(groupOfRecord(drawn, record));
+		}
+		return touched;
+	}, [inOverview, drawn, live.changed, byId]);
+	const onCanvasSelect = useStable((id: string | null) => {
+		const anchor = id ? groupAnchor(id) : null;
+		if (anchor === null) onSelect(id);
+		else setDrillAnchor(anchor);
+	});
 	const linked = useMemo(() => {
 		const outgoing: LinkedRecord[] = [];
 		const incoming: LinkedRecord[] = [];
@@ -450,10 +491,16 @@ export function RecordsTab({
 						<Label mb={0}>Show</Label>
 						<SegmentedControl
 							value={scope}
-							onChange={(value) => setScope(value as GraphScope)}
+							onChange={(value) => {
+								setScope(value as GraphScope);
+								setDrillAnchor(null);
+							}}
 							data={[
 								{ value: "engram", label: "Whole engram" },
 								{ value: "neighbourhood", label: "Around the selection" },
+								...(graph.clusters.length > 1
+									? [{ value: "clusters", label: "By cluster" }]
+									: []),
 							]}
 						/>
 					</Stack>
@@ -538,7 +585,7 @@ export function RecordsTab({
 						fz="xs"
 						c="slate"
 					>
-						Drawing {formatCount(drawn?.nodes.length)} of{" "}
+						{drill ? "Grouping" : "Drawing"} {formatCount(drawn?.nodes.length)} of{" "}
 						{formatCount(graph.nodes.length)} records and{" "}
 						{formatCount(drawn?.edges.length)} of {formatCount(graph.edges.length)}{" "}
 						relations
@@ -551,6 +598,45 @@ export function RecordsTab({
 						onSelect={onSelect}
 					/>
 				</Group>
+
+				{drill && overview && (
+					<Group
+						gap="sm"
+						align="flex-end"
+					>
+						<Select
+							w={280}
+							label="Open a cluster"
+							placeholder="All clusters"
+							searchable
+							clearable
+							data={overview.nodes.map((group) => ({
+								value: groupAnchor(group.id) ?? "",
+								label: group.label,
+							}))}
+							value={drillAnchor}
+							onChange={setDrillAnchor}
+						/>
+						{drillAnchor !== null && (
+							<Button
+								variant="light"
+								onClick={() => setDrillAnchor(null)}
+							>
+								All clusters
+							</Button>
+						)}
+						<Text
+							fz="xs"
+							c="slate"
+						>
+							{formatCount(drill.nodes.length)} {inOverview ? "clusters" : "records"}
+							{drill.hidden > 0 &&
+								(inOverview
+									? `, with ${formatCount(drill.hidden)} records in smaller clusters not drawn`
+									: `, most linked first, with ${formatCount(drill.hidden)} more not drawn`)}
+						</Text>
+					</Group>
+				)}
 
 				<Paper
 					data-guide="graph-canvas"
@@ -586,13 +672,14 @@ export function RecordsTab({
 							nodes={canvasNodes}
 							edges={canvasEdges}
 							directed
-							groupOf={groups.groupOf}
+							groupOf={inOverview ? overviewGroupOf : groups.groupOf}
 							groups={groups.groups}
 							legendTitle={`Color: ${colorOption?.label ?? "Kind"}`}
-							selected={selected}
-							changed={live.changed}
+							selected={inOverview ? null : selected}
+							changed={overviewChanged}
 							layoutKey={[
 								scope,
+								drillAnchor,
 								focus,
 								depth,
 								direction,
@@ -600,9 +687,26 @@ export function RecordsTab({
 								relationKinds,
 							].join("|")}
 							dimUnselected={scope === "engram"}
-							onSelect={onSelect}
-							hint="Scroll to zoom · drag to move · click a dot for details"
+							onSelect={onCanvasSelect}
+							hint={
+								inOverview
+									? "Scroll to zoom · drag to move · click a cluster to open it"
+									: "Scroll to zoom · drag to move · click a dot for details"
+							}
 							renderHover={(id) => {
+								if (groupAnchor(id) !== null) {
+									return (
+										<Text
+											fw={700}
+											c="bright"
+										>
+											{
+												overview?.nodes.find((group) => group.id === id)
+													?.label
+											}
+										</Text>
+									);
+								}
 								const record = byId.get(id);
 								if (!record) return null;
 								const outgoing = graph.edges.filter(
