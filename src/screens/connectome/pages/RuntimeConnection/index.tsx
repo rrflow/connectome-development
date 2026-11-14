@@ -418,13 +418,13 @@ export function RuntimeConnectionPage({
 										{handshake.service.deployment.storage_profile} ·{" "}
 										{handshake.service.deployment.endpoint_presentation}
 									</Text>
-									{handshake.service.installed_estate && (
+									{handshake.service.installed_engram && (
 										<Text
 											fz="sm"
 											ff="monospace"
 										>
-											{handshake.service.installed_estate.project_id} ·{" "}
-											{handshake.service.installed_estate.estate_id} ·
+											{handshake.service.installed_engram.project_id} ·{" "}
+											{handshake.service.installed_engram.engram_id} ·
 											configuration r
 											{handshake.service.configuration.revision}
 										</Text>
