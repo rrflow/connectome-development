@@ -1,30 +1,12 @@
 import { Box, Drawer, Flex, Group, Stack } from "@mantine/core";
-import { type FC, memo, Suspense, useLayoutEffect } from "react";
-import { createHtmlPortalNode, HtmlPortalNode, InPortal, OutPortal } from "react-reverse-portal";
-import { Redirect, Route, Switch, useLocation } from "wouter";
+import { Outlet } from "@tanstack/react-router";
+import { memo, useLayoutEffect } from "react";
 import { adapter, isDesktop } from "~/adapter";
 import { TopGlow } from "~/components/TopGlow";
-import AuthenticationView from "~/features/authentication/AuthenticationView";
-import { ControlPlanePage } from "~/features/control-plane";
-import { CreateConnectionPage } from "~/features/create-connection";
-import DesignerView from "~/features/designer/DesignerView";
-import { RuntimeDiagnosticsPage } from "~/features/diagnostics";
-import DocumentationView from "~/features/documentation/DocumentationView";
-import { NewEmbedPage } from "~/features/embed-builder";
-import ExplorerView from "~/features/explorer/ExplorerView";
-import FunctionsView from "~/features/functions/FunctionsView";
-import GraphqlView from "~/features/graphql/GraphqlView";
-import MigrationView from "~/features/migration/MigrationView";
-import { OverviewPage } from "~/features/overview";
-import ParametersView from "~/features/parameters/ParametersView";
-import QueryView from "~/features/query/QueryView";
-import { RuntimeConnectionPage } from "~/features/runtime";
 import { useSetting } from "~/hooks/app/config";
-import { useAvailableViews } from "~/hooks/connection/connection";
+import { useAbsoluteLocation } from "~/hooks/app/routing";
 import { useStable } from "~/hooks/state/stable";
 import { useGlowOffset } from "~/hooks/ui/glow";
-import type { ViewPage } from "~/shared/types";
-import { getConnectionById } from "~/shared/util/connection/connection";
 import { AppTitleBar } from "~/shell/components/AppTitleBar";
 import { useInterfaceStore } from "~/shell/stores/interface";
 import { ConnectomeSidebar } from "./sidebar";
@@ -32,46 +14,12 @@ import classes from "./style.module.scss";
 import { ConnectomeToolbar } from "./toolbar";
 
 const DatabaseSidebarLazy = memo(ConnectomeSidebar);
-const OverviewPageLazy = memo(OverviewPage);
-const NewEmbedPageLazy = memo(NewEmbedPage);
-const CreateConnectionPageLazy = memo(CreateConnectionPage);
-
-const PORTAL_OPTIONS = {
-	attributes: {
-		style: "height: 100%; display: flex; flex-direction: column;",
-	},
-};
-
-const VIEW_PORTALS: Record<ViewPage, HtmlPortalNode> = {
-	query: createHtmlPortalNode(PORTAL_OPTIONS),
-	explorer: createHtmlPortalNode(PORTAL_OPTIONS),
-	graphql: createHtmlPortalNode(PORTAL_OPTIONS),
-	designer: createHtmlPortalNode(PORTAL_OPTIONS),
-	authentication: createHtmlPortalNode(PORTAL_OPTIONS),
-	functions: createHtmlPortalNode(PORTAL_OPTIONS),
-	parameters: createHtmlPortalNode(PORTAL_OPTIONS),
-	documentation: createHtmlPortalNode(PORTAL_OPTIONS),
-	migrations: createHtmlPortalNode(PORTAL_OPTIONS),
-};
-
-const VIEW_COMPONENTS: Record<ViewPage, FC> = {
-	query: memo(QueryView),
-	explorer: memo(ExplorerView),
-	graphql: memo(GraphqlView),
-	designer: memo(DesignerView),
-	authentication: memo(AuthenticationView),
-	functions: memo(FunctionsView),
-	parameters: memo(ParametersView),
-	documentation: memo(DocumentationView),
-	migrations: memo(MigrationView),
-};
 
 export function ConnectomeScreen() {
 	const { setOverlaySidebar } = useInterfaceStore.getState();
 
 	const overlaySidebar = useInterfaceStore((s) => s.overlaySidebar);
 	const title = useInterfaceStore((s) => s.title);
-	const views = useAvailableViews();
 
 	const [sidebarMode] = useSetting("appearance", "sidebarMode");
 	const isMacos = adapter.platform === "darwin" && isDesktop;
@@ -82,7 +30,7 @@ export function ConnectomeScreen() {
 	});
 
 	const glowOffset = useGlowOffset();
-	const [location] = useLocation();
+	const [location] = useAbsoluteLocation();
 	const sidebarOffset = 25 + (sidebarMode === "wide" ? 190 : 49);
 
 	useLayoutEffect(() => {
@@ -142,109 +90,7 @@ export function ConnectomeScreen() {
 							<ConnectomeToolbar />
 						</Group>
 
-						<Switch>
-							<Route path="/" />
-
-							<Route path="/overview">
-								<OverviewPageLazy />
-							</Route>
-
-							<Route path="/mini/new">
-								<NewEmbedPageLazy />
-							</Route>
-
-							<Route path="/connections/create">
-								<CreateConnectionPageLazy />
-							</Route>
-
-							<Route path="/control/:id">
-								{({ id }) => <ControlPlanePage id={id} />}
-							</Route>
-
-							<Route path="/diagnostics/:id">
-								{({ id }) => <RuntimeDiagnosticsPage id={id} />}
-							</Route>
-
-							<Route path="/runtime/:id/:section/:detail">
-								{({ id, section, detail }) => (
-									<RuntimeConnectionPage
-										key={id}
-										id={id}
-										section={section}
-										detail={detail}
-									/>
-								)}
-							</Route>
-							<Route path="/runtime/:id/:section">
-								{({ id, section }) => (
-									<RuntimeConnectionPage
-										key={id}
-										id={id}
-										section={section}
-									/>
-								)}
-							</Route>
-							<Route path="/runtime/:id">
-								{({ id }) => (
-									<RuntimeConnectionPage
-										key={id}
-										id={id}
-									/>
-								)}
-							</Route>
-
-							<Route path="/c/:connection/:view">
-								{({ connection, view }) => {
-									const profile = getConnectionById(connection);
-									if (profile?.target === "control-plane") {
-										return <Redirect to={`/control/${profile.id}`} />;
-									}
-									if (profile?.target === "diagnostics") {
-										return <Redirect to={`/diagnostics/${profile.id}`} />;
-									}
-									if (profile?.target === "runtime") {
-										return <Redirect to={`/runtime/${profile.id}`} />;
-									}
-
-									const _view = view as ViewPage;
-									const portal = views[_view] ? VIEW_PORTALS[_view] : undefined;
-
-									return (
-										<>
-											{Object.values(views).map((mode) => {
-												const Content = VIEW_COMPONENTS[mode.id];
-
-												return (
-													<InPortal
-														key={mode.id}
-														node={VIEW_PORTALS[mode.id]}
-													>
-														<Suspense fallback={null}>
-															<Content />
-														</Suspense>
-													</InPortal>
-												);
-											})}
-
-											{portal ? (
-												<Stack
-													flex={1}
-													gap={0}
-												>
-													<OutPortal node={portal} />
-												</Stack>
-											) : (
-												<Redirect to="/overview" />
-											)}
-										</>
-									);
-								}}
-							</Route>
-
-							<Route>
-								<Redirect to="/overview" />
-							</Route>
-						</Switch>
+						<Outlet />
 					</Stack>
 				</Box>
 			</Flex>

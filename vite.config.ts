@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig, type PluginOption } from "vite";
 import { compression } from "vite-plugin-compression2";
@@ -52,6 +53,13 @@ export default defineConfig(({ mode }) => {
 	// Define base plugins
 	const plugins: PluginOption[] = [
 		images(),
+		// The folder tree under src/routes is the route tree and the main menu.
+		tanstackRouter({
+			target: "react",
+			routesDirectory: "./src/routes",
+			generatedRouteTree: "./src/app/router/routeTree.gen.ts",
+			autoCodeSplitting: false,
+		}),
 		react(),
 		markdown({
 			mode: [Mode.HTML],

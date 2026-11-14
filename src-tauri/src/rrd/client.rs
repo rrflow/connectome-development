@@ -52,6 +52,7 @@ use uuid::Uuid;
 mod artifact;
 pub mod attunement;
 mod backup;
+mod engram;
 mod history;
 mod live;
 mod quantization;

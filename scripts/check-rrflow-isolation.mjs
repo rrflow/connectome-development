@@ -1,4 +1,4 @@
-import { readFile, stat } from "node:fs/promises";
+import { readdir, readFile, stat } from "node:fs/promises";
 import { dirname, join, relative, resolve } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
@@ -32,9 +32,19 @@ export const entries = [
 	"src/features/control-plane/index.tsx",
 	"src/features/create-connection/index.tsx",
 	"src/features/overview/index.tsx",
-	"src/features/runtime/index.tsx",
+	"src/features/runtime/project/layout.tsx",
 	"src/features/diagnostics/index.tsx",
 ];
+
+/**
+ * Every project view is a route file, so each one is an RRFlow entry too. They
+ * are read from the folder, never listed, so a new view is gated by existing.
+ */
+for (const file of await readdir(join(root, "src/routes/runtime"), { recursive: true })) {
+	if (file.endsWith(".tsx")) {
+		entries.push(`src/routes/runtime/${file.replaceAll("\\", "/")}`);
+	}
+}
 
 const forbiddenFiles = ["src/connection/connection.tsx"];
 const forbiddenDirectories = ["src/vendor/"];

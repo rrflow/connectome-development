@@ -31,6 +31,7 @@ import { dispatchIntent } from "~/shared/util/platform/intents";
 import { isMobile } from "~/shared/util/text/helpers";
 import { useConfigStore } from "~/shell/stores/config";
 import { useInterfaceStore } from "~/shell/stores/interface";
+import { ProjectMenu } from "./project-menu";
 import classes from "./style.module.scss";
 
 const GLOBAL_NAVIGATION: GlobalPage[][] = [["/overview"], ["/mini/new"]];
@@ -124,6 +125,8 @@ export function ConnectomeSidebar({ sidebarMode, className, ...other }: Connecto
 	}, [views, sidebarViews, connection]);
 
 	const navigation = connection ? viewNavigation : globalNavigation;
+	const [location] = useAbsoluteLocation();
+	const project = location.startsWith("/runtime/") ? location.split("/")[2] : undefined;
 
 	const openSettings = useStable(() => dispatchIntent("open-settings"));
 	const openCommands = useStable(() => dispatchIntent("open-command-palette"));
@@ -214,29 +217,49 @@ export function ConnectomeSidebar({ sidebarMode, className, ...other }: Connecto
 						</>
 					)}
 
-					{navigation.map((items, i) => (
-						<Fragment key={i}>
-							{items.map((info) => (
-								<Group
-									key={info.name}
-									gap="lg"
-									wrap="nowrap"
-								>
-									<NavigationIcon
-										name={info.name}
-										icon={info.icon}
-										match={info.match}
-										onClick={info.navigate}
-										onMouseEnter={hoverSidebarHandle.open}
-										withTooltip={sidebarMode === "compact"}
-									/>
-								</Group>
-							))}
-							{i < navigation.length - 1 && (
-								<Divider color={isLight ? "obsidian.2" : "obsidian.7"} />
-							)}
-						</Fragment>
-					))}
+					{project && (
+						<>
+							<NavigationIcon
+								name="All projects"
+								icon={iconArrowLeft}
+								onClick={() => setLocation("/overview")}
+								onMouseEnter={hoverSidebarHandle.open}
+								withTooltip={sidebarMode === "compact"}
+							/>
+							<Divider color={isLight ? "obsidian.2" : "obsidian.7"} />
+							<ProjectMenu
+								project={project}
+								collapsed={sidebarMode === "compact"}
+								onOpen={setLocation}
+								onMouseEnter={hoverSidebarHandle.open}
+							/>
+						</>
+					)}
+
+					{!project &&
+						navigation.map((items, i) => (
+							<Fragment key={i}>
+								{items.map((info) => (
+									<Group
+										key={info.name}
+										gap="lg"
+										wrap="nowrap"
+									>
+										<NavigationIcon
+											name={info.name}
+											icon={info.icon}
+											match={info.match}
+											onClick={info.navigate}
+											onMouseEnter={hoverSidebarHandle.open}
+											withTooltip={sidebarMode === "compact"}
+										/>
+									</Group>
+								))}
+								{i < navigation.length - 1 && (
+									<Divider color={isLight ? "obsidian.2" : "obsidian.7"} />
+								)}
+							</Fragment>
+						))}
 
 					<Spacer />
 

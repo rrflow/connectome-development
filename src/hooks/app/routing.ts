@@ -1,5 +1,5 @@
+import { useRouter, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo } from "react";
-import { matchRoute, PathPattern, useRouter, useSearch } from "wouter";
 import { adapter } from "~/adapter";
 import { MiniAdapter } from "~/adapter/mini";
 import { SANDBOX } from "~/shared/config/constants";
@@ -10,32 +10,63 @@ import { consumeIntent, type IntentPayload, type IntentType } from "~/shared/uti
 import { useEventSubscription } from "../state/event";
 import { useStable } from "../state/stable";
 
-/**
- * Returns the current location and a function to navigate
- */
-export function useAbsoluteLocation() {
-	const router = useRouter();
+export type Navigate = (to: string, options?: { replace?: boolean }) => void;
 
-	return router.hook(router);
+/**
+ * Matches a path against a pattern of literal segments, `:name` parameters
+ * and `*` wildcards. Returns the parameters, or `null` when it does not match.
+ */
+export function matchPath(pattern: string, path: string): Record<string, string> | null {
+	const expected = pattern.split("/").filter(Boolean);
+	const actual = path.split("?")[0].split("/").filter(Boolean);
+	if (expected.length !== actual.length) return null;
+	const params: Record<string, string> = {};
+	for (let index = 0; index < expected.length; index++) {
+		const segment = expected[index];
+		if (segment === "*") continue;
+		if (segment.startsWith(":")) {
+			params[segment.slice(1)] = decodeURIComponent(actual[index]);
+		} else if (segment !== actual[index]) {
+			return null;
+		}
+	}
+	return params;
 }
 
 /**
  * Returns the current location and a function to navigate
  */
-export function useAbsoluteRoute<RoutePath extends PathPattern = PathPattern>(pattern: RoutePath) {
-	return matchRoute(useRouter().parser, pattern, useAbsoluteLocation()[0]);
+export function useAbsoluteLocation(): [string, Navigate] {
+	const router = useRouter();
+	const location = useRouterState({ select: (state) => state.location.pathname });
+	const navigate = useStable<Navigate>((to, options) => {
+		if (options?.replace) {
+			router.history.replace(to);
+		} else {
+			router.history.push(to);
+		}
+	});
+
+	return [location, navigate];
+}
+
+/**
+ * Returns whether the pattern matches the current route, and its parameters
+ */
+export function useAbsoluteRoute(pattern: string): [boolean, Record<string, string>] {
+	const [location] = useAbsoluteLocation();
+	const params = matchPath(pattern, location);
+
+	return [params !== null, params ?? {}];
 }
 
 /**
  * Returns whether any of the provided match patterns match the current route.
  */
 export function useRouteMatcher(match: string[]) {
-	const parser = useRouter().parser;
 	const [location] = useAbsoluteLocation();
 
-	return match.some((m) => {
-		return matchRoute(parser, m, location)[0];
-	});
+	return match.some((pattern) => matchPath(pattern, location) !== null);
 }
 
 /**
@@ -113,7 +144,7 @@ export function useIntent(type: IntentType, handler: (payload: IntentPayload) =>
  * Subscribe to the URL search parameters
  */
 export function useSearchParams() {
-	const search = useSearch();
+	const search = useRouterState({ select: (state) => state.location.searchStr });
 
 	return useMemo(() => Object.fromEntries(new URLSearchParams(search)), [search]);
 }
