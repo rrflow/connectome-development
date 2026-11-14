@@ -85,6 +85,8 @@ export function ApiReference({ endpoint, instance }: { endpoint: string; instanc
 								path: endpoint.path,
 								authentication: endpoint.authentication,
 								mutation: false,
+								// Opening the socket changes nothing, so it may be repeated.
+								retry: "read",
 								action: { source: "fixed", action: endpoint.connect_action },
 								request_type: "WebSocketFrame",
 								response_type: endpoint.frame_type,
