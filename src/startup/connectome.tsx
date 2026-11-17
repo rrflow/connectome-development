@@ -15,12 +15,13 @@ import "~/shared/assets/styles/variants.scss";
 
 import "../adapter";
 
+import { RouterProvider } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { createRoot } from "react-dom/client";
+import { router } from "~/app/router/router";
 import { startConfigSync } from "~/shared/util/config/config";
 import { preloadImages } from "~/shared/util/ui/preloader";
-import { App } from "~/shell/components/App";
 import { adapter } from "../adapter";
 import { generateEditorIcons } from "../editor/core/icons";
 
@@ -43,7 +44,7 @@ import { generateEditorIcons } from "../editor/core/icons";
 		throw new Error("Root element not found");
 	}
 
-	createRoot(root).render(<App />);
+	createRoot(root).render(<RouterProvider router={router} />);
 
 	// Preload images
 	preloadImages();

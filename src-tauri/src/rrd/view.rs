@@ -7,9 +7,11 @@
 //! governed effects, of the estate's history, and of live results.
 
 pub mod effect;
+pub mod engram;
 pub mod history;
 pub mod live;
 pub mod quantization;
+pub mod query_plan;
 
 use super::cluster;
 use rrd_contract::{
@@ -225,6 +227,10 @@ pub struct QueryView {
     pub truncated: bool,
     pub keys_examined: u64,
     pub output_bytes: u64,
+    /// The plan the engine bound: every access path it considered.
+    pub plan: query_plan::QueryPlanView,
+    /// What running that plan read and returned.
+    pub execution: query_plan::QueryExecutionView,
 }
 
 #[derive(Debug, Serialize)]
@@ -745,6 +751,8 @@ pub fn query(result: &QueryResult) -> QueryView {
         truncated: result.execution.truncated,
         keys_examined: result.execution.read_evidence.keys_examined,
         output_bytes: result.execution.output_bytes,
+        plan: query_plan::plan(&result.plan),
+        execution: query_plan::execution(&result.execution),
     }
 }
 

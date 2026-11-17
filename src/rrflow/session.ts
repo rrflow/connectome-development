@@ -233,6 +233,81 @@ export interface RrdQueryView {
 	truncated: boolean;
 	keys_examined: number;
 	output_bytes: number;
+	/** The plan the engine bound: every access path it considered. */
+	plan: RrdQueryPlanView;
+	/** What running that plan read and returned. */
+	execution: RrdQueryExecutionView;
+}
+
+/** One access path the engine considered, with its own reason. */
+export interface RrdQueryPlanCandidateView {
+	name: string;
+	selected: boolean;
+	exact: boolean;
+	reason: string;
+}
+
+export interface RrdQueryPlanView {
+	plan_sha256: string;
+	/** Zero denotes an explicitly unsecured loopback development engine. */
+	security_policy_revision: number;
+	authorization_sha256: string;
+	exact: boolean;
+	deterministic_order: string;
+	authorization_boundary: string;
+	candidates: RrdQueryPlanCandidateView[];
+}
+
+/** Logical reads the engine attributes to one access path. */
+export interface RrdQueryReadPathView {
+	path: string;
+	point_reads: number;
+	range_scans: number;
+	keys_examined: number;
+	values_decoded: number;
+	decoded_bytes: number;
+}
+
+export interface RrdQueryReadEvidenceView {
+	contract_version: number;
+	key_budget: number;
+	point_reads: number;
+	range_scans: number;
+	keys_examined: number;
+	values_decoded: number;
+	decoded_bytes: number;
+	stamp_validation_method: string;
+	stamp_validation_change_reads: number;
+	stamp_validation_proof_nodes: number;
+	paths: RrdQueryReadPathView[];
+}
+
+/** Physical execution counters, present only when the engine analysed the run. */
+export interface RrdQueryAnalysisView {
+	engine: string;
+	provider_scans: number;
+	input_rows: number;
+	input_batches: number;
+	input_memory_bytes: number;
+	output_batches: number;
+	projection_pushdown: string;
+	filter_pushdown: string;
+	limit_pushdown: string;
+	physical_operators: number;
+	peak_memory_bytes: number;
+	spill_count: number;
+	spilled_bytes: number;
+	spilled_rows: number;
+	elapsed_micros: number;
+}
+
+export interface RrdQueryExecutionView {
+	selected_versions: number;
+	read_evidence: RrdQueryReadEvidenceView;
+	returned_rows: number;
+	output_bytes: number;
+	truncated: boolean;
+	analysis: RrdQueryAnalysisView | null;
 }
 
 export interface RrdNamedVectorView {
@@ -685,6 +760,131 @@ export interface RrdAuditView {
 	records: RrdAuditRecordView[];
 }
 
+/**
+ * The installed engram's authority record. The engine contract still names it
+ * "estate" (`EstateSnapshot`, read with `estate-read`); Connectome presents it
+ * as an engram. Every field is the engine's own.
+ */
+export interface RrdEngramActivityPolicyView {
+	idle_after_ms: number;
+	stale_after_ms: number;
+	neglected_after_ms: number;
+}
+
+export interface RrdEngramAuthorityResourceView {
+	id: string;
+	/** The resource kind, such as `project`, `instance` or `node`. */
+	kind: string;
+	parent_ids: string[];
+	name: string;
+	spec_sha256: string;
+	desired: { generation: number; spec_sha256: string; updated_at_unix_ms: number } | null;
+	observed: {
+		generation: number;
+		/** `pending`, `ready`, `degraded`, `failed` or `retired`. */
+		status: string;
+		observed_at_unix_ms: number;
+		evidence_sha256: string;
+		error: string | null;
+	} | null;
+	secret_reference_ids: string[];
+	created_at_unix_ms: number;
+	updated_at_unix_ms: number;
+}
+
+export interface RrdEngramAuthorityReceiptView {
+	id: string;
+	resource_id: string;
+	operation_id: string;
+	lease_epoch: number;
+	/** `desired_accepted`, `assigned`, `applied`, `observed`, `completed` or `failed`. */
+	boundary: string;
+	at_unix_ms: number;
+	evidence_sha256: string;
+}
+
+export interface RrdEngramAuthorityView {
+	catalogue_sha256: string;
+	resources: RrdEngramAuthorityResourceView[];
+	receipts: RrdEngramAuthorityReceiptView[];
+	idempotency_binding_count: number;
+}
+
+export interface RrdEngramInstanceView {
+	id: string;
+	desired: {
+		generation: number;
+		/** `running`, `stopped` or `absent`. */
+		phase: string;
+		deployment_ref: string;
+		version: string;
+		configuration_sha256: string;
+		updated_at_unix_ms: number;
+	};
+	observed: {
+		generation: number;
+		/**
+		 * `unknown`, `provisioning`, `starting`, `running`, `stopping`, `stopped`,
+		 * `deleting`, `absent` or `failed`.
+		 */
+		phase: string;
+		version: string | null;
+		process_id: number | null;
+		observed_at_unix_ms: number;
+		evidence_sha256: string | null;
+		error: string | null;
+	};
+	activity: {
+		last_meaningful_runtime_at_unix_ms: number | null;
+		last_heartbeat_at_unix_ms: number | null;
+		/** `unknown`, `active`, `idle`, `stale` or `neglected`. */
+		class: string;
+		evaluated_at_unix_ms: number;
+	};
+}
+
+export interface RrdEngramOperationView {
+	id: string;
+	instance_id: string;
+	/** `provision`, `start`, `stop`, `restart`, `upgrade` or `delete`. */
+	kind: string;
+	desired_generation: number;
+	request_sha256: string;
+	/** `pending`, `leased`, `prepared`, `applied`, `succeeded`, `failed` or `superseded`. */
+	state: string;
+	attempts: number;
+	created_at_unix_ms: number;
+	updated_at_unix_ms: number;
+	lease: {
+		owner: string;
+		epoch: number;
+		acquired_at_unix_ms: number;
+		expires_at_unix_ms: number;
+	} | null;
+	receipts: {
+		/** `prepared`, `applied`, `completed` or `failed`. */
+		boundary: string;
+		lease_epoch: number;
+		at_unix_ms: number;
+		evidence_sha256: string;
+	}[];
+	error: string | null;
+}
+
+export interface RrdEngramView {
+	format_version: number;
+	id: string;
+	revision: number;
+	created_at_unix_ms: number;
+	updated_at_unix_ms: number;
+	activity_policy: RrdEngramActivityPolicyView;
+	authority: RrdEngramAuthorityView;
+	instances: RrdEngramInstanceView[];
+	/** In the engine's own order. */
+	operations: RrdEngramOperationView[];
+	idempotency_binding_count: number;
+}
+
 export interface RrdArchiveView {
 	archive_sha256: string;
 	action_count: number;
@@ -1051,6 +1251,12 @@ export class RrdSessionClient {
 	async physicalStorage(): Promise<RrdPhysicalStorageView> {
 		this.requireNative();
 		return this.call<RrdPhysicalStorageView>("rrd_physical_storage");
+	}
+
+	/** The installed engram's record: its instances and their operations. */
+	async engram(): Promise<RrdEngramView> {
+		this.requireNative();
+		return this.call<RrdEngramView>("rrd_engram_read");
 	}
 
 	async query(query: string): Promise<RrdQueryView> {
