@@ -479,6 +479,43 @@ missing from main. What the verification does not prove: behaviour at run
 time (the tests were located, not executed here) and anything git history did
 not record.
 
+### Deleted branches and their tips (2026-11-17)
+
+Each tip is an ancestor of `main` and had no open pull request when its branch was deleted. Recover one with `git branch <name> <tip>`.
+
+| Branch | Tip |
+|---|---|
+| `agent/connectome-theme` | `52e96610d6eb3af1c16b82bf6053e5d0dcebaa4c` |
+| `agent/controller-proposals` | `01a83431b38c528c265121c0e1195a2181c6fb2b` |
+| `agent/f1a-native-effects` | `b9963eea2af3f83a5420c845da7fe2b3654bef6d` |
+| `agent/f1b-live-results` | `fd8f2daf7f6db01184093076f139b4a50e03e020` |
+| `agent/f2-value-model` | `179d32e5079c95ce812c30816f439d7345bacc5d` |
+| `agent/f3-rrflowql-language` | `2670b09b664496af6956611cd1438fdff5eafa57` |
+| `agent/f4a-instance-lifecycle` | `186df9d275bfcd0710ea309fef1025b5545bc168` |
+| `agent/guided-workspace-guides` | `40eb9aaf53535011d606c6babab1a6ec71fec3bf` |
+| `agent/guided-workspace-inspector` | `f6bb4326fb5b7de887c3b98e36992b6befce8a71` |
+| `agent/guided-workspace-plan` | `3f4ea361226f9a0bba483527ada6b52d4944fdf0` |
+| `agent/guided-workspace-preserve` | `3ac4f1100ae1b34852f31f18b13fc4cbe843192d` |
+| `agent/guided-workspace-window` | `63b7b9973a9f2cbeb2559850d01fc4a4270173a5` |
+| `agent/layman-lenses-wip` | `bb43fe7be8887ec2aa9653fa7e1b933a7993682e` |
+| `agent/one-menu-restore-august-20261114` | `bb4f539cd87c7748e8203767cd6293eb1a6a31be` |
+| `agent/project-workspace` | `0aca893cd5e52ca596483645de4972a61bb17ca0` |
+| `agent/public-rrflow-association` | `d06acf929c13178677a4c045c76db62b96282fdb` |
+| `agent/rrd-engine-lenses` | `eb2cd3ac56c375d70d77339056cff50ec36748d0` |
+| `agent/slice-d0-rrflow-isolation` | `40fcc2d235b9b7b55cb7d4f64a5a051172f598eb` |
+| `agent/slice-d1a-api-reference` | `2055ea28cc39ae73cead2975b471d37fa4c1c726` |
+| `agent/slice-v0-visual-baseline` | `cc7558ad81aa8185908857c3e95e347d48801b2e` |
+| `agent/sprint-009-reauthor-plan` | `076ca26e1d633ad71d29b4da9acbf71cf3cb20cc` |
+| `agent/t1-turboquant-vectors` | `00f655c8aec0143ddb23a5bea019d660e42c25cc` |
+| `agent/teal-orange-tokens` | `30c7803c219ec7c99e326455eed48ad5074d229a` |
+| `agent/turnkey-native-workbench` | `03b716b4dfe5623e6c82408c6f4df367c9795388` |
+| `ci/merge-queue-gate` | `a6cc3e5c2e58e80cfb8b2816685300d3ced966c9` |
+| `codex/attunement-controls` | `7ea1aa869e50653e899c6109f85034a4556eb2c5` |
+| `codex/controller-startup-mapping` | `722f9fac6697b6f9555b8a4a69011afcdadb2d76` |
+| `codex/task-budget-resume` | `d46b3f7417f8292c84b8401f8686f8f4177150e4` |
+| `codex/worker-handoff` | `0b31c2e6fd45648526ed6aec6bf6ce5372c671db` |
+| `docs/sprint-009-rrflow-conversion` | `cd769940886384883335a0c193ad239c328f1786` |
+
 ## Open items for the owner
 
 1. **One rrflowQL editor language.** `main` has two lineages: an engine-tokenizer language for the Query lab, and the inherited grammar for the inherited views. The branch adds a third (presentation scanner, formatter, statement splitting). Which is canonical?
