@@ -9,6 +9,7 @@ use std::{env, sync::OnceLock};
 use log::info;
 use paths::get_logs_directory;
 use rrd::estate::EstateState;
+use rrd::ssh_forward::SshForwardState;
 use rrd::RrdClientState;
 use tauri::{AppHandle, Manager, RunEvent};
 use tauri_plugin_log::{Target, TargetKind};
@@ -99,6 +100,7 @@ fn main() {
         .manage(open::OpenResourceState(Default::default()))
         .manage(EstateState::default())
         .manage(RrdClientState::default())
+        .manage(SshForwardState::default())
         .invoke_handler(tauri::generate_handler![
             config::load_config,
             config::save_config,
@@ -193,6 +195,11 @@ fn main() {
         }
         RunEvent::Exit => {
             rrd::estate::stop_on_exit(&app.state::<EstateState>());
+            if let Err(error) =
+                tauri::async_runtime::block_on(app.state::<SshForwardState>().stop_all())
+            {
+                log::error!("Stopping the owned SSH forward failed: {error}");
+            }
         }
         _ => (),
     })

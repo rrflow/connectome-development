@@ -262,6 +262,8 @@ export interface Connection {
 	runtimeCredential?: string;
 	/** The canonical project directory whose instance this connection opens. */
 	runtimeProject?: string;
+	/** An SSH config host that carries a loopback-only engine on another machine. */
+	runtimeSshHost?: string;
 	icon: number;
 	labels?: string[];
 	instance?: boolean;

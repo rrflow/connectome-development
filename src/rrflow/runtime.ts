@@ -74,7 +74,7 @@ export function describeRrdError(error: unknown): string {
  * and returns the decoded envelope; the SDK then validates it as it would any
  * response. Only reads exist on this path.
  */
-function nativePublicFetch(endpoint: string): typeof globalThis.fetch {
+function nativePublicFetch(endpoint: string, sshHost?: string): typeof globalThis.fetch {
 	return async (input, init) => {
 		const url =
 			input instanceof URL
@@ -88,6 +88,7 @@ function nativePublicFetch(endpoint: string): typeof globalThis.fetch {
 			value = await invoke<unknown>("rrd_public_request", {
 				endpoint,
 				path: `${url.pathname}${url.search}`,
+				sshHost,
 			});
 		} catch (error) {
 			throw new Error(describeRrdError(error));
@@ -106,18 +107,27 @@ function nativePublicFetch(endpoint: string): typeof globalThis.fetch {
  */
 const browserFetch: typeof globalThis.fetch = (input, init) => globalThis.fetch(input, init);
 
+/** The browser build cannot start an SSH process, so a profile that needs one is refused. */
+const refuseSsh: typeof globalThis.fetch = () =>
+	Promise.reject(new Error("Configured SSH forwarding requires the native Connectome app"));
+
 export class RrdRuntimeClient {
 	private readonly client: RrdClient;
 
 	constructor(
 		private readonly endpoint: string,
 		private readonly expectedInstance?: string,
+		sshHost?: string,
 	) {
 		this.client = new RrdClient({
 			baseUrl: endpoint,
 			instance: expectedInstance || DISCOVERY_INSTANCE,
 			maxAttempts: 1,
-			fetch: isTauri() ? nativePublicFetch(endpoint) : browserFetch,
+			fetch: isTauri()
+				? nativePublicFetch(endpoint, sshHost)
+				: sshHost
+					? refuseSsh
+					: browserFetch,
 		});
 	}
 
