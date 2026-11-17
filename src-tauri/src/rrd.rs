@@ -16,10 +16,11 @@ mod view;
 use client::{
     NativeRrdClient, RrdAuditExportRequest, RrdAuditRequest, RrdBackupCreateRequest,
     RrdBackupRestoreRequest, RrdBackupsRequest, RrdChangeCommitRequest, RrdChangePreviewRequest,
-    RrdChangesFollowRequest, RrdChangesRequest, RrdConnectRequest, RrdLaunchObserveFlightRequest,
-    RrdLiveOpenRequest, RrdQuantizationApplyRequest, RrdQuantizationProposeRequest,
-    RrdQuantizationsRequest, RrdQueryExportRequest, RrdQueryRequest, RrdReadPromptFlightRequest,
-    RrdVectorCompareRequest, RrdVectorMapRequest, RrdVectorPointsRequest, RrdVectorSearchRequest,
+    RrdChangesFollowRequest, RrdChangesRequest, RrdConnectRequest, RrdKnowledgeTreesRequest,
+    RrdLaunchObserveFlightRequest, RrdLiveOpenRequest, RrdQuantizationApplyRequest,
+    RrdQuantizationProposeRequest, RrdQuantizationsRequest, RrdQueryExportRequest, RrdQueryRequest,
+    RrdReadPromptFlightRequest, RrdReplaceKnowledgeTreesRequest, RrdVectorCompareRequest,
+    RrdVectorMapRequest, RrdVectorPointsRequest, RrdVectorSearchRequest,
 };
 use error::RrdError;
 use transport::public_rrd_url;
@@ -226,6 +227,30 @@ pub async fn rrd_query(
     state: State<'_, RrdClientState>,
 ) -> Result<QueryView, RrdError> {
     state.client(&profile).await?.query(request).await
+}
+
+/// The project's knowledge trees, bound to the accepted instance and project.
+#[tauri::command]
+pub async fn rrd_knowledge_trees(
+    profile: String,
+    request: RrdKnowledgeTreesRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<rrd_contract::KnowledgeTreeCatalogue, RrdError> {
+    state.client(&profile).await?.knowledge_trees(request).await
+}
+
+/// Replaces the trees only against the revision the operator last read.
+#[tauri::command]
+pub async fn rrd_replace_knowledge_trees(
+    profile: String,
+    request: RrdReplaceKnowledgeTreesRequest,
+    state: State<'_, RrdClientState>,
+) -> Result<rrd_contract::ReplaceKnowledgeTreesResult, RrdError> {
+    state
+        .client(&profile)
+        .await?
+        .replace_knowledge_trees(request)
+        .await
 }
 
 #[tauri::command]
