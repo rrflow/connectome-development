@@ -32,7 +32,7 @@ Slice A of sprint 008. Read in full: the commit, `vite.config.ts`, `env.d.ts`, A
 | Behaviour on the branch | Where it lives on `main` |
 |---|---|
 | Contract pin moved off the stale revision | `src-tauri/Cargo.toml` pins `b099b5bc`, well past the branch's `4705941` |
-| Surrealist `engineProtocol` manifest field removed | absent from `package.json` |
+| the inherited `engineProtocol` manifest field removed | absent from `package.json` |
 | `vite.config.ts` reads the one pin from `Cargo.lock` and fails the build if it stops being one revision | `pinnedEngine()` in `vite.config.ts` |
 | Engine version and revision defined for the UI | `RRFLOW_ENGINE_VERSION` and `RRFLOW_ENGINE_REVISION` in `env.d.ts` and `vite.config.ts` |
 | About shows the real RRD protocol and engine revision | About rows "RRD protocol" and "RRFlow engine" |
@@ -52,7 +52,7 @@ Slice B and a small error-display fix. Read in full: both commits, the 468-line 
 | `estate:stage` and `estate:output` events | `estate.rs`; listened to in `adapter/desktop.tsx` |
 | Only the child this process started is stopped; stopped on exit | `estate/lifecycle.rs`, `OwnedProcess` drop, `stop_on_exit` |
 | Served estate becomes the runtime connection, one per operator credential, updated with the announced address | `components/ActionBar/served-connection.ts` |
-| Legacy SurrealDB launch lane removed | `src-tauri/src/database/` is absent; no `start_database` |
+| Legacy inherited-database launch lane removed | `src-tauri/src/database/` is absent; no `start_database` |
 | Settings reduced to project, mode, executable, history | `ConnectomeServingSettings` in `shared/types.tsx`, and the Serving settings tab (same four fields) |
 | Process tests drive the product's `serve_estate` | `rrd/client/process.rs` |
 | Plain-words stage text | 23 of 25 explanation strings verbatim; the other two are the same errors worded slightly differently |
