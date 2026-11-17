@@ -17,9 +17,9 @@ import {
 } from "@mantine/core";
 import { useInputState } from "@mantine/hooks";
 import { MouseEvent, useState } from "react";
-import { Link } from "wouter";
 import { adapter } from "~/adapter";
 import { ActionButton } from "~/components/ActionButton";
+import { AppLink } from "~/components/AppLink";
 import { Icon } from "~/components/Icon";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";
@@ -135,14 +135,14 @@ export function OverviewPage() {
 					<LocalStart />
 					<Group>
 						<PrimaryTitle fz={22}>RRFlow instances</PrimaryTitle>
-						<Link href="/connections/create">
+						<AppLink href="/connections/create">
 							<Button
 								size="xs"
 								variant="gradient"
 							>
 								Connect instance
 							</Button>
-						</Link>
+						</AppLink>
 
 						<Spacer />
 

@@ -222,7 +222,8 @@ export function WorkbenchTemplateLibraryPanel({
 																variant="light"
 																onClick={() =>
 																	onOpenRoute(
-																		event.route ?? "workbench",
+																		event.route ??
+																			"reasoning/workbench",
 																	)
 																}
 															>

@@ -33,7 +33,18 @@ const signals = new Set(
 		(match) => match[1],
 	),
 );
-const routes = new Set([...text.matchAll(/route: "([a-z/]+)"/g)].map((match) => match[1]));
+// A guide step may point at any project view. The views are the route files.
+const projectRoutes = join(root, "src/routes/runtime/$id");
+const routes = new Set(
+	sources(projectRoutes).map((path) =>
+		path
+			.slice(projectRoutes.length + 1)
+			.replaceAll("\\", "/")
+			.replace(/\.tsx?$/, "")
+			.replace(/(^|\/)(index|route)$/, "")
+			.replace(/\/$/, ""),
+	),
+);
 
 const problems = [];
 const files = readdirSync(folder).filter((name) => /\.v\d+\.json$/.test(name));
