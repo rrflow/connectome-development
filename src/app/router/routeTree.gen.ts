@@ -32,6 +32,7 @@ import { Route as RuntimeIdEngineKvRouteImport } from './../../routes/runtime/$i
 import { Route as RuntimeIdEngineLsmRouteImport } from './../../routes/runtime/$id/engine/lsm'
 import { Route as RuntimeIdKnowledgeClaimsRouteImport } from './../../routes/runtime/$id/knowledge/claims'
 import { Route as RuntimeIdKnowledgeModelsRouteImport } from './../../routes/runtime/$id/knowledge/models'
+import { Route as RuntimeIdKnowledgePathsRouteImport } from './../../routes/runtime/$id/knowledge/paths'
 import { Route as RuntimeIdKnowledgeRecordsRouteImport } from './../../routes/runtime/$id/knowledge/records'
 import { Route as RuntimeIdKnowledgeTablesRouteImport } from './../../routes/runtime/$id/knowledge/tables'
 import { Route as RuntimeIdKnowledgeVectorsRouteImport } from './../../routes/runtime/$id/knowledge/vectors'
@@ -170,6 +171,11 @@ const RuntimeIdKnowledgeModelsRoute =
     path: '/models',
     getParentRoute: () => RuntimeIdKnowledgeRouteRoute,
   } as any)
+const RuntimeIdKnowledgePathsRoute = RuntimeIdKnowledgePathsRouteImport.update({
+  id: '/paths',
+  path: '/paths',
+  getParentRoute: () => RuntimeIdKnowledgeRouteRoute,
+} as any)
 const RuntimeIdKnowledgeRecordsRoute =
   RuntimeIdKnowledgeRecordsRouteImport.update({
     id: '/records',
@@ -305,6 +311,7 @@ export interface FileRoutesByFullPath {
   '/runtime/$id/engine/lsm': typeof RuntimeIdEngineLsmRoute
   '/runtime/$id/knowledge/claims': typeof RuntimeIdKnowledgeClaimsRoute
   '/runtime/$id/knowledge/models': typeof RuntimeIdKnowledgeModelsRoute
+  '/runtime/$id/knowledge/paths': typeof RuntimeIdKnowledgePathsRoute
   '/runtime/$id/knowledge/records': typeof RuntimeIdKnowledgeRecordsRoute
   '/runtime/$id/knowledge/tables': typeof RuntimeIdKnowledgeTablesRoute
   '/runtime/$id/knowledge/vectors': typeof RuntimeIdKnowledgeVectorsRoute
@@ -348,6 +355,7 @@ export interface FileRoutesByTo {
   '/runtime/$id/engine/lsm': typeof RuntimeIdEngineLsmRoute
   '/runtime/$id/knowledge/claims': typeof RuntimeIdKnowledgeClaimsRoute
   '/runtime/$id/knowledge/models': typeof RuntimeIdKnowledgeModelsRoute
+  '/runtime/$id/knowledge/paths': typeof RuntimeIdKnowledgePathsRoute
   '/runtime/$id/knowledge/records': typeof RuntimeIdKnowledgeRecordsRoute
   '/runtime/$id/knowledge/tables': typeof RuntimeIdKnowledgeTablesRoute
   '/runtime/$id/knowledge/vectors': typeof RuntimeIdKnowledgeVectorsRoute
@@ -394,6 +402,7 @@ export interface FileRoutesById {
   '/runtime/$id/engine/lsm': typeof RuntimeIdEngineLsmRoute
   '/runtime/$id/knowledge/claims': typeof RuntimeIdKnowledgeClaimsRoute
   '/runtime/$id/knowledge/models': typeof RuntimeIdKnowledgeModelsRoute
+  '/runtime/$id/knowledge/paths': typeof RuntimeIdKnowledgePathsRoute
   '/runtime/$id/knowledge/records': typeof RuntimeIdKnowledgeRecordsRoute
   '/runtime/$id/knowledge/tables': typeof RuntimeIdKnowledgeTablesRoute
   '/runtime/$id/knowledge/vectors': typeof RuntimeIdKnowledgeVectorsRoute
@@ -441,6 +450,7 @@ export interface FileRouteTypes {
     | '/runtime/$id/engine/lsm'
     | '/runtime/$id/knowledge/claims'
     | '/runtime/$id/knowledge/models'
+    | '/runtime/$id/knowledge/paths'
     | '/runtime/$id/knowledge/records'
     | '/runtime/$id/knowledge/tables'
     | '/runtime/$id/knowledge/vectors'
@@ -484,6 +494,7 @@ export interface FileRouteTypes {
     | '/runtime/$id/engine/lsm'
     | '/runtime/$id/knowledge/claims'
     | '/runtime/$id/knowledge/models'
+    | '/runtime/$id/knowledge/paths'
     | '/runtime/$id/knowledge/records'
     | '/runtime/$id/knowledge/tables'
     | '/runtime/$id/knowledge/vectors'
@@ -529,6 +540,7 @@ export interface FileRouteTypes {
     | '/runtime/$id/engine/lsm'
     | '/runtime/$id/knowledge/claims'
     | '/runtime/$id/knowledge/models'
+    | '/runtime/$id/knowledge/paths'
     | '/runtime/$id/knowledge/records'
     | '/runtime/$id/knowledge/tables'
     | '/runtime/$id/knowledge/vectors'
@@ -725,6 +737,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RuntimeIdKnowledgeModelsRouteImport
       parentRoute: typeof RuntimeIdKnowledgeRouteRoute
     }
+    '/runtime/$id/knowledge/paths': {
+      id: '/runtime/$id/knowledge/paths'
+      path: '/paths'
+      fullPath: '/runtime/$id/knowledge/paths'
+      preLoaderRoute: typeof RuntimeIdKnowledgePathsRouteImport
+      parentRoute: typeof RuntimeIdKnowledgeRouteRoute
+    }
     '/runtime/$id/knowledge/records': {
       id: '/runtime/$id/knowledge/records'
       path: '/records'
@@ -902,6 +921,7 @@ const RuntimeIdEngineRouteRouteWithChildren =
 interface RuntimeIdKnowledgeRouteRouteChildren {
   RuntimeIdKnowledgeClaimsRoute: typeof RuntimeIdKnowledgeClaimsRoute
   RuntimeIdKnowledgeModelsRoute: typeof RuntimeIdKnowledgeModelsRoute
+  RuntimeIdKnowledgePathsRoute: typeof RuntimeIdKnowledgePathsRoute
   RuntimeIdKnowledgeRecordsRoute: typeof RuntimeIdKnowledgeRecordsRoute
   RuntimeIdKnowledgeTablesRoute: typeof RuntimeIdKnowledgeTablesRoute
   RuntimeIdKnowledgeVectorsRoute: typeof RuntimeIdKnowledgeVectorsRoute
@@ -911,6 +931,7 @@ const RuntimeIdKnowledgeRouteRouteChildren: RuntimeIdKnowledgeRouteRouteChildren
   {
     RuntimeIdKnowledgeClaimsRoute: RuntimeIdKnowledgeClaimsRoute,
     RuntimeIdKnowledgeModelsRoute: RuntimeIdKnowledgeModelsRoute,
+    RuntimeIdKnowledgePathsRoute: RuntimeIdKnowledgePathsRoute,
     RuntimeIdKnowledgeRecordsRoute: RuntimeIdKnowledgeRecordsRoute,
     RuntimeIdKnowledgeTablesRoute: RuntimeIdKnowledgeTablesRoute,
     RuntimeIdKnowledgeVectorsRoute: RuntimeIdKnowledgeVectorsRoute,
