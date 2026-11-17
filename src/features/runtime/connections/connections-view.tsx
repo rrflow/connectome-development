@@ -52,9 +52,16 @@ export function ConnectionsView() {
 					connection.id,
 					endpoint,
 					connection.runtimeInstance,
+					connection.runtimeSshHost,
 				],
 				queryFn: () =>
-					new RrdRuntimeClient(endpoint, connection.runtimeInstance).handshake(),
+					new RrdRuntimeClient(
+						endpoint,
+						connection.runtimeInstance,
+						connection.runtimeSshHost,
+					).handshake(),
+				// Listing projects never starts an SSH process; opening one does.
+				enabled: !connection.runtimeSshHost,
 				retry: false,
 				refetchOnMount: "always" as const,
 			};
@@ -83,7 +90,9 @@ export function ConnectionsView() {
 					leftSection={<Icon path={iconRefresh} />}
 					loading={checking}
 					onClick={() => {
-						for (const query of handshakes) query.refetch();
+						handshakes.forEach((query, index) => {
+							if (!connections[index].runtimeSshHost) query.refetch();
+						});
 					}}
 				>
 					Check again
@@ -151,7 +160,9 @@ function ConnectionRow({ connection, query, current, onOpen }: ConnectionRowProp
 	const state = reach(query);
 	// Only what the engine said in the read on screen; nothing from an older answer.
 	const service = query.isError ? undefined : query.data?.service;
-	const pending = query.isPending ? "…" : "—";
+	// An SSH profile nobody has opened has not been asked, and listing never asks.
+	const unasked = Boolean(connection.runtimeSshHost) && !query.data && !query.isError;
+	const pending = query.isPending && !unasked ? "…" : "—";
 
 	return (
 		<Table.Tr
@@ -183,9 +194,9 @@ function ConnectionRow({ connection, query, current, onOpen }: ConnectionRowProp
 			<Table.Td>
 				<Badge
 					variant="dot"
-					color={state.color}
+					color={unasked ? "gray" : state.color}
 				>
-					{state.label}
+					{unasked ? "SSH · checked when opened" : state.label}
 				</Badge>
 				{query.isError && (
 					<Text

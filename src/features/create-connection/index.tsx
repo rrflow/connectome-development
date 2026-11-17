@@ -507,6 +507,18 @@ export function CreateConnectionPage() {
 									}
 									description="Reject a reachable endpoint that identifies as another RRD instance."
 								/>
+								<TextInput
+									label="SSH host (optional)"
+									placeholder="devstation"
+									value={connection.runtimeSshHost ?? ""}
+									onChange={(event) =>
+										setConnection((draft) => {
+											draft.runtimeSshHost =
+												event.target.value.trim() || undefined;
+										})
+									}
+									description="An SSH config host for an engine on another machine. The engine listens on 127.0.0.1 there; Connectome forwards the same port while the project is open. Needs the desktop app."
+								/>
 							</Stack>
 						</Paper>
 					)}
