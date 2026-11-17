@@ -1,18 +1,10 @@
 {
-	"src-tauri/src/rrd.rs": 585,
 	"src-tauri/src/rrd/client.rs": 1395,
-	"src-tauri/src/rrd/client/attunement.rs": 542,
-	"src-tauri/src/rrd/client/live.rs": 672,
 	"src-tauri/src/rrd/client/process.rs": 1270,
 	"src-tauri/src/rrd/client/process/attunement.rs": 1530,
-	"src-tauri/src/rrd/client/process/effects.rs": 646,
-	"src-tauri/src/rrd/client/process/live.rs": 537,
-	"src-tauri/src/rrd/client/quantization.rs": 537,
 	"src-tauri/src/rrd/client/tasks.rs": 1321,
-	"src-tauri/src/rrd/estate.rs": 784,
 	"src-tauri/src/rrd/estate/lifecycle.rs": 1286,
 	"src-tauri/src/rrd/view.rs": 1980,
-	"src-tauri/src/rrd/view/effect.rs": 502,
 	"src/adapter/desktop.tsx": 471,
 	"src/components/ActionBar/projects.tsx": 573,
 	"src/components/DataTable/datatypes.tsx": 426,
@@ -51,7 +43,5 @@
 	"src/shared/util/text/helpers.tsx": 589,
 	"src/shell/components/App/modals/data/data-export.tsx": 453,
 	"src/shell/components/App/modals/data/data-import.tsx": 1161,
-	"tests/smoke/connectome.spec.ts": 1940,
-	"tests/visual/capture-native.mjs": 948,
-	"tests/visual/capture.mjs": 426
+	"tests/smoke/connectome.spec.ts": 1940
 }
