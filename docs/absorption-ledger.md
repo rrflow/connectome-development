@@ -123,9 +123,371 @@ Read in full: the commit message, sprint 009 decisions 16 to 18, and every line 
 | A move of `RelationGraph/drawing.tsx` | a pure rename; nothing to carry |
 | A simplified toolbar and route table | tied to the deletions; not carried |
 
+## The 31 branches git calls merged: read against `main`, oldest first
+
+Git says these 31 branches are ancestors of `main`. That says their commits were
+merged once, not that their work survives today: later commits can delete it,
+and the August work was lost that way once already. Each row below was read
+against the code on `main` on 2026-11-17.
+
+Method per branch: take the diff the branch's own PR introduced, then for every
+added file and every substantive edit find the counterpart on today's `main`,
+read both, and record file and line. A name match alone is not proof; each row
+says what was read and what was tested.
+
+### 1. agent/layman-lenses-wip (PR #1, merge b388e48c, 2026-10-16/17) - VERIFIED
+
+PR #1 changed 279 files: 23 added, 1 renamed, 255 modified.
+
+### The 16 added lens files under `src/screens/connectome/pages/RuntimeConnection/`
+
+Each was read old-versus-current. Every user-facing string and JSX text of
+`records` (91) and `vectors` (102) was checked in the current file, ignoring
+only import paths. Exported symbols of `vectors-tab.tsx` are identical to the
+old file.
+
+| Old file | Now | Verdict |
+|---|---|---|
+| format.ts, labels.ts | `features/runtime/utils/format.ts`, `graph/labels.ts` | byte-identical |
+| stat.tsx, types.tsx, subgraph.ts, groups.ts, notice.tsx | `components/stat.tsx`, `types.tsx`, `graph/subgraph.ts`, `graph/groups.ts`, `components/notice.tsx` | carried; import paths, estate renamed engram; `RuntimeLens` gained "models"; `GraphScope` gained "clusters" |
+| queries.ts | `api/queries.ts` | carried; added `quantizationsQuery` |
+| session.tsx | `session/session.tsx` | carried; one global `SESSION_QUERY_KEY` became per-profile `sessionQueryKey(id)` |
+| glossary.tsx | `components/glossary.tsx` | carried; added generation, turboquant, rerank, recall terms |
+| pipeline.tsx | `storage/pipeline.tsx` | carried; wording tightened so it no longer claims durability it cannot know |
+| physical.tsx | `storage/physical.tsx` | carried; added `only` filter and `ColdTier` panel |
+| graph.tsx | `graph/graph.tsx` | carried; added in-place live layout (`layoutKey`, `reconcileGraph`) and changed-node highlight |
+| tabs/storage.tsx | `storage/storage-tab.tsx` | carried; "Audit through" stat dropped, which PR #1's own later commit cc90ce99 did |
+| tabs/records.tsx | `records/records-tab.tsx` | carried; plain Textarea replaced by the single rrflowQL `QueryEditor` (Ctrl/Cmd+Enter run kept; monospace comes from `CodeEditor` style.module.scss:11,92); two-column Grid replaced by responsive layout |
+| tabs/vectors.tsx | `vectors/vectors-tab.tsx` | carried; "Selected record" panel became shared `InspectorPanel`/`InspectorObject` and keeps Clear and "Show its relations" |
+
+### Surviving files PR #1 changed in substance
+
+- `src-tauri/src/rrd/client.rs` (1,559 changed lines): all 73 PR-#1 function/type
+  names exist under `src-tauri/src/rrd/` (now 35 files). All 23 Rust tests from
+  PR #1 exist by name among the 69 on `main`, including
+  `application_windows_match_the_capability_window_pattern`.
+- `src-tauri/src/window.rs`: `WINDOW_LABEL_PREFIX` at line 24 and its test.
+- `src/components/RelationGraph/drawing.tsx`: `drawHover`, `drawLabel` as functions (lines 10, 55).
+- `tests/smoke/connectome.spec.ts`: both PR-#1 tests by title; the file now has 19.
+- `src/rrflow/runtime.ts`: hand-written `parseEnvelope`, `parseCapabilities`,
+  `parseLiveness`, `parseReadiness` were replaced by the generated
+  `@rrflow/rrd-client` SDK (spine-c); NOT independently tested here, the SDK's
+  validation is taken from its own contract (open item).
+  `validateRuntimeOrigin` is carried one-for-one in native `rrd_origin`
+  (`src-tauri/src/rrd/transport.rs:15-34`).
+- Import renames only (the icon package's name changed twice before the current one): `datatypes.tsx`, `drawer.tsx`, settings and modal files.
+
+### Not covered by this branch's own capability
+
+189 paths PR #1 touched are absent today (139 under `src/screens`, 20 under
+`src/components`, 10 each under `src/shell` and `src/cloud`, and a few others;
+checked with MSYS path conversion off, which an earlier run lacked and so
+miscounted 3 dot-prefixed paths). PR #1's edits
+to them were mechanical renames. They were removed by later branches
+(`connectome-cloud-strip`, `connectome-rrd-only`). Whether the inherited
+views were re-authored is tracked under the inherited-views item,
+not here.
+
+### Open from this branch
+
+1. SDK response validation replaced hand parsers: read and test the SDK contract.
+2. `src-tauri/src/rrd/estate.rs` still carries the retired name "estate" (rename debt).
+
+### 2. agent/rrd-engine-lenses and agent/layman-lenses-wip - SAME PR AS 1
+
+`layman-lenses-wip` tip bb43fe7b is an ancestor of `rrd-engine-lenses`, which
+is the tip merged by b388e48c (PR #1). Covered by row 1; nothing separate to
+verify.
+
+### 3. agent/public-rrflow-association (PR #11, merge 50f4b75b, 2026-10-19) - VERIFIED
+
+Added `.agents/parking-lot/002-public-rrflow-association.md` and
+`.agents/sprints/010-public-rrflow-association.md` (both on main), and edited
+`README.md` and `GOVERNANCE.md`. Every added README/GOVERNANCE line was tested
+against main: 20 identical, 2 reworded (the time-bound "after the
+source-integration change lands" sentence, and the contract link that pointed
+at a branch now points at `main`, README.md:70-80). Nothing dropped.
+
+### 4. agent/turnkey-native-workbench (PR #12, merge 05899c9c, 2026-10-19) - VERIFIED, one item superseded by PR #13
+
+Read the journal (`.agents/sprints/011-native-turnkey-workbench.md`) and checked
+each claim in it on main:
+
+| Capability | On main |
+|---|---|
+| Install needs the exact operator-accepted digest; regenerates the plan | `rrd/estate.rs:641-669` (`accepted_digest`, mismatch refused) |
+| Preview creates no installed locator | `estate.rs:164 preview_estate`; test `native_preview_requires_exact_acceptance_and_reopens` at `rrd/client/process.rs:1036` |
+| Real-process integration suite (4 ignored tests) | `process.rs` holds 27 tests on main |
+| Engine helpers hide the Windows console | `estate.rs:278 creation_flags(0x08000000)` |
+| NSIS banner references removed | `tauri.conf.json` nsis block holds only icon and template |
+| Models lens | `features/runtime/models/models-tab.tsx`, 306 lines, same symbols, all 91 old texts present |
+| Local-start card and DB/QL/KV learning guide | `features/overview/content/local.tsx`; every card and sentence present |
+| `docs/native-workbench.md` | present |
+
+Superseded: the button "Open local RRFlow" (open the single served estate)
+became "Manage project engines". Verify against PR #13 (project workspaces).
+
+### 5. agent/project-workspace (PR #13, merge 38142b77, 2026-10-23) - VERIFIED, notices deferred to PR #32
+
+Read `.agents/sprints/012-project-workspaces.md` and `docs/project-workspace-research.md`
+(both on main). 24 files; 18 exist at the same path, 6 were inherited-UI paths
+now replaced by `src/features/runtime` and `src/routes/runtime/$id`.
+
+| Capability | On main |
+|---|---|
+| Per-profile native sessions; no active-project fallback | 39 commands in `src-tauri/src/rrd.rs` take `profile: String` |
+| Eight native sessions, ninth refused | test asserts "eight native sessions", `rrd/client/process.rs:1163` |
+| Parallel isolated engines (A/B isolation test) | `project_registry_keeps_parallel_estates_and_sessions_isolated` present by name |
+| Pending-start reservation, 4-engine cap, failure release | test renamed to `pending_start_capacity_and_failure_are_bounded`, `rrd/estate/lifecycle.rs:~1063`; all four original assertions kept at lines 1076/1081/1090; failure now kept as a visible `Failed` instance holding no engine (semantic evolution, not loss) |
+| Project manager UI and served-connection projection | `components/ActionBar/projects.tsx`, `served-connection.ts` |
+| Stage history capped at 128 | `stores/database.tsx:134 .slice(-128)` |
+| CreateConnection waits for durable save, shows save error | `features/create-connection/index.tsx:102-117, 527-548` |
+| Lenses grouped by area | superseded by route-folder areas (merged #67) |
+| Research record | `docs/project-workspace-research.md` present |
+
+Deferred: the "unavailable in this build" notice pages (Knowledge paths,
+Learning controls, Provider setup and cloud sync, Session replay, Services)
+were removed by PR #32 (63b7b997, "Put the project workspace in one window,
+sprint 016 step 2"), not by the later 11-10 colocation commit. Their planned
+capabilities exist only as design text in `docs/project-workspace-research.md`.
+Row for #32 must state whether that removal was the sprint-016 decision.
+
+### 6. agent/connectome-theme (PR #9, merge 942b76bf, 2026-10-24/25) - VERIFIED
+
+Own brand replacing the inherited product's. Deletions in this PR were its own
+intent (inherited logos, referral artwork, fonts, GitHub images, NSIS bitmaps,
+`hooks/brand.ts`). Additions checked on main: `components/Wordmark` (used in
+`features/overview/index.tsx:109`, `features/query/MiniView:110`,
+`shell/.../settings/index.tsx:147`), `shared/assets/styles/theme.scss` (imported
+by `startup/connectome.tsx:13` and `mini-embed.tsx:9`),
+`shared/assets/brand/app-icon.svg`, `scripts/brand/render-installer-art.mjs`
+(manual, documented in its header), all regenerated `src-tauri/icons/*`,
+`public/favicon.ico`, CODEOWNERS, CHANGELOG, sprint 009 doc. 21 touched
+inherited-UI paths are absent (editor/base, editor/icons, Mantine util,
+preloader, three views); they were removed by later branches.
+Colour values were replaced by PR #38 (teal/orange); see its row.
+
+### 7. ci/merge-queue-gate (PR #14, merge b07dd4cd, 2026-10-24/25) - VERIFIED
+
+`.github/workflows/connectome-ci.yml` on main has `merge_group:` (line 7) and
+the single `ci-gate` job (line 250) with `needs:` the three jobs. The diff in
+the PR looks total only because of a line-ending flip.
+
+### 8. docs/sprint-009-rrflow-conversion (PR #15, merge 83804c31, 2026-10-24/25) - VERIFIED, content revised
+
+Added 164 lines to `.agents/sprints/009-connectome-ownership.md` (now 1,813
+lines). Of 149 non-empty added lines, 104 are verbatim on main and 45 are
+rewritten, every one located: the view-to-RRFlow mapping table rows
+(lines 352-367 and 534) now carry revised wording, and plan steps D1-D8 were
+replaced by V0-V7 under recorded decisions 17 ("nothing is deleted before its
+RRFlow lens exists", line 829) and 18 (re-author in place). No row was lost.
+
+### 9. agent/slice-d0-rrflow-isolation (PR #16, merge 169e624c, 2026-10-25) - VERIFIED
+
+`scripts/check-rrflow-isolation.mjs` present and still in the `pnpm check`
+chain (`package.json`). All 46 lines PR #16 added to `CodeBlock/index.tsx` are
+unchanged on main (code blocks stay filled while the language loads). Changed
+imports in `CodeEditor`, `editor/index.tsx`, `toolbar.tsx`, `adapter/mini.tsx`
+point at files that moved (`editor/core/*`, `editor/languages/*`,
+`features/*`). `query-keymaps.tsx` moved to `editor/core/query-keymaps.tsx`;
+`runQueryKeymap` (Mod-Enter, Mod-e) is used by `features/query/QueryPane:211`
+and `VariablesPane:85`; the GraphQL keymaps are used by
+`features/graphql/QueryPane:163` and `editor/languages/graphql.tsx:98`.
+
+### 10. agent/slice-v0-visual-baseline (PR #17, merge 62b46094, 2026-10-26) - VERIFIED (files); parity UNMET
+
+All 182 files PR #17 added exist on main (tests/visual README, PARITY.md,
+172 inherited-screen captures in both themes). Main holds 598 baseline images
+now. `tests/visual/PARITY.md` (308 lines) is the owner-approved checklist: 66
+items, 0 ticked. Its Sprint 016 section records the August Workbench views by
+screen. The checklist itself is the work list for the parity audit, which is
+a separate deliverable from this ledger.
+
+#### Correction to row 1 (PR #1)
+
+Rename detection (`git diff -M40%` PR#1 tree to main) splits the 189 absent
+paths into 88 moved to another path and 101 deleted outright. Deleted: about
+85 are the inherited hosted-service surface (cloud, billing, organizations,
+support, referral, Sidekick assistant, newsfeed), removed by
+`connectome-cloud-strip` (owner decision); 34 `pages` and 27 `views` include the
+`dashboard` view (BackupsBlock, ConfiguratorDrawer, ConnectBlock, UpdateBlock,
+UpgradeDrawer) and the `monitor` view (LogPane, MetricPane, MonitorsPane).
+Overview and RuntimeConnection `index.tsx` were re-authored under `features/`.
+
+### Running gap list (confirmed on main, not yet decided)
+
+G1. No backup / restore / export / import UI on main (inherited
+    BackupsBlock/BackupsDrawer and the data export/import modals were
+    deleted or not found; PARITY row `modal-export-database`,
+    `modal-import-database`; plan D7).
+G2. No metrics/log monitoring view (inherited `monitor/LogPane`, `MetricPane`,
+    `MonitorsPane`); `features/diagnostics` is connection diagnostics, not an
+    equivalent. Owner's monitoring/hop-tracing requirement is open.
+G3. Activity returns in sprint 016 step 6 and Knowledge paths in step 8; the
+    Learning, Services, Provider setup and Session replay notices were removed
+    by PR #32 per decision 20; the capabilities themselves are unbuilt.
+G4. SDK response validation replaced hand parsers (PR #1) - SDK contract not
+    independently tested.
+
+Method for rows 11-17, used for every code-bearing PR from here on: (a) every
+file the PR touched, present or absent on main; (b) every test the PR added, by
+name, in Rust (`#[test]`/`#[tokio::test]`) and JS; (c) for every code file, the
+share of the PR's added non-blank lines still verbatim on main, and every line
+that is not read by hand.
+
+### 11. agent/slice-d1a-api-reference (PR #18, merge d706d360) - VERIFIED
+
+Files: 24, all present or moved (`RuntimeConnection/api/*` to
+`features/runtime/api-reference/{index.tsx,examples.ts}`: 53 and 82 old texts,
+0 missing). `scripts/check-api-examples.mjs` present. 3 Rust tests present:
+`test_builds_never_resolve_a_user_data_directory`,
+`every_allowed_public_path_is_a_public_read_only_engine_operation`,
+`segment_handles_and_admission_state_are_every_counter_the_engine_reports`.
+
+### 12. agent/sprint-009-reauthor-plan (PR #19, merge ed22da0c) - VERIFIED (document revised later)
+
+156 added lines in sprint 009 and `screens/GOVERNANCE.md`: 145 verbatim; 11
+reworded and located (F3 at line 423, S1 at 487, V1 at 496, editor-language
+row). Decision 18 text present. V5 (Storage) at line 508 names backup and
+restore as planned (see gap G1).
+
+### 13. agent/f1a-native-effects (PR #20, merge 6e79b7c4) - VERIFIED
+
+15 files all present; 10 Rust tests all present by name; 2,593 of 2,610 added
+lines verbatim. The 17 others read: import-list reflow, comment updates, and
+`outcome_unknown` (commit whose outcome cannot be confirmed stays pending and
+retryable) which is still at `rrd/client/transaction.rs:65`, used at lines 213
+and 261.
+
+### 14. agent/f1b-live-results (PR #21, merge 2db8020e) - VERIFIED
+
+12 files present; 6 Rust tests present; 1,338 of 1,357 added lines verbatim;
+the 19 others are import reflow, comments and a refactored head-cursor read.
+
+### 15. agent/f2-value-model (PR #22, merge 5ba5a9d5) - VERIFIED
+
+7 files present; the Rust test present; 704 of 715 verbatim. Others: engine pin
+advanced in `engine-values.json`, and the `pinned_revision()` Rust guard was
+replaced by `scripts/check-value-model.mjs:23`
+(`assert.equal(golden.engine, pinned)`); fixtures on main carry
+b099b5bc641b9fe230d0598230a1933ac1b17c14, equal to the `Cargo.lock` pin.
+
+### 16. agent/f3-rrflowql-language (PR #23, merge 07c4d14b) - VERIFIED (language now being replaced by PR #73)
+
+20 files; 5 Rust tests present; 1,730 of 1,732 verbatim. `records.tsx` console
+editor, refusal marking, and `.queryEditor` style are on main
+(`features/runtime/records/records-tab.tsx`, `style.module.scss:104`).
+`check-rrflowql.mjs:24` asserts golden queries equal the pinned engine.
+Connectome PR #73 (open) replaces this language with the one editor.
+
+### 17. agent/f4a-instance-lifecycle (PR #24, merge 999c144a) - VERIFIED
+
+22 files; 5 Rust tests present; 2,133 of 2,149 verbatim. Others: SDK pin
+advance, `types.tsx` types moved to `shared/types.tsx:411-432`
+(`EstateStageName`, `InstanceState`, `InstanceOrigin`, `ProjectInstance`,
+`InstanceStatus`), reflowed imports.
+
+### 18. agent/t1-turboquant-vectors (PR #25, merge d90c947d) - VERIFIED
+
+24 files; 5 Rust tests present; 1,522 of 1,528 added lines verbatim.
+`quantization.tsx` is `features/runtime/vectors/quantization-tab.tsx`
+(1,253 lines both, 161 of 161 texts), `vectors.tsx` 999 to 999 lines (108 texts,
+only the `compact-xs` prop differs), glossary (only the estate rename),
+`queries.ts` 44 to 44 lines.
+
+### 19. agent/controller-proposals (PR #26, merge 423a13cb) - VERIFIED
+
+33 files; 1 Rust test; 1,830 of 1,846 verbatim. `tasks.tsx` is
+`features/runtime/tasks/tasks.tsx`. Changed lines read: reflowed imports and a
+time-bound status paragraph in `docs/native-workbench.md`.
+
+### 20. codex/controller-startup-mapping (PR #27, merge c1cbff20) - VERIFIED
+
+31 files; 3 Rust tests present; 667 of 667 added lines verbatim.
+
+### 21. codex/worker-handoff (PR #28, merge 1032dd05) - VERIFIED
+
+64 files; 1 Rust test; 2,811 of 2,826 verbatim. Changed: docs status wording
+(time-bound), `prepare_worker` action present at `rrflow/tasks.ts:161`.
+
+### 22. codex/task-budget-resume (PR #29, merge f4623071) - VERIFIED
+
+64 files; 2,591 of 2,596 verbatim. `tasks.ts` now has `"stop" | "resume"`
+(line 151). `tasks.tsx` 748 to 993 lines; 119 old texts, 2 reworded by later
+source-selection work ("Review selected worker" now "Review worker and
+selected source" at line 881; the policy sentence now says the selected source
+is sent only when shown, and keeps "Files are not changed").
+
+### 23. codex/attunement-controls (PR #30, merge ae73c3c3) - VERIFIED
+
+36 files; 4 Rust tests present; 2,337 of 2,340 verbatim; the 3 differing lines
+are the replan variant now boxed (`attunement.rs:99`). `plan.tsx` is
+`features/runtime/plan/plan.tsx`, 481 lines both, 65 of 65 texts. The
+hard-coded `areas.ts` table was replaced by route folders (merged #67).
+
+### 24. agent/guided-workspace-preserve (PR #31, merge 1cf5d9ec) - VERIFIED
+
+254 files (249 added, 5 modified) all present: the preserved August Workbench
+reference and window captures, `.agents/sprints/016-guided-workspace.md`,
+`.agents/parking-lot/006`, PARITY.md. 3,446 of 3,456 added lines verbatim; the
+10 others are plan wording (window pane description, a PARITY item reworded).
+
+### 25. agent/guided-workspace-window (PR #32, merge 1eb60184) - VERIFIED; notice removal authorized by decision 20
+
+63 files; the shell is `features/runtime/shell/shell.tsx` (12 old texts, 1
+reworded). `areas.ts`/`workspace.tsx` replaced by route-folder areas (merged
+#67). The notice pages removed here (Activity, Learning, Services, Knowledge
+paths) follow Sprint 009 decision 20, the owner's 2026-10-28 words: "A notice
+that a view is missing is not a view". Decision 20 owes three real views:
+project knowledge paths, editable rrflowQL graph results, and plan and
+handoff records with the schemas they produce (see gaps G3, G5).
+
+### 26. agent/guided-workspace-inspector (PR #33, merge de7cdeba) - VERIFIED
+
+18 files; 50 of 50 added lines verbatim; `inspector.tsx` is
+`features/runtime/components/inspector.tsx`, 140 lines both, 16 of 16 texts.
+
+### 27. agent/guided-workspace-guides (PR #34, merge 998c058f) - VERIFIED
+
+29 files; `guides/{cards,engine}.tsx` 67 and 343 lines both, all texts present;
+`explore-graph.v1.json` identical after line-ending normalisation (md5
+9c8422a2dda3 both); `scripts/check-guides.mjs` now validates guide routes
+against the route files (`check-guides.mjs:36-66`). 219 of 232 added lines
+verbatim; others are path updates in capture scripts and plan wording.
+
+### 28. agent/guided-workspace-plan (PR #36, merge 84a52496) - VERIFIED
+
+Documents only (sprint 016, parking lots 006/007, PARITY). 375 of 396 added
+lines verbatim; the 21 others are "PROPOSED/OPEN" status lines changed once the
+owner decided, and plan-table rows reworked.
+
+### 29. agent/teal-orange-tokens (PR #38, merge 95ba9975) - VERIFIED
+
+Tokens on main `theme.scss`: gradient `#0f5c63` to `#cc5500` (lines 8-9), paper
+`rgb(14 30 34 / .94)`, orange glow. The theme defines `rrflow` and also
+`violet: [...RRFLOW]` (`shared/util/ui/mantine.tsx:143`), so the 79 remaining
+uses of the name `violet` in 44 files render burnt orange. Naming debt only:
+rename `violet` references to `rrflow` when each view is re-authored.
+
+### Summary of the 31 branches git called merged
+
+All 31 are now accounted for: they sit in 29 distinct PRs (`layman-lenses-wip`
+and `rrd-engine-lenses` are one PR). For every PR: files by presence, tests by
+name, added lines by verbatim survival, every non-verbatim line read, and
+moved files compared by text coverage. No PR-added behaviour was found
+missing from main. What the verification does not prove: behaviour at run
+time (the tests were located, not executed here) and anything git history did
+not record.
+
 ## Open items for the owner
 
 1. **One rrflowQL editor language.** `main` has two lineages: an engine-tokenizer language for the Query lab, and the inherited grammar for the inherited views. The branch adds a third (presentation scanner, formatter, statement splitting). Which is canonical?
 2. **The pre-area address translations** kept in `layout.tsx` (`tasks`, `plan`, `api`, `workbench`, `knowledge/storage`) are pinned by the smoke suite but are compatibility under the pre-release rule. Keep or retire?
 3. **Grouping.** Areas are folders, so regrouping the views is moving files. The August Workbench grouped them as a primary set, "Visual labs" and "Developer tools"; PR #67 uses Knowledge, Reasoning, Labs, Engine, Activity and System.
 4. **Branch deletion** once everything above is carried: which of the 11 branches to delete, since each deletion is hard to undo.
+5. **Backup, restore, export and import UI is missing.** The inherited backups block, backups drawer and the data export and import dialogs are gone, and no RRFlow lens replaces them. PARITY lists them; plan step V5. Build, or retire?
+6. **Metrics and log monitoring is missing.** The inherited monitor view (log, metric and monitors panes) was removed with the hosted-service surface and has no RRFlow equivalent; the connection-diagnostics view is not one. Your monitoring and hop-tracing requirement is open.
+7. **Three real views decision 20 owes:** project knowledge paths (PR #68, open), editable rrflowQL graph results, and plan and handoff records with the schemas they produce. Learning, Services, Provider setup and Session replay are unbuilt.
+8. **`tests/visual/PARITY.md` has 66 items, none ticked.** Its Connectome Workbench section lists the August views and nine defects not to carry over. A code-level audit against it has not been done; it is the next package.
+9. **The SDK replaced the hand-written response parsers** (PR #1). The SDK's validation was not independently tested here.
+10. **Naming debt:** `src-tauri/src/rrd/estate.rs`, and 79 uses of the name `violet` (the theme maps it to burnt orange) in 44 files.
