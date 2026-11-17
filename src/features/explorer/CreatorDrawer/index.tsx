@@ -25,6 +25,7 @@ import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";
 import { executeQuery, getRRFlowQL } from "~/connection/connection";
 import { rrflowqlLinting } from "~/editor";
+import { rrflowql } from "~/editor/rrflowql";
 import { useValueValidator } from "~/hooks/connection/rrflowql";
 import { useTableNames, useTables } from "~/hooks/connection/schema";
 import { useStable } from "~/hooks/state/stable";
@@ -33,7 +34,6 @@ import type { QueryResponse } from "~/shared/types";
 import { extractEdgeRecords, getTableVariant } from "~/shared/util/connection/schema";
 import { RecordsChangedEvent } from "~/shared/util/platform/global-events";
 import { RecordId, StringRecordId, Table } from "~/vendor/rrflow-client";
-import { rrflowql } from "~/vendor/rrflowql-editor";
 
 type EdgeInfo = [string[], string[]];
 

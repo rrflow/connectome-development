@@ -6,12 +6,12 @@ import { Icon } from "~/components/Icon";
 import { ContentPane } from "~/components/Pane";
 import { getRRFlowQL } from "~/connection/connection";
 import { rrflowqlLinting } from "~/editor";
+import { rrflowql } from "~/editor/rrflowql";
 import { useConnectionAndView } from "~/hooks/app/routing";
 import { useConnection } from "~/hooks/connection/connection";
 import { useDebouncedFunction } from "~/hooks/state/debounce";
 import { iconClose, iconDollar } from "~/shared/assets/icons";
 import { useConfigStore } from "~/shell/stores/config";
-import { rrflowql } from "~/vendor/rrflowql-editor";
 
 export interface VariablesPaneProps {
 	isValid: boolean;

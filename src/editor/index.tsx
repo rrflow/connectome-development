@@ -8,6 +8,6 @@ export * from "./core/theme";
 export * from "./languages/functions";
 export * from "./languages/graphql";
 export * from "./languages/records";
-export * from "./languages/rrflowql";
 export * from "./languages/tables";
 export * from "./languages/variables";
+export * from "./rrflowql/index.ts";

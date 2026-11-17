@@ -10,13 +10,14 @@ import { parser as phpParser } from "@lezer/php";
 import { parser as pyParser } from "@lezer/python";
 import { parser as rustParser } from "@lezer/rust";
 import { parser as yamlParser } from "@lezer/yaml";
-import { parser as rrflowqlParser } from "@surrealdb/lezer";
 import { adapter } from "~/adapter";
 import { createStyleHighlighter } from "~/editor";
+import { rrflowqlLanguage } from "~/editor/rrflowql";
 import type { ColorScheme, SyntaxTheme } from "~/shared/types";
 
 type Parser = { parse: (code: string) => any };
 
+const rrflowqlParser = rrflowqlLanguage.parser;
 const csharpParser = StreamLanguage.define(csharp).parser;
 const javaParser = StreamLanguage.define(java).parser;
 
@@ -44,7 +45,7 @@ const PARSER_MAP = new Map<string, Parser>([
 	["html", htmlParser],
 	["cli", rrflowqlParser],
 	["php", phpParser.configure({ top: "Program" })],
-	["syntax", rrflowqlParser.configure({ top: "Syntax" })],
+	["syntax", rrflowqlParser],
 ]);
 
 /**

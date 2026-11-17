@@ -8,9 +8,9 @@ import { queryRefusal, type RrdDatabaseView } from "~/rrflow/session";
 import { iconErrorCircle, iconQuery } from "~/shared/assets/icons";
 import { databaseQuery } from "../api/queries";
 import { Term } from "../components/glossary";
+import { QueryEditor } from "../components/query-editor";
 import { useProject } from "../project/context";
 import { QueryAnswer } from "./query-answer";
-import { QueryEditor } from "./query-editor";
 import { QueryRows } from "./query-rows";
 
 /** Row bound for the starter queries; the engine's own query budget still applies. */

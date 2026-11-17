@@ -29,12 +29,12 @@ import {
 } from "react";
 import { Icon } from "~/components/Icon";
 import { acceptWithTab, editorTheme, inputBase } from "~/editor";
+import { rrflowql } from "~/editor/rrflowql";
 import { useKindList } from "~/hooks/connection/schema";
 import { useStable } from "~/hooks/state/stable";
 import { useIsLight, useTheme } from "~/hooks/ui/theme";
 import { iconCancel, iconCheck } from "~/shared/assets/icons";
 import { useConfigStore } from "~/shell/stores/config";
-import { rrflowql } from "~/vendor/rrflowql-editor";
 import { ActionButton } from "../ActionButton";
 
 export interface CodeInputProps
@@ -263,7 +263,7 @@ export function PermissionInput({
 			value={textValue}
 			onChange={handleChange}
 			rightSectionWidth={70}
-			extensions={[rrflowql("permission")]}
+			extensions={[rrflowql()]}
 			rightSection={
 				<Group
 					gap="xs"

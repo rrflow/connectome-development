@@ -1,7 +1,7 @@
 import type { CompletionSource } from "@codemirror/autocomplete";
 import type { Extension } from "@codemirror/state";
+import { rrflowqlLanguage } from "~/editor/rrflowql";
 import { useDatabaseStore } from "~/stores/database";
-import { rrflowqlLanguage } from "~/vendor/rrflowql-editor";
 
 const TABLE_SOURCE: CompletionSource = (context) => {
 	const match = context.matchBefore(/(from|update|create|delete|into) \w*/i);

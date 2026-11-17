@@ -2,7 +2,7 @@ import { EditorSelection, SelectionRange, StateEffect, StateField } from "@codem
 import type { Command, EditorView } from "@codemirror/view";
 import { executeGraphql, executeUserQuery, tryParseParams } from "~/connection/connection";
 import { getConnection } from "~/shared/util/connection/connection";
-import { getQueryRange } from "./rrflowql";
+import { getQueryRange } from "../rrflowql";
 
 const queryEditorEffect = StateEffect.define<EditorView>();
 

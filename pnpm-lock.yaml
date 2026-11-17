@@ -119,12 +119,6 @@ importers:
       '@sigma/node-border':
         specifier: ^3.0.0
         version: 3.0.0(sigma@3.0.2(graphology-types@0.24.8))
-      '@surrealdb/codemirror':
-        specifier: 1.0.3
-        version: 1.0.3
-      '@surrealdb/lezer':
-        specifier: 1.0.3
-        version: 1.0.3
       '@surrealdb/ql-wasm-v2':
         specifier: npm:@surrealdb/ql-wasm@0.2.0-beta.11
         version: '@surrealdb/ql-wasm@0.2.0-beta.11'
@@ -1322,12 +1316,6 @@ packages:
   '@surrealdb/cbor@2.0.0-alpha.4':
     resolution: {integrity: sha512-l/hNZ3ZCOJq8rzwx1y5ZV/8b2bYCWdhGqRVY33Pu50NAHyAW5qLsMn3ZBkZow77mAKwNCsbDsRGnyYEuU95mjw==}
     engines: {node: '>=18.0.0'}
-
-  '@surrealdb/codemirror@1.0.3':
-    resolution: {integrity: sha512-8f+wRfSrfYhRd9+ZxEkjMo/E/pp2PU5ah2LxKkLjW7IJQd1OYmVCPfXqqbW/oD2zPfgIQg+Cq/kCgenhdxFASQ==}
-
-  '@surrealdb/lezer@1.0.3':
-    resolution: {integrity: sha512-RBFbe50RNLzo9vUMbWCGpq2v3+4sDPLzaAhThLuXWKv7mhT6BimbolH/1gAQo/YEDHT1NzrDsytEqV8tD7TG6Q==}
 
   '@surrealdb/ql-wasm@0.2.0-beta.11':
     resolution: {integrity: sha512-7z9wpksZ8YxM46KiH66ZDBFj4DBfIbVJs80O20inFqqrHVDRqaEM++7LqxtIRpaRzqyhxhYFhyCO5n5+cqbJ4g==}
@@ -3650,21 +3638,6 @@ snapshots:
   '@standard-schema/utils@0.3.0': {}
 
   '@surrealdb/cbor@2.0.0-alpha.4': {}
-
-  '@surrealdb/codemirror@1.0.3':
-    dependencies:
-      '@codemirror/language': 6.12.3
-      '@codemirror/lint': 6.9.5
-      '@lezer/common': 1.5.1
-      '@lezer/javascript': 1.5.4
-      '@surrealdb/lezer': 1.0.3
-      compare-versions: 6.1.1
-
-  '@surrealdb/lezer@1.0.3':
-    dependencies:
-      '@lezer/common': 1.5.1
-      '@lezer/highlight': 1.2.3
-      '@lezer/lr': 1.4.8
 
   '@surrealdb/ql-wasm@0.2.0-beta.11': {}
 

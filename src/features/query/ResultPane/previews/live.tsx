@@ -6,6 +6,7 @@ import { CodeEditor } from "~/components/CodeEditor";
 import { Icon } from "~/components/Icon";
 import { executeQuery } from "~/connection/connection";
 import { rrflowqlRecordLinks } from "~/editor";
+import { rrflowql } from "~/editor/rrflowql";
 import { RelativeTime } from "~/features/query/components/RelativeTime";
 import { useRefreshTimer } from "~/features/query/hooks/timer";
 import { type Formatter, useResultFormatter } from "~/hooks/connection/rrflowql";
@@ -23,7 +24,6 @@ import {
 import type { LiveMessage } from "~/shared/types";
 import { ON_FOCUS_SELECT } from "~/shared/util/text/helpers";
 import { useInterfaceStore } from "~/shell/stores/interface";
-import { rrflowql } from "~/vendor/rrflowql-editor";
 import { attemptFormat, type PreviewProps } from ".";
 
 const LIVE_ACTION_COLORS: Record<string, [string, string]> = {

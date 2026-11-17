@@ -74,8 +74,7 @@ export function parseVariables(tree: Tree, extract: (from: number, to: number) =
 
 	tree.iterate({
 		enter: (node) => {
-			if (node.name === "LetStatementName") return false;
-			if (node.name !== "VariableName") return;
+			if (node.name !== "Parameter") return;
 
 			discovered.add(extract(node.from + 1, node.to));
 		},

@@ -10,13 +10,13 @@ import { ContentPane } from "~/components/Pane";
 import { getRRFlowQL } from "~/connection/connection";
 import { rrflowqlLinting, runQueryKeymap } from "~/editor";
 import { queryEditorField, setQueryEditor } from "~/editor/languages/query";
+import { rrflowql } from "~/editor/rrflowql";
 import { useConnectionAndView } from "~/hooks/app/routing";
 import { useActiveQuery } from "~/hooks/connection/connection";
 import { useDebouncedFunction } from "~/hooks/state/debounce";
 import { useStable } from "~/hooks/state/stable";
 import { iconClose, iconDollar, iconReset } from "~/shared/assets/icons";
 import { useConfigStore } from "~/shell/stores/config";
-import { rrflowql } from "~/vendor/rrflowql-editor";
 
 export interface VariablesPaneProps {
 	isValid: boolean;

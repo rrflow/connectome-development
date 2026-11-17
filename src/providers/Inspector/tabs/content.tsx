@@ -4,10 +4,10 @@ import { CodeEditor } from "~/components/CodeEditor";
 import { Icon } from "~/components/Icon";
 import { SaveBox } from "~/components/SaveBox";
 import { rrflowqlLinting, rrflowqlRecordLinks } from "~/editor";
+import { rrflowql } from "~/editor/rrflowql";
 import { useSetting } from "~/hooks/app/config";
 import type { SaveableHandle } from "~/hooks/state/save";
 import { iconWarning } from "~/shared/assets/icons";
-import { rrflowql } from "~/vendor/rrflowql-editor";
 import { useInspector } from "..";
 
 export interface ContentTabProps {

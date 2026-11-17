@@ -4,6 +4,7 @@ import { CodeEditor } from "~/components/CodeEditor";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { RadioSelect } from "~/components/RadioSelect";
 import { getRRFlowQL } from "~/connection/connection";
+import { rrflowql } from "~/editor/rrflowql";
 import { useIntent } from "~/hooks/app/routing";
 import { useBoolean } from "~/hooks/state/boolean";
 import { useStable } from "~/hooks/state/stable";
@@ -12,7 +13,6 @@ import { CodeLang, type ColorScheme, type SyntaxTheme } from "~/shared/types";
 import { useFeatureFlags } from "~/shared/util/config/feature-flags";
 import { renderHighlighting } from "~/shared/util/text/highlighting";
 import { useConfigStore } from "~/shell/stores/config";
-import { rrflowql } from "~/vendor/rrflowql-editor";
 
 function Render({
 	value,

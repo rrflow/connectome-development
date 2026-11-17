@@ -20,12 +20,12 @@ import {
 	rrflowqlVariableCompletion,
 	runQueryKeymap,
 } from "~/editor";
+import { rrflowql } from "~/editor/rrflowql";
 import { setEditorText } from "~/features/query/utils/helpers";
 import { useSetting } from "~/hooks/app/config";
 import { useConnectionAndView, useIntent } from "~/hooks/app/routing";
 import { useConnection } from "~/hooks/connection/connection";
 import { useStable } from "~/hooks/state/stable";
-import { useDatabaseVersionLinter } from "~/hooks/ui/editor";
 import { useIsLight } from "~/hooks/ui/theme";
 import { useInspector } from "~/providers/Inspector";
 import {
@@ -44,7 +44,6 @@ import { showErrorNotification } from "~/shared/util/text/helpers";
 import { parseVariables } from "~/shared/util/text/language";
 import { useConfigStore } from "~/shell/stores/config";
 import { useQueryStore } from "~/stores/query";
-import { rrflowql } from "~/vendor/rrflowql-editor";
 import { readQuery, writeQuery } from "../QueryView/strategy";
 
 const SERIALIZE = {
@@ -84,7 +83,6 @@ export function QueryPane({
 	const { inspect } = useInspector();
 	const [connection] = useConnectionAndView();
 	const queryTabList = useConnection((c) => c?.queryTabList);
-	const rrflowqlVersion = useDatabaseVersionLinter(editor);
 	const queryStateMap = useQueryStore((s) => s.queryState);
 	const saveTasks = useRef<Map<string, any>>(new Map());
 	const [executionHidden, setExecutionHidden] = useState(false);
@@ -202,7 +200,6 @@ export function QueryPane({
 	const extensions = useMemo(
 		() => [
 			rrflowql(),
-			rrflowqlVersion,
 			rrflowqlLinting(updateValid),
 			rrflowqlRecordLinks(inspect),
 			rrflowqlTableCompletion(),
@@ -211,7 +208,7 @@ export function QueryPane({
 			Prec.high(keymap.of(runQueryKeymap)),
 			scrollPastEnd(),
 		],
-		[inspect, rrflowqlVersion],
+		[inspect],
 	);
 
 	useIntent("format-query", handleFormat);

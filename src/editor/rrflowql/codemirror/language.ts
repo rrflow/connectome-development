@@ -1,6 +1,4 @@
 import { defineLanguageFacet, Language, LanguageSupport } from "@codemirror/language";
-import { type Diagnostic, setDiagnostics } from "@codemirror/lint";
-import type { EditorView } from "@codemirror/view";
 import {
 	type Input,
 	NodeSet,
@@ -11,15 +9,13 @@ import {
 	type TreeFragment,
 } from "@lezer/common";
 import { styleTags, tags } from "@lezer/highlight";
-import { classify, type Role, refusalRange } from "./rrflowql";
-import type { RrdQueryError } from "./session";
+import { classify, type Role, recordIds } from "../engine/index.ts";
 
 /*
- * The rrflowQL editor language: a syntax tree built from `classify`, so the
- * editor reads a query exactly as the engine's tokenizer and parser do, styled
- * with the tags the inherited editor's grammar uses for the same things.
- * Diagnostics come only from the engine: `showRefusal` places the refusal a
- * command returned for the query in the editor.
+ * The one rrflowQL language. Its syntax tree is the engine's own reading of a
+ * query (`classify`), styled with the tags the editor theme already knows.
+ * Nothing here decides whether a query is valid: tokens the engine would refuse
+ * are drawn as `Invalid`, and the engine's refusal arrives with the command.
  */
 
 const ROLE_NODES: Record<Role, string> = {
@@ -38,11 +34,15 @@ const ROLE_NODES: Record<Role, string> = {
 	word: "Word",
 };
 const ROLES = Object.keys(ROLE_NODES) as Role[];
-const INVALID = ROLES.length + 1;
+const RECORD_ID = ROLES.length + 1;
+const INVALID = ROLES.length + 2;
+/** A buffer entry is `[type, from, to, size]`; a node's size counts its children's. */
+const LEAF = 4;
 
 const nodes = new NodeSet([
 	NodeType.define({ id: 0, name: "Query", top: true }),
 	...ROLES.map((role, index) => NodeType.define({ id: index + 1, name: ROLE_NODES[role] })),
+	NodeType.define({ id: RECORD_ID, name: "RecordId" }),
 	NodeType.define({ id: INVALID, name: "Invalid", error: true }),
 ]).extend(
 	styleTags({
@@ -63,6 +63,25 @@ const nodes = new NodeSet([
 );
 
 /** A whole query, read in one pass: queries are short and bounded. */
+export function buildTree(text: string, offset = 0): Tree {
+	const { tokens } = classify(text);
+	const addresses = new Map(recordIds(tokens).map((span) => [span.token, span]));
+	const buffer: number[] = [];
+	for (let index = 0; index < tokens.length; index++) {
+		const address = addresses.get(index);
+		const count = address ? 3 : 1;
+		for (const token of tokens.slice(index, index + count)) {
+			const type = token.invalid ? INVALID : ROLES.indexOf(token.role) + 1;
+			buffer.push(type, offset + token.from, offset + token.to, LEAF);
+		}
+		if (address) {
+			buffer.push(RECORD_ID, offset + address.from, offset + address.to, LEAF * (count + 1));
+			index += count - 1;
+		}
+	}
+	return Tree.build({ buffer, nodeSet: nodes, topID: 0, length: offset + text.length });
+}
+
 class RrflowqlParser extends Parser {
 	createParse(
 		input: Input,
@@ -76,14 +95,7 @@ class RrflowqlParser extends Parser {
 			parsedPos: to,
 			stoppedAt: null,
 			stopAt() {},
-			advance() {
-				const buffer: number[] = [];
-				for (const token of classify(text).tokens) {
-					const type = token.invalid ? INVALID : ROLES.indexOf(token.role) + 1;
-					buffer.push(type, from + token.from, from + token.to, 4);
-				}
-				return Tree.build({ buffer, nodeSet: nodes, topID: 0, length: to - from });
-			},
+			advance: () => buildTree(text, from),
 		};
 	}
 }
@@ -98,29 +110,4 @@ export const rrflowqlLanguage = new Language(
 /** rrflowQL highlighting for a `CodeEditor`. */
 export function rrflowql(): LanguageSupport {
 	return new LanguageSupport(rrflowqlLanguage);
-}
-
-/** The engine's refusal of `query`, on the token it names. */
-export function refusalDiagnostic(query: string, refusal: RrdQueryError): Diagnostic {
-	return {
-		...refusalRange(query, refusal.offset),
-		severity: "error",
-		message: refusal.reason,
-		source: "RRFlow engine",
-	};
-}
-
-/**
- * Shows the engine's refusal of the editor's query, or clears it. A refusal
- * belongs to the text it was given for, so it shows only while the editor
- * holds that text.
- */
-export function showRefusal(
-	view: EditorView,
-	refused: { query: string; refusal: RrdQueryError } | null,
-): void {
-	const doc = view.state.doc.toString();
-	const diagnostics =
-		refused && refused.query === doc ? [refusalDiagnostic(doc, refused.refusal)] : [];
-	view.dispatch(setDiagnostics(view.state, diagnostics));
 }

@@ -2,8 +2,8 @@ import { Prec } from "@codemirror/state";
 import { type EditorView, keymap } from "@codemirror/view";
 import { useEffect, useMemo, useState } from "react";
 import { CodeEditor } from "~/components/CodeEditor";
+import { rrflowql, showRefusal } from "~/editor/rrflowql";
 import { useStable } from "~/hooks/state/stable";
-import { rrflowql, showRefusal } from "~/rrflow/editor";
 import { queryRefusal } from "~/rrflow/session";
 import classes from "../style.module.scss";
 
