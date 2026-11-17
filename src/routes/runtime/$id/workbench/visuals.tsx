@@ -9,8 +9,7 @@ export const Route = createFileRoute("/runtime/$id/workbench/visuals")({
 	staticData: {
 		menu: {
 			label: "Visuals",
-			group: "workbench",
-			order: 3,
+			order: 2,
 			icon: iconChart,
 			hint: "Pictures of this project: its files, how its records link, and how data is stored.",
 		},

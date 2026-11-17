@@ -6,8 +6,7 @@ import { iconRelation } from "~/shared/assets/icons";
 export const Route = createFileRoute("/runtime/$id/knowledge/records")({
 	staticData: {
 		menu: {
-			label: "Runtime graph",
-			group: "knowledge",
+			label: "Graph",
 			order: 1,
 			icon: iconRelation,
 			hint: "What the project knows and how each record links to the others.",

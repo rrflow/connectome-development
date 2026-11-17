@@ -7,7 +7,6 @@ export const Route = createFileRoute("/runtime/$id/system/storage")({
 	staticData: {
 		menu: {
 			label: "Storage",
-			group: "system",
 			order: 2,
 			icon: iconMemory,
 			hint: "How the data is kept safe on disk and quick in memory, with live counters.",

@@ -6,8 +6,7 @@ export const Route = createFileRoute("/runtime/$id/workbench/flights")({
 	staticData: {
 		menu: {
 			label: "Prompt flights",
-			group: "workbench",
-			order: 2,
+			order: 1,
 			icon: iconPlay,
 			hint: "Each prompt the engine recorded, with the steps it took and the context it gathered.",
 			count: "flights",

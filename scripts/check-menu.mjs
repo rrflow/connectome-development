@@ -4,11 +4,13 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 /**
- * Menu gate. The main menu is generated from the project's route files, so a
- * view is reachable exactly when its route file exists and declares a menu
- * entry. This gate keeps the owner's original Workbench menu as a floor: every
- * one of its seventeen views must exist as a route file. A view may move or be
- * renamed here, deliberately; it may never silently disappear.
+ * Menu gate. The area rail and the tabs are generated from the project's route
+ * folders: a folder's `route.tsx` declares its area, and each route file in it
+ * that declares a menu entry is a tab of that area. A view is reachable exactly
+ * when its route file exists, sits in an area's folder and declares a tab. This
+ * gate keeps the owner's original Workbench menu as a floor: every one of its
+ * seventeen views must exist as a route file. A view may move or be renamed
+ * here, deliberately; it may never silently disappear.
  */
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -16,7 +18,7 @@ const routes = join(root, "src/routes/runtime/$id");
 
 /** The original menu (RRFlow `crates/connectome-ui`, August 2026) and where each view lives now. */
 export const FLOOR = {
-	overview: "",
+	overview: "overview",
 	connections: "system/connections",
 	estates: "system/engines",
 	tables: "knowledge/tables",
@@ -45,9 +47,29 @@ function files(directory) {
 
 const views = new Map();
 const problems = [];
+const areaFolders = new Set();
 for (const path of files(routes)) {
 	const relative = path.slice(routes.length + 1).replaceAll("\\", "/");
 	if (relative === "route.tsx") continue;
+	if (relative === "index.tsx") continue;
+	if (relative.endsWith("/route.tsx")) {
+		const source = readFileSync(path, "utf8");
+		const area = source.match(/staticData:\s*{\s*area:\s*{([\s\S]*?)}\s*,?\s*}/);
+		const folder = relative.slice(0, -"/route.tsx".length);
+		if (!area || folder.includes("/")) {
+			problems.push(
+				`src/routes/runtime/$id/${relative}: an area folder's route must declare staticData.area`,
+			);
+			continue;
+		}
+		for (const field of ["label", "order", "icon", "hint"]) {
+			if (!new RegExp(`\\b${field}:`).test(area[1])) {
+				problems.push(`src/routes/runtime/$id/${relative}: area has no ${field}`);
+			}
+		}
+		areaFolders.add(folder);
+		continue;
+	}
 	const view = relative
 		.replace(/\.tsx$/, "")
 		.replace(/(^|\/)index$/, "")
@@ -60,7 +82,16 @@ for (const path of files(routes)) {
 		);
 		continue;
 	}
-	for (const field of ["label", "group", "order", "icon", "hint"]) {
+	if (!relative.includes("/")) {
+		problems.push(
+			`src/routes/runtime/$id/${relative}: a project view must sit in an area's folder`,
+		);
+	} else if (/\bgroup:/.test(menu[1])) {
+		problems.push(
+			`src/routes/runtime/$id/${relative}: a tab never names its area; the folder is the area`,
+		);
+	}
+	for (const field of ["label", "order", "icon", "hint"]) {
 		if (!new RegExp(`\\b${field}:`).test(menu[1])) {
 			problems.push(`src/routes/runtime/$id/${relative}: menu entry has no ${field}`);
 		}
@@ -73,6 +104,13 @@ for (const [original, view] of Object.entries(FLOOR)) {
 		problems.push(
 			`the original "${original}" view has no route file (expected src/routes/runtime/$id/${view || "index"}.tsx)`,
 		);
+	}
+}
+
+for (const view of views.keys()) {
+	const folder = view.split("/")[0];
+	if (!areaFolders.has(folder)) {
+		problems.push(`${view}: its folder "${folder}" has no route.tsx declaring an area`);
 	}
 }
 

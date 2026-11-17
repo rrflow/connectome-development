@@ -71,7 +71,7 @@ const workbenchRouteOptions = [
 	{ value: "system/storage", label: "System · Storage" },
 	{ value: "reasoning/plan", label: "Reasoning · Project plan" },
 	{ value: "reasoning/tasks", label: "Reasoning · Tasks" },
-	{ value: "workbench", label: "Workbench" },
+	{ value: "reasoning/workbench", label: "Reasoning · Workbench" },
 ];
 
 const learningKindOptions: { value: WorkbenchLearningEventKind; label: string }[] = [
@@ -144,7 +144,7 @@ function buildTemplateSteps(
 				id: newId(),
 				title: `Step ${index + 1}`,
 				detail: "",
-				route: "workbench",
+				route: "reasoning/workbench",
 			}
 		);
 	});
@@ -335,7 +335,7 @@ export function parseTemplateImport(
 					route:
 						typeof step.route === "string" && step.route.trim()
 							? step.route
-							: "workbench",
+							: "reasoning/workbench",
 					linkedPathId,
 				};
 			});
@@ -446,7 +446,7 @@ export function WorkbenchLanes({
 	const [learningRequiresSignoff, setLearningRequiresSignoff] = useState(true);
 	const [learningTitle, setLearningTitle] = useState("");
 	const [learningBody, setLearningBody] = useState("");
-	const [learningRoute, setLearningRoute] = useState<string>("workbench");
+	const [learningRoute, setLearningRoute] = useState<string>("reasoning/workbench");
 	const [learningCatamorphismNote, setLearningCatamorphismNote] = useState("");
 	const [learningActionName, setLearningActionName] =
 		useState<WorkbenchLearningActionName>("navigate-route");
@@ -929,9 +929,9 @@ export function WorkbenchLanes({
 	const runLearningAction = useCallback(
 		async (action: WorkbenchLearningAction) => {
 			if (action.name === "navigate-route") {
-				onOpenRoute(action.payload?.trim() || "workbench");
+				onOpenRoute(action.payload?.trim() || "reasoning/workbench");
 			} else if (action.name === "open-workbench") {
-				onOpenRoute("workbench");
+				onOpenRoute("reasoning/workbench");
 			} else if (action.name === "refresh-storage-signals") {
 				await storageSignals.refetch();
 			} else if (action.name === "refresh-governed-flights") {
@@ -1219,7 +1219,9 @@ export function WorkbenchLanes({
 						onChangeLearningBody={setLearningBody}
 						learningRoute={learningRoute}
 						workbenchRouteOptions={workbenchRouteOptions}
-						onChangeLearningRoute={(next) => setLearningRoute(next ?? "workbench")}
+						onChangeLearningRoute={(next) =>
+							setLearningRoute(next ?? "reasoning/workbench")
+						}
 						learningRequiresSignoff={learningRequiresSignoff}
 						onChangeLearningRequiresSignoff={(next) =>
 							setLearningRequiresSignoff((next ?? "yes") === "yes")

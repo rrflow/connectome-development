@@ -7,7 +7,6 @@ export const Route = createFileRoute("/runtime/$id/reasoning/tasks")({
 	staticData: {
 		menu: {
 			label: "Tasks",
-			group: "reasoning",
 			order: 1,
 			icon: iconList,
 			hint: "Units of work the engine tracks, with the prompts that belong to each.",

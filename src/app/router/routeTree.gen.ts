@@ -18,6 +18,13 @@ import { Route as MiniNewRouteImport } from './../../routes/mini/new'
 import { Route as RuntimeIdRouteRouteImport } from './../../routes/runtime/$id/route'
 import { Route as CConnectionViewRouteImport } from './../../routes/c/$connection/$view'
 import { Route as RuntimeIdIndexRouteImport } from './../../routes/runtime/$id/index'
+import { Route as RuntimeIdActivityRouteRouteImport } from './../../routes/runtime/$id/activity/route'
+import { Route as RuntimeIdEngineRouteRouteImport } from './../../routes/runtime/$id/engine/route'
+import { Route as RuntimeIdKnowledgeRouteRouteImport } from './../../routes/runtime/$id/knowledge/route'
+import { Route as RuntimeIdOverviewRouteRouteImport } from './../../routes/runtime/$id/overview/route'
+import { Route as RuntimeIdReasoningRouteRouteImport } from './../../routes/runtime/$id/reasoning/route'
+import { Route as RuntimeIdSystemRouteRouteImport } from './../../routes/runtime/$id/system/route'
+import { Route as RuntimeIdWorkbenchRouteRouteImport } from './../../routes/runtime/$id/workbench/route'
 import { Route as RuntimeIdActivityAuditRouteImport } from './../../routes/runtime/$id/activity/audit'
 import { Route as RuntimeIdActivityStreamRouteImport } from './../../routes/runtime/$id/activity/stream'
 import { Route as RuntimeIdEngineCldRouteImport } from './../../routes/runtime/$id/engine/cld'
@@ -28,11 +35,13 @@ import { Route as RuntimeIdKnowledgeModelsRouteImport } from './../../routes/run
 import { Route as RuntimeIdKnowledgeRecordsRouteImport } from './../../routes/runtime/$id/knowledge/records'
 import { Route as RuntimeIdKnowledgeTablesRouteImport } from './../../routes/runtime/$id/knowledge/tables'
 import { Route as RuntimeIdKnowledgeVectorsRouteImport } from './../../routes/runtime/$id/knowledge/vectors'
+import { Route as RuntimeIdOverviewIndexRouteImport } from './../../routes/runtime/$id/overview/index'
 import { Route as RuntimeIdReasoningPlanRouteImport } from './../../routes/runtime/$id/reasoning/plan'
 import { Route as RuntimeIdReasoningRoutesRouteImport } from './../../routes/runtime/$id/reasoning/routes'
 import { Route as RuntimeIdReasoningRunsRouteImport } from './../../routes/runtime/$id/reasoning/runs'
 import { Route as RuntimeIdReasoningTasksRouteImport } from './../../routes/runtime/$id/reasoning/tasks'
 import { Route as RuntimeIdReasoningTracesRouteImport } from './../../routes/runtime/$id/reasoning/traces'
+import { Route as RuntimeIdReasoningWorkbenchRouteImport } from './../../routes/runtime/$id/reasoning/workbench'
 import { Route as RuntimeIdSystemApiRouteImport } from './../../routes/runtime/$id/system/api'
 import { Route as RuntimeIdSystemCapabilitiesRouteImport } from './../../routes/runtime/$id/system/capabilities'
 import { Route as RuntimeIdSystemClusterRouteImport } from './../../routes/runtime/$id/system/cluster'
@@ -40,7 +49,6 @@ import { Route as RuntimeIdSystemConnectionsRouteImport } from './../../routes/r
 import { Route as RuntimeIdSystemEnginesRouteImport } from './../../routes/runtime/$id/system/engines'
 import { Route as RuntimeIdSystemInstanceRouteImport } from './../../routes/runtime/$id/system/instance'
 import { Route as RuntimeIdSystemStorageRouteImport } from './../../routes/runtime/$id/system/storage'
-import { Route as RuntimeIdWorkbenchIndexRouteImport } from './../../routes/runtime/$id/workbench/index'
 import { Route as RuntimeIdWorkbenchFlightsRouteImport } from './../../routes/runtime/$id/workbench/flights'
 import { Route as RuntimeIdWorkbenchQueryRouteImport } from './../../routes/runtime/$id/workbench/query'
 import { Route as RuntimeIdWorkbenchVisualsRouteImport } from './../../routes/runtime/$id/workbench/visuals'
@@ -90,146 +98,187 @@ const RuntimeIdIndexRoute = RuntimeIdIndexRouteImport.update({
   path: '/',
   getParentRoute: () => RuntimeIdRouteRoute,
 } as any)
-const RuntimeIdActivityAuditRoute = RuntimeIdActivityAuditRouteImport.update({
-  id: '/activity/audit',
-  path: '/activity/audit',
+const RuntimeIdActivityRouteRoute = RuntimeIdActivityRouteRouteImport.update({
+  id: '/activity',
+  path: '/activity',
   getParentRoute: () => RuntimeIdRouteRoute,
+} as any)
+const RuntimeIdEngineRouteRoute = RuntimeIdEngineRouteRouteImport.update({
+  id: '/engine',
+  path: '/engine',
+  getParentRoute: () => RuntimeIdRouteRoute,
+} as any)
+const RuntimeIdKnowledgeRouteRoute = RuntimeIdKnowledgeRouteRouteImport.update({
+  id: '/knowledge',
+  path: '/knowledge',
+  getParentRoute: () => RuntimeIdRouteRoute,
+} as any)
+const RuntimeIdOverviewRouteRoute = RuntimeIdOverviewRouteRouteImport.update({
+  id: '/overview',
+  path: '/overview',
+  getParentRoute: () => RuntimeIdRouteRoute,
+} as any)
+const RuntimeIdReasoningRouteRoute = RuntimeIdReasoningRouteRouteImport.update({
+  id: '/reasoning',
+  path: '/reasoning',
+  getParentRoute: () => RuntimeIdRouteRoute,
+} as any)
+const RuntimeIdSystemRouteRoute = RuntimeIdSystemRouteRouteImport.update({
+  id: '/system',
+  path: '/system',
+  getParentRoute: () => RuntimeIdRouteRoute,
+} as any)
+const RuntimeIdWorkbenchRouteRoute = RuntimeIdWorkbenchRouteRouteImport.update({
+  id: '/workbench',
+  path: '/workbench',
+  getParentRoute: () => RuntimeIdRouteRoute,
+} as any)
+const RuntimeIdActivityAuditRoute = RuntimeIdActivityAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => RuntimeIdActivityRouteRoute,
 } as any)
 const RuntimeIdActivityStreamRoute = RuntimeIdActivityStreamRouteImport.update({
-  id: '/activity/stream',
-  path: '/activity/stream',
-  getParentRoute: () => RuntimeIdRouteRoute,
+  id: '/stream',
+  path: '/stream',
+  getParentRoute: () => RuntimeIdActivityRouteRoute,
 } as any)
 const RuntimeIdEngineCldRoute = RuntimeIdEngineCldRouteImport.update({
-  id: '/engine/cld',
-  path: '/engine/cld',
-  getParentRoute: () => RuntimeIdRouteRoute,
+  id: '/cld',
+  path: '/cld',
+  getParentRoute: () => RuntimeIdEngineRouteRoute,
 } as any)
 const RuntimeIdEngineKvRoute = RuntimeIdEngineKvRouteImport.update({
-  id: '/engine/kv',
-  path: '/engine/kv',
-  getParentRoute: () => RuntimeIdRouteRoute,
+  id: '/kv',
+  path: '/kv',
+  getParentRoute: () => RuntimeIdEngineRouteRoute,
 } as any)
 const RuntimeIdEngineLsmRoute = RuntimeIdEngineLsmRouteImport.update({
-  id: '/engine/lsm',
-  path: '/engine/lsm',
-  getParentRoute: () => RuntimeIdRouteRoute,
+  id: '/lsm',
+  path: '/lsm',
+  getParentRoute: () => RuntimeIdEngineRouteRoute,
 } as any)
 const RuntimeIdKnowledgeClaimsRoute =
   RuntimeIdKnowledgeClaimsRouteImport.update({
-    id: '/knowledge/claims',
-    path: '/knowledge/claims',
-    getParentRoute: () => RuntimeIdRouteRoute,
+    id: '/claims',
+    path: '/claims',
+    getParentRoute: () => RuntimeIdKnowledgeRouteRoute,
   } as any)
 const RuntimeIdKnowledgeModelsRoute =
   RuntimeIdKnowledgeModelsRouteImport.update({
-    id: '/knowledge/models',
-    path: '/knowledge/models',
-    getParentRoute: () => RuntimeIdRouteRoute,
+    id: '/models',
+    path: '/models',
+    getParentRoute: () => RuntimeIdKnowledgeRouteRoute,
   } as any)
 const RuntimeIdKnowledgeRecordsRoute =
   RuntimeIdKnowledgeRecordsRouteImport.update({
-    id: '/knowledge/records',
-    path: '/knowledge/records',
-    getParentRoute: () => RuntimeIdRouteRoute,
+    id: '/records',
+    path: '/records',
+    getParentRoute: () => RuntimeIdKnowledgeRouteRoute,
   } as any)
 const RuntimeIdKnowledgeTablesRoute =
   RuntimeIdKnowledgeTablesRouteImport.update({
-    id: '/knowledge/tables',
-    path: '/knowledge/tables',
-    getParentRoute: () => RuntimeIdRouteRoute,
+    id: '/tables',
+    path: '/tables',
+    getParentRoute: () => RuntimeIdKnowledgeRouteRoute,
   } as any)
 const RuntimeIdKnowledgeVectorsRoute =
   RuntimeIdKnowledgeVectorsRouteImport.update({
-    id: '/knowledge/vectors',
-    path: '/knowledge/vectors',
-    getParentRoute: () => RuntimeIdRouteRoute,
+    id: '/vectors',
+    path: '/vectors',
+    getParentRoute: () => RuntimeIdKnowledgeRouteRoute,
   } as any)
+const RuntimeIdOverviewIndexRoute = RuntimeIdOverviewIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => RuntimeIdOverviewRouteRoute,
+} as any)
 const RuntimeIdReasoningPlanRoute = RuntimeIdReasoningPlanRouteImport.update({
-  id: '/reasoning/plan',
-  path: '/reasoning/plan',
-  getParentRoute: () => RuntimeIdRouteRoute,
+  id: '/plan',
+  path: '/plan',
+  getParentRoute: () => RuntimeIdReasoningRouteRoute,
 } as any)
 const RuntimeIdReasoningRoutesRoute =
   RuntimeIdReasoningRoutesRouteImport.update({
-    id: '/reasoning/routes',
-    path: '/reasoning/routes',
-    getParentRoute: () => RuntimeIdRouteRoute,
+    id: '/routes',
+    path: '/routes',
+    getParentRoute: () => RuntimeIdReasoningRouteRoute,
   } as any)
 const RuntimeIdReasoningRunsRoute = RuntimeIdReasoningRunsRouteImport.update({
-  id: '/reasoning/runs',
-  path: '/reasoning/runs',
-  getParentRoute: () => RuntimeIdRouteRoute,
+  id: '/runs',
+  path: '/runs',
+  getParentRoute: () => RuntimeIdReasoningRouteRoute,
 } as any)
 const RuntimeIdReasoningTasksRoute = RuntimeIdReasoningTasksRouteImport.update({
-  id: '/reasoning/tasks',
-  path: '/reasoning/tasks',
-  getParentRoute: () => RuntimeIdRouteRoute,
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => RuntimeIdReasoningRouteRoute,
 } as any)
 const RuntimeIdReasoningTracesRoute =
   RuntimeIdReasoningTracesRouteImport.update({
-    id: '/reasoning/traces',
-    path: '/reasoning/traces',
-    getParentRoute: () => RuntimeIdRouteRoute,
+    id: '/traces',
+    path: '/traces',
+    getParentRoute: () => RuntimeIdReasoningRouteRoute,
+  } as any)
+const RuntimeIdReasoningWorkbenchRoute =
+  RuntimeIdReasoningWorkbenchRouteImport.update({
+    id: '/workbench',
+    path: '/workbench',
+    getParentRoute: () => RuntimeIdReasoningRouteRoute,
   } as any)
 const RuntimeIdSystemApiRoute = RuntimeIdSystemApiRouteImport.update({
-  id: '/system/api',
-  path: '/system/api',
-  getParentRoute: () => RuntimeIdRouteRoute,
+  id: '/api',
+  path: '/api',
+  getParentRoute: () => RuntimeIdSystemRouteRoute,
 } as any)
 const RuntimeIdSystemCapabilitiesRoute =
   RuntimeIdSystemCapabilitiesRouteImport.update({
-    id: '/system/capabilities',
-    path: '/system/capabilities',
-    getParentRoute: () => RuntimeIdRouteRoute,
+    id: '/capabilities',
+    path: '/capabilities',
+    getParentRoute: () => RuntimeIdSystemRouteRoute,
   } as any)
 const RuntimeIdSystemClusterRoute = RuntimeIdSystemClusterRouteImport.update({
-  id: '/system/cluster',
-  path: '/system/cluster',
-  getParentRoute: () => RuntimeIdRouteRoute,
+  id: '/cluster',
+  path: '/cluster',
+  getParentRoute: () => RuntimeIdSystemRouteRoute,
 } as any)
 const RuntimeIdSystemConnectionsRoute =
   RuntimeIdSystemConnectionsRouteImport.update({
-    id: '/system/connections',
-    path: '/system/connections',
-    getParentRoute: () => RuntimeIdRouteRoute,
+    id: '/connections',
+    path: '/connections',
+    getParentRoute: () => RuntimeIdSystemRouteRoute,
   } as any)
 const RuntimeIdSystemEnginesRoute = RuntimeIdSystemEnginesRouteImport.update({
-  id: '/system/engines',
-  path: '/system/engines',
-  getParentRoute: () => RuntimeIdRouteRoute,
+  id: '/engines',
+  path: '/engines',
+  getParentRoute: () => RuntimeIdSystemRouteRoute,
 } as any)
 const RuntimeIdSystemInstanceRoute = RuntimeIdSystemInstanceRouteImport.update({
-  id: '/system/instance',
-  path: '/system/instance',
-  getParentRoute: () => RuntimeIdRouteRoute,
+  id: '/instance',
+  path: '/instance',
+  getParentRoute: () => RuntimeIdSystemRouteRoute,
 } as any)
 const RuntimeIdSystemStorageRoute = RuntimeIdSystemStorageRouteImport.update({
-  id: '/system/storage',
-  path: '/system/storage',
-  getParentRoute: () => RuntimeIdRouteRoute,
-} as any)
-const RuntimeIdWorkbenchIndexRoute = RuntimeIdWorkbenchIndexRouteImport.update({
-  id: '/workbench/',
-  path: '/workbench/',
-  getParentRoute: () => RuntimeIdRouteRoute,
+  id: '/storage',
+  path: '/storage',
+  getParentRoute: () => RuntimeIdSystemRouteRoute,
 } as any)
 const RuntimeIdWorkbenchFlightsRoute =
   RuntimeIdWorkbenchFlightsRouteImport.update({
-    id: '/workbench/flights',
-    path: '/workbench/flights',
-    getParentRoute: () => RuntimeIdRouteRoute,
+    id: '/flights',
+    path: '/flights',
+    getParentRoute: () => RuntimeIdWorkbenchRouteRoute,
   } as any)
 const RuntimeIdWorkbenchQueryRoute = RuntimeIdWorkbenchQueryRouteImport.update({
-  id: '/workbench/query',
-  path: '/workbench/query',
-  getParentRoute: () => RuntimeIdRouteRoute,
+  id: '/query',
+  path: '/query',
+  getParentRoute: () => RuntimeIdWorkbenchRouteRoute,
 } as any)
 const RuntimeIdWorkbenchVisualsRoute =
   RuntimeIdWorkbenchVisualsRouteImport.update({
-    id: '/workbench/visuals',
-    path: '/workbench/visuals',
-    getParentRoute: () => RuntimeIdRouteRoute,
+    id: '/visuals',
+    path: '/visuals',
+    getParentRoute: () => RuntimeIdWorkbenchRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -240,6 +289,13 @@ export interface FileRoutesByFullPath {
   '/control/$id': typeof ControlIdRoute
   '/diagnostics/$id': typeof DiagnosticsIdRoute
   '/mini/new': typeof MiniNewRoute
+  '/runtime/$id/activity': typeof RuntimeIdActivityRouteRouteWithChildren
+  '/runtime/$id/engine': typeof RuntimeIdEngineRouteRouteWithChildren
+  '/runtime/$id/knowledge': typeof RuntimeIdKnowledgeRouteRouteWithChildren
+  '/runtime/$id/overview': typeof RuntimeIdOverviewRouteRouteWithChildren
+  '/runtime/$id/reasoning': typeof RuntimeIdReasoningRouteRouteWithChildren
+  '/runtime/$id/system': typeof RuntimeIdSystemRouteRouteWithChildren
+  '/runtime/$id/workbench': typeof RuntimeIdWorkbenchRouteRouteWithChildren
   '/c/$connection/$view': typeof CConnectionViewRoute
   '/runtime/$id/': typeof RuntimeIdIndexRoute
   '/runtime/$id/activity/audit': typeof RuntimeIdActivityAuditRoute
@@ -257,6 +313,7 @@ export interface FileRoutesByFullPath {
   '/runtime/$id/reasoning/runs': typeof RuntimeIdReasoningRunsRoute
   '/runtime/$id/reasoning/tasks': typeof RuntimeIdReasoningTasksRoute
   '/runtime/$id/reasoning/traces': typeof RuntimeIdReasoningTracesRoute
+  '/runtime/$id/reasoning/workbench': typeof RuntimeIdReasoningWorkbenchRoute
   '/runtime/$id/system/api': typeof RuntimeIdSystemApiRoute
   '/runtime/$id/system/capabilities': typeof RuntimeIdSystemCapabilitiesRoute
   '/runtime/$id/system/cluster': typeof RuntimeIdSystemClusterRoute
@@ -267,7 +324,7 @@ export interface FileRoutesByFullPath {
   '/runtime/$id/workbench/flights': typeof RuntimeIdWorkbenchFlightsRoute
   '/runtime/$id/workbench/query': typeof RuntimeIdWorkbenchQueryRoute
   '/runtime/$id/workbench/visuals': typeof RuntimeIdWorkbenchVisualsRoute
-  '/runtime/$id/workbench/': typeof RuntimeIdWorkbenchIndexRoute
+  '/runtime/$id/overview/': typeof RuntimeIdOverviewIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -276,6 +333,12 @@ export interface FileRoutesByTo {
   '/control/$id': typeof ControlIdRoute
   '/diagnostics/$id': typeof DiagnosticsIdRoute
   '/mini/new': typeof MiniNewRoute
+  '/runtime/$id/activity': typeof RuntimeIdActivityRouteRouteWithChildren
+  '/runtime/$id/engine': typeof RuntimeIdEngineRouteRouteWithChildren
+  '/runtime/$id/knowledge': typeof RuntimeIdKnowledgeRouteRouteWithChildren
+  '/runtime/$id/reasoning': typeof RuntimeIdReasoningRouteRouteWithChildren
+  '/runtime/$id/system': typeof RuntimeIdSystemRouteRouteWithChildren
+  '/runtime/$id/workbench': typeof RuntimeIdWorkbenchRouteRouteWithChildren
   '/c/$connection/$view': typeof CConnectionViewRoute
   '/runtime/$id': typeof RuntimeIdIndexRoute
   '/runtime/$id/activity/audit': typeof RuntimeIdActivityAuditRoute
@@ -293,6 +356,7 @@ export interface FileRoutesByTo {
   '/runtime/$id/reasoning/runs': typeof RuntimeIdReasoningRunsRoute
   '/runtime/$id/reasoning/tasks': typeof RuntimeIdReasoningTasksRoute
   '/runtime/$id/reasoning/traces': typeof RuntimeIdReasoningTracesRoute
+  '/runtime/$id/reasoning/workbench': typeof RuntimeIdReasoningWorkbenchRoute
   '/runtime/$id/system/api': typeof RuntimeIdSystemApiRoute
   '/runtime/$id/system/capabilities': typeof RuntimeIdSystemCapabilitiesRoute
   '/runtime/$id/system/cluster': typeof RuntimeIdSystemClusterRoute
@@ -303,7 +367,7 @@ export interface FileRoutesByTo {
   '/runtime/$id/workbench/flights': typeof RuntimeIdWorkbenchFlightsRoute
   '/runtime/$id/workbench/query': typeof RuntimeIdWorkbenchQueryRoute
   '/runtime/$id/workbench/visuals': typeof RuntimeIdWorkbenchVisualsRoute
-  '/runtime/$id/workbench': typeof RuntimeIdWorkbenchIndexRoute
+  '/runtime/$id/overview': typeof RuntimeIdOverviewIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -314,6 +378,13 @@ export interface FileRoutesById {
   '/control/$id': typeof ControlIdRoute
   '/diagnostics/$id': typeof DiagnosticsIdRoute
   '/mini/new': typeof MiniNewRoute
+  '/runtime/$id/activity': typeof RuntimeIdActivityRouteRouteWithChildren
+  '/runtime/$id/engine': typeof RuntimeIdEngineRouteRouteWithChildren
+  '/runtime/$id/knowledge': typeof RuntimeIdKnowledgeRouteRouteWithChildren
+  '/runtime/$id/overview': typeof RuntimeIdOverviewRouteRouteWithChildren
+  '/runtime/$id/reasoning': typeof RuntimeIdReasoningRouteRouteWithChildren
+  '/runtime/$id/system': typeof RuntimeIdSystemRouteRouteWithChildren
+  '/runtime/$id/workbench': typeof RuntimeIdWorkbenchRouteRouteWithChildren
   '/c/$connection/$view': typeof CConnectionViewRoute
   '/runtime/$id/': typeof RuntimeIdIndexRoute
   '/runtime/$id/activity/audit': typeof RuntimeIdActivityAuditRoute
@@ -331,6 +402,7 @@ export interface FileRoutesById {
   '/runtime/$id/reasoning/runs': typeof RuntimeIdReasoningRunsRoute
   '/runtime/$id/reasoning/tasks': typeof RuntimeIdReasoningTasksRoute
   '/runtime/$id/reasoning/traces': typeof RuntimeIdReasoningTracesRoute
+  '/runtime/$id/reasoning/workbench': typeof RuntimeIdReasoningWorkbenchRoute
   '/runtime/$id/system/api': typeof RuntimeIdSystemApiRoute
   '/runtime/$id/system/capabilities': typeof RuntimeIdSystemCapabilitiesRoute
   '/runtime/$id/system/cluster': typeof RuntimeIdSystemClusterRoute
@@ -341,7 +413,7 @@ export interface FileRoutesById {
   '/runtime/$id/workbench/flights': typeof RuntimeIdWorkbenchFlightsRoute
   '/runtime/$id/workbench/query': typeof RuntimeIdWorkbenchQueryRoute
   '/runtime/$id/workbench/visuals': typeof RuntimeIdWorkbenchVisualsRoute
-  '/runtime/$id/workbench/': typeof RuntimeIdWorkbenchIndexRoute
+  '/runtime/$id/overview/': typeof RuntimeIdOverviewIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -353,6 +425,13 @@ export interface FileRouteTypes {
     | '/control/$id'
     | '/diagnostics/$id'
     | '/mini/new'
+    | '/runtime/$id/activity'
+    | '/runtime/$id/engine'
+    | '/runtime/$id/knowledge'
+    | '/runtime/$id/overview'
+    | '/runtime/$id/reasoning'
+    | '/runtime/$id/system'
+    | '/runtime/$id/workbench'
     | '/c/$connection/$view'
     | '/runtime/$id/'
     | '/runtime/$id/activity/audit'
@@ -370,6 +449,7 @@ export interface FileRouteTypes {
     | '/runtime/$id/reasoning/runs'
     | '/runtime/$id/reasoning/tasks'
     | '/runtime/$id/reasoning/traces'
+    | '/runtime/$id/reasoning/workbench'
     | '/runtime/$id/system/api'
     | '/runtime/$id/system/capabilities'
     | '/runtime/$id/system/cluster'
@@ -380,7 +460,7 @@ export interface FileRouteTypes {
     | '/runtime/$id/workbench/flights'
     | '/runtime/$id/workbench/query'
     | '/runtime/$id/workbench/visuals'
-    | '/runtime/$id/workbench/'
+    | '/runtime/$id/overview/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -389,6 +469,12 @@ export interface FileRouteTypes {
     | '/control/$id'
     | '/diagnostics/$id'
     | '/mini/new'
+    | '/runtime/$id/activity'
+    | '/runtime/$id/engine'
+    | '/runtime/$id/knowledge'
+    | '/runtime/$id/reasoning'
+    | '/runtime/$id/system'
+    | '/runtime/$id/workbench'
     | '/c/$connection/$view'
     | '/runtime/$id'
     | '/runtime/$id/activity/audit'
@@ -406,6 +492,7 @@ export interface FileRouteTypes {
     | '/runtime/$id/reasoning/runs'
     | '/runtime/$id/reasoning/tasks'
     | '/runtime/$id/reasoning/traces'
+    | '/runtime/$id/reasoning/workbench'
     | '/runtime/$id/system/api'
     | '/runtime/$id/system/capabilities'
     | '/runtime/$id/system/cluster'
@@ -416,7 +503,7 @@ export interface FileRouteTypes {
     | '/runtime/$id/workbench/flights'
     | '/runtime/$id/workbench/query'
     | '/runtime/$id/workbench/visuals'
-    | '/runtime/$id/workbench'
+    | '/runtime/$id/overview'
   id:
     | '__root__'
     | '/'
@@ -426,6 +513,13 @@ export interface FileRouteTypes {
     | '/control/$id'
     | '/diagnostics/$id'
     | '/mini/new'
+    | '/runtime/$id/activity'
+    | '/runtime/$id/engine'
+    | '/runtime/$id/knowledge'
+    | '/runtime/$id/overview'
+    | '/runtime/$id/reasoning'
+    | '/runtime/$id/system'
+    | '/runtime/$id/workbench'
     | '/c/$connection/$view'
     | '/runtime/$id/'
     | '/runtime/$id/activity/audit'
@@ -443,6 +537,7 @@ export interface FileRouteTypes {
     | '/runtime/$id/reasoning/runs'
     | '/runtime/$id/reasoning/tasks'
     | '/runtime/$id/reasoning/traces'
+    | '/runtime/$id/reasoning/workbench'
     | '/runtime/$id/system/api'
     | '/runtime/$id/system/capabilities'
     | '/runtime/$id/system/cluster'
@@ -453,7 +548,7 @@ export interface FileRouteTypes {
     | '/runtime/$id/workbench/flights'
     | '/runtime/$id/workbench/query'
     | '/runtime/$id/workbench/visuals'
-    | '/runtime/$id/workbench/'
+    | '/runtime/$id/overview/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -532,208 +627,339 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RuntimeIdIndexRouteImport
       parentRoute: typeof RuntimeIdRouteRoute
     }
+    '/runtime/$id/activity': {
+      id: '/runtime/$id/activity'
+      path: '/activity'
+      fullPath: '/runtime/$id/activity'
+      preLoaderRoute: typeof RuntimeIdActivityRouteRouteImport
+      parentRoute: typeof RuntimeIdRouteRoute
+    }
+    '/runtime/$id/engine': {
+      id: '/runtime/$id/engine'
+      path: '/engine'
+      fullPath: '/runtime/$id/engine'
+      preLoaderRoute: typeof RuntimeIdEngineRouteRouteImport
+      parentRoute: typeof RuntimeIdRouteRoute
+    }
+    '/runtime/$id/knowledge': {
+      id: '/runtime/$id/knowledge'
+      path: '/knowledge'
+      fullPath: '/runtime/$id/knowledge'
+      preLoaderRoute: typeof RuntimeIdKnowledgeRouteRouteImport
+      parentRoute: typeof RuntimeIdRouteRoute
+    }
+    '/runtime/$id/overview': {
+      id: '/runtime/$id/overview'
+      path: '/overview'
+      fullPath: '/runtime/$id/overview'
+      preLoaderRoute: typeof RuntimeIdOverviewRouteRouteImport
+      parentRoute: typeof RuntimeIdRouteRoute
+    }
+    '/runtime/$id/reasoning': {
+      id: '/runtime/$id/reasoning'
+      path: '/reasoning'
+      fullPath: '/runtime/$id/reasoning'
+      preLoaderRoute: typeof RuntimeIdReasoningRouteRouteImport
+      parentRoute: typeof RuntimeIdRouteRoute
+    }
+    '/runtime/$id/system': {
+      id: '/runtime/$id/system'
+      path: '/system'
+      fullPath: '/runtime/$id/system'
+      preLoaderRoute: typeof RuntimeIdSystemRouteRouteImport
+      parentRoute: typeof RuntimeIdRouteRoute
+    }
+    '/runtime/$id/workbench': {
+      id: '/runtime/$id/workbench'
+      path: '/workbench'
+      fullPath: '/runtime/$id/workbench'
+      preLoaderRoute: typeof RuntimeIdWorkbenchRouteRouteImport
+      parentRoute: typeof RuntimeIdRouteRoute
+    }
     '/runtime/$id/activity/audit': {
       id: '/runtime/$id/activity/audit'
-      path: '/activity/audit'
+      path: '/audit'
       fullPath: '/runtime/$id/activity/audit'
       preLoaderRoute: typeof RuntimeIdActivityAuditRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
+      parentRoute: typeof RuntimeIdActivityRouteRoute
     }
     '/runtime/$id/activity/stream': {
       id: '/runtime/$id/activity/stream'
-      path: '/activity/stream'
+      path: '/stream'
       fullPath: '/runtime/$id/activity/stream'
       preLoaderRoute: typeof RuntimeIdActivityStreamRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
+      parentRoute: typeof RuntimeIdActivityRouteRoute
     }
     '/runtime/$id/engine/cld': {
       id: '/runtime/$id/engine/cld'
-      path: '/engine/cld'
+      path: '/cld'
       fullPath: '/runtime/$id/engine/cld'
       preLoaderRoute: typeof RuntimeIdEngineCldRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
+      parentRoute: typeof RuntimeIdEngineRouteRoute
     }
     '/runtime/$id/engine/kv': {
       id: '/runtime/$id/engine/kv'
-      path: '/engine/kv'
+      path: '/kv'
       fullPath: '/runtime/$id/engine/kv'
       preLoaderRoute: typeof RuntimeIdEngineKvRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
+      parentRoute: typeof RuntimeIdEngineRouteRoute
     }
     '/runtime/$id/engine/lsm': {
       id: '/runtime/$id/engine/lsm'
-      path: '/engine/lsm'
+      path: '/lsm'
       fullPath: '/runtime/$id/engine/lsm'
       preLoaderRoute: typeof RuntimeIdEngineLsmRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
+      parentRoute: typeof RuntimeIdEngineRouteRoute
     }
     '/runtime/$id/knowledge/claims': {
       id: '/runtime/$id/knowledge/claims'
-      path: '/knowledge/claims'
+      path: '/claims'
       fullPath: '/runtime/$id/knowledge/claims'
       preLoaderRoute: typeof RuntimeIdKnowledgeClaimsRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
+      parentRoute: typeof RuntimeIdKnowledgeRouteRoute
     }
     '/runtime/$id/knowledge/models': {
       id: '/runtime/$id/knowledge/models'
-      path: '/knowledge/models'
+      path: '/models'
       fullPath: '/runtime/$id/knowledge/models'
       preLoaderRoute: typeof RuntimeIdKnowledgeModelsRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
+      parentRoute: typeof RuntimeIdKnowledgeRouteRoute
     }
     '/runtime/$id/knowledge/records': {
       id: '/runtime/$id/knowledge/records'
-      path: '/knowledge/records'
+      path: '/records'
       fullPath: '/runtime/$id/knowledge/records'
       preLoaderRoute: typeof RuntimeIdKnowledgeRecordsRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
+      parentRoute: typeof RuntimeIdKnowledgeRouteRoute
     }
     '/runtime/$id/knowledge/tables': {
       id: '/runtime/$id/knowledge/tables'
-      path: '/knowledge/tables'
+      path: '/tables'
       fullPath: '/runtime/$id/knowledge/tables'
       preLoaderRoute: typeof RuntimeIdKnowledgeTablesRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
+      parentRoute: typeof RuntimeIdKnowledgeRouteRoute
     }
     '/runtime/$id/knowledge/vectors': {
       id: '/runtime/$id/knowledge/vectors'
-      path: '/knowledge/vectors'
+      path: '/vectors'
       fullPath: '/runtime/$id/knowledge/vectors'
       preLoaderRoute: typeof RuntimeIdKnowledgeVectorsRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
+      parentRoute: typeof RuntimeIdKnowledgeRouteRoute
+    }
+    '/runtime/$id/overview/': {
+      id: '/runtime/$id/overview/'
+      path: '/'
+      fullPath: '/runtime/$id/overview/'
+      preLoaderRoute: typeof RuntimeIdOverviewIndexRouteImport
+      parentRoute: typeof RuntimeIdOverviewRouteRoute
     }
     '/runtime/$id/reasoning/plan': {
       id: '/runtime/$id/reasoning/plan'
-      path: '/reasoning/plan'
+      path: '/plan'
       fullPath: '/runtime/$id/reasoning/plan'
       preLoaderRoute: typeof RuntimeIdReasoningPlanRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
+      parentRoute: typeof RuntimeIdReasoningRouteRoute
     }
     '/runtime/$id/reasoning/routes': {
       id: '/runtime/$id/reasoning/routes'
-      path: '/reasoning/routes'
+      path: '/routes'
       fullPath: '/runtime/$id/reasoning/routes'
       preLoaderRoute: typeof RuntimeIdReasoningRoutesRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
+      parentRoute: typeof RuntimeIdReasoningRouteRoute
     }
     '/runtime/$id/reasoning/runs': {
       id: '/runtime/$id/reasoning/runs'
-      path: '/reasoning/runs'
+      path: '/runs'
       fullPath: '/runtime/$id/reasoning/runs'
       preLoaderRoute: typeof RuntimeIdReasoningRunsRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
+      parentRoute: typeof RuntimeIdReasoningRouteRoute
     }
     '/runtime/$id/reasoning/tasks': {
       id: '/runtime/$id/reasoning/tasks'
-      path: '/reasoning/tasks'
+      path: '/tasks'
       fullPath: '/runtime/$id/reasoning/tasks'
       preLoaderRoute: typeof RuntimeIdReasoningTasksRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
+      parentRoute: typeof RuntimeIdReasoningRouteRoute
     }
     '/runtime/$id/reasoning/traces': {
       id: '/runtime/$id/reasoning/traces'
-      path: '/reasoning/traces'
+      path: '/traces'
       fullPath: '/runtime/$id/reasoning/traces'
       preLoaderRoute: typeof RuntimeIdReasoningTracesRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
+      parentRoute: typeof RuntimeIdReasoningRouteRoute
+    }
+    '/runtime/$id/reasoning/workbench': {
+      id: '/runtime/$id/reasoning/workbench'
+      path: '/workbench'
+      fullPath: '/runtime/$id/reasoning/workbench'
+      preLoaderRoute: typeof RuntimeIdReasoningWorkbenchRouteImport
+      parentRoute: typeof RuntimeIdReasoningRouteRoute
     }
     '/runtime/$id/system/api': {
       id: '/runtime/$id/system/api'
-      path: '/system/api'
+      path: '/api'
       fullPath: '/runtime/$id/system/api'
       preLoaderRoute: typeof RuntimeIdSystemApiRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
+      parentRoute: typeof RuntimeIdSystemRouteRoute
     }
     '/runtime/$id/system/capabilities': {
       id: '/runtime/$id/system/capabilities'
-      path: '/system/capabilities'
+      path: '/capabilities'
       fullPath: '/runtime/$id/system/capabilities'
       preLoaderRoute: typeof RuntimeIdSystemCapabilitiesRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
+      parentRoute: typeof RuntimeIdSystemRouteRoute
     }
     '/runtime/$id/system/cluster': {
       id: '/runtime/$id/system/cluster'
-      path: '/system/cluster'
+      path: '/cluster'
       fullPath: '/runtime/$id/system/cluster'
       preLoaderRoute: typeof RuntimeIdSystemClusterRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
+      parentRoute: typeof RuntimeIdSystemRouteRoute
     }
     '/runtime/$id/system/connections': {
       id: '/runtime/$id/system/connections'
-      path: '/system/connections'
+      path: '/connections'
       fullPath: '/runtime/$id/system/connections'
       preLoaderRoute: typeof RuntimeIdSystemConnectionsRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
+      parentRoute: typeof RuntimeIdSystemRouteRoute
     }
     '/runtime/$id/system/engines': {
       id: '/runtime/$id/system/engines'
-      path: '/system/engines'
+      path: '/engines'
       fullPath: '/runtime/$id/system/engines'
       preLoaderRoute: typeof RuntimeIdSystemEnginesRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
+      parentRoute: typeof RuntimeIdSystemRouteRoute
     }
     '/runtime/$id/system/instance': {
       id: '/runtime/$id/system/instance'
-      path: '/system/instance'
+      path: '/instance'
       fullPath: '/runtime/$id/system/instance'
       preLoaderRoute: typeof RuntimeIdSystemInstanceRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
+      parentRoute: typeof RuntimeIdSystemRouteRoute
     }
     '/runtime/$id/system/storage': {
       id: '/runtime/$id/system/storage'
-      path: '/system/storage'
+      path: '/storage'
       fullPath: '/runtime/$id/system/storage'
       preLoaderRoute: typeof RuntimeIdSystemStorageRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
-    }
-    '/runtime/$id/workbench/': {
-      id: '/runtime/$id/workbench/'
-      path: '/workbench'
-      fullPath: '/runtime/$id/workbench/'
-      preLoaderRoute: typeof RuntimeIdWorkbenchIndexRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
+      parentRoute: typeof RuntimeIdSystemRouteRoute
     }
     '/runtime/$id/workbench/flights': {
       id: '/runtime/$id/workbench/flights'
-      path: '/workbench/flights'
+      path: '/flights'
       fullPath: '/runtime/$id/workbench/flights'
       preLoaderRoute: typeof RuntimeIdWorkbenchFlightsRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
+      parentRoute: typeof RuntimeIdWorkbenchRouteRoute
     }
     '/runtime/$id/workbench/query': {
       id: '/runtime/$id/workbench/query'
-      path: '/workbench/query'
+      path: '/query'
       fullPath: '/runtime/$id/workbench/query'
       preLoaderRoute: typeof RuntimeIdWorkbenchQueryRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
+      parentRoute: typeof RuntimeIdWorkbenchRouteRoute
     }
     '/runtime/$id/workbench/visuals': {
       id: '/runtime/$id/workbench/visuals'
-      path: '/workbench/visuals'
+      path: '/visuals'
       fullPath: '/runtime/$id/workbench/visuals'
       preLoaderRoute: typeof RuntimeIdWorkbenchVisualsRouteImport
-      parentRoute: typeof RuntimeIdRouteRoute
+      parentRoute: typeof RuntimeIdWorkbenchRouteRoute
     }
   }
 }
 
-interface RuntimeIdRouteRouteChildren {
-  RuntimeIdIndexRoute: typeof RuntimeIdIndexRoute
+interface RuntimeIdActivityRouteRouteChildren {
   RuntimeIdActivityAuditRoute: typeof RuntimeIdActivityAuditRoute
   RuntimeIdActivityStreamRoute: typeof RuntimeIdActivityStreamRoute
+}
+
+const RuntimeIdActivityRouteRouteChildren: RuntimeIdActivityRouteRouteChildren =
+  {
+    RuntimeIdActivityAuditRoute: RuntimeIdActivityAuditRoute,
+    RuntimeIdActivityStreamRoute: RuntimeIdActivityStreamRoute,
+  }
+
+const RuntimeIdActivityRouteRouteWithChildren =
+  RuntimeIdActivityRouteRoute._addFileChildren(
+    RuntimeIdActivityRouteRouteChildren,
+  )
+
+interface RuntimeIdEngineRouteRouteChildren {
   RuntimeIdEngineCldRoute: typeof RuntimeIdEngineCldRoute
   RuntimeIdEngineKvRoute: typeof RuntimeIdEngineKvRoute
   RuntimeIdEngineLsmRoute: typeof RuntimeIdEngineLsmRoute
+}
+
+const RuntimeIdEngineRouteRouteChildren: RuntimeIdEngineRouteRouteChildren = {
+  RuntimeIdEngineCldRoute: RuntimeIdEngineCldRoute,
+  RuntimeIdEngineKvRoute: RuntimeIdEngineKvRoute,
+  RuntimeIdEngineLsmRoute: RuntimeIdEngineLsmRoute,
+}
+
+const RuntimeIdEngineRouteRouteWithChildren =
+  RuntimeIdEngineRouteRoute._addFileChildren(RuntimeIdEngineRouteRouteChildren)
+
+interface RuntimeIdKnowledgeRouteRouteChildren {
   RuntimeIdKnowledgeClaimsRoute: typeof RuntimeIdKnowledgeClaimsRoute
   RuntimeIdKnowledgeModelsRoute: typeof RuntimeIdKnowledgeModelsRoute
   RuntimeIdKnowledgeRecordsRoute: typeof RuntimeIdKnowledgeRecordsRoute
   RuntimeIdKnowledgeTablesRoute: typeof RuntimeIdKnowledgeTablesRoute
   RuntimeIdKnowledgeVectorsRoute: typeof RuntimeIdKnowledgeVectorsRoute
+}
+
+const RuntimeIdKnowledgeRouteRouteChildren: RuntimeIdKnowledgeRouteRouteChildren =
+  {
+    RuntimeIdKnowledgeClaimsRoute: RuntimeIdKnowledgeClaimsRoute,
+    RuntimeIdKnowledgeModelsRoute: RuntimeIdKnowledgeModelsRoute,
+    RuntimeIdKnowledgeRecordsRoute: RuntimeIdKnowledgeRecordsRoute,
+    RuntimeIdKnowledgeTablesRoute: RuntimeIdKnowledgeTablesRoute,
+    RuntimeIdKnowledgeVectorsRoute: RuntimeIdKnowledgeVectorsRoute,
+  }
+
+const RuntimeIdKnowledgeRouteRouteWithChildren =
+  RuntimeIdKnowledgeRouteRoute._addFileChildren(
+    RuntimeIdKnowledgeRouteRouteChildren,
+  )
+
+interface RuntimeIdOverviewRouteRouteChildren {
+  RuntimeIdOverviewIndexRoute: typeof RuntimeIdOverviewIndexRoute
+}
+
+const RuntimeIdOverviewRouteRouteChildren: RuntimeIdOverviewRouteRouteChildren =
+  {
+    RuntimeIdOverviewIndexRoute: RuntimeIdOverviewIndexRoute,
+  }
+
+const RuntimeIdOverviewRouteRouteWithChildren =
+  RuntimeIdOverviewRouteRoute._addFileChildren(
+    RuntimeIdOverviewRouteRouteChildren,
+  )
+
+interface RuntimeIdReasoningRouteRouteChildren {
   RuntimeIdReasoningPlanRoute: typeof RuntimeIdReasoningPlanRoute
   RuntimeIdReasoningRoutesRoute: typeof RuntimeIdReasoningRoutesRoute
   RuntimeIdReasoningRunsRoute: typeof RuntimeIdReasoningRunsRoute
   RuntimeIdReasoningTasksRoute: typeof RuntimeIdReasoningTasksRoute
   RuntimeIdReasoningTracesRoute: typeof RuntimeIdReasoningTracesRoute
+  RuntimeIdReasoningWorkbenchRoute: typeof RuntimeIdReasoningWorkbenchRoute
+}
+
+const RuntimeIdReasoningRouteRouteChildren: RuntimeIdReasoningRouteRouteChildren =
+  {
+    RuntimeIdReasoningPlanRoute: RuntimeIdReasoningPlanRoute,
+    RuntimeIdReasoningRoutesRoute: RuntimeIdReasoningRoutesRoute,
+    RuntimeIdReasoningRunsRoute: RuntimeIdReasoningRunsRoute,
+    RuntimeIdReasoningTasksRoute: RuntimeIdReasoningTasksRoute,
+    RuntimeIdReasoningTracesRoute: RuntimeIdReasoningTracesRoute,
+    RuntimeIdReasoningWorkbenchRoute: RuntimeIdReasoningWorkbenchRoute,
+  }
+
+const RuntimeIdReasoningRouteRouteWithChildren =
+  RuntimeIdReasoningRouteRoute._addFileChildren(
+    RuntimeIdReasoningRouteRouteChildren,
+  )
+
+interface RuntimeIdSystemRouteRouteChildren {
   RuntimeIdSystemApiRoute: typeof RuntimeIdSystemApiRoute
   RuntimeIdSystemCapabilitiesRoute: typeof RuntimeIdSystemCapabilitiesRoute
   RuntimeIdSystemClusterRoute: typeof RuntimeIdSystemClusterRoute
@@ -741,29 +967,9 @@ interface RuntimeIdRouteRouteChildren {
   RuntimeIdSystemEnginesRoute: typeof RuntimeIdSystemEnginesRoute
   RuntimeIdSystemInstanceRoute: typeof RuntimeIdSystemInstanceRoute
   RuntimeIdSystemStorageRoute: typeof RuntimeIdSystemStorageRoute
-  RuntimeIdWorkbenchFlightsRoute: typeof RuntimeIdWorkbenchFlightsRoute
-  RuntimeIdWorkbenchQueryRoute: typeof RuntimeIdWorkbenchQueryRoute
-  RuntimeIdWorkbenchVisualsRoute: typeof RuntimeIdWorkbenchVisualsRoute
-  RuntimeIdWorkbenchIndexRoute: typeof RuntimeIdWorkbenchIndexRoute
 }
 
-const RuntimeIdRouteRouteChildren: RuntimeIdRouteRouteChildren = {
-  RuntimeIdIndexRoute: RuntimeIdIndexRoute,
-  RuntimeIdActivityAuditRoute: RuntimeIdActivityAuditRoute,
-  RuntimeIdActivityStreamRoute: RuntimeIdActivityStreamRoute,
-  RuntimeIdEngineCldRoute: RuntimeIdEngineCldRoute,
-  RuntimeIdEngineKvRoute: RuntimeIdEngineKvRoute,
-  RuntimeIdEngineLsmRoute: RuntimeIdEngineLsmRoute,
-  RuntimeIdKnowledgeClaimsRoute: RuntimeIdKnowledgeClaimsRoute,
-  RuntimeIdKnowledgeModelsRoute: RuntimeIdKnowledgeModelsRoute,
-  RuntimeIdKnowledgeRecordsRoute: RuntimeIdKnowledgeRecordsRoute,
-  RuntimeIdKnowledgeTablesRoute: RuntimeIdKnowledgeTablesRoute,
-  RuntimeIdKnowledgeVectorsRoute: RuntimeIdKnowledgeVectorsRoute,
-  RuntimeIdReasoningPlanRoute: RuntimeIdReasoningPlanRoute,
-  RuntimeIdReasoningRoutesRoute: RuntimeIdReasoningRoutesRoute,
-  RuntimeIdReasoningRunsRoute: RuntimeIdReasoningRunsRoute,
-  RuntimeIdReasoningTasksRoute: RuntimeIdReasoningTasksRoute,
-  RuntimeIdReasoningTracesRoute: RuntimeIdReasoningTracesRoute,
+const RuntimeIdSystemRouteRouteChildren: RuntimeIdSystemRouteRouteChildren = {
   RuntimeIdSystemApiRoute: RuntimeIdSystemApiRoute,
   RuntimeIdSystemCapabilitiesRoute: RuntimeIdSystemCapabilitiesRoute,
   RuntimeIdSystemClusterRoute: RuntimeIdSystemClusterRoute,
@@ -771,10 +977,49 @@ const RuntimeIdRouteRouteChildren: RuntimeIdRouteRouteChildren = {
   RuntimeIdSystemEnginesRoute: RuntimeIdSystemEnginesRoute,
   RuntimeIdSystemInstanceRoute: RuntimeIdSystemInstanceRoute,
   RuntimeIdSystemStorageRoute: RuntimeIdSystemStorageRoute,
-  RuntimeIdWorkbenchFlightsRoute: RuntimeIdWorkbenchFlightsRoute,
-  RuntimeIdWorkbenchQueryRoute: RuntimeIdWorkbenchQueryRoute,
-  RuntimeIdWorkbenchVisualsRoute: RuntimeIdWorkbenchVisualsRoute,
-  RuntimeIdWorkbenchIndexRoute: RuntimeIdWorkbenchIndexRoute,
+}
+
+const RuntimeIdSystemRouteRouteWithChildren =
+  RuntimeIdSystemRouteRoute._addFileChildren(RuntimeIdSystemRouteRouteChildren)
+
+interface RuntimeIdWorkbenchRouteRouteChildren {
+  RuntimeIdWorkbenchFlightsRoute: typeof RuntimeIdWorkbenchFlightsRoute
+  RuntimeIdWorkbenchQueryRoute: typeof RuntimeIdWorkbenchQueryRoute
+  RuntimeIdWorkbenchVisualsRoute: typeof RuntimeIdWorkbenchVisualsRoute
+}
+
+const RuntimeIdWorkbenchRouteRouteChildren: RuntimeIdWorkbenchRouteRouteChildren =
+  {
+    RuntimeIdWorkbenchFlightsRoute: RuntimeIdWorkbenchFlightsRoute,
+    RuntimeIdWorkbenchQueryRoute: RuntimeIdWorkbenchQueryRoute,
+    RuntimeIdWorkbenchVisualsRoute: RuntimeIdWorkbenchVisualsRoute,
+  }
+
+const RuntimeIdWorkbenchRouteRouteWithChildren =
+  RuntimeIdWorkbenchRouteRoute._addFileChildren(
+    RuntimeIdWorkbenchRouteRouteChildren,
+  )
+
+interface RuntimeIdRouteRouteChildren {
+  RuntimeIdActivityRouteRoute: typeof RuntimeIdActivityRouteRouteWithChildren
+  RuntimeIdEngineRouteRoute: typeof RuntimeIdEngineRouteRouteWithChildren
+  RuntimeIdKnowledgeRouteRoute: typeof RuntimeIdKnowledgeRouteRouteWithChildren
+  RuntimeIdOverviewRouteRoute: typeof RuntimeIdOverviewRouteRouteWithChildren
+  RuntimeIdReasoningRouteRoute: typeof RuntimeIdReasoningRouteRouteWithChildren
+  RuntimeIdSystemRouteRoute: typeof RuntimeIdSystemRouteRouteWithChildren
+  RuntimeIdWorkbenchRouteRoute: typeof RuntimeIdWorkbenchRouteRouteWithChildren
+  RuntimeIdIndexRoute: typeof RuntimeIdIndexRoute
+}
+
+const RuntimeIdRouteRouteChildren: RuntimeIdRouteRouteChildren = {
+  RuntimeIdActivityRouteRoute: RuntimeIdActivityRouteRouteWithChildren,
+  RuntimeIdEngineRouteRoute: RuntimeIdEngineRouteRouteWithChildren,
+  RuntimeIdKnowledgeRouteRoute: RuntimeIdKnowledgeRouteRouteWithChildren,
+  RuntimeIdOverviewRouteRoute: RuntimeIdOverviewRouteRouteWithChildren,
+  RuntimeIdReasoningRouteRoute: RuntimeIdReasoningRouteRouteWithChildren,
+  RuntimeIdSystemRouteRoute: RuntimeIdSystemRouteRouteWithChildren,
+  RuntimeIdWorkbenchRouteRoute: RuntimeIdWorkbenchRouteRouteWithChildren,
+  RuntimeIdIndexRoute: RuntimeIdIndexRoute,
 }
 
 const RuntimeIdRouteRouteWithChildren = RuntimeIdRouteRoute._addFileChildren(

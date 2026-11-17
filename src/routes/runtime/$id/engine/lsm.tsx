@@ -6,7 +6,6 @@ export const Route = createFileRoute("/runtime/$id/engine/lsm")({
 	staticData: {
 		menu: {
 			label: "rrflowLSM",
-			group: "engine",
 			order: 1,
 			icon: iconMemory,
 			hint: "The hot tier: recent writes in memory and sorted files, with live counters.",

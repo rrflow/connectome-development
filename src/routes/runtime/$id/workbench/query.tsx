@@ -6,8 +6,7 @@ export const Route = createFileRoute("/runtime/$id/workbench/query")({
 	staticData: {
 		menu: {
 			label: "Query lab",
-			group: "workbench",
-			order: 4,
+			order: 3,
 			icon: iconQuery,
 			hint: "Ask the engine a question and see both the answer and how it chose to find it.",
 		},

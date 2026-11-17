@@ -7,7 +7,6 @@ export const Route = createFileRoute("/runtime/$id/knowledge/vectors")({
 	staticData: {
 		menu: {
 			label: "Vectors",
-			group: "knowledge",
 			order: 3,
 			icon: iconTarget,
 			hint: "Find records with similar meaning by comparing their vectors.",

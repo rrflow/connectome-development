@@ -7,7 +7,6 @@ export const Route = createFileRoute("/runtime/$id/system/api")({
 	staticData: {
 		menu: {
 			label: "API reference",
-			group: "system",
 			order: 9,
 			icon: iconAPI,
 			hint: "Every operation this engine serves, with an example in each language.",

@@ -6,8 +6,7 @@ import { iconModel } from "~/shared/assets/icons";
 export const Route = createFileRoute("/runtime/$id/knowledge/models")({
 	staticData: {
 		menu: {
-			label: "Data models",
-			group: "knowledge",
+			label: "Schema",
 			order: 2,
 			icon: iconModel,
 			hint: "The shapes of the data this project keeps, read from the live schema.",

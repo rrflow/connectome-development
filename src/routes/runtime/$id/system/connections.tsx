@@ -6,7 +6,6 @@ export const Route = createFileRoute("/runtime/$id/system/connections")({
 	staticData: {
 		menu: {
 			label: "Connections",
-			group: "system",
 			order: 3,
 			icon: iconServerSecure,
 			hint: "Every project this app knows, and whether its engine answers right now.",

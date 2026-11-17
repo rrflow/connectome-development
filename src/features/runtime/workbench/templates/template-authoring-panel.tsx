@@ -545,7 +545,11 @@ export function WorkbenchTemplateAuthoringPanel({
 								value={step.route}
 								data={workbenchRouteOptions}
 								onChange={(next) =>
-									onUpdateTemplateStep(index, "route", next ?? "workbench")
+									onUpdateTemplateStep(
+										index,
+										"route",
+										next ?? "reasoning/workbench",
+									)
 								}
 							/>
 							<Select

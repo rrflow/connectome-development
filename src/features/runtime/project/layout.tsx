@@ -1,9 +1,11 @@
 import { Alert, Badge, Button, Group, Select, Stack, Text } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
-import { Navigate, Outlet } from "@tanstack/react-router";
+import { Navigate, Outlet, useRouter } from "@tanstack/react-router";
 import { isTauri } from "@tauri-apps/api/core";
 import { useEffect, useMemo, useState } from "react";
 import { type MenuCounts, useMenuCounts } from "~/app/router/menu-counts";
+import { projectAreas } from "~/app/router/project-menu";
+import { AppRedirect } from "~/components/AppLink";
 import { Icon } from "~/components/Icon";
 import { useAbsoluteLocation } from "~/hooks/app/routing";
 import { connectionProject } from "~/rrflow/instances";
@@ -19,17 +21,19 @@ import { WorkspaceShell } from "../shell/shell";
 import type { RuntimeLens } from "../types";
 import { ProjectContext, type ProjectContextValue } from "./context";
 
-/** Addresses saved before a view moved open the view where it lives now. */
-const MOVED: Record<string, string> = {
-	overview: "",
+/**
+ * Addresses saved before the project had areas, and where their views live now.
+ * The smoke suite pins this ("addresses saved before these areas still open
+ * their view"). Pre-release policy says no compatibility, so whether to retire
+ * it is the owner's decision at the reorganization; until then nothing that
+ * opened before stops opening.
+ */
+const BEFORE_AREAS: Record<string, string> = {
 	tasks: "reasoning/tasks",
+	workbench: "reasoning/workbench",
 	plan: "reasoning/plan",
 	api: "system/api",
-	"reasoning/workbench": "workbench",
 	"knowledge/storage": "system/storage",
-	knowledge: "knowledge/records",
-	reasoning: "reasoning/tasks",
-	system: "system/instance",
 };
 
 /**
@@ -38,6 +42,8 @@ const MOVED: Record<string, string> = {
  */
 export function ProjectLayout({ id }: { id: string }) {
 	const [location, navigate] = useAbsoluteLocation();
+	const router = useRouter();
+	const areas = useMemo(() => projectAreas(Object.values(router.routesById)), [router]);
 	const connections = useConfigStore((state) => state.connections);
 	const prefix = `/runtime/${id}`;
 	const path = location.startsWith(prefix)
@@ -125,13 +131,18 @@ export function ProjectLayout({ id }: { id: string }) {
 	if (connection?.target !== "runtime") {
 		return <Navigate to="/overview" />;
 	}
-	if (path in MOVED) {
-		return (
-			<Navigate
-				to={MOVED[path] ? `${prefix}/${MOVED[path]}` : prefix}
-				replace
-			/>
-		);
+	if (path in BEFORE_AREAS) {
+		return <AppRedirect to={`${prefix}/${BEFORE_AREAS[path]}`} />;
+	}
+	// An address no tab owns opens the project's first tab.
+	const known = new Set(areas.flatMap((area) => [area.id, ...area.tabs.map((tab) => tab.path)]));
+	if (path !== "" && areas.length > 0 && !known.has(path)) {
+		return <AppRedirect to={`${prefix}/${areas[0].tabs[0].path}`} />;
+	}
+	// An area's own address opens its first tab, unless that tab is the address itself.
+	const opening = areas.find((area) => area.id === path && area.tabs[0].path !== path);
+	if (opening) {
+		return <AppRedirect to={`${prefix}/${opening.tabs[0].path}`} />;
 	}
 
 	const unreachable = query.isError && isUnreachable(query.error);
@@ -159,7 +170,8 @@ export function ProjectLayout({ id }: { id: string }) {
 	return (
 		<ProjectContext.Provider value={value}>
 			<WorkspaceShell
-				route={path}
+				project={id}
+				route={path || (areas[0]?.tabs[0].path ?? "")}
 				onOpen={open}
 				top={
 					<>

@@ -3,12 +3,11 @@ import { useProject } from "~/features/runtime/project/context";
 import { WorkbenchPanel } from "~/features/runtime/workbench/workbench";
 import { iconHammer } from "~/shared/assets/icons";
 
-export const Route = createFileRoute("/runtime/$id/workbench/")({
+export const Route = createFileRoute("/runtime/$id/reasoning/workbench")({
 	staticData: {
 		menu: {
 			label: "Workbench",
-			group: "workbench",
-			order: 1,
+			order: 3,
 			icon: iconHammer,
 			hint: "Run prompts against this project and see exactly what the engine read.",
 		},

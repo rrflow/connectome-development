@@ -1,10 +1,15 @@
-import { Box, Button, ScrollArea, Stack } from "@mantine/core";
+import { Badge, Box, Button, ScrollArea, Stack, Tooltip, UnstyledButton } from "@mantine/core";
+import { useRouter } from "@tanstack/react-router";
 import { type ReactNode, useMemo, useState } from "react";
+import { useMenuCounts } from "~/app/router/menu-counts";
+import { areaOf, projectAreas } from "~/app/router/project-menu";
+import { Icon } from "~/components/Icon";
 import { InspectorContext } from "../components/inspector";
 import { GuideProvider } from "../guides/engine";
 import classes from "../style.module.scss";
 
 export interface WorkspaceShellProps {
+	project: string;
 	route: string;
 	onOpen: (route: string) => void;
 	top: ReactNode;
@@ -12,11 +17,16 @@ export interface WorkspaceShellProps {
 }
 
 /**
- * One window: the project bar stays in place, and the main menu, built from the
- * route tree, is the only navigation. The work pane and the inspector each
- * scroll by themselves (sprint 016).
+ * One window: the project bar, the area rail and the tabs stay in place. The
+ * rail and the tabs are built from the route tree, so an area is a folder and a
+ * tab is a route file in it. The work pane and the inspector each scroll by
+ * themselves (sprint 016).
  */
-export function WorkspaceShell({ route, onOpen, top, children }: WorkspaceShellProps) {
+export function WorkspaceShell({ project, route, onOpen, top, children }: WorkspaceShellProps) {
+	const router = useRouter();
+	const areas = useMemo(() => projectAreas(Object.values(router.routesById)), [router]);
+	const active = areaOf(areas, route) ?? areas[0];
+	const counts = useMenuCounts((state) => (state.project === project ? state.counts : undefined));
 	const [target, setTarget] = useState<HTMLElement | null>(null);
 	const [open, setOpen] = useState(true);
 	const [presented, setPresented] = useState(0);
@@ -45,8 +55,71 @@ export function WorkspaceShell({ route, onOpen, top, children }: WorkspaceShellP
 				<div className={classes.workspace}>
 					<div className={classes.workspaceTop}>{top}</div>
 					<div className={classes.workspaceBody}>
+						<nav
+							aria-label="Project areas"
+							className={classes.areaRail}
+						>
+							{areas.map((area) => (
+								<Tooltip
+									key={area.id}
+									label={area.hint}
+									position="right"
+									openDelay={500}
+									multiline
+									w={240}
+								>
+									<UnstyledButton
+										className={classes.area}
+										data-active={area.id === active?.id || undefined}
+										aria-current={area.id === active?.id ? "page" : undefined}
+										onClick={() => onOpen(area.tabs[0].path)}
+									>
+										<Icon path={area.icon} />
+										<span>{area.label}</span>
+									</UnstyledButton>
+								</Tooltip>
+							))}
+						</nav>
 						<div className={classes.workspaceMain}>
-							<div className={classes.areaTabs}>
+							<div
+								role="tablist"
+								aria-label={`${active?.label ?? "Project"} views`}
+								className={classes.areaTabs}
+							>
+								{active?.tabs.map((tab) => {
+									const count = tab.count ? counts?.[tab.count] : undefined;
+									return (
+										<Tooltip
+											key={tab.path}
+											label={tab.hint}
+											openDelay={500}
+											multiline
+											w={240}
+										>
+											<UnstyledButton
+												role="tab"
+												className={classes.areaTab}
+												data-active={tab.path === route || undefined}
+												aria-selected={tab.path === route}
+												aria-label={tab.label}
+												onClick={() => onOpen(tab.path)}
+											>
+												{tab.label}
+												{count !== undefined && (
+													<Badge
+														aria-hidden
+														ml={6}
+														size="xs"
+														variant="light"
+														color="slate"
+													>
+														{count}
+													</Badge>
+												)}
+											</UnstyledButton>
+										</Tooltip>
+									);
+								})}
 								{!open && presented > 0 && (
 									<Button
 										ml="auto"

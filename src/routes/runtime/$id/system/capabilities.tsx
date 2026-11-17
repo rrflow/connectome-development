@@ -6,7 +6,6 @@ export const Route = createFileRoute("/runtime/$id/system/capabilities")({
 	staticData: {
 		menu: {
 			label: "Capabilities",
-			group: "system",
 			order: 5,
 			icon: iconCheck,
 			hint: "What this project's engine says it can do, and how it is deployed.",
