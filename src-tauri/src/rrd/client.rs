@@ -53,6 +53,7 @@ mod artifact;
 pub mod attunement;
 mod backup;
 mod history;
+mod knowledge;
 mod live;
 mod quantization;
 pub mod tasks;
@@ -61,6 +62,7 @@ mod transaction;
 pub use artifact::{save_artifact, RrdAuditExportRequest, RrdQueryExportRequest};
 pub use backup::{RrdBackupCreateRequest, RrdBackupRestoreRequest, RrdBackupsRequest};
 pub use history::{RrdAuditRequest, RrdChangesFollowRequest, RrdChangesRequest};
+pub use knowledge::{RrdKnowledgeTreesRequest, RrdReplaceKnowledgeTreesRequest};
 pub use live::{LiveSink, RrdLiveOpenRequest};
 pub use quantization::{
     RrdQuantizationApplyRequest, RrdQuantizationProposeRequest, RrdQuantizationsRequest,
