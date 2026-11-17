@@ -14,7 +14,7 @@ import {
 } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { Link, Redirect } from "wouter";
+import { AppLink, AppRedirect } from "~/components/AppLink";
 import { Icon } from "~/components/Icon";
 import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
@@ -54,7 +54,7 @@ export function ControlPlanePage({ id }: { id: string }) {
 	});
 
 	if (connection?.target !== "control-plane") {
-		return <Redirect to="/overview" />;
+		return <AppRedirect to="/overview" />;
 	}
 
 	return (
@@ -233,7 +233,7 @@ export function ControlPlanePage({ id }: { id: string }) {
 											<Badge variant="light">v{instance.version}</Badge>
 										)}
 									</Group>
-									<Link
+									<AppLink
 										href={`/connections/create?runtime=${encodeURIComponent(instance.endpoint)}`}
 									>
 										<Button
@@ -243,7 +243,7 @@ export function ControlPlanePage({ id }: { id: string }) {
 										>
 											Open runtime
 										</Button>
-									</Link>
+									</AppLink>
 								</Paper>
 							))}
 						</SimpleGrid>

@@ -12,11 +12,12 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-/** The only files allowed to name a feature from outside `src/features`. */
-const compositionRoots = new Set([
-	"src/screens/connectome/index.tsx",
-	"src/screens/mini-embed/index.tsx",
-]);
+/**
+ * The only code allowed to name a feature from outside `src/features`: the
+ * route files, which are thin and compose features, and the embed screen.
+ */
+const compositionRoots = new Set(["src/screens/mini-embed/index.tsx"]);
+const composes = (file) => file.startsWith("src/routes/") || compositionRoots.has(file);
 
 /** A folder past this has stopped grouping anything; split it by what the code does. */
 const maxSourceFilesPerFolder = 12;
@@ -54,7 +55,7 @@ for (const path of files) {
 		if (!reached || reached === owner) continue;
 		if (owner) {
 			problems.push(`${file}: feature "${owner}" imports feature "${reached}" (${match[1]})`);
-		} else if (!compositionRoots.has(file)) {
+		} else if (!composes(file)) {
 			problems.push(`${file}: shared code imports feature "${reached}" (${match[1]})`);
 		}
 	}

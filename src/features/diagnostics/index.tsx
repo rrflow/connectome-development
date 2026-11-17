@@ -18,7 +18,7 @@ import {
 } from "@mantine/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { Redirect } from "wouter";
+import { AppRedirect } from "~/components/AppLink";
 import { Icon } from "~/components/Icon";
 import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
@@ -118,7 +118,7 @@ export function RuntimeDiagnosticsPage({ id }: { id: string }) {
 	const mutationError = launch.error ?? seedDemos.error;
 
 	if (connection?.target !== "diagnostics") {
-		return <Redirect to="/overview" />;
+		return <AppRedirect to="/overview" />;
 	}
 
 	const maxElapsed = Math.max(

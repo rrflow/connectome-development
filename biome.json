@@ -124,6 +124,7 @@
 			"!**/node_modules",
 			"!**/.pnpm-store",
 			"!**/src-tauri",
+			"!**/routeTree.gen.ts",
 			"!**/dist",
 			"!**/test-results",
 			"!**/playwright-report",

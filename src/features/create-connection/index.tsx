@@ -17,14 +17,14 @@ import {
 } from "@mantine/core";
 import { useMemo, useState } from "react";
 import { useImmer } from "use-immer";
-import { Link, useLocation } from "wouter";
 import { adapter } from "~/adapter";
+import { AppLink } from "~/components/AppLink";
 import { ConnectionNameDetails } from "~/components/ConnectionDetails/connection";
 import { ConnectionLabelsDetails } from "~/components/ConnectionDetails/labels";
 import { Icon } from "~/components/Icon";
 import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
-import { useConnectionNavigator } from "~/hooks/app/routing";
+import { useAbsoluteLocation, useConnectionNavigator } from "~/hooks/app/routing";
 import { useLastSavepoint } from "~/hooks/connection/overview";
 import { useStable } from "~/hooks/state/stable";
 import {
@@ -59,7 +59,7 @@ export function CreateConnectionPage() {
 	const { settings, addConnection } = useConfigStore.getState();
 	const [saving, setSaving] = useState(false);
 	const [saveError, setSaveError] = useState<string | null>(null);
-	const [, navigate] = useLocation();
+	const [, navigate] = useAbsoluteLocation();
 
 	const [connection, setConnection] = useImmer(() => {
 		const draft = createBaseConnection(settings);
@@ -533,14 +533,14 @@ export function CreateConnectionPage() {
 						</Alert>
 					)}
 					<Group mt={24}>
-						<Link to={savepoint.path}>
+						<AppLink href={savepoint.path}>
 							<Button
 								color="obsidian"
 								variant="light"
 							>
 								Back
 							</Button>
-						</Link>
+						</AppLink>
 						<Button
 							type="submit"
 							variant="gradient"

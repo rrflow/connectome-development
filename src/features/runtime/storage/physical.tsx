@@ -112,7 +112,13 @@ function HeadlineGauge({ metric }: { metric: RrdMetricView }) {
 	);
 }
 
-export function PhysicalStorage({ view }: { view: RrdPhysicalStorageView }) {
+export interface PhysicalStorageProps {
+	view: RrdPhysicalStorageView;
+	/** Show only these counter groups, for a view of one engine layer. */
+	only?: readonly string[];
+}
+
+export function PhysicalStorage({ view, only }: PhysicalStorageProps) {
 	const deltas = useCounterDeltas(view);
 
 	if (view.groups.length === 0) {
@@ -126,17 +132,20 @@ export function PhysicalStorage({ view }: { view: RrdPhysicalStorageView }) {
 
 	return (
 		<Stack gap="md">
-			<SimpleGrid cols={{ base: 2, md: 3, xl: 6 }}>
-				{view.headline.map((metric) => (
-					<HeadlineGauge
-						key={metric.id}
-						metric={metric}
-					/>
-				))}
-			</SimpleGrid>
+			{!only && (
+				<SimpleGrid cols={{ base: 2, md: 3, xl: 6 }}>
+					{view.headline.map((metric) => (
+						<HeadlineGauge
+							key={metric.id}
+							metric={metric}
+						/>
+					))}
+				</SimpleGrid>
+			)}
 			<SimpleGrid cols={{ base: 1, lg: 2 }}>
 				{view.groups
 					.filter((group) => group.id !== COLD_TIER_GROUP)
+					.filter((group) => !only || only.includes(group.id))
 					.map((group) => (
 						<Paper
 							key={group.id}

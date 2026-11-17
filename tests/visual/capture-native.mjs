@@ -397,7 +397,7 @@ try {
 	});
 	await step("workbench", async () => {
 		// Serving a project opens its address; a stray click must not move this start point.
-		await page.goto(page.url().replace(/(\/runtime\/[^/]+).*/, "$1/overview"), {
+		await page.goto(page.url().replace(/(\/runtime\/[^/]+).*/, "$1"), {
 			waitUntil: "domcontentloaded",
 		});
 		await wait(6000);
@@ -408,30 +408,46 @@ try {
 		await page.goto(workbench, { waitUntil: "domcontentloaded" });
 		await wait(4000);
 	};
-	// An area on the rail, then a tab inside it.
-	const open = async (area, tab) => {
-		await page
-			.getByRole("navigation", { name: "Project areas" })
-			.getByRole("button", { name: area })
+	// The one menu: every project view is an entry in it, built from the route tree.
+	const menu = () => page.getByRole("navigation", { name: "Project views" });
+	const literal = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+	const open = async (label) => {
+		// An entry's name is its label, then its live count when the engine reported one.
+		await menu()
+			.getByRole("button", { name: new RegExp(`^${literal(label)}(\\s*\\d+)?$`) })
+			.first()
 			.click();
-		await wait(800);
-		if (tab) await page.getByRole("tab", { name: tab, exact: true }).click();
 	};
-	for (const [name, area, tab] of [
-		["knowledge", "Knowledge"],
-		["tasks", "Reasoning", "Tasks"],
-		["api-reference", "System", "API reference"],
+	for (const [name, label] of [
+		["knowledge", "Runtime graph"],
+		["tasks", "Tasks"],
+		["api-reference", "API reference"],
 	]) {
 		await step(`tab ${name}`, async () => {
 			await back();
-			await open(area, tab);
+			await open(label);
 			await wait(3000);
 			await shot(`workbench-${name}`);
 		});
 	}
+	// Every entry of the menu, opened and captured against the served estate.
+	await step("every menu view", async () => {
+		await back();
+		const labels = (await menu().getByRole("button").allInnerTexts())
+			.map((text) => text.replace(/\s*\d+\s*$/, "").trim())
+			.filter(Boolean);
+		log.menu = labels;
+		for (const label of labels) {
+			await back();
+			await open(label);
+			await wait(5000);
+			await shot(`view-${slug(label)}`);
+			log.viewUrls = { ...(log.viewUrls ?? {}), [label]: page.url() };
+		}
+	});
 	await step("api-reference-states", async () => {
 		await back();
-		await open("System", "API reference");
+		await open("API reference");
 		await wait(4000);
 		// The topic list jumps to an operation and follows the article in view.
 		const topics = page.getByRole("navigation", { name: "API topics" });
@@ -487,15 +503,15 @@ try {
 		}
 		log.apiReferenceScrolledTo = scrolledTo;
 	});
-	for (const [card, area, tab] of [
-		["Data models", "Knowledge", "Schema"],
-		["Records & relations", "Knowledge", "Graph"],
-		["Vectors", "Knowledge", "Vectors"],
-		["Storage engine", "System", "Storage"],
+	for (const [card, label] of [
+		["Data models", "Data models"],
+		["Records & relations", "Runtime graph"],
+		["Vectors", "Vectors"],
+		["Storage engine", "Storage"],
 	]) {
 		await step(`lens ${card}`, async () => {
 			await back();
-			await open(area, tab);
+			await open(label);
 			await wait(4000);
 			await shot(`lens-${slug(card)}`);
 			log.lensUrls = { ...(log.lensUrls ?? {}), [card]: page.url() };
@@ -737,12 +753,12 @@ try {
 	});
 	await step("guide-ahead-of-its-steps", async () => {
 		await back();
-		await open("Knowledge", "Graph");
+		await open("Runtime graph");
 		await wait(1500);
 		await recordRow("Document a1").click();
 		await wait(800);
 		// The rail keeps the selection, so the guide opens the tab with a record already picked.
-		await open("Start");
+		await open("Overview");
 		await wait(800);
 		await startGuide();
 		await atGuideStep(1);
@@ -777,14 +793,12 @@ try {
 		if ((await guideCallout.getByText("press Show details").count()) > 0) {
 			throw new Error("the guide still says its control is hidden");
 		}
-		await page.getByRole("tab", { name: "Schema", exact: true }).click();
+		await open("Data models");
 		await wait(1000);
 		await shot("guide-on-another-tab");
 		await guideCallout.getByRole("button", { name: "Back to this step" }).click();
 		await wait(1500);
-		await page.getByRole("tab", { name: "Graph", exact: true, selected: true }).waitFor({
-			timeout: 3000,
-		});
+		await page.waitForURL(/\/knowledge\/records$/, { timeout: 3000 });
 		await atGuideStep(2);
 		await leaveGuide();
 	});
@@ -810,7 +824,7 @@ try {
 	});
 	await step("system-instance", async () => {
 		await back();
-		await open("System", "Instance");
+		await open("Instance");
 		await wait(3000);
 		await shot("panel-advanced-details");
 	});

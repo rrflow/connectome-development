@@ -1,5 +1,3 @@
-import { Prec } from "@codemirror/state";
-import { EditorView, keymap } from "@codemirror/view";
 import {
 	Alert,
 	Badge,
@@ -22,10 +20,8 @@ import {
 } from "@mantine/core";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CodeEditor } from "~/components/CodeEditor";
 import { Icon } from "~/components/Icon";
 import { Label } from "~/components/Label";
-import { rrflowql, showRefusal } from "~/editor/rrflowql";
 import { Section } from "~/features/runtime/components/Section";
 import { useStable } from "~/hooks/state/stable";
 import { queryRefusal, type RrdEdgeView, type RrdNodeView } from "~/rrflow/session";
@@ -45,6 +41,7 @@ import { databaseQuery } from "../api/queries";
 import { Term } from "../components/glossary";
 import { InspectorObject, InspectorPanel } from "../components/inspector";
 import { ReadNotice } from "../components/notice";
+import { QueryEditor } from "../components/query-editor";
 import { clusterMembers, clusterOverview, groupAnchor, groupOfRecord } from "../graph/drill";
 import { type CanvasEdge, type CanvasNode, GraphCanvas } from "../graph/graph";
 import { colorOptions, degrees, grouping } from "../graph/groups";
@@ -97,58 +94,6 @@ function refusalText(error: unknown): string {
 	return (
 		queryRefusal(error)?.reason ??
 		(error instanceof Error ? error.message : "Unknown RRD error")
-	);
-}
-
-interface QueryEditorProps {
-	query: string;
-	onChange: (query: string) => void;
-	onRun: () => void;
-	/** The query the last run sent, and how that run failed. */
-	refused: string | undefined;
-	error: unknown;
-}
-
-/**
- * The console's rrflowQL editor. The engine's refusal of the query a run sent
- * shows on the word the engine names, for as long as the editor holds that
- * query.
- */
-function QueryEditor({ query, onChange, onRun, refused, error }: QueryEditorProps) {
-	const [editor, setEditor] = useState<EditorView | null>(null);
-	const run = useStable(onRun);
-	const extensions = useMemo(
-		() => [
-			rrflowql(),
-			// Above the base keymap, which inserts a blank line on Mod-Enter.
-			Prec.highest(
-				keymap.of(
-					["Mod-Enter", "Ctrl-Enter"].map((key) => ({
-						key,
-						run: () => {
-							run();
-							return true;
-						},
-					})),
-				),
-			),
-		],
-		[],
-	);
-	const refusal = queryRefusal(error);
-	useEffect(() => {
-		if (editor) {
-			showRefusal(editor, refusal && refused === query ? { query, refusal } : null);
-		}
-	}, [editor, refusal, refused, query]);
-	return (
-		<CodeEditor
-			className={classes.queryEditor}
-			value={query}
-			onChange={onChange}
-			onMount={setEditor}
-			extensions={extensions}
-		/>
 	);
 }
 

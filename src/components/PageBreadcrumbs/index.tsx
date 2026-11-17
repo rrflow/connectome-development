@@ -1,5 +1,5 @@
 import { BoxProps, Breadcrumbs } from "@mantine/core";
-import { Link } from "wouter";
+import { AppLink } from "~/components/AppLink";
 import classes from "./style.module.scss";
 
 export interface PageBreadcrumbsProps extends BoxProps {
@@ -11,13 +11,13 @@ export function PageBreadcrumbs({ items, ...other }: PageBreadcrumbsProps) {
 		<Breadcrumbs {...other}>
 			{items.map((item, index) =>
 				item.href ? (
-					<Link
+					<AppLink
 						key={index}
 						href={item.href}
 						className={classes.link}
 					>
 						{item.label}
-					</Link>
+					</AppLink>
 				) : (
 					<span
 						key={index}

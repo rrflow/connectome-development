@@ -139,7 +139,9 @@ export function WorkbenchMcplLanePanel({
 								<Button
 									size="xs"
 									variant="subtle"
-									onClick={() => onOpenRoute(entry.event.route ?? "workbench")}
+									onClick={() =>
+										onOpenRoute(entry.event.route ?? "reasoning/workbench")
+									}
 								>
 									Open route
 								</Button>

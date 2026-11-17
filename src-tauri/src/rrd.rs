@@ -27,6 +27,7 @@ use view::effect::{
     AuditExportView, BackupCreatedView, BackupsView, ChangePreviewView, CommitReceiptView,
     QueryExportView, RestoreView, SavedArtifactView,
 };
+use view::engram::EngramView;
 use view::history::{AuditView, ChangesFollowView, ChangesView};
 use view::live::{LiveEventView, LiveView};
 use view::quantization::{
@@ -207,6 +208,15 @@ pub async fn rrd_physical_storage(
     state: State<'_, RrdClientState>,
 ) -> Result<PhysicalStorageView, RrdError> {
     state.client(&profile).await?.physical_storage().await
+}
+
+/// The installed engram's authority record, read with the engine's `estate-read`.
+#[tauri::command]
+pub async fn rrd_engram_read(
+    profile: String,
+    state: State<'_, RrdClientState>,
+) -> Result<EngramView, RrdError> {
+    state.client(&profile).await?.engram().await
 }
 
 #[tauri::command]
