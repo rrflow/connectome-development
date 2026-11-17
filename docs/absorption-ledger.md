@@ -11,19 +11,23 @@ commit's text exists somewhere. The evidence levels are **Read** (the branch
 code and its counterpart on `main` were read), **Tested** (a check that fails
 without the feature passes on `main`) and **Not read** (no claim).
 
-## `agent/rrflow-native-connectome` (tip `8a9eb5e5`, base 2026-10-16)
+## `agent/rrflow-native-connectome` (tip `8a9eb5e5`, base 2026-10-16): partly carried, partly pending
 
-Design record: its own `docs/rrflow-native-rewrite.md`, read in full.
+Design record read in full (`docs/rrflow-native-rewrite.md`), plus `knowledge.rs`, `knowledge.ts`, `ssh_forward.rs`, `editor/lexical.ts`, `editor/parser.ts`, `editor/index.ts`, the export lists of `client/values.ts`, `shared/util/rrflowql/native.ts` and `rrflow/ui/index.tsx`, and the rewrite's tests list. Sprint 009 decision 14 says this branch was "salvaged": its lexer and parser, dependency gate and knowledge-tree work were to be rebuilt on `main` "with credit". The dependency gate is on `main`. The rest is as below.
 
-| Capability on the branch | On `main` | State |
+| Item on the branch | On `main` | State |
 |---|---|---|
-| Knowledge-tree bridge, project/instance/capability binding (`rrd/client/knowledge.rs`) | Absent before PR #68 | Read; ported in PR #68; `cargo test knowledge` 2 passed |
-| Knowledge model: three-way draft rebase by immutable id, conflict retention, cycle/orphan repair (`src/rrflow/knowledge.ts`) | Absent before PR #68 | Read; ported in PR #68; 9 tests pass |
-| Knowledge editor tab (`RuntimeConnection/tabs/knowledge.tsx`, 1,358 lines) | Absent | Read for its role only; **port pending** after PR #67 (routes move) |
-| SSH-forwarded existing profile (`rrd/ssh_forward.rs`, 460 lines, 5 tests; `runtimeSshHost` in the connection form, serving action and runtime client) | Absent | Rust module read in full; **port pending** after PR #67 |
-| Authored native client, values, editor (`src/rrflow/client`, `editor`, `ui`) replacing the inherited client, editor and icon packages | `main` still carries the inherited wrappers (`src/vendor/rrflow-client.ts`, `src/vendor/rrflowql-editor.ts`, `rrflowql/v2.tsx`, `rrflowql/v3.tsx`) by its own header comments, used by 20+ components | Wrappers read; the authored replacements are **not yet read file by file**. They move with the view re-authoring (sprint 009 Slice D), not before |
-| 19 and 28 behaviour tests, editor and UI tests | Not compared | **Not read** |
-| 212 cloud, assistant and support files it rewrote | Deleted on `main` (cloud strip) | Path-level only; **not read** |
+| Knowledge-tree bridge (`rrd/client/knowledge.rs`, tests) | absent before PR #68 | carried by PR #68; `cargo test knowledge` 2 passed |
+| Knowledge model: three-way draft rebase by immutable id, conflicts kept, cycle and orphan repair (`knowledge.ts`, 9 tests) | absent before PR #68 | carried by PR #68 |
+| Knowledge editor tab (`tabs/knowledge.tsx`, 1,358 lines) | absent | **pending**: needs the area/tab structure from PR #67, and must be split to fit the architecture gate |
+| SSH-forwarded existing profile (`ssh_forward.rs` 460 lines, 5 tests; `runtimeSshHost` in the connection form, serving action and runtime client, about ten sites) | absent | **pending**: Rust module read in full, wiring read; port after #67 |
+| Authored value classes and helpers: `Table`, `RecordId`, `Decimal`, `Duration`, `Uuid`, `DateTime`, `FileRef`, geometry types, `escapeIdent`, `equals` (`client/values.ts`, 276 lines) | `main` re-exports the inherited client from `src/vendor/rrflow-client.ts` (its own header says it is transitional) | **pending**: replaces that wrapper when the 20+ importing components are re-authored (sprint 009 decision 18) |
+| `NativeRRFlowQL` (`shared/util/rrflowql/native.ts`, `values.ts`) | `createRRFlowQL` still picks the inherited V2 or V3 WASM | **pending**: same re-authoring |
+| rrflowQL presentation editor: scanner, statement ranges, formatter, parameter discovery, Lezer parser (`editor/lexical.ts`, `parser.ts`) | `main` has a different language built from the engine tokenizer for the Query lab (`rrflow/editor.ts`, `rrflowql.ts`); the inherited views' editor still uses the inherited grammar | **decision needed**: one editor language, not two. The formatter and statement splitting are not on `main`'s language |
+| `rrflow/ui`: `Icon`, `Spacer`, `CodeBlock`, `Markdown`, theme, about 130 icons, pictograms | Slice C1/C2 landed as the exact-diff commit `ce08e2f6e`; `main` has its own icons and pictograms | **not yet compared**: a safe `Markdown` component is not found on `main`; read before deciding |
+| Behaviour tests (19 then 28), native-client script, ui tests | only the knowledge tests are carried | **pending** with their modules |
+| `docs/rrflow-native-rewrite.md` | absent | pending; carries the verification record |
+| 212 cloud, assistant and support files it rewrote | deleted on `main` (cloud strip, below) | path-level only |
 
 ## `agent/rrflow-serve-spine` (tip `a964caf4`): absorbed
 
@@ -90,14 +94,38 @@ Slice D. Read in full: the commit, `build-sidecar.mjs`, and the engine-binding l
 | README and CI | README updated for the canonical builder; CI on Node 24.22.0 |
 | Sprint journal | 349 of 349 lines present |
 
-## Branches not yet read
+## `agent/connectome-cloud-strip` (tip `b054cbbc`), `agent/connectome-icons` (tip `b522202a`), `agent/connectome-ownership` (tip `6acb8d05`): exact diffs are on `main`
 
-These carry a status from a patch-id or path check only, which is **not** an absorption claim. Each gets its own row after it is read.
+For each, the branch commit's patch-id equals a commit in `main`'s history, so its exact diff was applied:
 
-| Branch | Tip | Check done | Claim |
-|---|---|---|---|
-| `agent/connectome-cloud-strip` | `b054cbbc` | patch-id present on `main` | none |
-| `agent/connectome-icons` | `b522202a` | patch-id present on `main` | none |
-| `agent/connectome-ownership` | `6acb8d05` | patch-id present on `main` | none |
-| `agent/connectome-rrd-only` | `58a3aeae` | patch-id not found; deletes 58 components `main` still has | none; a work in progress that conflicts with the restored August views until read |
-| `codex/task-assessments` | `52c3a5eb` | patch-id present on `main` | none |
+| Branch commit | Same diff on `main` as |
+|---|---|
+| `b054cbbc` Delete the inherited hosted-service surface | `1f34a3d4c` |
+| `b522202a` Draw icons, pictograms and code blocks from Connectome's own modules | `ce08e2f6e` |
+| `6acb8d05` Make Connectome Connectome's: home, license, notice, version contract, identity gate | `a3e00eecf` |
+
+This proves the commit was applied; it does not prove later `main` work kept every effect. That is checked by the gates (identity, isolation, architecture) which pass on `main`.
+
+## `codex/task-assessments` (tip `52c3a5eb`): nothing to carry
+
+One empty commit with no message body ("Open explicit assessment UI integration"). Its tree equals its parent `e74f2ef1`, which is on `main`.
+
+## `agent/connectome-rrd-only` (tip `58a3aeae`): superseded by owner decisions, one idea to keep
+
+A work-in-progress "not for review until D1's checks pass" that implements sprint 009 **decision 16** (fold, then delete, no stand-in): 52,146 deletions across 227 files, including 58 components `main` still uses. The owner rejected that approach on 2026-10-27 (**decision 18**: "I do not want you excluding … code but getting it authored properly"; re-author in place) and decision 17 forbids any visual regression. So its deletions are **not** absorbed, by your own direction.
+
+Read in full: the commit message, sprint 009 decisions 16 to 18, and every line the branch added. What it added:
+
+| Added by the branch | State |
+|---|---|
+| A connection model that names an RRD target and endpoint (`target`, `endpoint`, `runtimeInstance`, `runtimeCredential`, `controlToken`) instead of the inherited authentication-shaped profile that `main` still uses | **pending**: belongs to the view re-authoring; carry the model, not the migrator |
+| A version-3 configuration migrator that keeps only RRD profiles and drops all others | **not carried**: it is migration code, which pre-release forbids, and it deletes saved profiles |
+| A move of `RelationGraph/drawing.tsx` | a pure rename; nothing to carry |
+| A simplified toolbar and route table | tied to the deletions; not carried |
+
+## Open items for the owner
+
+1. **One rrflowQL editor language.** `main` has two lineages: an engine-tokenizer language for the Query lab, and the inherited grammar for the inherited views. The branch adds a third (presentation scanner, formatter, statement splitting). Which is canonical?
+2. **The pre-area address translations** kept in `layout.tsx` (`tasks`, `plan`, `api`, `workbench`, `knowledge/storage`) are pinned by the smoke suite but are compatibility under the pre-release rule. Keep or retire?
+3. **Grouping.** Areas are folders, so regrouping the views is moving files. The August Workbench grouped them as a primary set, "Visual labs" and "Developer tools"; PR #67 uses Knowledge, Reasoning, Labs, Engine, Activity and System.
+4. **Branch deletion** once everything above is carried: which of the 11 branches to delete, since each deletion is hard to undo.
