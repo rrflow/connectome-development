@@ -8,9 +8,9 @@ import { LoadingContainer } from "~/components/LoadingContainer";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";
 import { getRRFlowQL } from "~/connection/connection";
+import { rrflowql } from "~/editor/rrflowql";
 import { iconClose, iconMarker } from "~/shared/assets/icons";
 import { ON_STOP_PROPAGATION } from "~/shared/util/text/helpers";
-import { rrflowql } from "~/vendor/rrflowql-editor";
 import { CodeEditor } from "../CodeEditor";
 import type { GeographyInput } from "../GeographyMap";
 

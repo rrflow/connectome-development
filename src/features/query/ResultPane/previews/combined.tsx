@@ -4,12 +4,12 @@ import { Box, Stack, Text } from "@mantine/core";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CodeEditor } from "~/components/CodeEditor";
 import { rrflowqlRecordLinks } from "~/editor";
+import { rrflowql } from "~/editor/rrflowql";
 import { type Formatter, useResultFormatter } from "~/hooks/connection/rrflowql";
 import { useStable } from "~/hooks/state/stable";
 import { useInspector } from "~/providers/Inspector";
 import { QueryResponse } from "~/shared/types";
 import { Duration } from "~/vendor/rrflow-client";
-import { rrflowql } from "~/vendor/rrflowql-editor";
 import classes from "../style.module.scss";
 import { attemptFormat, type PreviewProps } from ".";
 
@@ -128,7 +128,7 @@ const combinedPreview = memo(function CombinedPreview({ responses, query }: Prev
 	}, [responses, format, noneResultMode]);
 
 	const extensions = useMemo(() => {
-		return [rrflowql("combined-results"), rrflowqlRecordLinks(inspect)];
+		return [rrflowql(), rrflowqlRecordLinks(inspect)];
 	}, [inspect]);
 
 	const applyFolding = useCallback(

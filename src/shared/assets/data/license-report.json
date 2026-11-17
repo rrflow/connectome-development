@@ -259,20 +259,6 @@
 		"author": "n/a"
 	},
 	{
-		"name": "@surrealdb/codemirror",
-		"licenseType": "n/a",
-		"link": "git+https://github.com/surrealdb/codemirror.git",
-		"installedVersion": "1.0.3",
-		"author": "SurrealDB"
-	},
-	{
-		"name": "@surrealdb/lezer",
-		"licenseType": "n/a",
-		"link": "git+https://github.com/surrealdb/codemirror.git",
-		"installedVersion": "1.0.3",
-		"author": "SurrealDB"
-	},
-	{
 		"name": "@surrealdb/ql-wasm",
 		"licenseType": "n/a",
 		"link": "git+https://github.com/surrealdb/surrealql.wasm.git",

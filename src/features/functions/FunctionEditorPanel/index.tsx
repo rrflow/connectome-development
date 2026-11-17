@@ -1,6 +1,5 @@
-import type { EditorView } from "@codemirror/view";
 import { Alert, Badge, Box, Group, Stack } from "@mantine/core";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import type { Updater } from "use-immer";
 import { adapter } from "~/adapter";
 import { ActionButton } from "~/components/ActionButton";
@@ -14,15 +13,14 @@ import {
 	rrflowqlTableCompletion,
 	rrflowqlVariableCompletion,
 } from "~/editor";
+import { rrflowql } from "~/editor/rrflowql";
 import { useSetting } from "~/hooks/app/config";
 import { useStable } from "~/hooks/state/stable";
-import { useDatabaseVersionLinter } from "~/hooks/ui/editor";
 import { iconDownload, iconJSON, iconText, iconWarning } from "~/shared/assets/icons";
 import { RRFLOWQL_FILTER } from "~/shared/config/constants";
 import type { FunctionDetails, SchemaFunction } from "~/shared/types";
 import { buildFunctionDefinition } from "~/shared/util/connection/schema";
 import { showErrorNotification } from "~/shared/util/text/helpers";
-import { rrflowql } from "~/vendor/rrflowql-editor";
 
 export interface FunctionEditorPanelProps {
 	details: SchemaFunction;
@@ -38,9 +36,6 @@ export function FunctionEditorPanel({
 	onChange,
 }: FunctionEditorPanelProps) {
 	const [hasLineNumbers] = useSetting("appearance", "functionLineNumbers");
-
-	const [editor, setEditor] = useState<EditorView | null>(null);
-	const rrflowqlVersion = useDatabaseVersionLinter(editor);
 
 	const downloadBody = useStable(() => {
 		adapter.saveFile(`Save function`, `${details.name}.rrflowql`, [RRFLOWQL_FILTER], () =>
@@ -76,13 +71,12 @@ export function FunctionEditorPanel({
 	const extensions = useMemo(
 		() => [
 			rrflowql(),
-			rrflowqlVersion,
 			rrflowqlLinting(),
 			rrflowqlVariableCompletion(resolveVariables),
 			rrflowqlCustomFunctionCompletion(),
 			rrflowqlTableCompletion(),
 		],
-		[rrflowqlVersion],
+		[],
 	);
 
 	return (
@@ -143,7 +137,6 @@ export function FunctionEditorPanel({
 						value={details.block}
 						autoFocus
 						lineNumbers={hasLineNumbers}
-						onMount={setEditor}
 						onChange={handleChange}
 						extensions={extensions}
 					/>

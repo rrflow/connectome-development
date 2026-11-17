@@ -48,7 +48,7 @@ function useLanguageExtension(lang: string | undefined) {
 
 		let active = true;
 
-		import("~/vendor/rrflowql-editor").then((editor) => {
+		import("~/editor/rrflowql").then((editor) => {
 			loadedRrflowql = editor.rrflowql;
 			if (active) {
 				setRrflowql(() => editor.rrflowql);

@@ -1,5 +1,4 @@
 import { Button, Group, Modal, PasswordInput, Table, Text, TextInput } from "@mantine/core";
-import { parser } from "@surrealdb/lezer";
 import { useState } from "react";
 import { useImmer } from "use-immer";
 import { adapter } from "~/adapter";
@@ -9,6 +8,7 @@ import { PrimaryTitle } from "~/components/PrimaryTitle";
 import { Spacer } from "~/components/Spacer";
 import { authenticate, register } from "~/connection/connection";
 import { composeAuthentication } from "~/connection/helpers";
+import { rrflowqlLanguage } from "~/editor/rrflowql";
 import { useIntent } from "~/hooks/app/routing";
 import { useConnection } from "~/hooks/connection/connection";
 import { useDatabaseSchema } from "~/hooks/connection/schema";
@@ -82,7 +82,7 @@ export function RegisterUserModal() {
 			let fields: AccessField[] = [];
 
 			if (signup.length > 0) {
-				const tree = parser.parse(signup);
+				const tree = rrflowqlLanguage.parser.parse(signup);
 				const discovered = parseVariables(tree, (from, to) => signup.slice(from, to));
 
 				fields = discovered.map((field) => ({

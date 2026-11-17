@@ -2,10 +2,10 @@ import { Text } from "@mantine/core";
 import { useEffect, useMemo, useState } from "react";
 import { CodeEditor } from "~/components/CodeEditor";
 import { rrflowqlRecordLinks } from "~/editor";
+import { rrflowql } from "~/editor/rrflowql";
 import { useSetting } from "~/hooks/app/config";
 import { useResultFormatter } from "~/hooks/connection/rrflowql";
 import { useInspector } from "~/providers/Inspector";
-import { rrflowql } from "~/vendor/rrflowql-editor";
 import { attemptFormat, type PreviewProps } from ".";
 
 export function IndividualPreview({ responses, selected }: PreviewProps) {

@@ -25,9 +25,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { CodeEditor } from "~/components/CodeEditor";
 import { Icon } from "~/components/Icon";
 import { Label } from "~/components/Label";
+import { rrflowql, showRefusal } from "~/editor/rrflowql";
 import { Section } from "~/features/runtime/components/Section";
 import { useStable } from "~/hooks/state/stable";
-import { rrflowql, showRefusal } from "~/rrflow/editor";
 import { queryRefusal, type RrdEdgeView, type RrdNodeView } from "~/rrflow/session";
 import {
 	iconChevronDown,

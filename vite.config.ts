@@ -110,8 +110,6 @@ export default defineConfig(({ mode }) => {
 						react: ["react", "react-dom"],
 						codemirror: [
 							"codemirror",
-							"@surrealdb/codemirror",
-							"@surrealdb/lezer",
 							"@replit/codemirror-indentation-markers",
 						],
 						mantime: ["@mantine/core", "@mantine/hooks", "@mantine/notifications"],

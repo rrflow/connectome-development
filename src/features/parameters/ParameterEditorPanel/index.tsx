@@ -1,17 +1,14 @@
-import { EditorView } from "@codemirror/view";
 import { Alert, Badge, Box, Stack } from "@mantine/core";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import type { Updater } from "use-immer";
 import { CodeEditor } from "~/components/CodeEditor";
 import { Icon } from "~/components/Icon";
 import { ContentPane } from "~/components/Pane";
-import { rrflowqlLinting } from "~/editor/languages/rrflowql";
 import { rrflowqlTableCompletion } from "~/editor/languages/tables";
+import { rrflowql, rrflowqlLinting } from "~/editor/rrflowql";
 import { useStable } from "~/hooks/state/stable";
-import { useDatabaseVersionLinter } from "~/hooks/ui/editor";
 import { iconTune, iconWarning } from "~/shared/assets/icons";
 import type { SchemaParameter } from "~/shared/types";
-import { rrflowql } from "~/vendor/rrflowql-editor";
 
 export interface ParameterEditorPanelProps {
 	details: SchemaParameter;
@@ -26,12 +23,9 @@ export function ParameterEditorPanel({
 	isCreating,
 	onChange,
 }: ParameterEditorPanelProps) {
-	const [editor, setEditor] = useState<EditorView | null>(null);
-	const rrflowqlVersion = useDatabaseVersionLinter(editor);
-
 	const extensions = useMemo(
-		() => [rrflowql(), rrflowqlVersion, rrflowqlLinting(), rrflowqlTableCompletion()],
-		[rrflowqlVersion],
+		() => [rrflowql(), rrflowqlLinting(), rrflowqlTableCompletion()],
+		[],
 	);
 
 	const handleChange = useStable((value: string) => {
@@ -82,7 +76,6 @@ export function ParameterEditorPanel({
 						value={details.value}
 						autoFocus
 						lineNumbers={true}
-						onMount={setEditor}
 						onChange={handleChange}
 						extensions={extensions}
 					/>

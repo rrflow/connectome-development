@@ -1,7 +1,7 @@
 import { type CompletionSource, snippetCompletion } from "@codemirror/autocomplete";
 import type { Extension } from "@codemirror/state";
+import { rrflowqlLanguage } from "~/editor/rrflowql";
 import { useDatabaseStore } from "~/stores/database";
-import { rrflowqlLanguage } from "~/vendor/rrflowql-editor";
 
 const CUSTOM_FUNCTION_SOURCE: CompletionSource = (context) => {
 	const match = context.matchBefore(/fn::\w*/i);

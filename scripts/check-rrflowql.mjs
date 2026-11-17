@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Checks Connectome's rrflowQL language (`src/rrflow/rrflowql.ts`) against
+ * Checks Connectome's rrflowQL language (`src/editor/rrflowql/engine`) against
  * what the pinned engine said about RRFlow's own query vectors and a corpus
  * of queries (`src/rrflow/fixtures/engine-queries.json`, written and verified
  * by the RRD process test `rrd::client::process::language`).
@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const language = await import(
-	`file://${join(root, "src/rrflow/rrflowql.ts").replaceAll("\\", "/")}`
+	`file://${join(root, "src/editor/rrflowql/engine/index.ts").replaceAll("\\", "/")}`
 );
 const golden = JSON.parse(
 	readFileSync(join(root, "src/rrflow/fixtures/engine-queries.json"), "utf8"),
@@ -23,7 +23,7 @@ const lock = readFileSync(join(root, "src-tauri/Cargo.lock"), "utf8");
 const pinned = lock.match(/rrflow-development\?rev=([0-9a-f]{40})/)?.[1];
 assert.equal(golden.engine, pinned, "the golden queries come from the pinned engine");
 
-const { scan, classify, refusalRange, LEXICAL_REASONS } = language;
+const { scan, classify, layout, recordIds, refusalRange, LEXICAL_REASONS } = language;
 const lexical = new Set(LEXICAL_REASONS);
 
 let checks = 0;
@@ -156,6 +156,42 @@ check("highlighting continues past a refusal", () => {
 		["!", '"a\\q"'],
 	);
 	assert.deepEqual(words(query, "field"), ["x", "y"]);
+});
+
+// Layout only moves whitespace: every query in the corpus keeps its tokens, and
+// laying it out twice changes nothing more.
+const texts = (source) => scan(source).tokens.map((token) => source.slice(token.from, token.to));
+for (const entry of golden.queries) {
+	check(`${entry.name} keeps its tokens when laid out`, () => {
+		const laid = layout(entry.query);
+		assert.deepEqual(texts(laid), texts(entry.query));
+		assert.equal(layout(laid), laid);
+		assert.equal(layout(entry.query, false), entry.query.trim());
+	});
+}
+const NL = String.fromCharCode(10);
+check("layout starts each clause on its own line", () => {
+	assert.equal(
+		layout("FROM record:a   AT VALID 1 KNOWN HEAD WHERE x = 1 PROJECT *  LIMIT 5"),
+		["FROM record:a", "AT VALID 1 KNOWN HEAD", "WHERE x = 1", "PROJECT *", "LIMIT 5"].join(NL),
+	);
+	assert.equal(
+		layout("FROM record:a JOIN record:b ON l = r"),
+		["FROM record:a", "JOIN record:b ON l = r"].join(NL),
+	);
+});
+
+// A record address is a reference, a colon and a reference, touching.
+check("record addresses are found as one span", () => {
+	const query = "FROM traverse:depends_on START document:a DIRECTION BOTH PROJECT id";
+	const spans = recordIds(classify(query).tokens);
+	assert.deepEqual(
+		spans.map((span) => query.slice(span.from, span.to)),
+		["document:a"],
+	);
+	// Spaced out, a source's family and kind, and a field list are not addresses.
+	assert.deepEqual(recordIds(classify("FROM record:a PROJECT id, from").tokens), []);
+	assert.deepEqual(recordIds(classify("FROM traverse:e START a : b").tokens), []);
 });
 
 console.log(

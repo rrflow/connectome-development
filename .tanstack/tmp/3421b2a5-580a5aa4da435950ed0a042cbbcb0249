@@ -1,0 +1,9 @@
+import { createFileRoute } from '@tanstack/react-router'
+
+export const Route = createFileRoute('/runtime/$id/system/connections')({
+  component: RouteComponent,
+})
+
+function RouteComponent() {
+  return <div>Hello "/runtime/$id/system/connections"!</div>
+}
