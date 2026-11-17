@@ -10,6 +10,7 @@ mod cluster;
 pub mod engine;
 mod error;
 pub mod estate;
+pub mod ssh_forward;
 mod transport;
 mod view;
 
@@ -86,11 +87,17 @@ impl RrdClientState {
         Ok(connection)
     }
 
-    async fn disconnect(&self, profile: &str) -> Result<(), RrdError> {
+    /// Closes one profile's session and returns the endpoint it served, so an
+    /// SSH forward owned for that endpoint can be stopped with it.
+    async fn disconnect(&self, profile: &str) -> Result<Option<String>, RrdError> {
         let client = self.0.lock().await.remove(profile);
         match client {
-            Some(client) => client.close().await,
-            None => Ok(()),
+            Some(client) => {
+                let endpoint = client.connection().endpoint;
+                client.close().await?;
+                Ok(Some(endpoint))
+            }
+            None => Ok(None),
         }
     }
 }
@@ -479,13 +486,34 @@ pub async fn rrd_live_close(
 pub async fn rrd_disconnect(
     profile: String,
     state: State<'_, RrdClientState>,
+    forward_state: State<'_, ssh_forward::SshForwardState>,
 ) -> Result<(), RrdError> {
-    state.disconnect(&profile).await
+    if let Some(endpoint) = state.disconnect(&profile).await? {
+        forward_state
+            .stop_endpoint(&endpoint)
+            .await
+            .map_err(RrdError::from)?;
+    }
+    Ok(())
 }
 
 #[tauri::command]
-pub async fn rrd_public_request(endpoint: String, path: String) -> Result<Value, String> {
+pub async fn rrd_public_request(
+    endpoint: String,
+    path: String,
+    ssh_host: Option<String>,
+    forward_state: State<'_, ssh_forward::SshForwardState>,
+) -> Result<Value, String> {
+    // Check the public route before any SSH effect. Only an explicitly
+    // configured host may create a forwarding process.
     let url = public_rrd_url(&endpoint, &path)?;
+    forward_state
+        .prepare(&endpoint, ssh_host.as_deref())
+        .await?;
+    public_http_get(url).await
+}
+
+async fn public_http_get(url: url::Url) -> Result<Value, String> {
     let client = Client::builder()
         .connect_timeout(Duration::from_secs(4))
         .timeout(Duration::from_secs(15))
@@ -561,11 +589,10 @@ mod tests {
             .expect("write RRD response");
         });
 
-        let response = tauri::async_runtime::block_on(rrd_public_request(
-            format!("http://{address}"),
-            "/v1/health/live".into(),
-        ))
-        .expect("native RRD request succeeds");
+        let url = public_rrd_url(&format!("http://{address}"), "/v1/health/live")
+            .expect("health route is public");
+        let response = tauri::async_runtime::block_on(public_http_get(url))
+            .expect("native RRD request succeeds");
         assert_eq!(response["protocol"], "rrd");
         assert_eq!(response["outcome"]["payload"]["observed_at_unix_ms"], 1);
         server.join().expect("join test server");

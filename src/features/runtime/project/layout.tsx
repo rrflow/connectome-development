@@ -59,9 +59,20 @@ export function ProjectLayout({ id }: { id: string }) {
 		? `${connection.authentication.protocol}://${connection.authentication.hostname}`
 		: "";
 	const query = useQuery({
-		queryKey: ["rrd-runtime-handshake", id, endpoint, connection?.runtimeInstance],
+		queryKey: [
+			"rrd-runtime-handshake",
+			id,
+			endpoint,
+			connection?.runtimeInstance,
+			connection?.runtimeSshHost,
+		],
 		enabled: Boolean(connection && connection.target === "runtime"),
-		queryFn: () => new RrdRuntimeClient(endpoint, connection?.runtimeInstance).handshake(),
+		queryFn: () =>
+			new RrdRuntimeClient(
+				endpoint,
+				connection?.runtimeInstance,
+				connection?.runtimeSshHost,
+			).handshake(),
 		retry: false,
 	});
 	const client = useMemo(() => new RrdSessionClient(id), [id]);
