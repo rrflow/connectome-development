@@ -625,6 +625,18 @@ export interface RrdPhysicalStorageView {
 	evidence_level: string;
 	headline: RrdMetricView[];
 	groups: RrdMetricGroupView[];
+	/** rrflowCLD's state, when the engine reported it. */
+	cold_tier?: RrdColdTierStateView;
+}
+
+/** rrflowCLD as typed state, so a view never reads meaning out of a note. */
+export interface RrdColdTierStateView {
+	enabled: boolean;
+	pending: boolean;
+	through_cursor: number;
+	files: number;
+	/** Why publication stopped, in plain words, when it has. */
+	stopped: string | null;
 }
 
 export interface RrdStorageView {

@@ -28,6 +28,7 @@ import { Route as RuntimeIdWorkbenchRouteRouteImport } from './../../routes/runt
 import { Route as RuntimeIdActivityAuditRouteImport } from './../../routes/runtime/$id/activity/audit'
 import { Route as RuntimeIdActivityStreamRouteImport } from './../../routes/runtime/$id/activity/stream'
 import { Route as RuntimeIdEngineCldRouteImport } from './../../routes/runtime/$id/engine/cld'
+import { Route as RuntimeIdEngineCursorRouteImport } from './../../routes/runtime/$id/engine/cursor'
 import { Route as RuntimeIdEngineKvRouteImport } from './../../routes/runtime/$id/engine/kv'
 import { Route as RuntimeIdEngineLsmRouteImport } from './../../routes/runtime/$id/engine/lsm'
 import { Route as RuntimeIdKnowledgeClaimsRouteImport } from './../../routes/runtime/$id/knowledge/claims'
@@ -147,6 +148,11 @@ const RuntimeIdActivityStreamRoute = RuntimeIdActivityStreamRouteImport.update({
 const RuntimeIdEngineCldRoute = RuntimeIdEngineCldRouteImport.update({
   id: '/cld',
   path: '/cld',
+  getParentRoute: () => RuntimeIdEngineRouteRoute,
+} as any)
+const RuntimeIdEngineCursorRoute = RuntimeIdEngineCursorRouteImport.update({
+  id: '/cursor',
+  path: '/cursor',
   getParentRoute: () => RuntimeIdEngineRouteRoute,
 } as any)
 const RuntimeIdEngineKvRoute = RuntimeIdEngineKvRouteImport.update({
@@ -307,6 +313,7 @@ export interface FileRoutesByFullPath {
   '/runtime/$id/activity/audit': typeof RuntimeIdActivityAuditRoute
   '/runtime/$id/activity/stream': typeof RuntimeIdActivityStreamRoute
   '/runtime/$id/engine/cld': typeof RuntimeIdEngineCldRoute
+  '/runtime/$id/engine/cursor': typeof RuntimeIdEngineCursorRoute
   '/runtime/$id/engine/kv': typeof RuntimeIdEngineKvRoute
   '/runtime/$id/engine/lsm': typeof RuntimeIdEngineLsmRoute
   '/runtime/$id/knowledge/claims': typeof RuntimeIdKnowledgeClaimsRoute
@@ -351,6 +358,7 @@ export interface FileRoutesByTo {
   '/runtime/$id/activity/audit': typeof RuntimeIdActivityAuditRoute
   '/runtime/$id/activity/stream': typeof RuntimeIdActivityStreamRoute
   '/runtime/$id/engine/cld': typeof RuntimeIdEngineCldRoute
+  '/runtime/$id/engine/cursor': typeof RuntimeIdEngineCursorRoute
   '/runtime/$id/engine/kv': typeof RuntimeIdEngineKvRoute
   '/runtime/$id/engine/lsm': typeof RuntimeIdEngineLsmRoute
   '/runtime/$id/knowledge/claims': typeof RuntimeIdKnowledgeClaimsRoute
@@ -398,6 +406,7 @@ export interface FileRoutesById {
   '/runtime/$id/activity/audit': typeof RuntimeIdActivityAuditRoute
   '/runtime/$id/activity/stream': typeof RuntimeIdActivityStreamRoute
   '/runtime/$id/engine/cld': typeof RuntimeIdEngineCldRoute
+  '/runtime/$id/engine/cursor': typeof RuntimeIdEngineCursorRoute
   '/runtime/$id/engine/kv': typeof RuntimeIdEngineKvRoute
   '/runtime/$id/engine/lsm': typeof RuntimeIdEngineLsmRoute
   '/runtime/$id/knowledge/claims': typeof RuntimeIdKnowledgeClaimsRoute
@@ -446,6 +455,7 @@ export interface FileRouteTypes {
     | '/runtime/$id/activity/audit'
     | '/runtime/$id/activity/stream'
     | '/runtime/$id/engine/cld'
+    | '/runtime/$id/engine/cursor'
     | '/runtime/$id/engine/kv'
     | '/runtime/$id/engine/lsm'
     | '/runtime/$id/knowledge/claims'
@@ -490,6 +500,7 @@ export interface FileRouteTypes {
     | '/runtime/$id/activity/audit'
     | '/runtime/$id/activity/stream'
     | '/runtime/$id/engine/cld'
+    | '/runtime/$id/engine/cursor'
     | '/runtime/$id/engine/kv'
     | '/runtime/$id/engine/lsm'
     | '/runtime/$id/knowledge/claims'
@@ -536,6 +547,7 @@ export interface FileRouteTypes {
     | '/runtime/$id/activity/audit'
     | '/runtime/$id/activity/stream'
     | '/runtime/$id/engine/cld'
+    | '/runtime/$id/engine/cursor'
     | '/runtime/$id/engine/kv'
     | '/runtime/$id/engine/lsm'
     | '/runtime/$id/knowledge/claims'
@@ -707,6 +719,13 @@ declare module '@tanstack/react-router' {
       path: '/cld'
       fullPath: '/runtime/$id/engine/cld'
       preLoaderRoute: typeof RuntimeIdEngineCldRouteImport
+      parentRoute: typeof RuntimeIdEngineRouteRoute
+    }
+    '/runtime/$id/engine/cursor': {
+      id: '/runtime/$id/engine/cursor'
+      path: '/cursor'
+      fullPath: '/runtime/$id/engine/cursor'
+      preLoaderRoute: typeof RuntimeIdEngineCursorRouteImport
       parentRoute: typeof RuntimeIdEngineRouteRoute
     }
     '/runtime/$id/engine/kv': {
@@ -905,12 +924,14 @@ const RuntimeIdActivityRouteRouteWithChildren =
 
 interface RuntimeIdEngineRouteRouteChildren {
   RuntimeIdEngineCldRoute: typeof RuntimeIdEngineCldRoute
+  RuntimeIdEngineCursorRoute: typeof RuntimeIdEngineCursorRoute
   RuntimeIdEngineKvRoute: typeof RuntimeIdEngineKvRoute
   RuntimeIdEngineLsmRoute: typeof RuntimeIdEngineLsmRoute
 }
 
 const RuntimeIdEngineRouteRouteChildren: RuntimeIdEngineRouteRouteChildren = {
   RuntimeIdEngineCldRoute: RuntimeIdEngineCldRoute,
+  RuntimeIdEngineCursorRoute: RuntimeIdEngineCursorRoute,
   RuntimeIdEngineKvRoute: RuntimeIdEngineKvRoute,
   RuntimeIdEngineLsmRoute: RuntimeIdEngineLsmRoute,
 }

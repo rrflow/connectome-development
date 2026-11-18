@@ -1318,4 +1318,43 @@ mod source_projection_tests {
         assert!(oversized.entries.is_empty());
         assert_eq!(oversized.oversized_rows, 1);
     }
+
+    #[test]
+    fn the_query_view_keeps_how_rrflowql_read_rrflowkv() {
+        let mut result = query_result(Vec::new(), false);
+        result.execution.read_evidence.range_scans = 2;
+        result.execution.read_evidence.keys_examined = 21;
+        result.execution.read_evidence.values_decoded = 20;
+        result.execution.read_evidence.decoded_bytes = 4096;
+        result.plan.candidates = vec![
+            rrd_contract::QueryPlanCandidate {
+                name: "full_scan".into(),
+                selected: false,
+                exact: true,
+                reason: "no index".into(),
+            },
+            rrd_contract::QueryPlanCandidate {
+                name: "kind_prefix".into(),
+                selected: true,
+                exact: true,
+                reason: "the kind bounds the key range".into(),
+            },
+        ];
+        let view = crate::rrd::view::query(&result);
+        let read = &view.execution.read_evidence;
+        assert_eq!(
+            (read.range_scans, read.keys_examined, read.values_decoded),
+            (2, 21, 20)
+        );
+        assert_eq!(read.decoded_bytes, 4096);
+        let chosen = view
+            .plan
+            .candidates
+            .iter()
+            .find(|candidate| candidate.selected)
+            .expect("the planner chose a path");
+        assert_eq!(chosen.name, "kind_prefix");
+        assert_eq!(chosen.reason, "the kind bounds the key range");
+        assert!(view.plan.exact && view.execution.analysis.is_none());
+    }
 }

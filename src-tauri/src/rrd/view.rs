@@ -434,6 +434,20 @@ pub struct PhysicalStorageView {
     pub evidence_level: String,
     pub headline: Vec<MetricView>,
     pub groups: Vec<MetricGroupView>,
+    /// rrflowCLD's state, when the engine reported it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cold_tier: Option<ColdTierStateView>,
+}
+
+/// rrflowCLD as typed state, so a view never reads meaning out of a note.
+#[derive(Debug, Clone, Serialize)]
+pub struct ColdTierStateView {
+    pub enabled: bool,
+    pub pending: bool,
+    pub through_cursor: u64,
+    pub files: u64,
+    /// Why publication stopped, in plain words, when it has.
+    pub stopped: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -1018,12 +1032,7 @@ pub(super) fn cold_tier_group(cold: &ColdHistoryReadResult) -> MetricGroupView {
         notes.push(format!(
             "Publishing is stopped at cursor {}: {}.",
             cold.through_cursor,
-            match failure.code {
-                ColdHistoryFailureCode::DeadlineExceeded => "the time limit was reached",
-                ColdHistoryFailureCode::ResourceLimit => "a change exceeds the configured limits",
-                ColdHistoryFailureCode::SourceConflict => "the source changed during publication",
-                ColdHistoryFailureCode::StorageOrOther => "a storage error occurred",
-            }
+            cold_failure_reason(failure.code)
         ));
     }
     if cold.enabled {
@@ -1034,6 +1043,28 @@ pub(super) fn cold_tier_group(cold: &ColdHistoryReadResult) -> MetricGroupView {
         label: "rrflowCLD cold tier",
         metrics,
         notes,
+    }
+}
+
+fn cold_failure_reason(code: ColdHistoryFailureCode) -> &'static str {
+    match code {
+        ColdHistoryFailureCode::DeadlineExceeded => "the time limit was reached",
+        ColdHistoryFailureCode::ResourceLimit => "a change exceeds the configured limits",
+        ColdHistoryFailureCode::SourceConflict => "the source changed during publication",
+        ColdHistoryFailureCode::StorageOrOther => "a storage error occurred",
+    }
+}
+
+pub(super) fn cold_tier_state(cold: &ColdHistoryReadResult) -> ColdTierStateView {
+    ColdTierStateView {
+        enabled: cold.enabled,
+        pending: cold.pending,
+        through_cursor: cold.through_cursor,
+        files: cold.current_generation,
+        stopped: cold
+            .failure
+            .as_ref()
+            .map(|failure| cold_failure_reason(failure.code).to_string()),
     }
 }
 
@@ -1060,6 +1091,7 @@ pub(super) fn physical(storage: &DiagnosticStorageSnapshot) -> PhysicalStorageVi
         evidence_level: label(&storage.evidence_level),
         headline,
         groups,
+        cold_tier: None,
     }
 }
 
@@ -1666,6 +1698,22 @@ mod cold_tier_tests {
             .notes
             .iter()
             .any(|note| note.contains("stopped at cursor 6181") && note.contains("limits")));
+    }
+
+    #[test]
+    fn cold_tier_state_is_typed_not_read_from_notes() {
+        let state = cold_tier_state(&status());
+        assert!(state.enabled && !state.pending && state.stopped.is_none());
+        assert_eq!((state.through_cursor, state.files), (6181, 28));
+        let mut stopped = status();
+        stopped.failure = Some(ColdHistoryFailure {
+            code: ColdHistoryFailureCode::SourceConflict,
+            since_unix_ms: 1,
+        });
+        assert_eq!(
+            cold_tier_state(&stopped).stopped.as_deref(),
+            Some("the source changed during publication")
+        );
     }
 
     #[test]
