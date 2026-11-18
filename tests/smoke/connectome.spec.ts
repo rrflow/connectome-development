@@ -2916,3 +2916,31 @@ test("workbench lanes save a template and generate a checklist that claims only 
 		}),
 	).toBeVisible();
 });
+
+test("dataset plans record the telemetry the author chose", async ({ page }) => {
+	const { profileA, profileB } = await createDiagnosticProfiles(page);
+	await openDiagnosticWorkbench(page, profileA, profileB);
+	await page.getByRole("textbox", { name: "Workbench lane", exact: true }).click();
+	await page.getByRole("option", { name: "Dataset authoring", exact: true }).click();
+	await page.getByLabel("Template name", { exact: true }).fill("Telemetry template");
+	await page.getByRole("button", { name: "Save template", exact: true }).click();
+	await expect(page.getByText("Telemetry template", { exact: true }).first()).toBeVisible();
+	await page.getByLabel("Telemetry profile", { exact: true }).fill("latency-only");
+	await page.getByLabel("Hops", { exact: true }).uncheck();
+	await page.getByLabel("Tools", { exact: true }).uncheck();
+	const workload = page.waitForEvent("download", {
+		predicate: (download) => download.suggestedFilename().endsWith("workload-plan.json"),
+	});
+	await page.getByLabel("Run label", { exact: true }).fill("telemetry run");
+	await page.getByRole("button", { name: "Generate dataset files", exact: true }).click();
+	const plan = JSON.parse(readFileSync(await (await workload).path(), "utf8")) as {
+		telemetry: Record<string, unknown>;
+	};
+	expect(plan.telemetry).toEqual({
+		profile: "latency-only",
+		hops: false,
+		actions: true,
+		tools: false,
+		time: true,
+	});
+});
