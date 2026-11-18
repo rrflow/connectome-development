@@ -29,6 +29,7 @@ import {
 	buildDatasetArtifacts,
 	type DatasetBuildArtifact,
 	type DatasetBuildResult,
+	DEFAULT_DATASET_TELEMETRY,
 } from "../datasets/dataset";
 import { WorkbenchDatasetPanel } from "../datasets/dataset-panel";
 import { WorkbenchLinkedCloudPanel } from "../linked-cloud/linked-cloud-panel";
@@ -475,6 +476,7 @@ export function WorkbenchLanes({
 		benchmarkWorkloadProfiles[0].id,
 	);
 	const [datasetBuildRunLabel, setDatasetBuildRunLabel] = useState("");
+	const [datasetTelemetry, setDatasetTelemetry] = useState(DEFAULT_DATASET_TELEMETRY);
 	const [datasetBuildFolderLinkId, setDatasetBuildFolderLinkId] = useState<string | null>(null);
 	const [datasetBuildError, setDatasetBuildError] = useState<string | null>(null);
 	const [datasetBuildResults, setDatasetBuildResults] = useState<DatasetBuildResult[]>([]);
@@ -1049,13 +1051,7 @@ export function WorkbenchLanes({
 			runLabel,
 			workloadProfile: selectedWorkloadProfile,
 			remoteSources,
-			telemetry: {
-				profile: "real-world-baseline",
-				hops: true,
-				actions: true,
-				tools: true,
-				time: true,
-			},
+			telemetry: datasetTelemetry,
 		}).map((artifact) => ({ ...artifact, fileName: `${runFolder}-${artifact.fileName}` }));
 		try {
 			const createdAtUnixMs = Date.now();
@@ -1160,6 +1156,8 @@ export function WorkbenchLanes({
 					}
 					datasetBuildRunLabel={datasetBuildRunLabel}
 					onChangeRunLabel={setDatasetBuildRunLabel}
+					telemetry={datasetTelemetry}
+					onChangeTelemetry={setDatasetTelemetry}
 					datasetOutputFolderOptions={datasetOutputFolderOptions}
 					datasetBuildFolderLinkId={datasetBuildFolderLinkId}
 					onSelectOutputFolder={setDatasetBuildFolderLinkId}
