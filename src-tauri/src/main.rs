@@ -8,7 +8,7 @@ use std::{env, sync::OnceLock};
 
 use log::info;
 use paths::get_logs_directory;
-use rrd::estate::EstateState;
+use rrd::engram::EngramState;
 use rrd::ssh_forward::SshForwardState;
 use rrd::RrdClientState;
 use tauri::{AppHandle, Manager, RunEvent};
@@ -98,7 +98,7 @@ fn main() {
                 .build(),
         )
         .manage(open::OpenResourceState(Default::default()))
-        .manage(EstateState::default())
+        .manage(EngramState::default())
         .manage(RrdClientState::default())
         .manage(SshForwardState::default())
         .invoke_handler(tauri::generate_handler![
@@ -107,10 +107,10 @@ fn main() {
             config::backup_config,
             config::has_config_backup,
             config::restore_config_backup,
-            rrd::estate::rrd_estate_preview,
-            rrd::estate::lifecycle::rrd_estate_serve,
-            rrd::estate::lifecycle::rrd_estate_status,
-            rrd::estate::lifecycle::rrd_estate_stop,
+            rrd::engram::rrd_engram_preview,
+            rrd::engram::lifecycle::rrd_engram_serve,
+            rrd::engram::lifecycle::rrd_engram_status,
+            rrd::engram::lifecycle::rrd_engram_stop,
             diagnostics::runtime_diagnostics_request,
             rrd::rrd_public_request,
             rrd::rrd_connect,
@@ -194,7 +194,7 @@ fn main() {
             window::emit_last(app, "open-resource", ());
         }
         RunEvent::Exit => {
-            rrd::estate::stop_on_exit(&app.state::<EstateState>());
+            rrd::engram::stop_on_exit(&app.state::<EngramState>());
             if let Err(error) =
                 tauri::async_runtime::block_on(app.state::<SshForwardState>().stop_all())
             {

@@ -4,7 +4,7 @@
 //! search and retired, a lost reply settles as the engine's replay, and a
 //! spent or replaced handle applies nothing.
 //!
-//! Like the lens tests it installs and serves a fresh estate through the
+//! Like the lens tests it installs and serves a fresh engram through the
 //! product's serve path, loads the lens fixture, and is run by CI's RRD
 //! process job with `--ignored`.
 
@@ -53,10 +53,10 @@ fn apply(handle: &str) -> RrdQuantizationApplyRequest {
 #[test]
 #[ignore = "needs RRFLOW_BIN; run by CI's RRD process job"]
 fn turboquant_generations_build_activate_compare_replay_and_retire() {
-    let estate = Estate::install_and_serve();
+    let engram = Engram::install_and_serve();
     tauri::async_runtime::block_on(async {
-        load_fixture(&estate).await;
-        let client = NativeRrdClient::connect(estate.connect_request())
+        load_fixture(&engram).await;
+        let client = NativeRrdClient::connect(engram.connect_request())
             .await
             .expect("connection");
 
@@ -102,7 +102,7 @@ fn turboquant_generations_build_activate_compare_replay_and_retire() {
         assert_eq!(built.operation, "vector-quantization-build");
         assert_eq!(
             built.request["scope"],
-            json!(format!("instance:{}", estate.instance))
+            json!(format!("instance:{}", engram.instance))
         );
         assert_eq!(
             built.request["method"],

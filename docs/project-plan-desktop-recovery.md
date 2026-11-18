@@ -14,8 +14,8 @@ This is an unsigned, unoptimized developer preview.
 
 The fresh project contained exact copies of this UI revision's `README.md` and
 `src/rrflow/attunement.ts`. The latter was placed at the project root. No old
-estate state, Git metadata or credentials were copied. Connectome's existing
-project flow previewed and installed a new local estate with no provider binding.
+engram state, Git metadata or credentials were copied. Connectome's existing
+project flow previewed and installed a new local engram with no provider binding.
 This controlled source projection is not a complete development task.
 
 ## Observed workflow

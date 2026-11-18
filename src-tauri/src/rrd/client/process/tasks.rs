@@ -5,9 +5,9 @@ use crate::rrd::client::tasks::{TaskCommand, TaskReply};
 #[test]
 #[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
 fn task_controls_preserve_engine_state_and_refuse_unconfigured_inference() {
-    let estate = Estate::install_and_serve();
+    let engram = Engram::install_and_serve();
     tauri::async_runtime::block_on(async {
-        let client = NativeRrdClient::connect(estate.connect_request())
+        let client = NativeRrdClient::connect(engram.connect_request())
             .await
             .expect("connect");
         // This is the actual maintenance work tracked by Connectome PR26.
@@ -188,7 +188,7 @@ fn task_controls_preserve_engine_state_and_refuse_unconfigured_inference() {
             .await
             .is_err());
         client.close().await.expect("close first session");
-        let reopened = NativeRrdClient::connect(estate.connect_request())
+        let reopened = NativeRrdClient::connect(engram.connect_request())
             .await
             .expect("reconnect");
         let read = reopened
@@ -240,7 +240,7 @@ fn task_controls_preserve_engine_state_and_refuse_unconfigured_inference() {
             .await
             .expect_err("old Stop cannot stop resumed work");
         reopened.close().await.expect("close after resume");
-        let recovered = NativeRrdClient::connect(estate.connect_request())
+        let recovered = NativeRrdClient::connect(engram.connect_request())
             .await
             .expect("reconnect after resume");
         let retained = recovered

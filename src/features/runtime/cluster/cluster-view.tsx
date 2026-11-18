@@ -22,7 +22,7 @@ const CLUSTER_REFRESH_MS = 10_000;
 /**
  * The engram's own record of the engines that serve it and of every lifecycle
  * operation recorded for them. The engine contract still names this record
- * "estate"; Connectome presents it as an engram.
+ * "engram"; Connectome presents it as an engram.
  */
 export function ClusterView() {
 	const { session, client, sessionKey, handshake } = useProject();
@@ -38,7 +38,7 @@ export function ClusterView() {
 
 	const view = engram.data;
 	/** The engine's capability document answered and names no installed engram. */
-	const notInstalled = handshake !== undefined && !handshake.service.installed_estate;
+	const notInstalled = handshake !== undefined && !handshake.service.installed_engram;
 
 	return (
 		<Stack gap="xl">

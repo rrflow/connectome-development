@@ -8,8 +8,8 @@ use tauri::{ipc::Channel, State};
 mod client;
 mod cluster;
 pub mod engine;
+pub mod engram;
 mod error;
-pub mod estate;
 pub mod ssh_forward;
 mod transport;
 mod view;
@@ -218,7 +218,7 @@ pub async fn rrd_physical_storage(
     state.client(&profile).await?.physical_storage().await
 }
 
-/// The installed engram's authority record, read with the engine's `estate-read`.
+/// The installed engram's authority record, read with the engine's `engram-read`.
 #[tauri::command]
 pub async fn rrd_engram_read(
     profile: String,
@@ -474,8 +474,8 @@ pub async fn rrd_backup_create(
     state.client(&profile).await?.create_backup(request).await
 }
 
-/// Restores a backup into its own verified root beside the estate; the
-/// serving estate is not replaced.
+/// Restores a backup into its own verified root beside the engram; the
+/// serving engram is not replaced.
 #[tauri::command]
 pub async fn rrd_backup_restore(
     profile: String,

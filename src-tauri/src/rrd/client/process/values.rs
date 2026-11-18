@@ -64,9 +64,9 @@ fn samples() -> BTreeMap<String, QueryValue> {
 #[test]
 #[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
 fn the_value_model_golden_matches_the_engine() {
-    let estate = Estate::install_and_serve();
+    let engram = Engram::install_and_serve();
     let golden = tauri::async_runtime::block_on(async {
-        let client = NativeRrdClient::connect(estate.connect_request())
+        let client = NativeRrdClient::connect(engram.connect_request())
             .await
             .expect("connection");
         let current = client.schema().await.expect("schema").schema;

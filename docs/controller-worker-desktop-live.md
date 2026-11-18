@@ -13,7 +13,7 @@ Windows preview. Its executable SHA-256 is
 `8c323716f02e210ebc211bf4593dde84b03d1b55d50f62e710676cda5a971da0`
 (154,010,112 bytes). These sizes exclude remote model weights.
 
-The existing installed-controller proof initialized a fresh estate and checked
+The existing installed-controller proof initialized a fresh engram and checked
 admission denials without provider credentials. An operator-managed engine then
 loaded the private provider credential mapping. The desktop connected to that
 engine and used its local operator credential file through the native process.
@@ -65,7 +65,7 @@ native checks and actual-engine process integration.
 The configured binding identifies the provisional custom BF16 service. Its
 reported alias is not weight attestation. One candidate cannot establish routing
 quality. The returned draft includes suggestions about source/target instances;
-this trial exercised one engine estate and proves no distributed migration.
+this trial exercised one engine engram and proves no distributed migration.
 No independent correctness label or training consent follows from acceptance.
 
 Keep PR28 draft behind its engine and UI prerequisites. Uncertain-attempt

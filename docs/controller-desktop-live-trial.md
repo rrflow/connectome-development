@@ -10,7 +10,7 @@ Connectome implementation `d7eb6ea3027b76e1afd515715ab4958e66083060`, engine
 `61ddb26416811ba7e56edf2e28b8cef3acad5930`. See the retained
 [build receipt](evidence/controller-desktop-20261030/build-receipt.json).
 
-An operator helper installed a fresh estate and started the engine with its
+An operator helper installed a fresh engram and started the engine with its
 explicit credential mapping. It applied the existing experimental SWAG profile
 through configuration preview/apply and closed its setup session. Setup performed
 no inference. Authenticated endpoint discovery returned 200 and the configured
@@ -26,7 +26,7 @@ does not attest the model's weights or establish multi-model routing quality.
 ## Actual desktop action and result
 
 The desktop recorded the real maintenance task **Verify Connectome PR26 live
-BF16 proposal and recovery** with scope limited to this estate and PR26 evidence.
+BF16 proposal and recovery** with scope limited to this engram and PR26 evidence.
 The acceptance criterion was one explicit proposal or a preserved failure,
 followed by reload/readback without another model call. Limits were one step,
 60,000 ms per step and 900,000 ms total. No worker, training or model modification
@@ -63,7 +63,7 @@ readback sets, build identity, post-close verification and a SHA256 manifest.
 Published JSON was whitespace-formatted to repository style; the manifest binds
 original and published bytes, and export validation checked parsed equality.
 Session creation responses and credentials are excluded. Local original receipts,
-UI text, setup/readback helpers and the estate remain under
+UI text, setup/readback helpers and the engram remain under
 `D:/projects/swag/.swag/controller-ui/live-bf16-20261030/`.
 
 The first auxiliary `task-read` request omitted required `max_storage_keys` and

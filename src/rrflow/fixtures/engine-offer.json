@@ -26,8 +26,8 @@
 			"status": "available"
 		},
 		{
-			"limitation": "read-only estate snapshots; estate mutations remain unavailable",
-			"name": "estate-authority-read",
+			"limitation": "read-only engram snapshots; engram mutations remain unavailable",
+			"name": "engram-authority-read",
 			"status": "experimental"
 		},
 		{
@@ -101,7 +101,7 @@
 			"status": "experimental"
 		}
 	],
-	"engine": "b099b5bc641b9fe230d0598230a1933ac1b17c14",
+	"engine": "cc5ebe0fd17bd9cb1a72a0d40811ba381869d202",
 	"operations": [
 		"attunement-cancel",
 		"attunement-job-list",
@@ -133,7 +133,7 @@
 		"endpoint-configuration-apply",
 		"endpoint-configuration-preview",
 		"endpoint-configuration-read",
-		"estate-read",
+		"engram-read",
 		"flight-launch",
 		"flight-list",
 		"flight-read",

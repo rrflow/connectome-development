@@ -2,7 +2,7 @@
 //! a change commits exactly as previewed, exports and backups round-trip,
 //! effects fail closed across an engine restart, and every refusal holds.
 //!
-//! Like the lens tests they install and serve a fresh estate through the
+//! Like the lens tests they install and serve a fresh engram through the
 //! product's serve path, load the lens fixture, and are run by CI's RRD
 //! process job with `--ignored`.
 
@@ -83,13 +83,13 @@ fn count(records: &[AuditRecordView], action: &str) -> usize {
         .count()
 }
 
-impl Estate {
-    /// Stops the engine and serves the same installed estate again. The kernel
+impl Engram {
+    /// Stops the engine and serves the same installed engram again. The kernel
     /// picks a new port, so earlier connections lose their endpoint.
     pub(super) fn restart(&mut self) {
         let _ = self.served.server.kill();
         let _ = self.served.server.wait();
-        let mut reopen = EstateServeRequest {
+        let mut reopen = EngramServeRequest {
             project: self.served.view.project.clone(),
             mode: InstallMode::Fresh,
             executable: rrflow().to_string_lossy().into_owned(),
@@ -97,22 +97,22 @@ impl Estate {
             installation_identity: None,
             endpoint_credentials: None,
         };
-        let preview = preview_estate(&reopen).expect("reopen preview");
+        let preview = preview_engram(&reopen).expect("reopen preview");
         assert!(
             preview.installation.is_none(),
-            "an installed estate reopens without a new installation plan"
+            "an installed engram reopens without a new installation plan"
         );
         reopen.installation_identity = preview.installation_identity;
         let observer = Arc::new(RecordingObserver::default());
-        let served = serve_estate(reopen, observer.clone()).unwrap_or_else(|error| {
+        let served = serve_engram(reopen, observer.clone()).unwrap_or_else(|error| {
             panic!(
-                "reopening the estate failed: {error:?}\n{}",
+                "reopening the engram failed: {error:?}\n{}",
                 observer.lines.lock().expect("observer").join("\n")
             )
         });
         assert!(
             !served.view.installed,
-            "a restart reopens the installed estate"
+            "a restart reopens the installed engram"
         );
         assert_eq!(served.view.instance, self.instance);
         self.address = served
@@ -120,7 +120,7 @@ impl Estate {
             .endpoint
             .strip_prefix("http://")
             .and_then(|address| address.parse().ok())
-            .expect("the reopened estate names a loopback HTTP address");
+            .expect("the reopened engram names a loopback HTTP address");
         self.served = served;
     }
 }
@@ -128,10 +128,10 @@ impl Estate {
 #[test]
 #[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
 fn a_change_commits_exactly_as_previewed() {
-    let estate = Estate::install_and_serve();
+    let engram = Engram::install_and_serve();
     tauri::async_runtime::block_on(async {
-        load_fixture(&estate).await;
-        let client = NativeRrdClient::connect(estate.connect_request())
+        load_fixture(&engram).await;
+        let client = NativeRrdClient::connect(engram.connect_request())
             .await
             .expect("connection");
         let (audited, _) = audit_trail(&client).await;
@@ -274,10 +274,10 @@ fn a_change_commits_exactly_as_previewed() {
 #[test]
 #[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
 fn exports_and_backups_round_trip_through_the_native_process() {
-    let estate = Estate::install_and_serve();
+    let engram = Engram::install_and_serve();
     tauri::async_runtime::block_on(async {
-        load_fixture(&estate).await;
-        let client = NativeRrdClient::connect(estate.connect_request())
+        load_fixture(&engram).await;
+        let client = NativeRrdClient::connect(engram.connect_request())
             .await
             .expect("connection");
 
@@ -403,13 +403,13 @@ fn exports_and_backups_round_trip_through_the_native_process() {
 #[test]
 #[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
 fn effects_fail_closed_across_an_engine_restart() {
-    let mut estate = Estate::install_and_serve();
+    let mut engram = Engram::install_and_serve();
     tauri::async_runtime::block_on(async {
-        load_fixture(&estate).await;
+        load_fixture(&engram).await;
     });
     let (before, pending, backup, last_change, audit_head) =
         tauri::async_runtime::block_on(async {
-            let before = NativeRrdClient::connect(estate.connect_request())
+            let before = NativeRrdClient::connect(engram.connect_request())
                 .await
                 .expect("connection before the restart");
             let pending = before
@@ -446,7 +446,7 @@ fn effects_fail_closed_across_an_engine_restart() {
             (before, pending, backup, last_change, audit_head)
         });
 
-    estate.restart();
+    engram.restart();
     tauri::async_runtime::block_on(async {
         // The old connection's endpoint is gone: its pending change cannot be
         // committed and its reads fail rather than reach another process.
@@ -465,7 +465,7 @@ fn effects_fail_closed_across_an_engine_restart() {
             .await
             .expect_err("a read from the stopped engine");
 
-        let after = NativeRrdClient::connect(estate.connect_request())
+        let after = NativeRrdClient::connect(engram.connect_request())
             .await
             .expect("connection after the restart");
         assert!(
@@ -529,16 +529,16 @@ fn effects_fail_closed_across_an_engine_restart() {
 #[test]
 #[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
 fn the_engine_and_the_native_layer_refuse_what_they_must() {
-    let estate = Estate::install_and_serve();
+    let engram = Engram::install_and_serve();
     tauri::async_runtime::block_on(async {
-        load_fixture(&estate).await;
+        load_fixture(&engram).await;
 
         // The engine refuses a credential it never issued.
         let directory =
             std::env::temp_dir().join(format!("connectome-forged-{}", Uuid::new_v4().simple()));
         std::fs::create_dir_all(&directory).expect("forged credential directory");
         let installed: Value = serde_json::from_slice(
-            &std::fs::read(&estate.served.view.credential_path).expect("installed credential"),
+            &std::fs::read(&engram.served.view.credential_path).expect("installed credential"),
         )
         .expect("credential JSON");
         let mut forged = installed.clone();
@@ -546,7 +546,7 @@ fn the_engine_and_the_native_layer_refuse_what_they_must() {
         let forged_path = directory.join("local-operator.json");
         std::fs::write(&forged_path, serde_json::to_vec(&forged).expect("JSON"))
             .expect("write forged credential");
-        let mut request = estate.connect_request();
+        let mut request = engram.connect_request();
         request.credential_path = forged_path.to_string_lossy().into_owned();
         assert!(
             NativeRrdClient::connect(request).await.is_err(),
@@ -558,11 +558,11 @@ fn the_engine_and_the_native_layer_refuse_what_they_must() {
         // released: the next preview is not over the one-transaction quota.
         let sessions = RrdClientState::default();
         sessions
-            .connect("project-a".into(), estate.connect_request())
+            .connect("project-a".into(), engram.connect_request())
             .await
             .expect("first connection");
         sessions
-            .connect("project-b".into(), estate.connect_request())
+            .connect("project-b".into(), engram.connect_request())
             .await
             .expect("second connection");
         let a = sessions.client("project-a").await.expect("a");

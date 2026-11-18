@@ -59,14 +59,14 @@ struct InstalledOperatorCredential {
     credential: String,
 }
 
-async fn control_session(estate: &Estate) -> (RrdClient, Session) {
-    let bytes = std::fs::read(&estate.served.view.credential_path)
+async fn control_session(engram: &Engram) -> (RrdClient, Session) {
+    let bytes = std::fs::read(&engram.served.view.credential_path)
         .expect("read the isolated installed operator credential");
     let credential: InstalledOperatorCredential =
         serde_json::from_slice(&bytes).expect("installed operator credential document");
     let client = RrdClient::connect_local(
-        estate.address,
-        rrd_contract::CanonicalId::new(&estate.instance).expect("installed instance ID"),
+        engram.address,
+        rrd_contract::CanonicalId::new(&engram.instance).expect("installed instance ID"),
         ClientConfig {
             max_attempts: 1,
             ..ClientConfig::default()
@@ -416,9 +416,9 @@ fn reply_loopback_chat(socket: &mut TcpStream, model: &str, content: &str) {
 #[test]
 #[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
 fn project_plan_controls_recover_expired_lease_and_record_cancellation() {
-    let estate = Estate::install_and_serve();
+    let engram = Engram::install_and_serve();
     tauri::async_runtime::block_on(async {
-        let client = NativeRrdClient::connect(estate.connect_request())
+        let client = NativeRrdClient::connect(engram.connect_request())
             .await
             .unwrap();
         let Reply::Page { page } = client
@@ -527,9 +527,9 @@ fn project_plan_controls_recover_expired_lease_and_record_cancellation() {
 #[test]
 #[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
 fn project_plan_controls_discover_replan_and_recover_without_client_identity_derivation() {
-    let estate = Estate::install_and_serve();
+    let engram = Engram::install_and_serve();
     tauri::async_runtime::block_on(async {
-        let client = NativeRrdClient::connect(estate.connect_request())
+        let client = NativeRrdClient::connect(engram.connect_request())
             .await
             .unwrap();
         let Reply::Page { page } = client
@@ -638,7 +638,7 @@ fn project_plan_controls_discover_replan_and_recover_without_client_identity_der
             connected["status"]["job"]["checkpoints"]
         );
 
-        let source = PathBuf::from(&estate.served.view.project).join("plan-control-fixture.txt");
+        let source = PathBuf::from(&engram.served.view.project).join("plan-control-fixture.txt");
         std::fs::write(
             &source,
             "Ordinary source edit used only by this installed-process test.\n",
@@ -684,7 +684,7 @@ fn project_plan_controls_discover_replan_and_recover_without_client_identity_der
         );
         client.close().await.unwrap();
 
-        let reopened = NativeRrdClient::connect(estate.connect_request())
+        let reopened = NativeRrdClient::connect(engram.connect_request())
             .await
             .unwrap();
         let Reply::Page { page } = reopened
@@ -733,9 +733,9 @@ fn project_plan_controls_discover_replan_and_recover_without_client_identity_der
 #[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
 fn selected_source_query_projects_typed_inventory_from_installed_engine() {
     let content = "Public typed source query fixture; not training data.\n";
-    let estate = Estate::install_and_serve();
+    let engram = Engram::install_and_serve();
     tauri::async_runtime::block_on(async {
-        let client = NativeRrdClient::connect(estate.connect_request())
+        let client = NativeRrdClient::connect(engram.connect_request())
             .await
             .expect("connect to installed engine");
         let Reply::Page { page } = client
@@ -767,7 +767,7 @@ fn selected_source_query_projects_typed_inventory_from_installed_engine() {
         );
 
         let source_path =
-            PathBuf::from(&estate.served.view.project).join("source-query-fixture.txt");
+            PathBuf::from(&engram.served.view.project).join("source-query-fixture.txt");
         std::fs::write(&source_path, content).expect("temporary project source fixture");
         let changed = read(&client, job_id).await;
         let (handle, _) = prepare(&client, &changed, Control::Replan).await;
@@ -844,11 +844,11 @@ fn selected_source_worker_roundtrips_through_installed_ui_adapter() {
     let source_content = "Isolated source-worker protocol fixture; not training data.\n";
     let changed_source_content =
         "Changed after review to prove stale selected content is refused.\n";
-    let mut estate = Estate::install_source_read_and_serve();
+    let mut engram = Engram::install_source_read_and_serve();
     tauri::async_runtime::block_on(async {
-        let client = NativeRrdClient::connect(estate.connect_request())
+        let client = NativeRrdClient::connect(engram.connect_request())
             .await
-            .expect("connect the installed source-readable estate");
+            .expect("connect the installed source-readable engram");
         let Reply::Page { page } = client
             .attunement_command(Command::List { after_job_id: None })
             .await
@@ -881,7 +881,7 @@ fn selected_source_worker_roundtrips_through_installed_ui_adapter() {
         );
 
         let source_path =
-            PathBuf::from(&estate.served.view.project).join("source-query-fixture.txt");
+            PathBuf::from(&engram.served.view.project).join("source-query-fixture.txt");
         std::fs::write(&source_path, source_content).expect("write owned source fixture");
         let changed = read(&client, job_id).await;
         let (handle, _) = prepare(&client, &changed, Control::Replan).await;
@@ -1056,7 +1056,7 @@ fn selected_source_worker_roundtrips_through_installed_ui_adapter() {
             observed
         });
 
-        let (control_client, control_session_handle) = control_session(&estate).await;
+        let (control_client, control_session_handle) = control_session(&engram).await;
         let _ = configure_loopback_profile(
             &control_client,
             &control_session_handle,
@@ -1430,10 +1430,10 @@ fn selected_source_worker_roundtrips_through_installed_ui_adapter() {
             .close()
             .await
             .expect("close active UI-adapter session before process restart");
-        estate.stop_and_reopen();
+        engram.stop_and_reopen();
         let new_address_client = RrdClient::connect_local(
-            estate.address,
-            rrd_contract::CanonicalId::new(&estate.instance).expect("reopened instance ID"),
+            engram.address,
+            rrd_contract::CanonicalId::new(&engram.instance).expect("reopened instance ID"),
             ClientConfig {
                 max_attempts: 1,
                 ..ClientConfig::default()
@@ -1458,7 +1458,7 @@ fn selected_source_worker_roundtrips_through_installed_ui_adapter() {
             }
             _ => panic!("explicitly closed pre-restart session remained usable"),
         }
-        let (fresh_control_client, fresh_control_session) = control_session(&estate).await;
+        let (fresh_control_client, fresh_control_session) = control_session(&engram).await;
         let reopened_configuration = fresh_control_client
             .read_endpoint_configuration(
                 &fresh_control_session,
@@ -1473,9 +1473,9 @@ fn selected_source_worker_roundtrips_through_installed_ui_adapter() {
             .expect("fresh public SDK session works after restart");
         assert_eq!(
             reopened_configuration.identity.instance_id.as_str(),
-            estate.instance
+            engram.instance
         );
-        let reopened = NativeRrdClient::connect(estate.connect_request())
+        let reopened = NativeRrdClient::connect(engram.connect_request())
             .await
             .expect("reauthenticate after real installed-process restart");
         let TaskReply::Budget {

@@ -48,7 +48,7 @@ bytes). This is candidate evidence; the pin is not yet treated as landed.
 The ignored installed-process test
 `selected_source_worker_roundtrips_through_installed_ui_adapter` passed 1/1. It
 uses the public CLI to opt into `ProjectSourceRead`, then serves that installed
-estate through Connectome's existing process adapter. It reads the typed public
+engram through Connectome's existing process adapter. It reads the typed public
 inventory, selects one file by entry identity/content digest, reviews the exact
 source request, and sends one source-derived worker packet to a controlled
 loopback protocol fixture. The packet is checked against typed source
@@ -108,7 +108,7 @@ response and returned-content hashes to RRFlow's protected attempt readback.
 Disabling source export through public configuration preview/apply withheld the
 retained output and cleared the desktop draft. Restoring export recovered the
 identical attempt. Stopping and starting that project through the desktop opened
-the same estate at a new address; **Recover last attempt**, followed by
+the same engram at a new address; **Recover last attempt**, followed by
 **Read budget and attempt**, displayed the same result and provenance. A separate
 public API session verified exact attempt and budget equality after restoration
 and restart: two steps reserved, 76 ms charged, and the original deadline.

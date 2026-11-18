@@ -23,11 +23,11 @@ import { describeRrdError } from "~/rrflow/runtime";
 import { RrdSessionClient, sessionQueryKey } from "~/rrflow/session";
 import { iconPlay } from "~/shared/assets/icons";
 import type {
-	EstatePreview,
-	EstateSelection,
+	EngramPreview,
+	EngramSelection,
 	InstanceState,
 	ProjectInstance,
-	ServedEstate,
+	ServedEngram,
 } from "~/shared/types";
 import { persistCurrentConfig } from "~/shared/util/config/config";
 import { useConfigStore } from "~/shell/stores/config";
@@ -87,12 +87,12 @@ const lastSegment = (project: string) =>
 
 export function DatabaseServing() {
 	const [opened, setOpened] = useState(false);
-	const [selection, setSelection] = useState<EstateSelection>(() => ({
+	const [selection, setSelection] = useState<EngramSelection>(() => ({
 		...useConfigStore.getState().settings.serving,
 	}));
 	const [preview, setPreview] = useState<{
-		value: EstatePreview;
-		selection: EstateSelection;
+		value: EngramPreview;
+		selection: EngramSelection;
 	} | null>(null);
 	const [pending, setPending] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -168,15 +168,15 @@ export function DatabaseServing() {
 			await refresh();
 		}
 	};
-	const start = async (request: EstateSelection, digest?: string) => {
-		const estate = await adapter.serveEstate(digest, request);
+	const start = async (request: EngramSelection, digest?: string) => {
+		const engram = await adapter.serveEngram(digest, request);
 		setPreview(null);
-		useDatabaseStore.getState().confirmServing(estate);
-		await openServed(estate);
+		useDatabaseStore.getState().confirmServing(engram);
+		await openServed(engram);
 		setOpened(false);
 	};
-	const openServed = async (estate: ServedEstate) => {
-		const connection = resolveServedConnection(estate);
+	const openServed = async (engram: ServedEngram) => {
+		const connection = resolveServedConnection(engram);
 		try {
 			await persistCurrentConfig();
 		} catch (cause) {
@@ -186,9 +186,9 @@ export function DatabaseServing() {
 		}
 		navigate(connection);
 	};
-	const prepare = (request: EstateSelection) =>
+	const prepare = (request: EngramSelection) =>
 		run(async () => {
-			const value = await adapter.previewEstate(request);
+			const value = await adapter.previewEngram(request);
 			// Freeze the resolved directory, mode, executable and the identity the
 			// engine planned with, so the plan applied is the plan reviewed.
 			const resolved = {
@@ -201,29 +201,29 @@ export function DatabaseServing() {
 		});
 	const startKnown = (project: string) =>
 		prepare({ ...useConfigStore.getState().settings.serving, project, mode: "existing" });
-	const disconnect = async (estate: ServedEstate) => {
+	const disconnect = async (engram: ServedEngram) => {
 		const profiles = useConfigStore
 			.getState()
 			.connections.filter(
 				(c) =>
 					c.target === "runtime" &&
-					c.runtimeCredential === estate.credential_path &&
+					c.runtimeCredential === engram.credential_path &&
 					`${c.authentication.protocol}://${c.authentication.hostname}` ===
-						estate.endpoint,
+						engram.endpoint,
 			);
 		for (const profile of profiles) {
 			await new RrdSessionClient(profile.id).disconnect();
 			queryClient.setQueryData(sessionQueryKey(profile.id), null);
 		}
 	};
-	const stop = (estate: ServedEstate) =>
+	const stop = (engram: ServedEngram) =>
 		run(async () => {
-			await disconnect(estate);
-			await adapter.stopEstate(estate.project);
+			await disconnect(engram);
+			await adapter.stopEngram(engram.project);
 		});
 	const dismiss = (project: string) =>
 		run(async () => {
-			await adapter.stopEstate(project);
+			await adapter.stopEngram(project);
 		});
 	return (
 		<>
@@ -316,26 +316,26 @@ export function DatabaseServing() {
 							>
 								{instance.detail}
 							</Text>
-							{instance.estate?.endpoint_credentials && (
+							{instance.engram?.endpoint_credentials && (
 								<Text
 									size="sm"
 									style={{ overflowWrap: "anywhere" }}
 								>
 									Endpoint mapping used at startup:{" "}
-									{instance.estate.endpoint_credentials}. Stop and restart to
+									{instance.engram.endpoint_credentials}. Stop and restart to
 									apply changes.
 								</Text>
 							)}
 							<Group mt="sm">
-								{instance.state === "ready" && instance.estate && (
+								{instance.state === "ready" && instance.engram && (
 									<Button
 										variant="light"
 										disabled={pending}
 										onClick={() => {
-											if (!instance.estate) return;
-											const estate = instance.estate;
+											if (!instance.engram) return;
+											const engram = instance.engram;
 											void run(async () => {
-												await openServed(estate);
+												await openServed(engram);
 												setOpened(false);
 											});
 										}}
@@ -344,13 +344,13 @@ export function DatabaseServing() {
 									</Button>
 								)}
 								{instance.state === "ready" &&
-									instance.estate &&
+									instance.engram &&
 									(instance.origin === "connectome" ? (
 										<Button
 											variant="subtle"
 											color="red"
 											disabled={pending}
-											onClick={() => instance.estate && stop(instance.estate)}
+											onClick={() => instance.engram && stop(instance.engram)}
 										>
 											Stop this engine
 										</Button>

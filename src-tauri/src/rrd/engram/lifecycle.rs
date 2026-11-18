@@ -10,7 +10,7 @@
 //!
 //! A tracked instance is starting, ready, stopping or failed; a project with no
 //! entry is stopped. Every transition is numbered and sent to the webview as
-//! one `estate:lifecycle` event naming its project, so a status read that
+//! one `engram:lifecycle` event naming its project, so a status read that
 //! arrives after a newer event can be recognised as older.
 
 use serde::{Deserialize, Serialize};
@@ -23,7 +23,7 @@ use tokio::task::JoinSet;
 
 use super::{
     endpoint_credentials_path, engine_stage, project_directory, prove_elsewhere, serve_with, stage,
-    EstateServeRequest, EstateStage, ServeObserver, ServedEstate, ServedEstateView, DEFAULT_ESTATE,
+    EngramServeRequest, EngramStage, ServeObserver, ServedEngram, ServedEngramView, DEFAULT_ENGRAM,
     LOCATOR, OUTPUT_EVENT, SERVING_RECORD, STAGE_EVENT,
 };
 use crate::paths::get_data_directory;
@@ -31,7 +31,7 @@ use crate::rrd::client::answers_as;
 use crate::rrd::engine::resolve_engine;
 use crate::rrd::error::RrdError;
 
-pub(super) const LIFECYCLE_EVENT: &str = "estate:lifecycle";
+pub(super) const LIFECYCLE_EVENT: &str = "engram:lifecycle";
 /// Local engines this desktop runs at once.
 const MAX_OWNED: usize = 4;
 /// Instances tracked at once, owned or not; each needs one of the eight
@@ -79,7 +79,7 @@ pub struct InstanceView {
     pub detail: String,
     /// The instance's coordinates once it is ready.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub estate: Option<ServedEstateView>,
+    pub engram: Option<ServedEngramView>,
     /// The registry's transition number when this view was taken.
     pub revision: u64,
 }
@@ -88,9 +88,9 @@ pub struct InstanceView {
 /// authorities. Do not log project paths, credentials, endpoints or output.
 pub(super) fn trace_lifecycle(instance: &InstanceView) {
     let instance_id = instance
-        .estate
+        .engram
         .as_ref()
-        .map(|estate| estate.instance.as_str());
+        .map(|engram| engram.instance.as_str());
     log::info!(
         target: "connectome::instance",
         "[connectome::instance] revision={} state={:?} origin={:?} stage={:?} instance={:?}",
@@ -127,9 +127,9 @@ enum Entry {
         detail: String,
     },
     /// The engine child this desktop started.
-    Owned(ServedEstate),
+    Owned(ServedEngram),
     /// An instance started elsewhere and proved by `rrflow ready`.
-    Attached(ServedEstateView),
+    Attached(ServedEngramView),
     /// The owned engine is being stopped.
     Stopping,
     /// A start or an attach failed, or the owned engine exited by itself.
@@ -164,7 +164,7 @@ impl Entry {
     }
 
     fn view(&self, project: &Path, revision: u64) -> InstanceView {
-        let (state, stage, detail, estate) = match self {
+        let (state, stage, detail, engram) = match self {
             Self::Starting { stage, detail, .. } => (
                 InstanceState::Starting,
                 *stage,
@@ -203,7 +203,7 @@ impl Entry {
             origin: self.origin(),
             stage,
             detail,
-            estate,
+            engram,
             revision,
         }
     }
@@ -227,14 +227,14 @@ fn record_hint(project: &Path) -> Option<RecordHint> {
 }
 
 #[derive(Default)]
-struct EstateRegistry {
+struct EngramRegistry {
     closing: bool,
     revision: u64,
     projects: BTreeMap<PathBuf, Tracked>,
     unproved: BTreeMap<PathBuf, RecordHint>,
 }
 
-impl EstateRegistry {
+impl EngramRegistry {
     /// Records one transition; the returned view is sent once the lock is
     /// released.
     fn set(&mut self, project: &Path, entry: Entry) -> InstanceView {
@@ -264,7 +264,7 @@ impl EstateRegistry {
             origin,
             stage: None,
             detail,
-            estate: None,
+            engram: None,
             revision: self.revision,
         }
     }
@@ -320,10 +320,10 @@ impl EstateRegistry {
 /// Every project instance this desktop knows, keyed by canonical project
 /// directory.
 #[derive(Default, Clone)]
-pub struct EstateState(Arc<Mutex<EstateRegistry>>);
+pub struct EngramState(Arc<Mutex<EngramRegistry>>);
 
 /// A reservation survives the blocking launch and releases on panic.
-struct Reservation(EstateState, PathBuf);
+struct Reservation(EngramState, PathBuf);
 impl Drop for Reservation {
     fn drop(&mut self) {
         let mut registry = self.0.lock();
@@ -343,8 +343,8 @@ impl Drop for Reservation {
 
 /// How one start ended.
 enum Launched {
-    Owned(ServedEstate),
-    Attached(ServedEstateView),
+    Owned(ServedEngram),
+    Attached(ServedEngramView),
 }
 
 /// Follows a start's stages into its lifecycle entry, then passes each one on.
@@ -352,7 +352,7 @@ enum Launched {
 /// so the registry is held weakly: the registry owns the engine, and dropping
 /// it must still stop the engine.
 struct Tracking {
-    registry: Weak<Mutex<EstateRegistry>>,
+    registry: Weak<Mutex<EngramRegistry>>,
     project: PathBuf,
     inner: Arc<dyn ServeObserver>,
     reached: Mutex<Option<&'static str>>,
@@ -365,13 +365,13 @@ impl Tracking {
 }
 
 impl ServeObserver for Tracking {
-    fn stage(&self, stage: EstateStage) {
+    fn stage(&self, stage: EngramStage) {
         if matches!(stage.state, "running" | "failed") {
             *self.reached.lock().expect("start stage") = Some(stage.stage);
         }
         if stage.state == "running" {
             let view = self.registry.upgrade().and_then(|registry| {
-                let mut registry = registry.lock().expect("estate state");
+                let mut registry = registry.lock().expect("engram state");
                 let starting = registry
                     .projects
                     .get(&self.project)
@@ -406,19 +406,19 @@ impl ServeObserver for Tracking {
 /// Proves the instance an existing record names: the outer error means the
 /// proof itself cannot be accepted, the inner one that nothing proved itself.
 type Prover =
-    dyn Fn(&str, &Path) -> Result<Result<ServedEstateView, String>, RrdError> + Send + Sync;
+    dyn Fn(&str, &Path) -> Result<Result<ServedEngramView, String>, RrdError> + Send + Sync;
 
 fn prove_with_engine(
     executable: &str,
     project: &Path,
-) -> Result<Result<ServedEstateView, String>, RrdError> {
+) -> Result<Result<ServedEngramView, String>, RrdError> {
     let engine = resolve_engine(executable)?;
     prove_elsewhere(&engine.path, project)
 }
 
-impl EstateState {
-    fn lock(&self) -> MutexGuard<'_, EstateRegistry> {
-        self.0.lock().expect("estate state")
+impl EngramState {
+    fn lock(&self) -> MutexGuard<'_, EngramRegistry> {
+        self.0.lock().expect("engram state")
     }
 
     /// Starts or attaches to the project's instance and returns once it is
@@ -426,9 +426,9 @@ impl EstateState {
     /// project that another process serves is attached instead of served.
     pub fn start(
         &self,
-        mut request: EstateServeRequest,
+        mut request: EngramServeRequest,
         observer: Arc<dyn ServeObserver>,
-    ) -> Result<ServedEstateView, RrdError> {
+    ) -> Result<ServedEngramView, RrdError> {
         request.endpoint_credentials =
             endpoint_credentials_path(request.endpoint_credentials.as_deref())?
                 .map(|path| path.to_string_lossy().into_owned());
@@ -812,7 +812,7 @@ impl EstateState {
 /// The engine, an instance started elsewhere if the project has one, else
 /// the serve sequence.
 fn launch(
-    request: EstateServeRequest,
+    request: EngramServeRequest,
     project: &Path,
     observer: Arc<Tracking>,
 ) -> Result<Launched, RrdError> {
@@ -843,7 +843,7 @@ fn attach_stage(
     app: &dyn ServeObserver,
     executable: &Path,
     project: &Path,
-) -> Result<Option<ServedEstateView>, RrdError> {
+) -> Result<Option<ServedEngramView>, RrdError> {
     if !project.join(SERVING_RECORD).is_file() {
         stage(
             app,
@@ -889,10 +889,10 @@ fn attach_stage(
 }
 
 /// A known project's canonical directory, without creating anything; an
-/// empty name is Connectome's own default estate.
+/// empty name is Connectome's own default engram.
 fn known_directory(project: &str) -> Option<PathBuf> {
     let directory = match project.trim() {
-        "" => get_data_directory().join(DEFAULT_ESTATE),
+        "" => get_data_directory().join(DEFAULT_ENGRAM),
         configured => PathBuf::from(configured),
     };
     if !directory.is_absolute() {
@@ -902,11 +902,11 @@ fn known_directory(project: &str) -> Option<PathBuf> {
 }
 
 #[tauri::command]
-pub async fn rrd_estate_serve(
+pub async fn rrd_engram_serve(
     app: AppHandle,
-    request: EstateServeRequest,
-    state: State<'_, EstateState>,
-) -> Result<ServedEstateView, RrdError> {
+    request: EngramServeRequest,
+    state: State<'_, EngramState>,
+) -> Result<ServedEngramView, RrdError> {
     let owner = state.inner().clone();
     let project = request.project.clone();
     let observer: Arc<dyn ServeObserver> = Arc::new(ProjectObserver { app, project });
@@ -921,7 +921,7 @@ struct ProjectObserver {
     project: String,
 }
 impl ServeObserver for ProjectObserver {
-    fn stage(&self, mut value: EstateStage) {
+    fn stage(&self, mut value: EngramStage) {
         value.detail = format!("[{}] {}", self.project, value.detail);
         let _ = self.app.emit(STAGE_EVENT, value);
     }
@@ -937,20 +937,20 @@ impl ServeObserver for ProjectObserver {
 }
 
 #[tauri::command]
-pub async fn rrd_estate_status(
+pub async fn rrd_engram_status(
     app: AppHandle,
     request: StatusRequest,
-    state: State<'_, EstateState>,
+    state: State<'_, EngramState>,
 ) -> Result<StatusView, RrdError> {
     let owner = state.inner().clone();
     owner.refresh(request, Arc::new(app)).await
 }
 
 #[tauri::command]
-pub async fn rrd_estate_stop(
+pub async fn rrd_engram_stop(
     app: AppHandle,
     project: String,
-    state: State<'_, EstateState>,
+    state: State<'_, EngramState>,
 ) -> Result<bool, RrdError> {
     let owner = state.inner().clone();
     tauri::async_runtime::spawn_blocking(move || owner.stop(&project, &app))
@@ -961,7 +961,7 @@ pub async fn rrd_estate_stop(
 /// Shutdown marks the registry closed before dropping every owned child.
 /// A launch finishing afterwards drops its child instead of publishing it.
 /// Instances started elsewhere keep running.
-pub fn stop_on_exit(state: &EstateState) {
+pub fn stop_on_exit(state: &EngramState) {
     let projects = {
         let mut registry = state.lock();
         registry.closing = true;
@@ -973,13 +973,13 @@ pub fn stop_on_exit(state: &EstateState) {
 #[cfg(test)]
 mod registry_tests {
     use super::*;
-    use crate::rrd::estate::InstallMode;
+    use crate::rrd::engram::InstallMode;
     use std::sync::atomic::{AtomicUsize, Ordering};
 
     #[derive(Default)]
     struct Recording(Mutex<Vec<InstanceView>>);
     impl ServeObserver for Recording {
-        fn stage(&self, _: EstateStage) {}
+        fn stage(&self, _: EngramStage) {}
         fn output(&self, _: String) {}
         fn lifecycle(&self, instance: InstanceView) {
             self.0.lock().unwrap().push(instance);
@@ -1005,8 +1005,8 @@ mod registry_tests {
         std::fs::canonicalize(&directory).unwrap()
     }
 
-    fn request(directory: &Path) -> EstateServeRequest {
-        EstateServeRequest {
+    fn request(directory: &Path) -> EngramServeRequest {
+        EngramServeRequest {
             project: directory.to_string_lossy().into_owned(),
             mode: InstallMode::Fresh,
             executable: directory
@@ -1027,8 +1027,8 @@ mod registry_tests {
         }
     }
 
-    fn attached(project: &Path, endpoint: &str) -> ServedEstateView {
-        ServedEstateView {
+    fn attached(project: &Path, endpoint: &str) -> ServedEngramView {
+        ServedEngramView {
             project: project.to_string_lossy().into_owned(),
             endpoint: endpoint.into(),
             instance: "instance-elsewhere".into(),
@@ -1043,8 +1043,8 @@ mod registry_tests {
         }
     }
 
-    fn tracked(entry: impl Fn() -> Entry) -> EstateRegistry {
-        let mut registry = EstateRegistry::default();
+    fn tracked(entry: impl Fn() -> Entry) -> EngramRegistry {
+        let mut registry = EngramRegistry::default();
         for index in 0..MAX_TRACKED {
             registry.set(Path::new(&format!("project-{index}")), entry());
         }
@@ -1088,7 +1088,7 @@ mod registry_tests {
     #[test]
     fn pending_start_capacity_and_failure_are_bounded() {
         let directory = scratch("registry");
-        let owner = EstateState::default();
+        let owner = EngramState::default();
         let quiet = Arc::new(Recording::default());
         let start = || owner.start(request(&directory), quiet.clone());
         owner.lock().set(&directory, starting(Origin::Connectome));
@@ -1126,7 +1126,7 @@ mod registry_tests {
     #[test]
     fn every_transition_is_numbered_and_sent() {
         let directory = scratch("transitions");
-        let owner = EstateState::default();
+        let owner = EngramState::default();
         let recording = Arc::new(Recording::default());
         assert!(owner.start(request(&directory), recording.clone()).is_err());
         assert_eq!(
@@ -1163,7 +1163,7 @@ mod registry_tests {
     #[test]
     fn an_instance_started_elsewhere_is_attached_never_stopped() {
         let directory = scratch("elsewhere");
-        let owner = EstateState::default();
+        let owner = EngramState::default();
         let recording = Arc::new(Recording::default());
         let view = attached(&directory, "http://127.0.0.1:9");
         owner.lock().set(&directory, Entry::Attached(view.clone()));
@@ -1189,7 +1189,7 @@ mod registry_tests {
         let directory = scratch("mapped");
         let mapping = directory.join("mapping.json");
         std::fs::write(&mapping, "{\"format_version\":1,\"entries\":[]}").unwrap();
-        let owner = EstateState::default();
+        let owner = EngramState::default();
         let recording = Arc::new(Recording::default());
         let view = attached(&directory, "http://127.0.0.1:9");
         owner.lock().set(&directory, Entry::Attached(view.clone()));
@@ -1226,7 +1226,7 @@ mod registry_tests {
             let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
             listener.local_addr().unwrap().port()
         };
-        let owner = EstateState::default();
+        let owner = EngramState::default();
         owner.lock().set(
             &lost,
             Entry::Attached(attached(&lost, &format!("http://127.0.0.1:{port}"))),

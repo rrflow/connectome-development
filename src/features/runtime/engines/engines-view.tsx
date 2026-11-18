@@ -57,9 +57,9 @@ export function EnginesView() {
 	});
 	const ownProject = connectionProject(connection);
 	const servesThisProject = (instance: ProjectInstance) => {
-		const estate = instance.estate;
-		if (estate && estate.endpoint === endpoint) {
-			return !handshake || estate.instance === handshake.service.instance.id;
+		const engram = instance.engram;
+		if (engram && engram.endpoint === endpoint) {
+			return !handshake || engram.instance === handshake.service.instance.id;
 		}
 		return ownProject !== undefined && instance.project === ownProject;
 	};
@@ -142,7 +142,7 @@ interface EngineCardProps {
 }
 
 function EngineCard({ instance, name, current }: EngineCardProps) {
-	const estate = instance.estate;
+	const engram = instance.engram;
 	const busy = instance.state === "starting" || instance.state === "stopping";
 
 	return (
@@ -207,20 +207,20 @@ function EngineCard({ instance, name, current }: EngineCardProps) {
 					}
 					plain
 				/>
-				{estate ? (
+				{engram ? (
 					<>
 						<Fact
 							label="Address"
-							value={estate.endpoint}
+							value={engram.endpoint}
 						/>
 						<Fact
 							label="Instance id"
-							value={estate.instance}
+							value={engram.instance}
 						/>
-						{estate.engine && (
+						{engram.engine && (
 							<Fact
 								label="Engine program"
-								value={displayPath(estate.engine.path)}
+								value={displayPath(engram.engine.path)}
 							/>
 						)}
 					</>

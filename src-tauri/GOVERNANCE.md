@@ -37,8 +37,8 @@ each request and response. The webview receives view projections
 (`src/rrd/view.rs`, `view/effect.rs`, `view/history.rs`). It never receives the
 operator credential, a session bearer, or an engine-clock expiry instant.
 
-- **Estates:** `rrd_estate_preview`, `rrd_estate_serve`, `rrd_estate_status`,
-  `rrd_estate_stop`; and `rrd_public_request` for public read-only paths.
+- **Engrams:** `rrd_engram_preview`, `rrd_engram_serve`, `rrd_engram_status`,
+  `rrd_engram_stop`; and `rrd_public_request` for public read-only paths.
   Startup may explicitly name an endpoint credential mapping file for that
   project. The launcher passes only its path; RRFlow validates the mapping and
   resolves environment values. The webview never reads the file or credentials.
@@ -67,7 +67,7 @@ operator credential, a session bearer, or an engine-clock expiry instant.
   The verified file stays native under an opaque handle until the native
   save dialog writes it; the webview never names a path.
 - **Backups:** `rrd_backups`, `rrd_backup_create`, `rrd_backup_restore`.
-  A restore stages a verified root beside the estate and never replaces it.
+  A restore stages a verified root beside the engram and never replaces it.
 
 - **Live results:** `rrd_live_open`, `rrd_live_close`.
   - Each live subscription is a durable engine subscription, delivered over

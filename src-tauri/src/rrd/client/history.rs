@@ -1,4 +1,4 @@
-//! The estate's history: changefeed pages and audit pages, read forward from
+//! The engram's history: changefeed pages and audit pages, read forward from
 //! a cursor or sequence the webview names.
 //!
 //! The SDK verifies each changefeed page against the engine's read stamp and

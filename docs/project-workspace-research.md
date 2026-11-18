@@ -114,7 +114,7 @@ candidate CI and acceptance evidence before being called complete.
 
 1. **Remember and re-prove an instance.** The existing local profile is saved
    through `src/shared/util/config.tsx` and the native config writer; the native
-   lifecycle registry in `src-tauri/src/rrd/estate/lifecycle.rs` proves an
+   lifecycle registry in `src-tauri/src/rrd/engram/lifecycle.rs` proves an
    instance again rather than trusting `.rrflow/serving.json`. Save the profile
    before acknowledging open, retain the previous config on a failed write,
    and report the actual outcome. Lifecycle diagnostics are redacted and are not

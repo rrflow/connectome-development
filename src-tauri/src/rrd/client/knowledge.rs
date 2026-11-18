@@ -34,10 +34,10 @@ fn accepted_project(
             && capability.contract_version == 1
             && matches!(capability.status.as_str(), "available" | "experimental")
     }) {
-        return Err("this estate does not offer knowledge-tree-catalogue v1".into());
+        return Err("this engram does not offer knowledge-tree-catalogue v1".into());
     }
     let installed = service
-        .installed_estate
+        .installed_engram
         .as_ref()
         .filter(|installed| installed.instance_id == expected_instance)
         .ok_or("knowledge trees require this session's installed project identity")?;
@@ -111,7 +111,7 @@ impl NativeRrdClient {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::rrd::view::{CapabilityView, InstalledEstateView};
+    use crate::rrd::view::{CapabilityView, InstalledEngramView};
 
     fn service() -> ServiceView {
         ServiceView {
@@ -121,9 +121,9 @@ mod tests {
             deployment_form: "single_node_server".into(),
             storage_profile: "rrflow_kv".into(),
             endpoint_presentation: "loopback_http_websocket".into(),
-            installed_estate: Some(InstalledEstateView {
+            installed_engram: Some(InstalledEngramView {
                 project_id: "project-original".into(),
-                estate_id: "estate-original".into(),
+                engram_id: "engram-original".into(),
                 instance_id: "instance-original".into(),
             }),
             configuration_revision: 1,
@@ -157,10 +157,10 @@ mod tests {
         unsupported.capabilities[0].contract_version = 2;
         assert!(accepted_project(&unsupported, "instance-original").is_err());
         let mut unbound = service();
-        unbound.installed_estate = None;
+        unbound.installed_engram = None;
         assert!(accepted_project(&unbound, "instance-original").is_err());
         let mut wrong_project = service();
-        wrong_project.installed_estate.as_mut().unwrap().instance_id = "instance-other".into();
+        wrong_project.installed_engram.as_mut().unwrap().instance_id = "instance-other".into();
         assert!(accepted_project(&wrong_project, "instance-original").is_err());
     }
 

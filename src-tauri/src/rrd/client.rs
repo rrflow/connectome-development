@@ -457,7 +457,7 @@ fn neighbour_links(
         .collect()
 }
 
-/// One rrflowQL request within the estate's budget, refused before it is sent
+/// One rrflowQL request within the engram's budget, refused before it is sent
 /// when the contract could never accept it.
 fn execute_query(
     query: &str,

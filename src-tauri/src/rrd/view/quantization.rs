@@ -95,7 +95,7 @@ pub struct VectorCompareView {
     pub matched: u64,
     /// `matched` over the exact neighbours; absent without both lists.
     pub recall: Option<f64>,
-    /// Both searches read the estate at the same cursor, so their lists
+    /// Both searches read the engram at the same cursor, so their lists
     /// compare one state.
     pub same_cursor: bool,
 }

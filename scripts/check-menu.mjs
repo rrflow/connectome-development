@@ -20,7 +20,7 @@ const routes = join(root, "src/routes/runtime/$id");
 export const FLOOR = {
 	overview: "overview",
 	connections: "system/connections",
-	estates: "system/engines",
+	engrams: "system/engines",
 	tables: "knowledge/tables",
 	models: "knowledge/models",
 	visuals: "workbench/visuals",

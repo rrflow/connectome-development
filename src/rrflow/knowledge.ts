@@ -12,7 +12,7 @@ export const KNOWLEDGE_TREE_CAPABILITY = "knowledge-tree-catalogue";
 /** Capability negotiation is checked before any new endpoint is invoked. The
  * native bridge repeats this check and binds the accepted project and scope. */
 export function knowledgeTreeAvailability(connection: RrdConnectionView): string | null {
-	if (!connection.service.installed_estate) {
+	if (!connection.service.installed_engram) {
 		return "This engine has not presented an installed project identity for knowledge trees.";
 	}
 	const capability = connection.service.capabilities.find(
@@ -24,7 +24,7 @@ export function knowledgeTreeAvailability(connection: RrdConnectionView): string
 	) {
 		return (
 			capability?.limitation ||
-			"This estate does not offer knowledge-tree-catalogue v1. Its existing records, vectors and storage remain available."
+			"This engram does not offer knowledge-tree-catalogue v1. Its existing records, vectors and storage remain available."
 		);
 	}
 	return null;
@@ -145,7 +145,7 @@ function equal(left: unknown, right: unknown) {
 	return JSON.stringify(left) === JSON.stringify(right);
 }
 
-/** Three-way merge by immutable identities. Disjoint estate changes survive;
+/** Three-way merge by immutable identities. Disjoint engram changes survive;
  * conflicting fields retain the local draft until the operator resolves them. */
 export function rebaseKnowledgeTrees(
 	base: RrdKnowledgeTreeView[],

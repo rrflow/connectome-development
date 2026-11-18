@@ -138,7 +138,7 @@ pub(super) fn write_artifact(
 }
 
 impl NativeRrdClient {
-    /// Runs `request.query` as a Parquet export within the estate's query
+    /// Runs `request.query` as a Parquet export within the engram's query
     /// budget and holds the verified file.
     pub async fn export_query(
         &self,

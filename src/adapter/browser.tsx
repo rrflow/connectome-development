@@ -1,10 +1,10 @@
 import { isFunction, shake } from "radash";
 import type {
 	ConnectomeConfig,
-	EstatePreview,
+	EngramPreview,
 	InstanceStatus,
 	Platform,
-	ServedEstate,
+	ServedEngram,
 	UrlTarget,
 } from "~/shared/types";
 import * as idxdb from "~/shared/util/config/idxdb";
@@ -76,11 +76,11 @@ export class BrowserAdapter implements ConnectomeAdapter {
 		localStorage.removeItem(CONFIG_KEY);
 	}
 
-	public async previewEstate(): Promise<EstatePreview> {
+	public async previewEngram(): Promise<EngramPreview> {
 		throw new Error("Use the native desktop to start RRFlow");
 	}
 
-	public async serveEstate(): Promise<ServedEstate> {
+	public async serveEngram(): Promise<ServedEngram> {
 		throw new Error("Not supported");
 	}
 
@@ -88,7 +88,7 @@ export class BrowserAdapter implements ConnectomeAdapter {
 		return { revision: 0, instances: [] };
 	}
 
-	public async stopEstate(): Promise<boolean> {
+	public async stopEngram(): Promise<boolean> {
 		throw new Error("Not supported");
 	}
 

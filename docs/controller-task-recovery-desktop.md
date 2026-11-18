@@ -15,7 +15,7 @@ The independently copied unsigned preview contains:
 
 The [implementation journal](controller-task-recovery.md) records component
 checks and their limits. This observation uses the actual native application,
-its public SDK boundary and a separately served fresh estate using the same
+its public SDK boundary and a separately served fresh engram using the same
 engine binary. It is not an installer, clean-machine or fleet deployment test.
 The existing admission harness prepared explicit endpoint policy without provider
 credentials; subsequent UI actions used an operator-configured credential mapping.
@@ -28,7 +28,7 @@ transformation are retained. No task text, response, ranking or label was invent
 
 ## Observed journey
 
-The UI recorded the task and explicitly configured the estate's observed limits:
+The UI recorded the task and explicitly configured the engram's observed limits:
 256 steps, 60,000 ms per step and 900,000 ms total. It reviewed the configured
 candidate and requested one real controller proposal. Public readback confirmed
 an accepted selection with one step and 2,048 ms charged.
@@ -61,7 +61,7 @@ attestation. No training consent or reviewed label is inferred.
 [Manifest and 44 observations](evidence/controller-task-recovery-desktop-20261031/manifest.json)
 bind the executable/source identities, actual HTTP payloads, task projection,
 invariants and UI screenshots/text. The actual provider and local operator
-credentials were scanned before publication; neither credential nor estate is
+credentials were scanned before publication; neither credential nor engram is
 published. JSON uses the existing Biome formatter. Every original capture digest
 is retained alongside its publication digest, with exact JSON-value equality
 verified after formatting; screenshots remain byte-identical. Accessibility text
@@ -78,7 +78,7 @@ controls. These failures do not become successful trial claims.
 
 The owned UI was closed and its process absence checked. The external owned
 engine was stopped after readback and waited for; its exit receipt is retained.
-All earlier estates and trials remain untouched. The pre-publication PR29 brief
+All earlier engrams and trials remain untouched. The pre-publication PR29 brief
 covers this journal, selected observations and workbench link. No runtime or
 model call is repeated for evidence publication. Raw captures and command logs
 remain in SWAG `.swag/evidence/20261031/connectome-resume-live/`.

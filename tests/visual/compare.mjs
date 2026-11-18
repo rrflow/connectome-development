@@ -31,7 +31,7 @@ const out = resolve(args.out ?? "visual-compare");
 const tolerance = Number(args.tolerance ?? 8);
 // Force-directed layouts and live map tiles move with timing and with the
 // order in which code consumes the seeded random sequence, and the storage
-// engine's live counters move when the estate writes during the capture
+// engine's live counters move when the engram writes during the capture
 // (most likely an automatic session renewal), so their pixels are reported but
 // reviewed by eye for structure (records, edges, legend, counters). A search
 // generation is built during the capture, so its digests and the screens that

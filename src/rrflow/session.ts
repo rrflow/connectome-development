@@ -39,9 +39,9 @@ export interface RrdCapabilityView {
 	limitation: string | null;
 }
 
-export interface RrdInstalledEstateView {
+export interface RrdInstalledEngramView {
 	project_id: string;
-	estate_id: string;
+	engram_id: string;
 	instance_id: string;
 }
 
@@ -52,7 +52,7 @@ export interface RrdServiceView {
 	deployment_form: string;
 	storage_profile: string;
 	endpoint_presentation: string;
-	installed_estate: RrdInstalledEstateView | null;
+	installed_engram: RrdInstalledEngramView | null;
 	configuration_revision: number;
 	configuration_sha256: string;
 	capabilities: RrdCapabilityView[];
@@ -526,7 +526,7 @@ export interface RrdVectorCompareView {
 	/** Approximate hits that are exact neighbours, counting ties at the cut. */
 	matched: number;
 	recall: number | null;
-	/** Both searches read the estate at the same cursor. */
+	/** Both searches read the engram at the same cursor. */
 	same_cursor: boolean;
 }
 
@@ -774,7 +774,7 @@ export interface RrdAuditView {
 
 /**
  * The installed engram's authority record. The engine contract still names it
- * "estate" (`EstateSnapshot`, read with `estate-read`); Connectome presents it
+ * "engram" (`EngramSnapshot`, read with `engram-read`); Connectome presents it
  * as an engram. Every field is the engine's own.
  */
 export interface RrdEngramActivityPolicyView {
@@ -908,7 +908,7 @@ export interface RrdArchiveView {
 	runtime_cursor: number;
 }
 
-/** How a backup carries one family of estate state. */
+/** How a backup carries one family of engram state. */
 export interface RrdCoverageView {
 	family: string;
 	coverage: "included" | "referenced_only" | "rebuild_required" | "excluded";
@@ -937,7 +937,7 @@ export interface RrdBackupCreatedView {
 	idempotent_replay: boolean;
 }
 
-/** A backup restored into its own verified root; the estate is not replaced. */
+/** A backup restored into its own verified root; the engram is not replaced. */
 export interface RrdRestoreView {
 	backup_sha256: string;
 	restore_id: string;
@@ -1448,7 +1448,7 @@ export class RrdSessionClient {
 		return this.call<RrdBackupCreatedView>("rrd_backup_create", { request: { label } });
 	}
 
-	/** Restores a backup into its own verified root beside the estate. */
+	/** Restores a backup into its own verified root beside the engram. */
 	async restoreBackup(backupSha256: string): Promise<RrdRestoreView> {
 		this.requireNative();
 		return this.call<RrdRestoreView>("rrd_backup_restore", {
@@ -1458,7 +1458,7 @@ export class RrdSessionClient {
 
 	/**
 	 * Opens a live subscription; `onEvent` hears its events until it is closed
-	 * or ends. Without `afterCursor`, changes start at the estate's head and a
+	 * or ends. Without `afterCursor`, changes start at the engram's head and a
 	 * live query runs once first, its result returned as `first`.
 	 * Query continuation also requires the identity version observed with that cursor.
 	 */

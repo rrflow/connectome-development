@@ -2,15 +2,15 @@
 //! was asked of them and what was last observed, and the lifecycle operations
 //! recorded against them.
 //!
-//! The engine contract still names this "estate" (`EstateSnapshot`, read with
-//! `estate-read`); Connectome presents it as an engram. Every field is the
+//! The engine contract still names this "engram" (`EngramSnapshot`, read with
+//! `engram-read`); Connectome presents it as an engram. Every field is the
 //! engine's own; nothing is derived except the string form of its
 //! enumerations.
 
 use super::label;
 use rrd_contract::{
-    EstateAuthorityReceiptSnapshot, EstateAuthorityResourceSnapshot, EstateInstanceSnapshot,
-    EstateOperationSnapshot, EstateSnapshot,
+    EngramAuthorityReceiptSnapshot, EngramAuthorityResourceSnapshot, EngramInstanceSnapshot,
+    EngramOperationSnapshot, EngramSnapshot,
 };
 use serde::Serialize;
 
@@ -165,7 +165,7 @@ pub struct EngramView {
     pub idempotency_binding_count: u32,
 }
 
-fn resource(resource: &EstateAuthorityResourceSnapshot) -> EngramAuthorityResourceView {
+fn resource(resource: &EngramAuthorityResourceSnapshot) -> EngramAuthorityResourceView {
     EngramAuthorityResourceView {
         id: resource.id.as_str().into(),
         kind: label(&resource.kind),
@@ -204,7 +204,7 @@ fn resource(resource: &EstateAuthorityResourceSnapshot) -> EngramAuthorityResour
     }
 }
 
-fn authority_receipt(receipt: &EstateAuthorityReceiptSnapshot) -> EngramAuthorityReceiptView {
+fn authority_receipt(receipt: &EngramAuthorityReceiptSnapshot) -> EngramAuthorityReceiptView {
     EngramAuthorityReceiptView {
         id: receipt.id.as_str().into(),
         resource_id: receipt.resource_id.as_str().into(),
@@ -216,7 +216,7 @@ fn authority_receipt(receipt: &EstateAuthorityReceiptSnapshot) -> EngramAuthorit
     }
 }
 
-fn instance(instance: &EstateInstanceSnapshot) -> EngramInstanceView {
+fn instance(instance: &EngramInstanceSnapshot) -> EngramInstanceView {
     EngramInstanceView {
         id: instance.id.as_str().into(),
         desired: EngramDesiredView {
@@ -247,7 +247,7 @@ fn instance(instance: &EstateInstanceSnapshot) -> EngramInstanceView {
     }
 }
 
-fn operation(operation: &EstateOperationSnapshot) -> EngramOperationView {
+fn operation(operation: &EngramOperationSnapshot) -> EngramOperationView {
     EngramOperationView {
         id: operation.id.as_str().into(),
         instance_id: operation.instance_id.as_str().into(),
@@ -278,7 +278,7 @@ fn operation(operation: &EstateOperationSnapshot) -> EngramOperationView {
     }
 }
 
-pub fn engram(snapshot: &EstateSnapshot) -> EngramView {
+pub fn engram(snapshot: &EngramSnapshot) -> EngramView {
     EngramView {
         format_version: snapshot.format_version,
         id: snapshot.id.as_str().into(),
@@ -313,7 +313,7 @@ mod tests {
     use serde_json::json;
 
     /// A snapshot in the engine's wire form, decoded by the contract.
-    fn snapshot() -> EstateSnapshot {
+    fn snapshot() -> EngramSnapshot {
         let digest = "a".repeat(64);
         serde_json::from_value(json!({
             "format_version": 1,
