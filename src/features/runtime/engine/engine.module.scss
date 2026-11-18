@@ -1,0 +1,85 @@
+.track {
+	position: relative;
+	height: 10px;
+	border-radius: 5px;
+	background: var(--mantine-color-obsidian-7);
+	overflow: visible;
+}
+
+.fill {
+	position: absolute;
+	inset: 0 auto 0 0;
+	border-radius: 5px;
+	transition: width 600ms ease;
+
+	&[data-state="at"] {
+		background: var(--mantine-color-teal-7);
+	}
+
+	&[data-state="behind"] {
+		background: var(--mantine-color-rrflow-7);
+	}
+}
+
+.marker {
+	position: absolute;
+	top: 50%;
+	width: 18px;
+	height: 18px;
+	margin: -9px 0 0 -9px;
+	border-radius: 50%;
+	border: 3px solid var(--mantine-color-obsidian-9);
+	transition: left 600ms ease;
+
+	&[data-state="at"] {
+		background: var(--mantine-color-teal-4);
+	}
+
+	&[data-state="behind"] {
+		background: var(--mantine-color-rrflow-4);
+	}
+
+	&[data-pulse="true"] {
+		animation: pulse 1200ms ease-out;
+	}
+}
+
+.missing {
+	height: 10px;
+	border-radius: 5px;
+	border: 1px dashed var(--mantine-color-slate-5);
+}
+
+.part {
+	height: 100%;
+	border-left: 3px solid var(--mantine-color-obsidian-5);
+
+	&[data-state="at"] {
+		border-left-color: var(--mantine-color-teal-5);
+	}
+
+	&[data-state="behind"] {
+		border-left-color: var(--mantine-color-rrflow-5);
+	}
+}
+
+@keyframes pulse {
+	0% {
+		box-shadow: 0 0 0 0 var(--mantine-color-teal-4);
+	}
+
+	100% {
+		box-shadow: 0 0 0 14px transparent;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.fill,
+	.marker {
+		transition: none;
+	}
+
+	.marker[data-pulse="true"] {
+		animation: none;
+	}
+}

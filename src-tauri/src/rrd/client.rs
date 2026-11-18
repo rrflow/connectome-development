@@ -919,7 +919,10 @@ impl NativeRrdClient {
             return;
         }
         physical.groups.push(match self.cold_tier().await {
-            Ok(cold) => view::cold_tier_group(&cold),
+            Ok(cold) => {
+                physical.cold_tier = Some(view::cold_tier_state(&cold));
+                view::cold_tier_group(&cold)
+            }
             Err(error) => view::cold_tier_unavailable(&error.to_string()),
         });
     }
