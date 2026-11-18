@@ -20,6 +20,7 @@ import { SessionPanel } from "../session/session";
 import { WorkspaceShell } from "../shell/shell";
 import type { RuntimeLens } from "../types";
 import { ProjectContext, type ProjectContextValue } from "./context";
+import { ViewGate } from "./view-gate";
 
 /**
  * Addresses saved before the project had areas, and where their views live now.
@@ -339,7 +340,9 @@ export function ProjectLayout({ id }: { id: string }) {
 						ready={nativeSession.isFetched}
 					/>
 				)}
-				<Outlet />
+				<ViewGate path={path}>
+					<Outlet />
+				</ViewGate>
 			</WorkspaceShell>
 			<GlossaryDrawer
 				opened={glossaryOpen}
