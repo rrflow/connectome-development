@@ -1,6 +1,6 @@
 {
 	"src-tauri/src/rrd/client.rs": 1401,
-	"src-tauri/src/rrd/client/process.rs": 1270,
+	"src-tauri/src/rrd/client/process.rs": 1271,
 	"src-tauri/src/rrd/client/process/attunement.rs": 1530,
 	"src-tauri/src/rrd/client/tasks.rs": 1360,
 	"src-tauri/src/rrd/estate/lifecycle.rs": 1286,
@@ -42,5 +42,5 @@
 	"src/shared/util/text/helpers.tsx": 589,
 	"src/shell/components/App/modals/data/data-export.tsx": 453,
 	"src/shell/components/App/modals/data/data-import.tsx": 1161,
-	"tests/smoke/connectome.spec.ts": 2019
+	"tests/smoke/connectome.spec.ts": 2049
 }
