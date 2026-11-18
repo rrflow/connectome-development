@@ -106,9 +106,20 @@ For each, the branch commit's patch-id equals a commit in `main`'s history, so i
 
 This proves the commit was applied; it does not prove later `main` work kept every effect. That is checked by the gates (identity, isolation, architecture) which pass on `main`.
 
-## `codex/task-assessments` (tip `52c3a5eb`): nothing to carry
+## `codex/task-assessments` (tip `52c3a5eb`): commit empty, the work was in its worktree, now absorbed
 
-One empty commit with no message body ("Open explicit assessment UI integration"). Its tree equals its parent `e74f2ef1`, which is on `main`.
+The commit is empty (its tree equals its parent `e74f2ef1`). An earlier version of this row concluded "nothing to carry"; that was wrong, because the branch's worktree held the uncommitted assessment UI. That work landed through pull request 82 (assess a file, `src/rrflow/tasks.ts`, `docs/task-assessments.md`). Checked 2026-11-18 by an independent read of the branch against `main`: absorbed.
+
+## Final audit, 2026-11-18
+
+Every remaining branch was read against `main` by capability, not ancestry, and each "absorbed" verdict was attacked by a second reader.
+
+| Ref | Verdict |
+|---|---|
+| `agent/engine-pin-catalogue`, `agent/one-engine-view-20261111` | absorbed, verified |
+| `agent/f4b-view-registry` | one gap: per-view instance lifecycle (`lifecycleState` in `src/rrflow/views.ts`, applied by `ViewGate`); carried by pull request 90. `planned` is not carried: a view exists only when its route file does |
+| `origin/agent/connectome-rrd-only` | superseded by decisions 16 to 18; the `endpoint` and `controlToken` connection fields are still **pending** with the client replacement |
+| `origin/agent/rrflow-native-connectome` | **partly carried**: the authored value model, `rrflow/ui`, the presentation editor, the behaviour and dependency tests and `docs/rrflow-native-rewrite.md` are pending with the client replacement |
 
 ## `agent/connectome-rrd-only` (tip `58a3aeae`): superseded by owner decisions, one idea to keep
 

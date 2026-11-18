@@ -102,3 +102,29 @@ export function viewState(path: string, offer: InstanceOffer): ViewState {
 		experimental: declared.filter((capability) => capability.status === "experimental"),
 	};
 }
+
+/** What the native registry says about a project's instance. A subset of `ProjectInstance`. */
+export interface InstanceLifecycle {
+	state: "starting" | "ready" | "stopping" | "stopped" | "failed";
+	detail: string;
+}
+
+/** A tracked instance that is not running, in the registry's own words. */
+export interface InstanceNotReady {
+	kind: "instance";
+	state: Exclude<InstanceLifecycle["state"], "ready">;
+	detail: string;
+}
+
+/**
+ * Whether a project's instance runs, which comes before what the instance
+ * serves: a view is available when its project's instance runs. An instance
+ * the registry does not track (attached elsewhere, or not yet listed) gates
+ * nothing, since the handshake and catalogue decide for it. A tracked instance
+ * that is starting, stopping, stopped or failed says so, with the registry's
+ * detail, instead of letting the view fail on its first request.
+ */
+export function lifecycleState(instance: InstanceLifecycle | undefined): InstanceNotReady | null {
+	if (!instance || instance.state === "ready") return null;
+	return { kind: "instance", state: instance.state, detail: instance.detail };
+}
