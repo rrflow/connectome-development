@@ -92,7 +92,9 @@ check("a template saved without lists, and an event without a decision, are fill
 		id: "interactive",
 		mode: "interactive",
 		requiresOperatorSignoff: true,
-		triggers: [{ id: "manual-trigger", kind: "manual", description: "Run on operator command." }],
+		triggers: [
+			{ id: "manual-trigger", kind: "manual", description: "Run on operator command." },
+		],
 		actions: [],
 	});
 	assert.equal(old.learningEvents[1].requiresOperatorSignoff, false);

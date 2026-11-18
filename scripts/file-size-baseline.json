@@ -28,7 +28,7 @@
 	"src/features/runtime/tasks/tasks.tsx": 1869,
 	"src/features/runtime/vectors/quantization-tab.tsx": 1253,
 	"src/features/runtime/vectors/vectors-tab.tsx": 999,
-	"src/features/runtime/workbench/lanes/lanes.tsx": 1369,
+	"src/features/runtime/workbench/lanes/lanes.tsx": 1157,
 	"src/features/runtime/workbench/linked-cloud/linked-cloud-panel.tsx": 420,
 	"src/features/runtime/workbench/templates/template-authoring-panel.tsx": 578,
 	"src/features/runtime/workbench/workbench.tsx": 606,
