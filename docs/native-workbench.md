@@ -128,6 +128,22 @@ authority; unknown execution cannot resume. If the reply is lost, read the budge
 again before another change. Existing attempts remain available through public
 engine readback.
 
+The **Assess a file** section is a separate, explicit task operation. It requires
+an authenticated session, an available task budget, a currently listed source
+file, and confirmation before source and practice text can be exported. The
+engine's current assessment policy must allow the requested network, source and
+context exports; the UI does not infer permission from a configured endpoint.
+Each request is one bounded attempt. Its result is advisory, including when it
+abstains, and is read back through the engine's protected assessment operation.
+After reconnecting or reopening the task, **Check assessment result** performs a
+fresh protected read. A denied or unavailable read clears any displayed result.
+
+Assessment inputs are caller-authored declarations, not imported or verified
+SWAG templates. Provenance details show the declaration identity and its exact
+byte digest separately from the engine's practice-text digest. This interface
+does not certify an answer, train a model, or establish evaluation quality. See
+[Task assessments](task-assessments.md) for the limits and recovery behavior.
+
 The [earlier desktop recovery trial](controller-task-recovery-desktop.md) proves
 proposal, Stop/resume, worker draft and reload/readback on its recorded source.
 A fresh trial on this reconciliation and dependency/candidate/protected acceptance
