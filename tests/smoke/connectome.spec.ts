@@ -1539,6 +1539,8 @@ test("clears withheld worker output and rejects a delayed read after task contex
 			active_attempt: null,
 			execution_may_continue: false,
 			stopped: null,
+			repetition_policy: null,
+			equivalent_attempts: {},
 		};
 		const proposal = {
 			attempt_id: "proposal-1",
@@ -1965,6 +1967,873 @@ test("clears withheld worker output and rejects a delayed read after task contex
 	});
 	await expect(page.getByRole("heading", { name: "Different task" })).toBeVisible();
 	await expect(page.getByText("SOURCE_DERIVED_PRIVATE_DRAFT")).toHaveCount(0);
+});
+
+test("runs explicit binary, score and choice assessments with protected readback and no selector prelude", async ({
+	page,
+}) => {
+	await page.goto("/connections/create", { waitUntil: "domcontentloaded" });
+	await expect(page.getByText("Connect to RRFlow", { exact: true })).toBeVisible();
+	const task = {
+		id: "assessment-task",
+		title: "Assessment task",
+		goal: "Review the selected file",
+		status: "open",
+		cursor: "1",
+	};
+	const taskB = {
+		id: "other-task",
+		title: "Other task",
+		goal: "Check another task while the first assessment remains unresolved",
+		status: "open",
+		cursor: "2",
+	};
+	const repeatedTask = {
+		id: "repeated-work-task",
+		title: "Repeated work task",
+		goal: "Resume without resetting the budget",
+		status: "open",
+		cursor: "3",
+	};
+	const budgetB = {
+		sha256: "a".repeat(64),
+		max_steps: "5",
+		max_step_elapsed_ms: "30000",
+		max_run_elapsed_ms: "60000",
+		reserved_steps: "0",
+		charged_elapsed_ms: "0",
+		started_at_unix_ms: "1000",
+		deadline_unix_ms: "61000",
+		active_attempt: null,
+		execution_may_continue: false,
+		stopped: null,
+		repetition_policy: null,
+		equivalent_attempts: {},
+	};
+	const budgetRepeated = {
+		sha256: "f".repeat(64),
+		max_steps: "5",
+		max_step_elapsed_ms: "30000",
+		max_run_elapsed_ms: "60000",
+		reserved_steps: "2",
+		charged_elapsed_ms: "1200",
+		started_at_unix_ms: "1000",
+		deadline_unix_ms: "61000",
+		active_attempt: null,
+		execution_may_continue: false,
+		stopped: "repeated_work",
+		repetition_policy: { max_equivalent_attempts: "5" },
+		equivalent_attempts: { ["6".repeat(64)]: "2" },
+	};
+	const source = {
+		entry_identity: "3".repeat(64),
+		path: "src/plan.txt",
+		content_sha256: "4".repeat(64),
+		bytes: "24",
+	};
+	const budget = {
+		sha256: "b".repeat(64),
+		max_steps: "5",
+		max_step_elapsed_ms: "30000",
+		max_run_elapsed_ms: "60000",
+		reserved_steps: "0",
+		charged_elapsed_ms: "0",
+		started_at_unix_ms: "1000",
+		deadline_unix_ms: "61000",
+		active_attempt: null,
+		execution_may_continue: false,
+		stopped: null,
+		repetition_policy: null,
+		equivalent_attempts: {},
+	};
+	await page.evaluate(
+		({ task, taskB, repeatedTask, source, budget, budgetB, budgetRepeated, catalogue }) => {
+			Object.assign(globalThis, { isTauri: true });
+			let storedAssessment: Record<string, unknown> | null = null;
+			let assessmentIndex = 0;
+			let exposeAssessmentOperations = true;
+			let deferAssessmentRead = false;
+			let resolveAssessmentRead: ((value: unknown) => void) | null = null;
+			let resumeRequest: Record<string, unknown> | null = null;
+			let hideCurrentAssessmentRead = false;
+			let denyAssessmentRead = false;
+			let assessmentBudgetAvailable = true;
+			const attemptStatuses: Record<string, string> = {};
+			const actions: string[] = [];
+			const assessmentRequests: Record<string, unknown>[] = [];
+			const assessmentOutputs: Record<string, any>[] = [];
+			Object.assign(window, {
+				__assessmentTest: {
+					actions: () => actions,
+					requests: () => assessmentRequests,
+					outputs: () => assessmentOutputs,
+					setAssessmentOperationsAvailable: (available: boolean) => {
+						exposeAssessmentOperations = available;
+					},
+					setAttemptStatus: (attemptId: string, status: string) => {
+						attemptStatuses[attemptId] = status;
+					},
+					setAssessmentReadDenied: (denied: boolean) => {
+						denyAssessmentRead = denied;
+					},
+					setAssessmentBudgetAvailable: (available: boolean) => {
+						assessmentBudgetAvailable = available;
+					},
+					savedCoordinates: () => {
+						const key = Object.keys(localStorage).find((item) =>
+							item.endsWith(":assessment"),
+						);
+						const value = key ? localStorage.getItem(key) : null;
+						return value ? JSON.parse(value) : null;
+					},
+					resumeRequest: () => resumeRequest,
+					deferRead: () => {
+						deferAssessmentRead = true;
+					},
+					pendingRead: () => resolveAssessmentRead !== null,
+					resolveRead: () => {
+						deferAssessmentRead = false;
+						resolveAssessmentRead?.({
+							kind: "assessment",
+							assessment: hideCurrentAssessmentRead ? null : storedAssessment,
+							outcome_sha256: hideCurrentAssessmentRead ? null : "2".repeat(64),
+						});
+						resolveAssessmentRead = null;
+					},
+				},
+			});
+			Object.defineProperty(window, "__TAURI_INTERNALS__", {
+				configurable: true,
+				value: {
+					invoke: async (
+						command: string,
+						args: { endpoint?: string; path?: string; request?: Record<string, any> },
+					) => {
+						if (command === "rrd_session")
+							return {
+								endpoint: "http://localhost:9477",
+								instance: "rrd-assessment",
+								principal: "smoke-principal",
+								connected_at_unix_ms: 1,
+								session: { idle_timeout_ms: 60000, absolute_timeout_ms: 3600000 },
+								service: {
+									implementation: "rrflow",
+									implementation_version: "1.0.0",
+									instance: "rrd-assessment",
+									deployment_form: "single_node_server",
+									storage_profile: "rrflow_kv",
+									endpoint_presentation: "loopback_http_websocket",
+									installed_estate: null,
+									configuration_revision: 1,
+									configuration_sha256: "2".repeat(64),
+									capabilities: [],
+								},
+							};
+						if (command === "rrd_public_request") {
+							const path = args.path ?? "";
+							const payload =
+								path === "/v1/schema/endpoints"
+									? {
+											protocol: "rrd",
+											protocol_version: 1,
+											// Everything the pinned engine serves, except the assessment
+											// operations this test turns on and off.
+											endpoints: [
+												...catalogue.endpoints.filter(
+													(endpoint: { operation: string }) =>
+														!endpoint.operation.startsWith(
+															"task-assessment-",
+														),
+												),
+												...(exposeAssessmentOperations
+													? [
+															{
+																action: {
+																	action: "reasoning_write",
+																	source: "fixed",
+																},
+																authentication: "session_bearer",
+																description:
+																	"Execute one bounded assessment.",
+																family: "tasks",
+																method: "post",
+																mutation: true,
+																operation:
+																	"task-assessment-execute",
+																path: "/v1/tasks/assessment/execute",
+																request_type:
+																	"TaskAssessmentRequest",
+																response_type:
+																	"TaskAssessmentOutput",
+																summary:
+																	"Execute one bounded assessment.",
+															},
+															{
+																action: {
+																	action: "reasoning_read",
+																	source: "fixed",
+																},
+																authentication: "session_bearer",
+																description:
+																	"Read one protected assessment.",
+																family: "tasks",
+																method: "post",
+																mutation: false,
+																operation: "task-assessment-read",
+																path: "/v1/tasks/assessment/read",
+																request_type: "TaskAssessmentRead",
+																response_type: "TaskAssessmentView",
+																summary:
+																	"Read one protected assessment.",
+															},
+														]
+													: []),
+											],
+											families: [],
+											websocket_endpoints: [],
+										}
+									: path === "/v1/health/live"
+										? { observed_at_unix_ms: 1 }
+										: path === "/v1/health/ready"
+											? {
+													observed_at_unix_ms: 2,
+													claim_sequence: 3,
+													runtime_cursor: 4,
+													backend: "rrflow_kv",
+												}
+											: {
+													protocol: "rrd",
+													protocol_version: 1,
+													implementation: "rrflow",
+													implementation_version: "1.0.0",
+													deployment: {
+														contract_version: 1,
+														deployment_form: "single_node_server",
+														storage_profile: "rrflow_kv",
+														endpoint_presentation:
+															"loopback_http_websocket",
+													},
+													configuration: {
+														format_version: 1,
+														revision: 1,
+														configuration_sha256: "2".repeat(64),
+													},
+													instance: {
+														kind: "instance",
+														id: "rrd-assessment",
+													},
+													capabilities: [],
+													product_capabilities: {},
+												};
+							return {
+								protocol: "rrd",
+								protocol_version: 1,
+								request_id: `assessment-${path}`,
+								operation_id: `assessment-${path}`,
+								outcome: { status: "ok", payload },
+							};
+						}
+						if (command === "rrd_database")
+							return {
+								observed_at_unix_ms: 1,
+								runtime_cursor: 1,
+								schema_revision: null,
+								tables: [],
+								models: [],
+								graph: {
+									valid_at_unix_ms: 1,
+									known_at_cursor: 1,
+									nodes: [],
+									edges: [],
+									clusters: [],
+								},
+								sections: [],
+							};
+						if (command === "rrd_vector_collections") return { collections: [] };
+						if (command !== "rrd_task")
+							throw new Error(`Unexpected command ${command}`);
+						const request = args.request ?? {};
+						const action = String(request.action ?? "");
+						actions.push(action);
+						if (action === "list")
+							return {
+								kind: "page",
+								tasks: [task, taskB, repeatedTask],
+								truncated: false,
+								next_cursor: "2",
+							};
+						if (action === "budget")
+							return {
+								kind: "budget",
+								budget:
+									request.task_id === task.id && !assessmentBudgetAvailable
+										? null
+										: request.task_id === taskB.id
+											? budgetB
+											: request.task_id === repeatedTask.id
+												? budgetRepeated
+												: budget,
+							};
+						if (action === "read") {
+							const found = [task, taskB, repeatedTask].find(
+								(item) => item.id === request.task_id,
+							);
+							return found
+								? { kind: "task", task: found }
+								: { kind: "not_dispatched" };
+						}
+						if (action === "attempt")
+							return {
+								kind: "attempt",
+								status: attemptStatuses[String(request.attempt_id)] ?? null,
+								proposal: null,
+								worker: null,
+							};
+						if (action === "resume") {
+							resumeRequest = request;
+							return {
+								kind: "budget",
+								budget: {
+									...budgetRepeated,
+									sha256: "c".repeat(64),
+									stopped: null,
+								},
+							};
+						}
+						if (action === "prepare_assessment")
+							return {
+								kind: "assessment_prepared",
+								task: request.task_id === taskB.id ? taskB : task,
+								task_sha256: "c".repeat(64),
+								configuration_sha256: "d".repeat(64),
+								controller_binding_id: "configured-controller",
+								controller_destination: "http://127.0.0.1:9477",
+								maximum_input_bytes: "1024",
+								maximum_response_bytes: "4096",
+								wait_timeout_ms: "5000",
+								allow_network: true,
+								allow_source_export: true,
+								allow_context_export: true,
+								unavailable: null,
+								inventory: {
+									entries: [source],
+									read_cursor: "9",
+									read_manifest_sha256: "5".repeat(64),
+									result_identity_version: 2,
+									truncated: false,
+									incomplete_rows: 0,
+									unavailable_rows: 0,
+									oversized_rows: 0,
+								},
+							};
+						if (action === "assess") {
+							assessmentIndex += 1;
+							attemptStatuses[String(request.attempt_id)] =
+								assessmentIndex === 5 ? "reserved" : "accepted";
+							hideCurrentAssessmentRead = assessmentIndex === 5;
+							assessmentRequests.push(
+								JSON.parse(JSON.stringify(request)) as Record<string, unknown>,
+							);
+							const descriptor = request.descriptor;
+							const practiceText = String(request.practice_text);
+							const practiceHash = [
+								...new Uint8Array(
+									await crypto.subtle.digest(
+										"SHA-256",
+										new TextEncoder().encode(practiceText),
+									),
+								),
+							]
+								.map((byte) => byte.toString(16).padStart(2, "0"))
+								.join("");
+							const declaration = JSON.stringify({
+								contract_version: 1,
+								descriptor,
+								practice_text: practiceText,
+							});
+							const declarationHash = [
+								...new Uint8Array(
+									await crypto.subtle.digest(
+										"SHA-256",
+										new TextEncoder().encode(declaration),
+									),
+								),
+							]
+								.map((byte) => byte.toString(16).padStart(2, "0"))
+								.join("");
+							const mode = String(descriptor.mode);
+							const practiceIdentity = {
+								question_set_id: "connectome-adhoc-set",
+								question_id: `connectome-adhoc-${mode}`,
+								template_id: `connectome-adhoc-${mode}-declaration`,
+								template_revision: 1,
+								template_sha256: declarationHash,
+								requirement_id: `connectome-adhoc-${mode}-requirement`,
+							};
+							const decision =
+								assessmentIndex === 4
+									? {
+											outcome: "abstained",
+											reason: "Insufficient evidence in the supplied bytes.",
+										}
+									: descriptor.mode === "binary"
+										? {
+												outcome: "answered",
+												value: { kind: "binary", value: true },
+											}
+										: descriptor.mode === "score"
+											? {
+													outcome: "answered",
+													value: { kind: "score", value: 0.75 },
+												}
+											: {
+													outcome: "answered",
+													value: {
+														kind: "choice",
+														option_id: descriptor.options[0].id,
+													},
+												};
+							storedAssessment = {
+								contract_version: 1,
+								scope: "instance:rrd-assessment",
+								task_id: request.task_id,
+								attempt_id: request.attempt_id,
+								task_sha256: request.expected_task_sha256,
+								configuration_sha256: request.expected_configuration_sha256,
+								packet_sha256: "6".repeat(64),
+								request_sha256: "7".repeat(64),
+								response_sha256: "8".repeat(64),
+								content_sha256: "9".repeat(64),
+								controller_binding_id: "configured-controller",
+								service_id: "controlled-protocol-fixture",
+								descriptor,
+								practice_identity: practiceIdentity,
+								practice_sha256: practiceHash,
+								source_bytes: 24,
+								practice_bytes: new TextEncoder().encode(practiceText).length,
+								source: {
+									contract_version: 1,
+									captured_snapshot_sha256: "a".repeat(64),
+									captured_read: {
+										runtime_manifest_sha256: "b".repeat(64),
+										runtime_cursor: "10",
+										schema_revision: "1",
+										catalogue_revision: "1",
+									},
+									project_id: "project-smoke",
+									entry_identity: request.source.entry_identity,
+									path_sha256: "c".repeat(64),
+									content_sha256: request.source.expected_content_sha256,
+									policy_sha256: "d".repeat(64),
+									profile_sha256: "e".repeat(64),
+									captured_at_unix_ms: "11",
+									validated_snapshot_sha256: "f".repeat(64),
+									validated_read: {
+										runtime_manifest_sha256: "1".repeat(64),
+										runtime_cursor: "12",
+										schema_revision: "1",
+										catalogue_revision: "1",
+									},
+									validated_at_unix_ms: "13",
+								},
+								read: {},
+								decision,
+								references:
+									decision.outcome === "answered"
+										? [
+												{
+													input: "source",
+													input_sha256:
+														request.source.expected_content_sha256,
+													start_byte: 0,
+													end_byte: 4,
+												},
+											]
+										: [],
+								usage: null,
+								elapsed_ms: 3,
+								http_status: 200,
+							};
+							assessmentOutputs.push(storedAssessment);
+							return {
+								kind: "assessment",
+								assessment: storedAssessment,
+								outcome_sha256: null,
+							};
+						}
+						if (action === "assessment") {
+							if (denyAssessmentRead)
+								throw new Error("protected assessment read denied");
+							if (deferAssessmentRead)
+								return new Promise((resolve) => {
+									resolveAssessmentRead = resolve;
+								});
+							return {
+								kind: "assessment",
+								assessment: hideCurrentAssessmentRead ? null : storedAssessment,
+								outcome_sha256:
+									!hideCurrentAssessmentRead && storedAssessment
+										? "2".repeat(64)
+										: null,
+							};
+						}
+						throw new Error(`Unexpected task action ${action}`);
+					},
+				},
+			});
+		},
+		{
+			task,
+			taskB,
+			repeatedTask,
+			source,
+			budget,
+			budgetB,
+			budgetRepeated,
+			catalogue: CATALOGUE,
+		},
+	);
+	await page.route(/http:\/\/localhost:9477\/v1\//, async (route) => {
+		const path = new URL(route.request().url()).pathname;
+		const payload =
+			path === "/v1/health/live"
+				? { observed_at_unix_ms: 1 }
+				: path === "/v1/health/ready"
+					? {
+							observed_at_unix_ms: 2,
+							claim_sequence: 3,
+							runtime_cursor: 4,
+							backend: "rrflow_kv",
+						}
+					: {
+							protocol: "rrd",
+							protocol_version: 1,
+							implementation: "rrflow",
+							implementation_version: "1.0.0",
+							deployment: {
+								contract_version: 1,
+								deployment_form: "single_node_server",
+								storage_profile: "rrflow_kv",
+								endpoint_presentation: "loopback_http_websocket",
+							},
+							configuration: {
+								format_version: 1,
+								revision: 1,
+								configuration_sha256: "2".repeat(64),
+							},
+							instance: { kind: "instance", id: "rrd-assessment" },
+							capabilities: [],
+							product_capabilities: {},
+						};
+		await route.fulfill({
+			contentType: "application/json",
+			headers: { "Access-Control-Allow-Origin": "*" },
+			body: JSON.stringify({
+				protocol: "rrd",
+				protocol_version: 1,
+				request_id: `request-${path}`,
+				operation_id: `operation-${path}`,
+				outcome: { status: "ok", payload },
+			}),
+		});
+	});
+	await page.getByRole("button", { name: "Save & connect to RRD" }).click();
+	await expect(page.getByText("RRD connected", { exact: true })).toBeVisible();
+	await page.getByRole("button", { name: "Reasoning", exact: true }).click();
+	await page.getByRole("button", { name: "Read tasks" }).click();
+	await page.getByRole("button", { name: /Assessment task/ }).click();
+	await page.getByRole("button", { name: "Read budget and attempt" }).click();
+	const setAssessmentOperationsAvailable = async (available: boolean) =>
+		page.evaluate(
+			(available) =>
+				(
+					window as unknown as {
+						__assessmentTest: {
+							setAssessmentOperationsAvailable: (value: boolean) => void;
+						};
+					}
+				).__assessmentTest.setAssessmentOperationsAvailable(available),
+			available,
+		);
+	await setAssessmentOperationsAvailable(false);
+	await page.getByRole("button", { name: "Review current policy and source files" }).click();
+	await expect(
+		page.getByText(
+			"This RRFlow version does not expose both supported task assessment operations.",
+		),
+	).toBeVisible();
+	const preparedBeforeDiscovery = await page.evaluate(
+		() =>
+			(
+				window as unknown as { __assessmentTest: { actions: () => string[] } }
+			).__assessmentTest
+				.actions()
+				.filter((action) => action === "prepare_assessment").length,
+	);
+	expect(preparedBeforeDiscovery).toBe(0);
+	await setAssessmentOperationsAvailable(true);
+	await page.getByRole("button", { name: "Review current policy and source files" }).click();
+	await page.getByRole("textbox", { name: "Source file" }).click();
+	await page.getByRole("option", { name: /src\/plan.txt/ }).click();
+	const submit = async (
+		mode: string,
+		expected: string,
+		fields: (index: number) => Promise<void>,
+	) => {
+		if (mode !== currentMode) {
+			await page.getByRole("textbox", { name: "Assessment mode" }).click();
+			await page.getByRole("option", { name: mode, exact: true }).click();
+			currentMode = mode;
+		}
+		await fields(assessmentCount++);
+		await page.getByLabel(/I approve sending this source and practice text/).check();
+		await page.getByRole("button", { name: "Request assessment" }).click();
+		await expect(
+			page.getByRole("heading", { name: "Advisory assessment report" }),
+		).toBeVisible();
+		await expect(page.getByText(expected, { exact: false })).toBeVisible();
+	};
+	let assessmentCount = 0;
+	let currentMode = "Binary";
+	await submit("Binary", "Yes/no answer — Yes", async () => {
+		await page.getByLabel("Yes/no statement").fill("The source has a bounded declaration.");
+		await page
+			.getByLabel("Guidance or development practice")
+			.fill("Check only the selected text.");
+	});
+	await page.getByText("Evidence and provenance").click();
+	await expect(page.getByText(/Declaration SHA-256:/)).toBeVisible();
+	await submit("Score", "Score — 0.75", async () => {
+		await page.getByLabel("Scoring criteria").fill("Score the stated evidence only.");
+		await page.getByLabel("Guidance or development practice").fill("Use bounded evidence.");
+	});
+	await submit("Choice", "Choice — First label", async () => {
+		await page.getByLabel("Choice question").fill("Which label fits?");
+		await page.getByLabel("Choices, one per line").fill("First label\nSecond label");
+		await page.getByLabel("Guidance or development practice").fill("Choose one listed label.");
+	});
+	await submit("Choice", "Abstained — Insufficient evidence in the supplied bytes.", async () => {
+		await page.getByLabel("Choice question").fill("Can this be answered?");
+		await page.getByLabel("Choices, one per line").fill("Yes\nNo");
+		await page
+			.getByLabel("Guidance or development practice")
+			.fill("Abstain when evidence is insufficient.");
+	});
+	const hashCheck = await page.evaluate(async () => {
+		const state = (
+			window as unknown as {
+				__assessmentTest: {
+					requests: () => Record<string, any>[];
+					outputs: () => Record<string, any>[];
+				};
+			}
+		).__assessmentTest;
+		const requests = state.requests();
+		const outputs = state.outputs();
+		const hash = async (value: string) =>
+			[
+				...new Uint8Array(
+					await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)),
+				),
+			]
+				.map((byte) => byte.toString(16).padStart(2, "0"))
+				.join("");
+		return Promise.all(
+			requests.map(async (request, index) => ({
+				sentIdentity: Object.hasOwn(request, "practice_identity"),
+				template: outputs[index].practice_identity.template_sha256,
+				expectedTemplate: await hash(
+					JSON.stringify({
+						contract_version: 1,
+						descriptor: request.descriptor,
+						practice_text: request.practice_text,
+					}),
+				),
+				practice: outputs[index].practice_sha256,
+				expectedPractice: await hash(String(request.practice_text)),
+			})),
+		);
+	});
+	for (const check of hashCheck) {
+		expect(check.sentIdentity).toBe(false);
+		expect(check.template).toBe(check.expectedTemplate);
+		expect(check.practice).toBe(check.expectedPractice);
+		expect(check.template).not.toBe(check.practice);
+	}
+	await page.evaluate(() =>
+		(
+			window as unknown as { __assessmentTest: { deferRead: () => void } }
+		).__assessmentTest.deferRead(),
+	);
+	await page.getByLabel("Choice question").fill("Can the delayed read be fenced?");
+	await page.getByLabel("Choices, one per line").fill("Allow\nAbstain");
+	await page
+		.getByLabel("Guidance or development practice")
+		.fill("This read will finish after task selection changes.");
+	await page.getByLabel(/I approve sending this source and practice text/).check();
+	await page.getByRole("button", { name: "Request assessment" }).click();
+	await expect
+		.poll(() =>
+			page.evaluate(() =>
+				(
+					window as unknown as { __assessmentTest: { pendingRead: () => boolean } }
+				).__assessmentTest.pendingRead(),
+			),
+		)
+		.toBe(true);
+	await page.getByRole("button", { name: /Other task/ }).click();
+	await expect(page.getByRole("heading", { name: "Other task" })).toBeVisible();
+	await expect(page.getByText("A saved assessment needs checking")).toBeVisible();
+	await page.evaluate(() =>
+		(
+			window as unknown as { __assessmentTest: { resolveRead: () => void } }
+		).__assessmentTest.resolveRead(),
+	);
+	await expect(page.getByText("Insufficient evidence in the supplied bytes.")).toHaveCount(0);
+	await page.getByRole("button", { name: "Review current policy and source files" }).click();
+	await page.getByRole("textbox", { name: "Source file" }).click();
+	await page.getByRole("option", { name: /src\/plan.txt/ }).click();
+	await page
+		.getByLabel("Yes/no statement")
+		.fill("Another task cannot overwrite the pending bookmark.");
+	await page
+		.getByLabel("Guidance or development practice")
+		.fill("Keep the prior attempt recoverable.");
+	await page.getByLabel(/I approve sending this source and practice text/).check();
+	const guardedRequest = page.getByRole("button", { name: "Request assessment" });
+	await expect(guardedRequest).toBeDisabled();
+	await page.getByText("Optional recovery by attempt ID").click();
+	await page.getByLabel("Assessment attempt ID").fill("manual-attempt-b");
+	await page.getByRole("button", { name: "Check this attempt" }).click();
+	await expect(
+		page.getByText("No accepted assessment is available to this session."),
+	).toBeVisible();
+	const originalRecovery = await page.evaluate(() => {
+		const test = (
+			window as unknown as {
+				__assessmentTest: {
+					savedCoordinates: () => { task_id: string; attempt_id: string };
+					requests: () => Record<string, any>[];
+				};
+			}
+		).__assessmentTest;
+		return {
+			coordinates: test.savedCoordinates(),
+			lastAttemptId: test.requests()[4]?.attempt_id,
+		};
+	});
+	const originalCoordinates = originalRecovery.coordinates;
+	expect(originalCoordinates).toEqual({
+		task_id: "assessment-task",
+		attempt_id: originalRecovery.lastAttemptId,
+	});
+	await expect(guardedRequest).toBeDisabled();
+	await page.getByRole("button", { name: "Open saved assessment task", exact: true }).click();
+	await expect(page.getByRole("heading", { name: "Assessment task" })).toBeVisible();
+	await page.evaluate(() =>
+		(
+			window as unknown as {
+				__assessmentTest: {
+					setAssessmentReadDenied: (denied: boolean) => void;
+				};
+			}
+		).__assessmentTest.setAssessmentReadDenied(true),
+	);
+	await page.getByRole("button", { name: "Check assessment result" }).click();
+	await expect(
+		page.getByText("Protected read was denied or unavailable; no prior assessment is shown."),
+	).toBeVisible();
+	const deniedCoordinates = await page.evaluate(() =>
+		(
+			window as unknown as {
+				__assessmentTest: {
+					savedCoordinates: () => { task_id: string; attempt_id: string };
+				};
+			}
+		).__assessmentTest.savedCoordinates(),
+	);
+	expect(deniedCoordinates).toEqual(originalCoordinates);
+	const pendingAttemptId = String(originalCoordinates.attempt_id);
+	await page.evaluate((attemptId) => {
+		const test = (
+			window as unknown as {
+				__assessmentTest: {
+					setAttemptStatus: (id: string, status: string) => void;
+					setAssessmentReadDenied: (denied: boolean) => void;
+				};
+			}
+		).__assessmentTest;
+		test.setAttemptStatus(attemptId, "accepted");
+		test.setAssessmentReadDenied(false);
+	}, pendingAttemptId);
+	await page.evaluate(() =>
+		(
+			window as unknown as {
+				__assessmentTest: { setAssessmentBudgetAvailable: (available: boolean) => void };
+			}
+		).__assessmentTest.setAssessmentBudgetAvailable(false),
+	);
+	await page.getByRole("button", { name: "Check assessment result" }).click();
+	await expect(
+		page.getByText("No accepted assessment is available to this session."),
+	).toBeVisible();
+	const coordinatesWithoutBudget = await page.evaluate(() =>
+		(
+			window as unknown as {
+				__assessmentTest: {
+					savedCoordinates: () => { task_id: string; attempt_id: string };
+				};
+			}
+		).__assessmentTest.savedCoordinates(),
+	);
+	expect(coordinatesWithoutBudget).toEqual(originalCoordinates);
+	await page.evaluate(() =>
+		(
+			window as unknown as {
+				__assessmentTest: { setAssessmentBudgetAvailable: (available: boolean) => void };
+			}
+		).__assessmentTest.setAssessmentBudgetAvailable(true),
+	);
+	await page.getByRole("button", { name: "Check assessment result" }).click();
+	await expect(
+		page.getByText("No accepted assessment is available to this session."),
+	).toBeVisible();
+	const clearedCoordinates = await page.evaluate(() =>
+		(
+			window as unknown as { __assessmentTest: { savedCoordinates: () => unknown } }
+		).__assessmentTest.savedCoordinates(),
+	);
+	expect(clearedCoordinates).toBeNull();
+	await page.getByRole("button", { name: /Repeated work task/ }).click();
+	await expect(page.getByRole("heading", { name: "Repeated work task" })).toBeVisible();
+	await page.getByRole("button", { name: "Read budget and attempt" }).click();
+	const resumeButton = page.getByRole("button", { name: "Resume task budget" });
+	await expect(resumeButton).toBeDisabled();
+	await page.getByLabel(/I reviewed this repeated-work stop/).check();
+	await expect(resumeButton).toBeEnabled();
+	await resumeButton.click();
+	await expect(page.getByText(/2 \/ 5 steps reserved/)).toBeVisible();
+	await expect(page.getByText(/1200 ms charged/)).toBeVisible();
+	const resumed = await page.evaluate(() =>
+		(
+			window as unknown as {
+				__assessmentTest: { resumeRequest: () => Record<string, unknown> | null };
+			}
+		).__assessmentTest.resumeRequest(),
+	);
+	expect(resumed).toEqual({
+		action: "resume",
+		task_id: "repeated-work-task",
+		expected_budget_sha256: "f".repeat(64),
+	});
+	const actionList = await page.evaluate(() =>
+		(
+			window as unknown as { __assessmentTest: { actions: () => string[] } }
+		).__assessmentTest.actions(),
+	);
+	expect(actionList.filter((action) => action === "assess")).toHaveLength(5);
+	expect(actionList.filter((action) => action === "assessment")).toHaveLength(10);
+	expect(actionList).not.toContain("propose");
 });
 
 test("explains the local database and keeps native startup explicit", async ({

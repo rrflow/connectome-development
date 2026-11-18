@@ -1,16 +1,22 @@
 //! Project-scoped task controls. Reads never dispatch a provider or reset a budget.
 use super::*;
-use rrd_client::operations::{TaskBudgetResume, TaskEndpointPropose, TaskWorkerExecute};
+use rrd_client::operations::{
+    TaskAssessmentExecute, TaskAssessmentRead, TaskBudgetResume, TaskEndpointPropose,
+    TaskWorkerExecute,
+};
 use rrd_contract::{
-    ConfigureTaskBudget, ContextReadStamp, CorrelationId, EndpointConfiguration,
-    EndpointSelectionChoice, EndpointSelectionProposal, EndpointSelectionRequest,
-    EndpointSelectionTask, ListTasks, OpenTask, QueryResult, QueryValue, ReadEndpointConfiguration,
-    ReadTask, ReadTaskAttempt, ReadTaskBudget, ReasoningBudgetStop, ReasoningLimits,
-    ResumeTaskBudget, StopTaskBudget, TaskAttemptStatus, TaskBudgetView, TaskRecord,
-    TaskWorkerOutput, TaskWorkerRequest, TaskWorkerSourceProvenance, TaskWorkerSourceRequest,
-    MAX_ROUTE_REQUEST_BYTES,
+    AssessmentPracticeIdentity, ConfigureTaskBudget, ContextReadStamp, CorrelationId,
+    EndpointConfiguration, EndpointSelectionChoice, EndpointSelectionProposal,
+    EndpointSelectionRequest, EndpointSelectionTask, ListTasks, OpenTask, QueryResult, QueryValue,
+    ReadEndpointConfiguration, ReadTask, ReadTaskAssessment, ReadTaskAttempt, ReadTaskBudget,
+    ReasoningBudgetStop, ReasoningLimits, ResumeTaskBudget, StopTaskBudget,
+    TaskAssessmentDescriptor, TaskAssessmentOutput, TaskAssessmentRequest, TaskAssessmentView,
+    TaskAttemptStatus, TaskBudgetView, TaskRecord, TaskWorkerOutput, TaskWorkerRequest,
+    TaskWorkerSourceProvenance, TaskWorkerSourceRequest, MAX_ROUTE_REQUEST_BYTES,
+    TASK_ASSESSMENT_VERSION,
 };
 use serde::Serialize;
+use sha2::Digest;
 
 /// Local read ceilings; these do not supply model/provider or reasoning policy.
 const TASK_PAGE_SIZE: u16 = 32;
@@ -19,6 +25,46 @@ const SOURCE_QUERY_ROWS: u64 = 128;
 const SOURCE_QUERY_OUTPUT_BYTES: u64 = 256 * 1024;
 // RRFlow result identity v2: typed record family + kind + entry digest.
 const SOURCE_RESULT_IDENTITY_VERSION: u16 = 2;
+
+#[derive(Serialize)]
+struct CallerDeclaredAssessment<'a> {
+    contract_version: u16,
+    descriptor: &'a TaskAssessmentDescriptor,
+    practice_text: &'a str,
+}
+
+fn caller_declared_assessment_identity(
+    descriptor: &TaskAssessmentDescriptor,
+    practice_text: &str,
+) -> Result<AssessmentPracticeIdentity, String> {
+    let mode = match descriptor {
+        TaskAssessmentDescriptor::Binary { .. } => "binary",
+        TaskAssessmentDescriptor::Choice { .. } => "choice",
+        TaskAssessmentDescriptor::Score { .. } => "score",
+    };
+    let declaration = CallerDeclaredAssessment {
+        contract_version: TASK_ASSESSMENT_VERSION,
+        descriptor,
+        practice_text,
+    };
+    let bytes = serde_json::to_vec(&declaration)
+        .map_err(|error| format!("serialize caller-declared assessment: {error}"))?;
+    let template_sha256 = format!("{:x}", sha2::Sha256::digest(&bytes));
+    Ok(AssessmentPracticeIdentity {
+        question_set_id: canonical("connectome-adhoc-set", "assessment question set")?,
+        question_id: canonical(&format!("connectome-adhoc-{mode}"), "assessment question")?,
+        template_id: canonical(
+            &format!("connectome-adhoc-{mode}-declaration"),
+            "assessment declaration",
+        )?,
+        template_revision: 1,
+        template_sha256,
+        requirement_id: canonical(
+            &format!("connectome-adhoc-{mode}-requirement"),
+            "assessment requirement",
+        )?,
+    })
+}
 
 #[derive(Debug, Deserialize)]
 #[serde(tag = "action", rename_all = "snake_case", deny_unknown_fields)]
@@ -80,6 +126,22 @@ pub enum TaskCommand {
         task_id: String,
         attempt_id: String,
     },
+    PrepareAssessment {
+        task_id: String,
+    },
+    Assess {
+        task_id: String,
+        attempt_id: String,
+        expected_task_sha256: String,
+        expected_configuration_sha256: String,
+        source: TaskWorkerSourceRequest,
+        descriptor: TaskAssessmentDescriptor,
+        practice_text: String,
+    },
+    Assessment {
+        task_id: String,
+        attempt_id: String,
+    },
 }
 
 #[derive(Debug, Serialize)]
@@ -115,6 +177,12 @@ pub struct BudgetSummary {
     pub active_attempt: Option<String>,
     pub execution_may_continue: bool,
     pub stopped: Option<ReasoningBudgetStop>,
+    pub repetition_policy: Option<RepetitionPolicySummary>,
+    pub equivalent_attempts: std::collections::BTreeMap<String, String>,
+}
+#[derive(Debug, Serialize, PartialEq, Eq)]
+pub struct RepetitionPolicySummary {
+    pub max_equivalent_attempts: String,
 }
 fn budget_view(view: TaskBudgetView) -> Option<BudgetSummary> {
     view.budget
@@ -131,6 +199,16 @@ fn budget_view(view: TaskBudgetView) -> Option<BudgetSummary> {
             active_attempt: budget.active_attempt.map(|id| id.as_str().to_owned()),
             execution_may_continue: budget.execution_may_continue,
             stopped: budget.stopped,
+            repetition_policy: budget
+                .repetition_policy
+                .map(|policy| RepetitionPolicySummary {
+                    max_equivalent_attempts: policy.max_equivalent_attempts.to_string(),
+                }),
+            equivalent_attempts: budget
+                .equivalent_attempts
+                .into_iter()
+                .map(|(identity, count)| (identity, count.to_string()))
+                .collect(),
         })
 }
 
@@ -332,6 +410,26 @@ pub enum TaskReply {
         status: Option<TaskAttemptStatus>,
         proposal: Option<ProposalSummary>,
         worker: Option<WorkerSummary>,
+    },
+    AssessmentPrepared {
+        task: TaskSummary,
+        task_sha256: String,
+        configuration_sha256: String,
+        controller_binding_id: Option<String>,
+        controller_destination: Option<String>,
+        maximum_input_bytes: Option<String>,
+        maximum_response_bytes: Option<String>,
+        wait_timeout_ms: Option<String>,
+        allow_network: bool,
+        allow_source_export: bool,
+        allow_context_export: bool,
+        unavailable: Option<String>,
+        inventory: Option<SourceInventory>,
+    },
+    Assessment {
+        /// Boxed: the assessment output is far larger than every other reply.
+        assessment: Option<Box<TaskAssessmentOutput>>,
+        outcome_sha256: Option<String>,
     },
 }
 
@@ -962,6 +1060,221 @@ impl NativeRrdClient {
                     worker: output.into(),
                 })
             }
+            TaskCommand::PrepareAssessment { task_id } => {
+                let task = self.task_record(&task_id).await?;
+                let task_sha256 = EndpointSelectionTask::from_task(&task)
+                    .map_err(contract_error)?
+                    .task_sha256;
+                let config = self.task_configuration().await?;
+                let configuration_sha256 = config.sha256().map_err(contract_error)?;
+                let profile = config.profile.as_ref();
+                let policy = profile.and_then(|profile| profile.assessment_policy.as_ref());
+                let selection = profile.and_then(|profile| profile.selection_policy.as_ref());
+                let controller_binding_id =
+                    selection.map(|selection| selection.controller_binding_id.to_string());
+                let controller_destination = profile
+                    .zip(selection)
+                    .and_then(|(profile, selection)| {
+                        profile
+                            .bindings
+                            .iter()
+                            .find(|binding| binding.id == selection.controller_binding_id)
+                    })
+                    .and_then(|binding| match &binding.endpoint {
+                        rrd_contract::EndpointLocator::Url { url } => url::Url::parse(url)
+                            .ok()
+                            .map(|url| url.origin().ascii_serialization()),
+                        rrd_contract::EndpointLocator::InProcess { component } => {
+                            Some(format!("in-process component {}", component.as_str()))
+                        }
+                    });
+                let mut unavailable = None;
+                let (
+                    maximum_input_bytes,
+                    maximum_response_bytes,
+                    allow_network,
+                    allow_source_export,
+                    allow_context_export,
+                    wait_timeout_ms,
+                ) = if let Some(policy) = policy {
+                    let timeout = controller_timeout(&config).and_then(|timeout| {
+                        self.check_controller_window(timeout)?;
+                        Ok(timeout)
+                    });
+                    let timeout = match timeout {
+                        Ok(timeout) => Some(timeout.as_millis().to_string()),
+                        Err(error) => {
+                            unavailable = Some(error.message);
+                            None
+                        }
+                    };
+                    if !policy.allow_network
+                        || !policy.allow_source_export
+                        || !policy.allow_context_export
+                    {
+                        unavailable.get_or_insert_with(|| {
+                                "Assessment requires network, source-export and context-export policy to be enabled.".into()
+                            });
+                    }
+                    (
+                        Some(policy.maximum_input_bytes.to_string()),
+                        Some(policy.maximum_response_bytes.to_string()),
+                        policy.allow_network,
+                        policy.allow_source_export,
+                        policy.allow_context_export,
+                        timeout,
+                    )
+                } else {
+                    unavailable = Some(
+                        "Task assessment is disabled in the current RRFlow endpoint profile."
+                            .into(),
+                    );
+                    (None, None, false, false, false, None)
+                };
+                if profile.is_none() || selection.is_none() {
+                    unavailable.get_or_insert_with(|| {
+                        "No configured selector/controller is available for assessment.".into()
+                    });
+                }
+                let inventory = if unavailable.is_none() {
+                    Some(self.source_inventory().await?)
+                } else {
+                    None
+                };
+                Ok(TaskReply::AssessmentPrepared {
+                    task: task.into(),
+                    task_sha256,
+                    configuration_sha256,
+                    controller_binding_id,
+                    controller_destination,
+                    maximum_input_bytes,
+                    maximum_response_bytes,
+                    wait_timeout_ms,
+                    allow_network,
+                    allow_source_export,
+                    allow_context_export,
+                    unavailable,
+                    inventory,
+                })
+            }
+            TaskCommand::Assess {
+                task_id,
+                attempt_id,
+                expected_task_sha256,
+                expected_configuration_sha256,
+                source,
+                descriptor,
+                practice_text,
+            } => {
+                let preflight: Result<_, RrdError> = async {
+                    let task = self.task_record(&task_id).await?;
+                    let task_sha256 = EndpointSelectionTask::from_task(&task)
+                        .map_err(contract_error)?
+                        .task_sha256;
+                    let config = self.task_configuration().await?;
+                    let configuration_sha256 = config.sha256().map_err(contract_error)?;
+                    if task_sha256 != expected_task_sha256
+                        || configuration_sha256 != expected_configuration_sha256
+                    {
+                        return Err("Assessment inputs changed; review them again before dispatch".into());
+                    }
+                    let profile = config.profile.as_ref().ok_or(
+                        "Task assessment is disabled in the current RRFlow endpoint profile",
+                    )?;
+                    let policy = profile.assessment_policy.as_ref().ok_or(
+                        "Task assessment is disabled in the current RRFlow endpoint profile",
+                    )?;
+                    if !policy.allow_network
+                        || !policy.allow_source_export
+                        || !policy.allow_context_export
+                    {
+                        return Err("Current assessment policy does not allow network, source export and context export".into());
+                    }
+                    let timeout = controller_timeout(&config)?;
+                    let margin = self.check_controller_window(timeout)?;
+                    let client = RrdClient::connect_local(
+                        self.address,
+                        self.instance.clone(),
+                        ClientConfig {
+                            request_timeout: timeout,
+                            max_attempts: 1,
+                            ..ClientConfig::default()
+                        },
+                    )
+                    .map_err(RrdError::sdk)?;
+                    let practice_identity = caller_declared_assessment_identity(
+                        &descriptor,
+                        &practice_text,
+                    )?;
+                    let request = TaskAssessmentRequest {
+                        contract_version: TASK_ASSESSMENT_VERSION,
+                        scope: self.scope(),
+                        task_id: canonical(&task_id, "task")?,
+                        attempt_id: CorrelationId::new(&attempt_id).map_err(contract_error)?,
+                        expected_task_sha256,
+                        expected_configuration_sha256,
+                        max_storage_keys: TASK_READ_KEYS,
+                        source,
+                        descriptor,
+                        practice_identity,
+                        practice_text,
+                    };
+                    request.validate().map_err(contract_error)?;
+                    let lease = self.lease_for(margin).await?;
+                    let options = self.ids.next(true)?;
+                    Ok((client, lease, request, options))
+                }
+                .await;
+                let (client, lease, request, options) = match preflight {
+                    Ok(prepared) => prepared,
+                    Err(error) => {
+                        return Ok(TaskReply::NotDispatched {
+                            reason: error.message,
+                        })
+                    }
+                };
+                let output = client
+                    .call_operation::<TaskAssessmentExecute>(&lease.session, request, options)
+                    .await
+                    .map_err(RrdError::sdk)?;
+                Ok(TaskReply::Assessment {
+                    assessment: Some(Box::new(output)),
+                    outcome_sha256: None,
+                })
+            }
+            TaskCommand::Assessment {
+                task_id,
+                attempt_id,
+            } => {
+                let request = ReadTaskAssessment {
+                    contract_version: TASK_ASSESSMENT_VERSION,
+                    scope: self.scope(),
+                    task_id: canonical(&task_id, "task")?,
+                    attempt_id: CorrelationId::new(&attempt_id).map_err(contract_error)?,
+                };
+                request.validate().map_err(contract_error)?;
+                let view: TaskAssessmentView = self
+                    .send(false, |session, options| async move {
+                        self.client
+                            .call_operation::<TaskAssessmentRead>(&session, request, options)
+                            .await
+                    })
+                    .await?;
+                view.validate().map_err(contract_error)?;
+                if view.assessment.as_ref().is_some_and(|assessment| {
+                    assessment.task_id.as_str() != task_id
+                        || assessment.attempt_id.as_str() != attempt_id
+                        || assessment.scope != self.scope()
+                }) {
+                    return Err(
+                        "Assessment readback changed the requested task or attempt identity".into(),
+                    );
+                }
+                Ok(TaskReply::Assessment {
+                    assessment: view.assessment.map(Box::new),
+                    outcome_sha256: view.outcome_sha256,
+                })
+            }
             TaskCommand::Attempt {
                 task_id,
                 attempt_id,
@@ -1356,5 +1669,49 @@ mod source_projection_tests {
         assert_eq!(chosen.name, "kind_prefix");
         assert_eq!(chosen.reason, "the kind bounds the key range");
         assert!(view.plan.exact && view.execution.analysis.is_none());
+    }
+}
+
+#[cfg(test)]
+mod assessment_identity_tests {
+    use super::*;
+
+    #[test]
+    fn caller_declared_identity_hashes_exact_ordered_utf8_bytes_and_is_mode_scoped() {
+        let descriptor = TaskAssessmentDescriptor::Binary {
+            proposition: "A bounded claim".into(),
+        };
+        let practice = "Café exact practice";
+        let identity = caller_declared_assessment_identity(&descriptor, practice)
+            .expect("native caller-declared assessment identity");
+        let declaration = r#"{"contract_version":1,"descriptor":{"mode":"binary","proposition":"A bounded claim"},"practice_text":"Café exact practice"}"#;
+        assert_eq!(
+            identity.template_sha256,
+            format!("{:x}", sha2::Sha256::digest(declaration.as_bytes()))
+        );
+        assert_eq!(identity.question_set_id.as_str(), "connectome-adhoc-set");
+        assert_eq!(identity.question_id.as_str(), "connectome-adhoc-binary");
+        assert_eq!(
+            identity.template_id.as_str(),
+            "connectome-adhoc-binary-declaration"
+        );
+        assert_eq!(
+            identity.requirement_id.as_str(),
+            "connectome-adhoc-binary-requirement"
+        );
+        assert_ne!(
+            identity.template_sha256,
+            format!("{:x}", sha2::Sha256::digest(practice.as_bytes())),
+            "declaration provenance and native UTF-8 practice digest are separate"
+        );
+
+        let changed = caller_declared_assessment_identity(
+            &TaskAssessmentDescriptor::Binary {
+                proposition: "A changed claim".into(),
+            },
+            practice,
+        )
+        .expect("changed declaration identity");
+        assert_ne!(identity.template_sha256, changed.template_sha256);
     }
 }
