@@ -149,11 +149,11 @@ impl Drop for ReplyDropper {
 #[test]
 #[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
 fn project_plan_controls_reconcile_lost_replies_without_duplicate_effects() {
-    let estate = Estate::install_and_serve();
-    let proxy = ReplyDropper::new(estate.address);
+    let engram = Engram::install_and_serve();
+    let proxy = ReplyDropper::new(engram.address);
     tauri::async_runtime::block_on(async {
         let request = || {
-            let mut request = estate.connect_request();
+            let mut request = engram.connect_request();
             request.endpoint = format!("http://{}", proxy.address);
             request
         };
@@ -224,7 +224,7 @@ fn project_plan_controls_reconcile_lost_replies_without_duplicate_effects() {
             started["status"]["job"]
         );
         std::fs::write(
-            PathBuf::from(&estate.served.view.project).join("lost-reply-fixture.txt"),
+            PathBuf::from(&engram.served.view.project).join("lost-reply-fixture.txt"),
             "Source change in a temporary integration-test project.\n",
         )
         .unwrap();

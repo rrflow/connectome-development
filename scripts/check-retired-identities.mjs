@@ -3,7 +3,7 @@ import { extname, join, relative } from "node:path";
 import process from "node:process";
 
 /**
- * Two identity gates run over the authored tree.
+ * Three identity gates run over the authored tree.
  *
  * 1. Retired pre-release query identities (the vocabulary that preceded
  *    RRFlowQL) may not appear anywhere.
@@ -14,6 +14,9 @@ import process from "node:process";
  *    names, and configuration may not carry it. The allowed set is derived from
  *    the declared dependencies, so it shrinks to nothing as sprint 009 replaces
  *    them.
+ * 3. The product's earlier word for an engram may not appear. The engine
+ *    renamed it on 2026-11-15 and this repository followed; evidence captured
+ *    before the rename keeps the word it recorded.
  */
 
 const roots = ["src", "src-tauri", "docs", "scripts"];
@@ -43,6 +46,12 @@ const textExtensions = new Set([
 
 const retired = /vyrm(?:ql|ml)/i;
 const vendor = /surreal/i;
+// Case-sensitive on purpose: "InstanceState" and "useState" contain "eState".
+const earlierTerm = /Estate|(?<![A-Za-z])ESTATE|(?<![A-Za-z])estate/;
+
+/** Records that keep the earlier term because they report what was true then. */
+const earlierTermRecords = ["docs/evidence/", "docs/absorption-ledger.md"];
+const earlierTermGate = "scripts/check-retired-identities.mjs";
 
 /**
  * Files whose purpose is to preserve or report third-party provenance, plus
@@ -129,11 +138,20 @@ function manifestResidue(content) {
 
 const retiredViolations = [];
 const vendorViolations = [];
+const earlierTermViolations = [];
 for (const file of files) {
 	const path = relative(process.cwd(), file).replaceAll("\\", "/");
 	const content = await readFile(file, "utf8");
 	if (retired.test(path) || retired.test(content)) {
 		retiredViolations.push(path);
+	}
+	if (
+		path !== earlierTermGate &&
+		!earlierTermRecords.some((record) => path.startsWith(record)) &&
+		(earlierTerm.test(path) || earlierTerm.test(content))
+	) {
+		const line = content.split("\n").findIndex((text) => earlierTerm.test(text)) + 1;
+		earlierTermViolations.push(line > 0 ? `${path}:${line}` : `${path} (path)`);
 	}
 	if (noticeFiles.has(path)) {
 		continue;
@@ -172,6 +190,14 @@ if (vendorViolations.length > 0) {
 		"The inherited vendor's name appears outside a declared dependency identifier or the notices:",
 	);
 	for (const violation of vendorViolations.sort()) {
+		console.error(`- ${violation}`);
+	}
+	process.exitCode = 1;
+}
+
+if (earlierTermViolations.length > 0) {
+	console.error("The earlier word for an engram remains:");
+	for (const violation of earlierTermViolations.sort()) {
 		console.error(`- ${violation}`);
 	}
 	process.exitCode = 1;

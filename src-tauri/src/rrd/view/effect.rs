@@ -82,7 +82,7 @@ pub struct ArchiveView {
     pub runtime_cursor: u64,
 }
 
-/// How a backup carries one family of estate state.
+/// How a backup carries one family of engram state.
 #[derive(Debug, Serialize)]
 pub struct CoverageView {
     pub family: &'static str,
@@ -117,8 +117,8 @@ pub struct BackupCreatedView {
     pub idempotent_replay: bool,
 }
 
-/// A backup restored into its own verified staging root beside the estate.
-/// The serving estate is not replaced.
+/// A backup restored into its own verified staging root beside the engram.
+/// The serving engram is not replaced.
 #[derive(Debug, Serialize)]
 pub struct RestoreView {
     pub backup_sha256: String,

@@ -1,7 +1,7 @@
 //! Actual engine startup configuration; no provider, model output or training data.
 use super::*;
-use crate::rrd::estate::lifecycle::InstanceState;
-use crate::rrd::estate::EstateState;
+use crate::rrd::engram::lifecycle::InstanceState;
+use crate::rrd::engram::EngramState;
 
 #[test]
 #[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
@@ -11,7 +11,7 @@ fn endpoint_mapping_is_engine_validated_and_requires_explicit_restart() {
     let mapping = root.join("mapping with spaces.json");
     let empty_mapping = br#"{"format_version":1,"entries":[]}"#;
     std::fs::write(&mapping, empty_mapping).unwrap();
-    let request = accepted(EstateServeRequest {
+    let request = accepted(EngramServeRequest {
         project: root.join("project").to_string_lossy().into_owned(),
         mode: InstallMode::Fresh,
         executable: rrflow().to_string_lossy().into_owned(),
@@ -20,7 +20,7 @@ fn endpoint_mapping_is_engine_validated_and_requires_explicit_restart() {
         endpoint_credentials: Some(mapping.to_string_lossy().into_owned()),
     });
     let observer = Arc::new(RecordingObserver::default());
-    let owner = EstateState::default();
+    let owner = EngramState::default();
     let first = owner.start(request.clone(), observer.clone()).unwrap();
     assert_eq!(
         first.endpoint_credentials.as_deref(),

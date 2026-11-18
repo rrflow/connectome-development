@@ -8,8 +8,8 @@
 //! record it left, and attach again after an outside restart on a new port.
 
 use super::*;
-use crate::rrd::estate::lifecycle::{InstanceState, StatusRequest};
-use crate::rrd::estate::{EstateState, Origin};
+use crate::rrd::engram::lifecycle::{InstanceState, StatusRequest};
+use crate::rrd::engram::{EngramState, Origin};
 use crate::rrd::RrdClientState;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
@@ -57,18 +57,18 @@ impl Drop for Outside {
 fn an_instance_started_elsewhere_is_found_attached_and_left_running() {
     // An installed project folder, served once and killed, so it holds a
     // stale served endpoint record as a crashed server leaves one.
-    let mut estate = Estate::install_and_serve();
-    estate.served.server.kill().expect("kill the first server");
-    estate.served.server.wait().expect("reap the first server");
-    let project = estate.served.view.project.clone();
-    let instance = estate.instance.clone();
+    let mut engram = Engram::install_and_serve();
+    engram.served.server.kill().expect("kill the first server");
+    engram.served.server.wait().expect("reap the first server");
+    let project = engram.served.view.project.clone();
+    let instance = engram.instance.clone();
     assert!(
         Path::new(&project).join(".rrflow/serving.json").is_file(),
         "a killed server leaves its record"
     );
 
     let observer = Arc::new(RecordingObserver::default());
-    let owner = EstateState::default();
+    let owner = EngramState::default();
     let lines = || observer.lines.lock().expect("observer").join("\n");
     let refresh = || {
         tauri::async_runtime::block_on(owner.refresh(
@@ -80,7 +80,7 @@ fn an_instance_started_elsewhere_is_found_attached_and_left_running() {
         ))
         .unwrap_or_else(|error| panic!("status read failed: {error:?}\n{}", lines()))
     };
-    let open = || EstateServeRequest {
+    let open = || EngramServeRequest {
         project: project.clone(),
         mode: InstallMode::Existing,
         executable: rrflow().to_string_lossy().into_owned(),
@@ -104,7 +104,7 @@ fn an_instance_started_elsewhere_is_found_attached_and_left_running() {
     assert_eq!(found.state, InstanceState::Ready, "{}", lines());
     assert_eq!(found.origin, Origin::Elsewhere);
     let attached = found
-        .estate
+        .engram
         .clone()
         .expect("a ready instance has coordinates");
     assert_eq!(attached.endpoint, outside.url);
@@ -123,7 +123,7 @@ fn an_instance_started_elsewhere_is_found_attached_and_left_running() {
         .expect("rrflow ready");
     assert!(report.status.success());
     assert_eq!(
-        crate::rrd::estate::proven(&report.stdout, &instance).unwrap(),
+        crate::rrd::engram::proven(&report.stdout, &instance).unwrap(),
         (outside.url.clone(), instance.clone())
     );
     let mut other: Value = serde_json::from_slice(&report.stdout).unwrap();
@@ -132,7 +132,7 @@ fn an_instance_started_elsewhere_is_found_attached_and_left_running() {
         .expect("OpenAPI paths")
         .remove("/v1/query");
     let refused =
-        crate::rrd::estate::proven(&serde_json::to_vec(&other).unwrap(), &instance).unwrap_err();
+        crate::rrd::engram::proven(&serde_json::to_vec(&other).unwrap(), &instance).unwrap_err();
     assert!(
         refused.message.contains("different public contract"),
         "{refused:?}"
@@ -142,7 +142,7 @@ fn an_instance_started_elsewhere_is_found_attached_and_left_running() {
     // instance runs: opening the project attaches instead of failing "already
     // open in another process", and a native session reads it. Letting go of
     // an attached instance leaves it running.
-    let fresh = EstateState::default();
+    let fresh = EngramState::default();
     let opened = fresh
         .start(open(), observer.clone())
         .unwrap_or_else(|error| panic!("opening a running project failed: {error:?}\n{}", lines()));
@@ -162,7 +162,7 @@ fn an_instance_started_elsewhere_is_found_attached_and_left_running() {
         Uuid::new_v4()
     ));
     std::fs::write(&mapping, br#"{"format_version":1,"entries":[]}"#).unwrap();
-    let mapped = EstateState::default();
+    let mapped = EngramState::default();
     let mut with_mapping = open();
     with_mapping.endpoint_credentials = Some(mapping.to_string_lossy().into_owned());
     let refusal = mapped
@@ -177,9 +177,9 @@ fn an_instance_started_elsewhere_is_found_attached_and_left_running() {
     std::fs::remove_file(&mapping).unwrap();
     // Without the attach step the engine refuses a second serve itself, and
     // Connectome reports the engine's own reason.
-    let second = serve_estate(open(), observer.clone())
+    let second = serve_engram(open(), observer.clone())
         .err()
-        .expect("a second serve of an open estate is refused");
+        .expect("a second serve of an open engram is refused");
     assert!(
         second.message.contains("already open in another process"),
         "{second:?}"
@@ -233,7 +233,7 @@ fn an_instance_started_elsewhere_is_found_attached_and_left_running() {
     // Connectome serves the project itself over the record the killed
     // server left. The engine is the registry's, so dropping the registry
     // stops it, although its console thread still holds the start's observer.
-    let serving = EstateState::default();
+    let serving = EngramState::default();
     let served = serving
         .start(open(), observer.clone())
         .unwrap_or_else(|error| {
@@ -261,7 +261,7 @@ fn an_instance_started_elsewhere_is_found_attached_and_left_running() {
     assert_eq!(status.instances.len(), 1, "{}", lines());
     assert_eq!(status.instances[0].state, InstanceState::Ready);
     assert_eq!(
-        status.instances[0].estate.as_ref().unwrap().endpoint,
+        status.instances[0].engram.as_ref().unwrap().endpoint,
         restarted.url
     );
     drop(restarted);

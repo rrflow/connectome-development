@@ -9,7 +9,7 @@ This directory holds the evidence for that rule:
 | `baseline/inherited/38142b7/{dark,light}/` | 49 captures per theme of every reachable inherited screen and state at `main` `38142b7` |
 | `baseline/inherited/38142b7/manifest.json` | Revision, viewport, seed digest, capture-only patches and one entry per image with its SHA-256 |
 | `baseline/native/83804c3/{dark,light}/` | Captures per theme of every RRFlow-native desktop screen and lens state at `main` `83804c3` |
-| `baseline/native/83804c3/manifest.json` | Revision, viewport, engine revision, estate, determinism measures and one entry per image with its SHA-256 |
+| `baseline/native/83804c3/manifest.json` | Revision, viewport, engine revision, engram, determinism measures and one entry per image with its SHA-256 |
 | `baseline/workbench/6448a4f/dark/` | 85 captures of the first-party Connectome Workbench, RRFlow `crates/connectome-ui` at its last full revision, the reference for [sprint 016](../../.agents/sprints/016-guided-workspace.md) |
 | `baseline/workbench/6448a4f/manifest.json` | How those were made, with one entry per image |
 | `baseline/window/c1cbff2/` | Today's desktop at real window sizes, the "before" for sprint 016's window |
@@ -19,7 +19,7 @@ This directory holds the evidence for that rule:
 | `PARITY.md` | The visual elements and interactions each RRFlow lens must keep or improve |
 | `capture-only.mjs` | Applies, then restores byte for byte, the patches that let the inherited screens open and run |
 | `capture.mjs` | The capture flow: seed the in-browser Sandbox, then visit each view, mode, drawer, modal and settings tab |
-| `capture-native.mjs` | The desktop capture flow: install and serve a fresh estate, seed it, then visit each workbench tab, lens, lens state, panel and settings tab |
+| `capture-native.mjs` | The desktop capture flow: install and serve a fresh engram, seed it, then visit each workbench tab, lens, lens state, panel and settings tab |
 | `compare.mjs` | Pixel comparison of two capture sets, with diff images and a report |
 | `seed.surql` | The deterministic dataset the inherited engine is seeded with |
 
@@ -85,10 +85,10 @@ node tests/visual/compare.mjs --before tests/visual/baseline/native/83804c3/dark
 
 Clear the preview data folder between runs, so each run starts from a fresh
 application; the capture refuses to start while an earlier run's webview
-still answers on its debugging port. The flow installs a fresh estate into
+still answers on its debugging port. The flow installs a fresh engram into
 `<dir>/project` through the application's own installation preview, serves
 it, seeds it with the lens fixture through the native test
-`seed_served_estate_for_visual_capture` (which reads the operator credential
+`seed_served_engram_for_visual_capture` (which reads the operator credential
 inside the native process; the capture passes only its path), then visits
 every workbench tab, lens, graph and map state, console query, panel and
 settings tab at 1440x1800 through WebView2's remote debugging port.
@@ -101,7 +101,7 @@ override was needed. Two captures of one build compared, dark: 2 identical,
 25 negligible (the largest 0.02 percent), 9 dynamic, 0 changed; light: 2
 identical, 25 negligible (the largest 0.051 percent), 9 dynamic, 0 changed.
 The dynamic views are the records graph states and the storage engine's live
-counters, which move when the estate writes during a capture: one light run
+counters, which move when the engram writes during a capture: one light run
 read 12 more versions and 6 more keys than the other three, most likely an
 automatic session renewal landing earlier in a slower run. The committed
 baseline is the second run of each pair.

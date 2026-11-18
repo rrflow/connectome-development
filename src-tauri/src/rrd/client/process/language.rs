@@ -184,9 +184,9 @@ async fn change(client: &NativeRrdClient, mutations: Value) {
 #[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
 fn the_rrflowql_golden_matches_the_engine() {
     let vectors = engine_query_vectors();
-    let estate = Estate::install_and_serve();
+    let engram = Engram::install_and_serve();
     let golden = tauri::async_runtime::block_on(async {
-        let client = NativeRrdClient::connect(estate.connect_request())
+        let client = NativeRrdClient::connect(engram.connect_request())
             .await
             .expect("connection");
         let mut registry = serde_json::to_value(
@@ -250,7 +250,7 @@ fn the_rrflowql_golden_matches_the_engine() {
         )
         .await;
 
-        // A vector may name a known cursor; the estate is written until its
+        // A vector may name a known cursor; the engram is written until its
         // head reaches every one of them.
         let named = vectors
             .iter()

@@ -22,7 +22,7 @@ use rrd_contract::{
 /// How long a preview stays open for its commit.
 pub(super) const CHANGE_TIMEOUT_MS: u64 = 300_000;
 /// Storage keys the engine may read to build the prospective snapshot: the
-/// contract's default. The snapshot covers the whole data scope, so an estate
+/// contract's default. The snapshot covers the whole data scope, so an engram
 /// with more keys than this cannot be previewed until RRFlow bounds the
 /// preview to the mutations' targets.
 pub(super) const PREVIEW_MAX_STORAGE_KEYS: u32 = 10_000;

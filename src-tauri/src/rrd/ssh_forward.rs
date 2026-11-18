@@ -1,6 +1,6 @@
 //! An explicitly configured SSH carriage for an existing RRD HTTP origin.
 //! This owns only a local forwarding process. It never starts an engine,
-//! installs an estate, changes the saved port, or handles an RRD credential.
+//! installs an engram, changes the saved port, or handles an RRD credential.
 
 use std::collections::VecDeque;
 use std::io::{BufRead, BufReader};

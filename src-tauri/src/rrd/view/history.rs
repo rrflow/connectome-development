@@ -1,4 +1,4 @@
-//! Views of the estate's history: changefeed pages and audit pages.
+//! Views of the engram's history: changefeed pages and audit pages.
 //!
 //! Both are hash chains the SDK validated before Connectome projects them, so
 //! each row keeps its own digest and the digest it follows.

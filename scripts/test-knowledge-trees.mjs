@@ -48,9 +48,9 @@ function connection(status = "experimental") {
 		instance: "original-instance",
 		service: {
 			instance: "original-instance",
-			installed_estate: {
+			installed_engram: {
 				project_id: "existing-project",
-				estate_id: "estate",
+				engram_id: "engram",
 				instance_id: "original-instance",
 			},
 			capabilities: [
@@ -122,21 +122,21 @@ test("removing a group removes exactly its subtree and preserves vector data ref
 	);
 });
 
-test("three-way rebase combines disjoint local and estate edits using stable identities", () => {
+test("three-way rebase combines disjoint local and engram edits using stable identities", () => {
 	const base = [tree()];
 	const local = structuredClone(base);
 	local[0].name = "My tree rename";
 	local[0].paths[2].name = "My path rename";
 	const latest = structuredClone(base);
-	latest[0].paths[2].binding.collection_id = "estate-rebound-collection";
-	latest[0].paths.push(path("estate-added"));
+	latest[0].paths[2].binding.collection_id = "engram-rebound-collection";
+	latest[0].paths.push(path("engram-added"));
 	const before = structuredClone({ base, local, latest });
 	const result = rebaseKnowledgeTrees(base, local, latest);
 	assert.deepEqual(result.conflicts, []);
 	assert.equal(result.trees[0].name, "My tree rename");
 	assert.equal(result.trees[0].paths[2].name, "My path rename");
-	assert.equal(result.trees[0].paths[2].binding.collection_id, "estate-rebound-collection");
-	assert.equal(result.trees[0].paths.at(-1).id, "estate-added");
+	assert.equal(result.trees[0].paths[2].binding.collection_id, "engram-rebound-collection");
+	assert.equal(result.trees[0].paths.at(-1).id, "engram-added");
 	assert.deepEqual({ base, local, latest }, before);
 });
 
@@ -145,7 +145,7 @@ test("same-field and edit/delete conflicts preserve the local draft without hidi
 	const local = structuredClone(base);
 	local[0].paths[2].name = "My title";
 	const latest = structuredClone(base);
-	latest[0].paths[2].name = "Estate title";
+	latest[0].paths[2].name = "Engram title";
 	let result = rebaseKnowledgeTrees(base, local, latest);
 	assert.equal(result.trees[0].paths[2].name, "My title");
 	assert.deepEqual(result.conflicts, ["Path My title: name"]);
@@ -155,17 +155,17 @@ test("same-field and edit/delete conflicts preserve the local draft without hidi
 	assert.equal(result.conflicts.length, 1);
 });
 
-test("rebase preserves deliberate local removals and independently added estate trees", () => {
+test("rebase preserves deliberate local removals and independently added engram trees", () => {
 	const base = [tree()];
 	const local = [{ ...base[0], paths: [base[0].paths[3]] }];
-	const latest = [...structuredClone(base), { id: "estate-tree", name: "Estate", paths: [] }];
+	const latest = [...structuredClone(base), { id: "engram-tree", name: "Engram", paths: [] }];
 	const result = rebaseKnowledgeTrees(base, local, latest);
 	assert.deepEqual(result.conflicts, []);
 	assert.deepEqual(
 		result.trees[0].paths.map((entry) => entry.id),
 		["other"],
 	);
-	assert.equal(result.trees[1].id, "estate-tree");
+	assert.equal(result.trees[1].id, "engram-tree");
 });
 
 test("old, unavailable, incompatible and unbound engines invoke no knowledge routes", () => {
@@ -183,7 +183,7 @@ test("old, unavailable, incompatible and unbound engines invoke no knowledge rou
 	const future = connection();
 	future.service.capabilities[0].contract_version = 2;
 	const unbound = connection();
-	unbound.service.installed_estate = null;
+	unbound.service.installed_engram = null;
 	const emptyLimitation = connection("unavailable");
 	emptyLimitation.service.capabilities[0].limitation = "";
 	for (const candidate of [old, connection("unavailable"), future, unbound, emptyLimitation]) {

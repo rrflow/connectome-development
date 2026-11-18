@@ -1,28 +1,28 @@
-import type { ServedEstate } from "~/shared/types";
+import type { ServedEngram } from "~/shared/types";
 import { createBaseConnection } from "~/shared/util/config/defaults";
 import { useConfigStore } from "~/shell/stores/config";
 
 /**
- * The runtime connection that reaches the served estate. One connection per
- * estate project: it is found by the operator credential the installation
+ * The runtime connection that reaches the served engram. One connection per
+ * engram project: it is found by the operator credential the installation
  * wrote, updated with the address the engine announced this time (the kernel
  * chooses the port), and created on first serve.
  */
-export function resolveServedConnection(estate: ServedEstate) {
+export function resolveServedConnection(engram: ServedEngram) {
 	const { settings, connections, addConnection, updateConnection } = useConfigStore.getState();
 
-	const hostname = estate.endpoint.replace(/^https?:\/\//, "");
+	const hostname = engram.endpoint.replace(/^https?:\/\//, "");
 	const existing = connections.find(
 		(candidate) =>
 			candidate.target === "runtime" &&
-			candidate.runtimeCredential === estate.credential_path,
+			candidate.runtimeCredential === engram.credential_path,
 	);
 
 	if (existing) {
 		updateConnection({
 			id: existing.id,
-			runtimeInstance: estate.instance,
-			runtimeProject: estate.project,
+			runtimeInstance: engram.instance,
+			runtimeProject: engram.project,
 			authentication: {
 				...existing.authentication,
 				protocol: "http",
@@ -38,11 +38,11 @@ export function resolveServedConnection(estate: ServedEstate) {
 	addConnection({
 		...base,
 		name:
-			estate.project.replace(/\\/g, "/").split("/").filter(Boolean).at(-1) ?? "Local project",
+			engram.project.replace(/\\/g, "/").split("/").filter(Boolean).at(-1) ?? "Local project",
 		target: "runtime",
-		runtimeInstance: estate.instance,
-		runtimeCredential: estate.credential_path,
-		runtimeProject: estate.project,
+		runtimeInstance: engram.instance,
+		runtimeCredential: engram.credential_path,
+		runtimeProject: engram.project,
 		authentication: {
 			...base.authentication,
 			protocol: "http",

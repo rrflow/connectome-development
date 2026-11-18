@@ -16,7 +16,7 @@ test("each kind of file has the limit the conventions document gives it", () => 
 test("test files are recognised by place and by name", () => {
 	assert.equal(isTestFile("tests/smoke/a.spec.ts"), true);
 	assert.equal(isTestFile("src/rrflow/ui.test.mjs"), true);
-	assert.equal(isTestFile("src-tauri/src/rrd/estate/tests.rs"), true);
+	assert.equal(isTestFile("src-tauri/src/rrd/engram/tests.rs"), true);
 	assert.equal(isTestFile("src/features/latest/index.ts"), false);
 	assert.equal(isTestFile("src/features/contests.ts"), false);
 });

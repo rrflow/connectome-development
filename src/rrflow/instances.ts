@@ -56,7 +56,7 @@ export function applyStatus(current: InstanceMap, status: InstanceStatus): Insta
 
 /** The first ready instance's coordinates, for the screens that show one. */
 export function firstServed(instances: InstanceMap) {
-	return Object.values(instances).find((instance) => instance.state === "ready")?.estate ?? null;
+	return Object.values(instances).find((instance) => instance.state === "ready")?.engram ?? null;
 }
 
 const CREDENTIAL_SUFFIX = /^(.*)[\\/]\.rrflow[\\/]credentials[\\/]local-operator\.json$/;

@@ -31,7 +31,7 @@ export function exampleLanguage(saved: string | undefined): ExampleLanguage {
 export interface ExampleTarget {
 	/** The engine's base URL, for example `http://127.0.0.1:9477`. */
 	endpoint: string;
-	/** The estate instance the client is bound to. */
+	/** The engram instance the client is bound to. */
 	instance: string;
 }
 

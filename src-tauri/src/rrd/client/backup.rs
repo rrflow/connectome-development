@@ -1,7 +1,7 @@
-//! Estate backups: the catalogue, a new backup, and a verified restore.
+//! Engram backups: the catalogue, a new backup, and a verified restore.
 //!
-//! A restore stages the backup into its own root beside the estate and
-//! verifies it; the serving estate is not replaced. Each backup has one
+//! A restore stages the backup into its own root beside the engram and
+//! verifies it; the serving engram is not replaced. Each backup has one
 //! restore identity, derived from its digest, so restoring it again (or
 //! retrying a restore whose reply was lost) re-verifies the root already
 //! staged instead of staging another copy.

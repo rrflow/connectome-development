@@ -55,7 +55,7 @@ pub type LiveSink = Arc<dyn Fn(LiveEventView) -> bool + Send + Sync>;
 #[derive(Debug, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum RrdLiveStream {
-    /// Every change in the estate.
+    /// Every change in the engram.
     Changes,
     /// The rows an rrflowQL query adds, updates and removes.
     Query { query: String },
@@ -66,7 +66,7 @@ pub enum RrdLiveStream {
 pub struct RrdLiveOpenRequest {
     pub stream: RrdLiveStream,
     /// Deliver what follows this cursor. Without one, changes start at the
-    /// estate's head, and a live query runs once and starts at the cursor of
+    /// engram's head, and a live query runs once and starts at the cursor of
     /// that first result. A caller that passes a cursor for a live query
     /// already holds its result and observed identity version at that cursor.
     #[serde(default)]

@@ -60,7 +60,7 @@ The production frontend and debug native app built with
 `pnpm tauri build --debug --no-bundle --config src-tauri/tauri.bundle.conf.json`
 and `VITE_CONNECTOME_PREVIEW=true`. No installer was built.
 
-The desktop installed a fresh local estate, opened its native session, and
+The desktop installed a fresh local engram, opened its native session, and
 recorded the actual maintenance task "Verify Connectome controller proposal
 workflow". Task identity:
 `task-81f62f99b2459f3c9e438e528b516a2bbeac586058f149969f3b10b04980880e`.
@@ -74,9 +74,9 @@ returned cancelled with zero reserved steps and zero charged time.
 The first attempted click on Record task was outside the window and did not
 submit. Scrolling and observing the visible control preceded the successful
 submission. Closing the app ended its owned app/engine processes. Subsequent
-`rrflow --json verify --project <trial-estate> --level quick` returned exit 0,
+`rrflow --json verify --project <trial-engram> --level quick` returned exit 0,
 13 passing checks, runtime cursor 7, control journal sequence 95 and current
-attunement source. This is not proof of graceful shutdown protocol. The estate,
+attunement source. This is not proof of graceful shutdown protocol. The engram,
 build receipt and observed UI text remain in the local trial directory
 `D:/projects/swag/.swag/controller-ui/d7eb6ea3/`. Final strict all-target Clippy
 also passed after the post-renewal lease guard.

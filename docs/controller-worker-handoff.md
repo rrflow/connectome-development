@@ -104,7 +104,7 @@ The five conflicted paths were dependency manifests/locks and the recorded value
 fixture. Only revision/archive identities conflicted; retain the worker pin
 `e3528330` for this merge, pending the current engine dependency's landing.
 
-Main's native client, estate and instance lifecycle, startup tests, query-language
+Main's native client, engram and instance lifecycle, startup tests, query-language
 tests and quantization tests are byte-identical in the merged index. The worker
 command, typed projections, renderer actions and denial tests retain their existing
 implementation. Main's guided workspace and visual changes merge without edits.
@@ -192,7 +192,7 @@ binds source, artifacts and private original readback hashes. The initial launch
 harness could not access its process environment; a recorded PowerShell launch
 started the identified application. No model request preceded UI admission.
 
-An isolated installed estate used the existing operator-configured experimental
+An isolated installed engram used the existing operator-configured experimental
 BF16 profile. Through the actual Tasks UI, the driver recorded a
 [real PR-derived task](evidence/controller-worker-20261106/task-input.json),
 set two steps with 60-second step and 120-second run limits, reviewed controller
@@ -263,4 +263,4 @@ approval review before execution, with reason "blocked by policy". Independent
 process observation confirmed the original engine remained running and no stop
 record was created. The rejected action was not retried. This candidate has UI
 reload evidence, not a new process-restart claim. The correlation trial uses a
-separate estate and does not replace or stop the earlier process.
+separate engram and does not replace or stop the earlier process.

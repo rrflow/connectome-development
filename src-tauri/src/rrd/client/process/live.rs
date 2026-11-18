@@ -114,11 +114,11 @@ async fn changes_through(
 #[test]
 #[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
 fn live_changes_arrive_in_order_across_renewal_and_replacement() {
-    let estate = Estate::install_and_serve();
+    let engram = Engram::install_and_serve();
     tauri::async_runtime::block_on(async {
-        load_fixture(&estate).await;
+        load_fixture(&engram).await;
         let client = Arc::new(
-            NativeRrdClient::connect(estate.connect_request())
+            NativeRrdClient::connect(engram.connect_request())
                 .await
                 .expect("connection"),
         );
@@ -184,11 +184,11 @@ fn live_changes_arrive_in_order_across_renewal_and_replacement() {
 #[test]
 #[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
 fn a_live_query_reports_the_rows_it_adds_updates_and_removes() {
-    let estate = Estate::install_and_serve();
+    let engram = Engram::install_and_serve();
     tauri::async_runtime::block_on(async {
-        load_fixture(&estate).await;
+        load_fixture(&engram).await;
         let client = Arc::new(
-            NativeRrdClient::connect(estate.connect_request())
+            NativeRrdClient::connect(engram.connect_request())
                 .await
                 .expect("connection"),
         );
@@ -339,11 +339,11 @@ fn a_live_query_reports_the_rows_it_adds_updates_and_removes() {
 #[test]
 #[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
 fn live_results_end_across_a_restart_and_resume_from_their_cursor() {
-    let mut estate = Estate::install_and_serve();
+    let mut engram = Engram::install_and_serve();
     let (before, mut events, delivered) = tauri::async_runtime::block_on(async {
-        load_fixture(&estate).await;
+        load_fixture(&engram).await;
         let before = Arc::new(
-            NativeRrdClient::connect(estate.connect_request())
+            NativeRrdClient::connect(engram.connect_request())
                 .await
                 .expect("connection before the restart"),
         );
@@ -365,7 +365,7 @@ fn live_results_end_across_a_restart_and_resume_from_their_cursor() {
         (before, events, cursor)
     });
 
-    estate.restart();
+    engram.restart();
     tauri::async_runtime::block_on(async {
         // The old endpoint is gone: the subscription reports that it ended
         // and that a new connection can resume it.
@@ -378,7 +378,7 @@ fn live_results_end_across_a_restart_and_resume_from_their_cursor() {
         drop(before);
 
         let after = Arc::new(
-            NativeRrdClient::connect(estate.connect_request())
+            NativeRrdClient::connect(engram.connect_request())
                 .await
                 .expect("connection after the restart"),
         );
@@ -406,11 +406,11 @@ fn live_results_end_across_a_restart_and_resume_from_their_cursor() {
 #[test]
 #[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
 fn live_subscriptions_are_bounded_and_refusals_end_them() {
-    let estate = Estate::install_and_serve();
+    let engram = Engram::install_and_serve();
     tauri::async_runtime::block_on(async {
-        load_fixture(&estate).await;
+        load_fixture(&engram).await;
         let client = Arc::new(
-            NativeRrdClient::connect(estate.connect_request())
+            NativeRrdClient::connect(engram.connect_request())
                 .await
                 .expect("connection"),
         );

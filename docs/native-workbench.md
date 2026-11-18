@@ -16,7 +16,7 @@ without another installation. Credentials are stored by RRFlow and read by the
 native client; no token is entered in a URL or browser storage.
 
 The default project is in Connectome's application-data directory under
-`estates/local` in the currently pinned desktop implementation. The serving settings can select an absolute project path,
+`engrams/local` in the currently pinned desktop implementation. The serving settings can select an absolute project path,
 fresh/existing mode, and an explicit engine override. Startup binds a free
 loopback port and creates or updates its local connection profile. Close the
 app to stop all owned engines, or use **Stop this engine** for one project; data remains.

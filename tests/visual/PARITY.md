@@ -69,7 +69,7 @@ moves, as in Slice D0.
 | `modal-import-database` | Opens the system file picker | Storage lens typed import (D7) |
 | `modal-table-creator` | Create-new-table dialog with Table/Relation/View kinds, name, schema mode | Schema lens (D6) |
 | `functions`, `functions-greet` | Function list with search; source editor; properties: name, arguments with types, return type, permission, comment; revert and save; empty-state guide | Functions lens on RRFlow governed functions (rebuilt when RRFlow serves them) |
-| `parameters`, `parameters-team` | Parameter list; value editor; permission and comment; empty-state guide | Query lens variables and estate configuration (D4) |
+| `parameters`, `parameters-team` | Parameter list; value editor; permission and comment; empty-state guide | Query lens variables and engram configuration (D4) |
 | `authentication`, `authentication-user` | Root, namespace and database authentication columns; user list; user editor with password, roles and durations | Principals and access lens (rebuilt when RRFlow serves principal administration) |
 | `graphql` | GraphQL playground empty state and its cURL example | GraphQL lens (rebuilt when RRFlow serves GraphQL) |
 | `documentation` | API reference with a topic tree, prose and code examples per topic, language switch | RRFlow API reference generated from the public operation catalogue. **Met in Slice D1a** (`native-workbench-api-reference`, `native-api-reference-*`): a family topic tree that follows the article in view, the catalogue's own summary and description per operation, method, path, authentication, mutation and action badges, request and response types, a titled copyable example per operation, and a saved language switch. RRFlow ships clients for CLI (curl), TypeScript, Python, Go, Java and .NET; the inherited PHP and C entries have no RRFlow client and fall back to CLI. The inherited view stays until the final cut |
@@ -83,7 +83,7 @@ moves, as in Slice D0.
 ## RRFlow-native desktop screens
 
 Baseline: the desktop preview build of `main` `83804c3`, both themes,
-1440x1800, an estate installed fresh by the capture and seeded with the lens
+1440x1800, an engram installed fresh by the capture and seeded with the lens
 fixture (12 records, 14 relations, one collection of 8 vectors). Image names
 are the capture names under `baseline/native/83804c3/<theme>/`. These screens
 are already RRFlow; the rule still applies when a slice changes them (D1 to
@@ -97,7 +97,7 @@ D7 rebuild the query, records, schema and storage lenses in place).
       move, click a dot for its details.
 - [ ] "Find a record" search by title or identity; the selection highlights
       its neighbours and dims the rest (`native-records-selected`).
-- [ ] Show the whole estate or the selection's neighbourhood, with steps
+- [ ] Show the whole engram or the selection's neighbourhood, with steps
       away 1 to 3 and links followed both ways, out or in
       (`native-records-around-selection`).
 - [ ] Colour by cluster, kind or a field, with a legend and counts per colour
@@ -135,13 +135,13 @@ D7 rebuild the query, records, schema and storage lenses in place).
 | `native-overview` | Hero with mark, wordmark and version; local RRFlow card with "Start local RRFlow" and "How RRFlow fits together"; instance list with filters, search and the empty state; resources |
 | `native-project-engines` | Project engines dialog: engine and connection limits, running engines, project directory with folder picker, fresh or existing project mode, preview or open |
 | `native-installation-preview` | The exact installation preview: target path, the review notice (paths, permissions, configuration; no cloud upload or training) and the attunement plan as JSON. Improvement target: show the path without the `\\?\` prefix |
-| `native-serving-stages`, `native-served` | Serving stages while the estate installs and starts; the served project's running state |
+| `native-serving-stages`, `native-served` | Serving stages while the engram installs and starts; the served project's running state |
 | `native-workbench-overview` | Breadcrumb; connection badge; project name, instance identity and endpoint; project switcher; tabs; session strip with sign-in, renewal and disconnect; the four lens cards with live counts; reasoning workspace with explore and knowledge-path actions |
 | `native-workbench-knowledge`, `native-lens-data-models` | Native data-model catalogue (relational, vector, graph relation, geo, object, event, graph node, time series, key value) with schema and cursor badges; native table chooser; the multimodal notice; refresh schema |
 | `native-models-document-rows` | A chosen table's name, mode and purpose; browse up to 50 rows; the query that read them, the row and key counts and the bounded-preview note; the row table |
 | `native-lens-storage-engine` | rrflowKV pipeline: write-ahead log, memtable, segments on disk and page cache, each with its live counter and fill bar |
 | `native-storage-counters`, `native-storage-history` | Every engine counter by stage (page cache, memtable, write-ahead log, segments, flush and compaction, segment I/O including open files and handle evictions, reopens and denials, sequences, and storage admission: checkpoint entries, native transactions, read views, retained bytes, outstanding and queued requests, with the engine's own caveats) with fill bars; history, retention and indexes: backend, cursors, change head, retention, sequences, revisions, manifest |
-| `native-workbench-tasks` | The task and controller-proposal workspace (sprint 013) on a fresh estate: its heading and the note that a proposal executes no worker and authorizes no training; read tasks and recover the last attempt; the form that records a task in RRFlow, disabled until it has a title |
+| `native-workbench-tasks` | The task and controller-proposal workspace (sprint 013) on a fresh engram: its heading and the note that a proposal executes no worker and authorizes no training; read tasks and recover the last attempt; the form that records a task in RRFlow, disabled until it has a title |
 | `native-workbench-activity`, `native-workbench-learning`, `native-workbench-services` | The honest unavailable states: no fabricated activity, learning controls and provider setup unavailable in this build, planned cloud roles |
 | `native-panel-*` | Glossary drawer; advanced details (HTTP transport, engine readiness, protocol and identity, verified engine identity with its capability list); explore knowledge; knowledge paths; manage project engines |
 | `native-settings-*` | Preferences; keybindings; templates; Database Serving (project directory, installation mode, engine path, console history); backup and restore; open-source licences; About (version, build, protocol and engine revision, repositories). The inherited wordmark here is replaced in Slice C2 |
@@ -205,7 +205,7 @@ information and supports the same interaction, at equal or better clarity.
 
 - [ ] Saved profiles and negotiation against a chosen address, with its failure shown.
 
-### Estates: `03-estates` to `03d` → System › Estate
+### Engrams: `03-estates` to `03d` → System › Engram
 
 - [ ] A map of the project boundary with its nodes, role and lag.
 - [ ] Authority, reconciliation operations, storage boundary, project scope and hosting boundary.
@@ -288,7 +288,7 @@ surface matrix's entrypoints. Today's window must keep all of them. Parking lot 
 
 ### Defects not to carry over
 
-- Estates reads "NaN" for its revision without an estate document (`03-estates`).
+- Engrams reads "NaN" for its revision without an engram document (`03-estates`).
 - Capabilities throws once a planning receipt exists: the click does nothing, then the footer says
   "Runtime unavailable" (`13x`, `13y`).
 - Query and Routes results vanish at the 5-second refresh (`14c`).

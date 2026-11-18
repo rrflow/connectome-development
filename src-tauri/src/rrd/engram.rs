@@ -1,10 +1,10 @@
-//! Serving a local estate from the desktop.
+//! Serving a local engram from the desktop.
 //!
 //! This is the contracted sequence the RRD process tests drive, as product
 //! commands: `rrflow install plan` and `install apply --expect <digest>` when
 //! the project has no locator, then `--json serve --bind 127.0.0.1:0`, which
 //! announces its loopback address on one stdout line, then `rrflow ready`
-//! until the estate authenticates. Every boundary is reported to the webview
+//! until the engram authenticates. Every boundary is reported to the webview
 //! as a stage event so the serving panel can explain what is happening.
 //!
 //! The webview configures a project directory, an installation mode, and an
@@ -33,7 +33,7 @@ use crate::paths::get_data_directory;
 
 pub mod lifecycle;
 
-pub use lifecycle::{stop_on_exit, EstateState, InstanceView, Origin};
+pub use lifecycle::{stop_on_exit, EngramState, InstanceView, Origin};
 
 /// How long a fresh install and the first open may take before serving is
 /// declared failed. A debug engine on a cold cache stays well inside it.
@@ -43,21 +43,21 @@ const READY_POLL: Duration = Duration::from_millis(500);
 const LOCATOR: &str = ".rrflow/config.toml";
 /// The operator credential the installation wrote, relative to the project.
 const OPERATOR_CREDENTIAL: &str = ".rrflow/credentials/local-operator.json";
-/// The served endpoint record RRFlow writes while an estate is served. Only a
+/// The served endpoint record RRFlow writes while an engram is served. Only a
 /// hint of where to look: `rrflow ready --project` proves what it names.
 const SERVING_RECORD: &str = ".rrflow/serving.json";
-const STAGE_EVENT: &str = "estate:stage";
-const OUTPUT_EVENT: &str = "estate:output";
+const STAGE_EVENT: &str = "engram:stage";
+const OUTPUT_EVENT: &str = "engram:output";
 
-/// A served estate: the engine child this process started and its public
+/// A served engram: the engine child this process started and its public
 /// coordinates. Killing the child is the only way it is ever stopped.
-pub struct ServedEstate {
+pub struct ServedEngram {
     pub server: OwnedProcess,
-    pub view: ServedEstateView,
+    pub view: ServedEngramView,
 }
 
 /// Reap a child on every error path, including an invalid announcement or
-/// readiness command failure before a ServedEstate can be constructed.
+/// readiness command failure before a ServedEngram can be constructed.
 pub struct OwnedProcess(Child);
 impl std::ops::Deref for OwnedProcess {
     type Target = Child;
@@ -81,13 +81,13 @@ impl Drop for OwnedProcess {
 /// and the lifecycle each project's instance moves through. The desktop
 /// forwards all three to the webview; the process tests record them.
 pub trait ServeObserver: Send + Sync {
-    fn stage(&self, stage: EstateStage);
+    fn stage(&self, stage: EngramStage);
     fn output(&self, line: String);
     fn lifecycle(&self, _instance: InstanceView) {}
 }
 
 impl ServeObserver for AppHandle {
-    fn stage(&self, stage: EstateStage) {
+    fn stage(&self, stage: EngramStage) {
         let _ = self.emit(STAGE_EVENT, stage);
     }
 
@@ -117,13 +117,13 @@ impl InstallMode {
     }
 }
 
-/// Where Connectome keeps its own estate when no project is configured.
-const DEFAULT_ESTATE: &str = "estates/local";
+/// Where Connectome keeps its own engram when no project is configured.
+const DEFAULT_ENGRAM: &str = "engrams/local";
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct EstateServeRequest {
-    /// The project directory that holds, or will hold, the estate; empty
-    /// means Connectome's default estate inside its data directory.
+pub struct EngramServeRequest {
+    /// The project directory that holds, or will hold, the engram; empty
+    /// means Connectome's default engram inside its data directory.
     #[serde(default)]
     pub project: String,
     /// Installation mode when the project has no locator yet.
@@ -146,7 +146,7 @@ pub struct EstateServeRequest {
 
 /// Non-secret engine-owned installation preview, before any installed state exists.
 #[derive(Debug, Serialize)]
-pub struct EstatePreview {
+pub struct EngramPreview {
     pub project: String,
     pub mode: InstallMode,
     pub engine: EngineBinding,
@@ -156,13 +156,13 @@ pub struct EstatePreview {
 }
 
 #[tauri::command]
-pub async fn rrd_estate_preview(request: EstateServeRequest) -> Result<EstatePreview, RrdError> {
-    tauri::async_runtime::spawn_blocking(move || preview_estate(&request))
+pub async fn rrd_engram_preview(request: EngramServeRequest) -> Result<EngramPreview, RrdError> {
+    tauri::async_runtime::spawn_blocking(move || preview_engram(&request))
         .await
         .map_err(|error| RrdError::from(format!("preview task failed: {error}")))?
 }
 
-pub fn preview_estate(request: &EstateServeRequest) -> Result<EstatePreview, RrdError> {
+pub fn preview_engram(request: &EngramServeRequest) -> Result<EngramPreview, RrdError> {
     endpoint_credentials_path(request.endpoint_credentials.as_deref())?;
     let project = project_directory(request)?;
     let engine = resolve_engine(&request.executable)?;
@@ -184,7 +184,7 @@ pub fn preview_estate(request: &EstateServeRequest) -> Result<EstatePreview, Rrd
             Some(identity),
         )
     };
-    Ok(EstatePreview {
+    Ok(EngramPreview {
         project: project.to_string_lossy().into_owned(),
         mode: request.mode,
         engine,
@@ -233,13 +233,13 @@ fn endpoint_credentials_path(configured: Option<&str>) -> Result<Option<PathBuf>
     Ok(Some(path))
 }
 
-fn project_directory(request: &EstateServeRequest) -> Result<PathBuf, RrdError> {
+fn project_directory(request: &EngramServeRequest) -> Result<PathBuf, RrdError> {
     let project = match request.project.trim() {
-        "" => get_data_directory().join(DEFAULT_ESTATE),
+        "" => get_data_directory().join(DEFAULT_ENGRAM),
         configured => PathBuf::from(configured),
     };
     if !project.is_absolute() {
-        return Err("the estate project must be an absolute directory path".into());
+        return Err("the engram project must be an absolute directory path".into());
     }
     // Planning requires a directory; this does not create installed state.
     std::fs::create_dir_all(&project)
@@ -282,14 +282,14 @@ fn engine_command(executable: &Path) -> Command {
     command
 }
 
-/// The served estate as the webview may see it: coordinates only.
+/// The served engram as the webview may see it: coordinates only.
 #[derive(Debug, Clone, Serialize)]
-pub struct ServedEstateView {
+pub struct ServedEngramView {
     pub project: String,
     pub endpoint: String,
     pub instance: String,
     pub credential_path: String,
-    /// Whether this serve installed the estate first.
+    /// Whether this serve installed the engram first.
     pub installed: bool,
     /// Who started the instance: this desktop, or a process elsewhere.
     pub origin: Origin,
@@ -306,7 +306,7 @@ pub struct ServedEstateView {
 
 /// One boundary of the serve sequence, reported as it is reached.
 #[derive(Debug, Clone, Serialize)]
-pub struct EstateStage {
+pub struct EngramStage {
     pub stage: &'static str,
     pub state: &'static str,
     pub detail: String,
@@ -318,23 +318,23 @@ fn stage(
     state: &'static str,
     detail: impl Into<String>,
 ) {
-    observer.stage(EstateStage {
+    observer.stage(EngramStage {
         stage: name,
         state,
         detail: detail.into(),
     });
 }
 
-/// Serves the requested estate: installs it when the project has no locator,
+/// Serves the requested engram: installs it when the project has no locator,
 /// starts the engine on a kernel-chosen loopback port, and returns once the
-/// estate answers an authenticated readiness check. This is the product
+/// engram answers an authenticated readiness check. This is the product
 /// path without the lifecycle's attach step; the RRD process tests drive it
 /// directly.
 #[cfg(test)]
-pub fn serve_estate(
-    request: EstateServeRequest,
+pub fn serve_engram(
+    request: EngramServeRequest,
     observer: Arc<dyn ServeObserver>,
-) -> Result<ServedEstate, RrdError> {
+) -> Result<ServedEngram, RrdError> {
     let engine = engine_stage(observer.as_ref(), &request.executable)?;
     serve_with(request, engine, observer)
 }
@@ -358,10 +358,10 @@ fn engine_stage(app: &dyn ServeObserver, executable: &str) -> Result<EngineBindi
 
 /// The serve sequence after the engine is resolved.
 fn serve_with(
-    request: EstateServeRequest,
+    request: EngramServeRequest,
     engine: EngineBinding,
     observer: Arc<dyn ServeObserver>,
-) -> Result<ServedEstate, RrdError> {
+) -> Result<ServedEngram, RrdError> {
     let app = observer.as_ref();
     let endpoint_credentials = endpoint_credentials_path(request.endpoint_credentials.as_deref())?;
     let project = project_directory(&request)?;
@@ -373,7 +373,7 @@ fn serve_with(
             app,
             "install",
             "skipped",
-            "This project is already an installed estate; its locator will be opened as it is.",
+            "This project is already an installed engram; its locator will be opened as it is.",
         );
         false
     } else {
@@ -454,7 +454,7 @@ fn serve_with(
         app,
         "ready",
         "running",
-        "Authenticating against the estate with its operator credential.",
+        "Authenticating against the engram with its operator credential.",
     );
     let address = endpoint.trim_start_matches("http://").to_owned();
     let deadline = Instant::now() + READY_TIMEOUT;
@@ -488,9 +488,9 @@ fn serve_with(
                 app,
                 "ready",
                 "failed",
-                "The estate did not become ready in time.",
+                "The engram did not become ready in time.",
             );
-            return Err(format!("the estate was not ready after {READY_TIMEOUT:?}").into());
+            return Err(format!("the engram was not ready after {READY_TIMEOUT:?}").into());
         }
         std::thread::sleep(READY_POLL);
     }
@@ -498,12 +498,12 @@ fn serve_with(
         app,
         "ready",
         "done",
-        "The estate answered an authenticated readiness check.",
+        "The engram answered an authenticated readiness check.",
     );
 
-    Ok(ServedEstate {
+    Ok(ServedEngram {
         server,
-        view: ServedEstateView {
+        view: ServedEngramView {
             project: project.to_string_lossy().into_owned(),
             endpoint,
             instance,
@@ -592,7 +592,7 @@ pub(in crate::rrd) fn proven(
 fn prove_elsewhere(
     executable: &Path,
     project: &Path,
-) -> Result<Result<ServedEstateView, String>, RrdError> {
+) -> Result<Result<ServedEngramView, String>, RrdError> {
     let output = engine_command(executable)
         .args(["--json", "ready", "--project"])
         .arg(project)
@@ -605,7 +605,7 @@ fn prove_elsewhere(
         return Ok(Err(detail.to_owned()));
     }
     let (endpoint, instance) = proven(&output.stdout, "")?;
-    Ok(Ok(ServedEstateView {
+    Ok(Ok(ServedEngramView {
         project: project.to_string_lossy().into_owned(),
         endpoint,
         instance,
@@ -654,7 +654,7 @@ fn install(
         "Sealing an installation plan for this project; nothing is written yet.",
     );
     let accepted_digest = accepted_digest
-        .ok_or("Review and accept the installation preview before starting a new estate")?;
+        .ok_or("Review and accept the installation preview before starting a new engram")?;
     // The reviewed preview's identity: planning again with it reproduces the
     // exact plan the operator accepted, or the digests differ below.
     let identity = valid_identity(
@@ -672,7 +672,7 @@ fn install(
     }
     let instance = plan["installation"]["target"]["instance_id"]
         .as_str()
-        .unwrap_or("the estate")
+        .unwrap_or("the engram")
         .to_owned();
 
     // The plan is an input to apply; it lives outside the project because the

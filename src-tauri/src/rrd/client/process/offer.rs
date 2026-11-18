@@ -14,11 +14,11 @@ const GOLDEN: &str = "../src/rrflow/fixtures/engine-offer.json";
 #[test]
 #[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
 fn the_view_registry_golden_matches_the_engine() {
-    let estate = Estate::install_and_serve();
+    let engram = Engram::install_and_serve();
     let golden = tauri::async_runtime::block_on(async {
         let client = RrdClient::connect_local(
-            estate.address,
-            CanonicalId::new(&estate.instance).expect("instance"),
+            engram.address,
+            CanonicalId::new(&engram.instance).expect("instance"),
             ClientConfig::default(),
         )
         .expect("public client");

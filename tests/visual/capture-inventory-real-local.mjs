@@ -7,7 +7,7 @@ import { chromium } from "@playwright/test";
 /**
  * Captures the RRFlow-native desktop screens (sprint 009, decision 17): the
  * project engines dialog, the exact installation preview, serving, and every
- * runtime workbench lens on a seeded estate.
+ * runtime workbench lens on a seeded engram.
  *
  *   node tests/visual/capture-native.mjs --root <worktree> --exe <connectome.exe> \
  *     --engine-dir <dir holding rrflow.exe> --out <dir> [--theme dark|light] [--port 9333] \
@@ -21,9 +21,9 @@ import { chromium } from "@playwright/test";
  * --no-bundle`: a preview build keeps its data in `RRFlow/ConnectomePreview`,
  * apart from the user's own Connectome data. The webview profile goes to a
  * scratch folder through `WEBVIEW2_USER_DATA_FOLDER`, and Playwright attaches
- * through WebView2's remote debugging port. After serving, the estate is
+ * through WebView2's remote debugging port. After serving, the engram is
  * seeded with the lens fixture by the native test
- * `seed_served_estate_for_visual_capture`, which reads the operator credential
+ * `seed_served_engram_for_visual_capture`, which reads the operator credential
  * inside the native process; the capture only passes its path.
  */
 
@@ -78,12 +78,12 @@ const stopApp = () => {
 let page;
 const slug = (s) => s.toLowerCase().replace(/\W+/g, "-").replace(/^-|-$/g, "");
 const literal = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-// Text that differs on every run: the estate's instance, project and estate
+// Text that differs on every run: the engram's instance, project and engram
 // identities (each installation draws a new identity), its loopback port,
 // clock dates and times, the clock reading a query is pinned to, measured
 // durations and the capture's own folder.
 const VARIABLE_TEXT = [
-	/(instance|project|estate)-[0-9a-f]{6,}/,
+	/(instance|project|engram)-[0-9a-f]{6,}/,
 	/127\.0\.0\.1:\d+/,
 	/\d{1,2}\/\d{1,2}\/\d{4}/,
 	/\d{1,2}:\d{2}(:\d{2})?\s?[AP]M/,
@@ -269,15 +269,15 @@ const step = async (name, fn) => {
 };
 const invoke = (command, payload) =>
 	page.evaluate(([c, p]) => window.__TAURI_INTERNALS__.invoke(c, p), [command, payload ?? {}]);
-// The served estates, from either status shape: a list of served estates
+// The served engrams, from either status shape: a list of served engrams
 // before step F4a, then every tracked instance with its lifecycle.
-const servedEstates = async () => {
-	const status = await invoke("rrd_estate_status", { request: { projects: [], executable: "" } });
+const servedEngrams = async () => {
+	const status = await invoke("rrd_engram_status", { request: { projects: [], executable: "" } });
 	return Array.isArray(status)
 		? status
 		: (status?.instances ?? [])
 				.filter((instance) => instance.state === "ready")
-				.map((instance) => instance.estate);
+				.map((instance) => instance.engram);
 };
 
 try {
@@ -337,7 +337,7 @@ try {
 		await page.getByRole("button", { name: "Preview or open project" }).first().click();
 		let served = [];
 		for (let i = 0; i < 90; i++) {
-			served = await servedEstates();
+			served = await servedEngrams();
 			if (Array.isArray(served) && served.length) break;
 			await wait(1000);
 		}
@@ -384,10 +384,10 @@ try {
 		};
 	});
 	await step("stop-owned-engine", async () => {
-		const served = await servedEstates();
+		const served = await servedEngrams();
 		for (const instance of served)
-			await invoke("rrd_estate_stop", { project: instance.project });
-		if ((await servedEstates()).length) throw new Error("Owned engine still reported ready");
+			await invoke("rrd_engram_stop", { project: instance.project });
+		if ((await servedEngrams()).length) throw new Error("Owned engine still reported ready");
 	});
 } finally {
 	writeFileSync(join(out, "native-capture-log.json"), JSON.stringify(log, null, 1));

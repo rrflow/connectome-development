@@ -4,7 +4,7 @@
 //! Database, Vectors, and Storage lenses render, so the webview never decodes a
 //! wire type and never receives a credential, token, or raw vector payload
 //! larger than its preview. `effect`, `history` and `live` hold the views of
-//! governed effects, of the estate's history, and of live results.
+//! governed effects, of the engram's history, and of live results.
 
 pub mod effect;
 pub mod engram;
@@ -46,16 +46,16 @@ pub struct ServiceView {
     pub deployment_form: String,
     pub storage_profile: String,
     pub endpoint_presentation: String,
-    pub installed_estate: Option<InstalledEstateView>,
+    pub installed_engram: Option<InstalledEngramView>,
     pub configuration_revision: u64,
     pub configuration_sha256: String,
     pub capabilities: Vec<CapabilityView>,
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub struct InstalledEstateView {
+pub struct InstalledEngramView {
     pub project_id: String,
-    pub estate_id: String,
+    pub engram_id: String,
     pub instance_id: String,
 }
 
@@ -173,7 +173,7 @@ pub struct GraphView {
     /// linked first.
     pub records_total: u64,
     pub relations_total: u64,
-    /// Connectome-computed clusters, largest first; not estate data.
+    /// Connectome-computed clusters, largest first; not engram data.
     pub clusters: Vec<ClusterView>,
 }
 
@@ -578,11 +578,11 @@ pub fn service(capabilities: &ServiceCapabilities) -> ServiceView {
         deployment_form: label(&capabilities.deployment.deployment_form),
         storage_profile: label(&capabilities.deployment.storage_profile),
         endpoint_presentation: label(&capabilities.deployment.endpoint_presentation),
-        installed_estate: capabilities.installed_estate.as_ref().map(|estate| {
-            InstalledEstateView {
-                project_id: estate.project_id.as_str().into(),
-                estate_id: estate.estate_id.as_str().into(),
-                instance_id: estate.instance_id.as_str().into(),
+        installed_engram: capabilities.installed_engram.as_ref().map(|engram| {
+            InstalledEngramView {
+                project_id: engram.project_id.as_str().into(),
+                engram_id: engram.engram_id.as_str().into(),
+                instance_id: engram.instance_id.as_str().into(),
             }
         }),
         configuration_revision: capabilities.configuration.revision,

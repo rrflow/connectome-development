@@ -350,14 +350,14 @@ export interface ConnectomeTemplateSettings {
 }
 
 /**
- * How the desktop serves a local RRFlow estate. RRFlow has one storage
+ * How the desktop serves a local RRFlow engram. RRFlow has one storage
  * engine, picks its own loopback port, and keeps the operator credential in a
  * file the native process reads, so there is nothing else to configure.
  */
 export interface ConnectomeServingSettings {
-	/** The project directory that holds, or will hold, the estate. Empty means the app's default estate. */
+	/** The project directory that holds, or will hold, the engram. Empty means the app's default engram. */
 	project: string;
-	/** Installation mode used when the project has no estate yet. */
+	/** Installation mode used when the project has no engram yet. */
 	mode: InstallMode;
 	/** An explicit `rrflow` executable; empty means the one on PATH. */
 	executable: string;
@@ -376,7 +376,7 @@ export interface EngineBinding {
 	revision?: string;
 }
 
-export interface EstateSelection {
+export interface EngramSelection {
 	project: string;
 	mode: InstallMode;
 	executable: string;
@@ -386,7 +386,7 @@ export interface EstateSelection {
 	endpointCredentialMapping?: string;
 }
 
-export interface EstatePreview {
+export interface EngramPreview {
 	project: string;
 	mode: InstallMode;
 	engine: EngineBinding;
@@ -395,8 +395,8 @@ export interface EstatePreview {
 	installation_identity: string | null;
 }
 
-/** The estate the native process is serving, as the webview may see it: coordinates only. */
-export interface ServedEstate {
+/** The engram the native process is serving, as the webview may see it: coordinates only. */
+export interface ServedEngram {
 	project: string;
 	endpoint: string;
 	instance: string;
@@ -410,7 +410,7 @@ export interface ServedEstate {
 	endpoint_credentials?: string | null;
 }
 
-export type EstateStageName = "engine" | "attach" | "install" | "serve" | "ready";
+export type EngramStageName = "engine" | "attach" | "install" | "serve" | "ready";
 
 export type InstanceState = "starting" | "ready" | "stopping" | "stopped" | "failed";
 export type InstanceOrigin = "connectome" | "elsewhere";
@@ -421,11 +421,11 @@ export interface ProjectInstance {
 	state: InstanceState;
 	origin: InstanceOrigin;
 	/** The boundary a start or an attach last reached, or where it failed. */
-	stage?: EstateStageName | "stop";
+	stage?: EngramStageName | "stop";
 	/** What this state means for this instance. */
 	detail: string;
 	/** The instance's coordinates once it is ready. */
-	estate?: ServedEstate;
+	engram?: ServedEngram;
 	/** The native registry's transition number when this was observed. */
 	revision: number;
 }
@@ -435,12 +435,12 @@ export interface InstanceStatus {
 	revision: number;
 	instances: ProjectInstance[];
 }
-export type EstateStageState = "running" | "done" | "skipped" | "failed" | "stopped";
+export type EngramStageState = "running" | "done" | "skipped" | "failed" | "stopped";
 
 /** One boundary of the serve sequence, reported by the native process as it is reached. */
-export interface EstateStage {
-	stage: EstateStageName;
-	state: EstateStageState;
+export interface EngramStage {
+	stage: EngramStageName;
+	state: EngramStageState;
 	detail: string;
 }
 

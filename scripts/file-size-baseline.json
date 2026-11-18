@@ -3,7 +3,7 @@
 	"src-tauri/src/rrd/client/process.rs": 1271,
 	"src-tauri/src/rrd/client/process/attunement.rs": 1530,
 	"src-tauri/src/rrd/client/tasks.rs": 1717,
-	"src-tauri/src/rrd/estate/lifecycle.rs": 1305,
+	"src-tauri/src/rrd/engram/lifecycle.rs": 1305,
 	"src-tauri/src/rrd/view.rs": 2036,
 	"src/adapter/desktop.tsx": 471,
 	"src/components/ActionBar/projects.tsx": 588,

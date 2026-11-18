@@ -1,10 +1,10 @@
 import type {
 	ConnectomeConfig,
-	EstatePreview,
-	EstateSelection,
+	EngramPreview,
+	EngramSelection,
 	InstanceStatus,
 	Platform,
-	ServedEstate,
+	ServedEngram,
 	UrlTarget,
 } from "~/shared/types";
 
@@ -87,13 +87,13 @@ export interface ConnectomeAdapter {
 	saveConfig(config: ConnectomeConfig): Promise<void>;
 
 	/**
-	 * Serve the configured local estate: install it when the project has no
-	 * estate yet, attach to it when another process already serves it, or
+	 * Serve the configured local engram: install it when the project has no
+	 * engram yet, attach to it when another process already serves it, or
 	 * start the engine on a loopback port, and wait until it is ready.
-	 * Resolves with the served estate's coordinates.
+	 * Resolves with the served engram's coordinates.
 	 */
-	previewEstate(selection?: EstateSelection): Promise<EstatePreview>;
-	serveEstate(acceptedPlanSha256?: string, selection?: EstateSelection): Promise<ServedEstate>;
+	previewEngram(selection?: EngramSelection): Promise<EngramPreview>;
+	serveEngram(acceptedPlanSha256?: string, selection?: EngramSelection): Promise<ServedEngram>;
 
 	/**
 	 * Every project instance the native registry tracks. It looks at each one
@@ -107,7 +107,7 @@ export interface ConnectomeAdapter {
 	 * path, or dismiss its failure. An instance started elsewhere is never
 	 * stopped. Resolves with whether an engine was stopped.
 	 */
-	stopEstate(project: string): Promise<boolean>;
+	stopEngram(project: string): Promise<boolean>;
 
 	/**
 	 * Open the given URL in the default browser

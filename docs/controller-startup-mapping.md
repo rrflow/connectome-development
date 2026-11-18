@@ -82,7 +82,7 @@ click installed the reviewed plan. Neither failed UI input is counted as an
 accepted action. The selected file contained only a valid empty mapping; no
 provider secret, endpoint profile, model request or training record was involved.
 
-Through the UI, the trial installed a dedicated estate, started its own engine,
+Through the UI, the trial installed a dedicated engram, started its own engine,
 opened an authenticated session, displayed the selected startup mapping, stopped,
 and reopened the same instance. OS process evidence binds the exact child
 executable and `--endpoint-credentials` argument to the observed project. Both
@@ -90,7 +90,7 @@ authenticated `ready` checks passed; after each UI stop, all 13 quick verificati
 checks passed. Instance, plan, project inventory and runtime manifest identities
 matched across reopen. The app and its owned trial processes were then closed;
 an OS process query confirmed none remained at the trial artifact path. Existing
-project data/profiles were preserved. The generated trial estate and credentials
+project data/profiles were preserved. The generated trial engram and credentials
 remain private local evidence.
 
 [Evidence manifest](evidence/controller-startup-mapping/manifest.json) binds the
