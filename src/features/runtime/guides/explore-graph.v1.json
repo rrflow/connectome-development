@@ -8,7 +8,7 @@
 		{
 			"route": "knowledge/records",
 			"anchor": "graph-canvas",
-			"text": "This is the project's graph. Each dot is a record RRFlow holds, and each line is a link between two records. Bigger dots have more links.",
+			"text": "This is the project's graph. Each dot is a record RRFlow returned, and each line is a link between two of them. A large project shows its most linked records, so some records and links may not be drawn. Bigger dots have more visible links.",
 			"action": "Click any dot, or a record in the list on the right.",
 			"until": "record-selected"
 		},
@@ -20,7 +20,7 @@
 		},
 		{
 			"anchor": "inspector-links",
-			"text": "These are the records this one links to, and the records that link to it.",
+			"text": "These are the visible records this one links to, and the visible records that link to it.",
 			"action": "Click a linked record, or another dot if this one has no links.",
 			"until": "record-selected"
 		},

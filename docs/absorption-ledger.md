@@ -110,6 +110,20 @@ This proves the commit was applied; it does not prove later `main` work kept eve
 
 One empty commit with no message body ("Open explicit assessment UI integration"). Its tree equals its parent `e74f2ef1`, which is on `main`.
 
+## Worktree audit, 2026-11-18
+
+Seven worktrees held uncommitted work. Each was read against `main` by capability, line-ending noise set aside, and each "nothing missing" verdict was attacked by a second reader.
+
+| Worktree | Result |
+|---|---|
+| `connectome-merge` (the unfinished 1,127-path reconcile merge) | nothing authored: both parents are on `main`; every capability maps to a `src/features` file. Its three real defects were fixed in pull request 87 |
+| `connectome-assessments` | absorbed by pull request 82; the one unmatched helper, `configure_loopback_assessment_profile`, is dead code |
+| `connectome-ci-gate` | 596 line-ending-only changes, nothing real |
+| `connectome-review` | scratch capture scripts that `tests/visual/` already holds in better form |
+| `connectome-remember-projects-20261106` | config write safety is on `main` (pull request 83). Guide wording that claimed the graph shows every record is corrected in pull request 91; the records tab already reports the engine totals and says when the graph is bounded |
+| `connectome-visual-isolated-20261107` | all on `main` |
+| `connectome-visual-runner-20261107` | three local capture scripts carried into `tests/visual/` (pull request 91, **not run against the current UI**). Two items are not carried: reading the all-model snapshot only on Overview (the project layout uses that query for the menu counts on every route, so it cannot be gated) and the `CONNECTOME_VISUAL_SANDBOX` data-directory override (its own comment says it is local and never to be committed) |
+
 ## `agent/connectome-rrd-only` (tip `58a3aeae`): superseded by owner decisions, one idea to keep
 
 A work-in-progress "not for review until D1's checks pass" that implements sprint 009 **decision 16** (fold, then delete, no stand-in): 52,146 deletions across 227 files, including 58 components `main` still uses. The owner rejected that approach on 2026-10-27 (**decision 18**: "I do not want you excluding … code but getting it authored properly"; re-author in place) and decision 17 forbids any visual regression. So its deletions are **not** absorbed, by your own direction.
