@@ -30,6 +30,8 @@ export type GlossaryTerm =
 	| "rerank"
 	| "recall"
 	| "rrflowKV"
+	| "rrflowQL"
+	| "rrflowCLD"
 	| "wal"
 	| "memtable"
 	| "version"
@@ -146,6 +148,16 @@ export const GLOSSARY: Record<GlossaryTerm, GlossaryEntry> = {
 		meaning:
 			"Of the k nearest records exact search finds, the share the approximate search found too. 1 means it found all of them.",
 	},
+	rrflowQL: {
+		term: "rrflowQL",
+		meaning:
+			"RRFlow's query language and engine. It answers a question at one cursor and reads only through rrflowKV, so every answer says which change it saw.",
+	},
+	rrflowCLD: {
+		term: "rrflowCLD",
+		meaning:
+			"RRFlow's cold tier. It copies committed changes into compact files on disk, one published generation at a time. Today those files are a copy: rrflowKV still keeps every change too.",
+	},
 	rrflowKV: {
 		term: "rrflowKV",
 		meaning:
@@ -222,6 +234,8 @@ const SECTIONS: { title: string; terms: GlossaryTerm[] }[] = [
 		title: "Storage engine",
 		terms: [
 			"rrflowKV",
+			"rrflowQL",
+			"rrflowCLD",
 			"wal",
 			"memtable",
 			"version",
