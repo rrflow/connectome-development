@@ -31,7 +31,7 @@
 	"src/features/runtime/workbench/lanes/lanes.tsx": 1369,
 	"src/features/runtime/workbench/linked-cloud/linked-cloud-panel.tsx": 420,
 	"src/features/runtime/workbench/templates/template-authoring-panel.tsx": 578,
-	"src/features/runtime/workbench/workbench.tsx": 606,
+	"src/features/runtime/workbench/workbench.tsx": 618,
 	"src/modals/connection-diagnostics.tsx": 443,
 	"src/providers/Commands/commands.tsx": 733,
 	"src/rrflow/session.ts": 1496,
@@ -42,5 +42,5 @@
 	"src/shared/util/text/helpers.tsx": 589,
 	"src/shell/components/App/modals/data/data-export.tsx": 453,
 	"src/shell/components/App/modals/data/data-import.tsx": 1161,
-	"tests/smoke/connectome.spec.ts": 2946
+	"tests/smoke/connectome.spec.ts": 2964
 }
