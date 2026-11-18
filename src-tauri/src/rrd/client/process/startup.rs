@@ -74,3 +74,50 @@ fn endpoint_mapping_is_engine_validated_and_requires_explicit_restart() {
     drop(owner);
     std::fs::remove_dir_all(root).unwrap();
 }
+
+/// A connection that names another instance, or presents a credential the
+/// engine did not issue, is refused; neither refusal disturbs the engram, and
+/// the issued credential still connects afterwards.
+#[test]
+#[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
+fn a_wrong_instance_and_a_wrong_credential_are_refused() {
+    let engram = Engram::install_and_serve();
+    let issued = engram.connect_request();
+    let scratch = std::env::temp_dir().join(format!("connectome-denial-{}", Uuid::new_v4()));
+    std::fs::create_dir(&scratch).unwrap();
+    let forged_path = scratch.join("forged-credential.json");
+    let mut forged: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&issued.credential_path).unwrap()).unwrap();
+    forged["credential"] = serde_json::Value::String("not-the-issued-credential".into());
+    std::fs::write(&forged_path, serde_json::to_vec(&forged).unwrap()).unwrap();
+
+    tauri::async_runtime::block_on(async {
+        let mut other_instance = engram.connect_request();
+        other_instance.instance = "connectome-wrong-instance".into();
+        let refused = NativeRrdClient::connect(other_instance)
+            .await
+            .err()
+            .expect("another instance's name is refused");
+        assert!(
+            !refused.message.is_empty(),
+            "the refusal says why: {refused:?}"
+        );
+
+        let mut forged_credential = engram.connect_request();
+        forged_credential.credential_path = forged_path.to_string_lossy().into_owned();
+        let denied = NativeRrdClient::connect(forged_credential)
+            .await
+            .err()
+            .expect("a credential the engine did not issue is refused");
+        assert!(
+            !denied.message.contains("not-the-issued-credential"),
+            "the refusal never repeats the credential: {denied:?}"
+        );
+
+        let client = NativeRrdClient::connect(issued)
+            .await
+            .expect("the issued credential still connects");
+        client.close().await.expect("close the session");
+    });
+    std::fs::remove_dir_all(scratch).unwrap();
+}

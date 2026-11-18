@@ -106,6 +106,13 @@ const declared = Object.keys({
 	...manifest.optionalDependencies,
 }).filter((name) => vendor.test(name));
 
+/**
+ * The inherited dependencies are counted down, never up: a new one would
+ * authorise its own name everywhere, because the allowed set above is read
+ * from the manifest. Lower this as each is removed.
+ */
+const INHERITED_DEPENDENCY_LIMIT = 4;
+
 function escapePattern(text) {
 	return text.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&");
 }
@@ -200,6 +207,13 @@ if (earlierTermViolations.length > 0) {
 	for (const violation of earlierTermViolations.sort()) {
 		console.error(`- ${violation}`);
 	}
+	process.exitCode = 1;
+}
+
+if (declared.length > INHERITED_DEPENDENCY_LIMIT) {
+	console.error(
+		`package.json declares ${declared.length} inherited vendor dependencies; the limit is ${INHERITED_DEPENDENCY_LIMIT} and may only go down.`,
+	);
 	process.exitCode = 1;
 }
 
