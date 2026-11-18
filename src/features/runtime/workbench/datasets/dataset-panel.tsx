@@ -2,6 +2,7 @@ import {
 	Alert,
 	Badge,
 	Button,
+	Checkbox,
 	Group,
 	Paper,
 	Select,
@@ -11,7 +12,7 @@ import {
 	Title,
 } from "@mantine/core";
 import type { WorkbenchDatasetTemplate } from "~/shared/types";
-import type { BenchmarkWorkloadProfile, DatasetBuildResult } from "./dataset";
+import type { BenchmarkWorkloadProfile, DatasetBuildResult, DatasetTelemetry } from "./dataset";
 
 interface DatasetLaneReadiness {
 	id: string;
@@ -28,6 +29,8 @@ export function WorkbenchDatasetPanel({
 	onSelectWorkloadProfile,
 	datasetBuildRunLabel,
 	onChangeRunLabel,
+	telemetry,
+	onChangeTelemetry,
 	datasetOutputFolderOptions,
 	datasetBuildFolderLinkId,
 	onSelectOutputFolder,
@@ -52,6 +55,8 @@ export function WorkbenchDatasetPanel({
 	onSelectWorkloadProfile: (id: string | null) => void;
 	datasetBuildRunLabel: string;
 	onChangeRunLabel: (label: string) => void;
+	telemetry: DatasetTelemetry;
+	onChangeTelemetry: (telemetry: DatasetTelemetry) => void;
 	datasetOutputFolderOptions: { value: string; label: string }[];
 	datasetBuildFolderLinkId: string | null;
 	onSelectOutputFolder: (id: string | null) => void;
@@ -105,6 +110,28 @@ export function WorkbenchDatasetPanel({
 						value={datasetBuildRunLabel}
 						onChange={(event) => onChangeRunLabel(event.currentTarget.value)}
 					/>
+					<TextInput
+						label="Telemetry profile"
+						value={telemetry.profile}
+						onChange={(event) =>
+							onChangeTelemetry({ ...telemetry, profile: event.currentTarget.value })
+						}
+					/>
+					<Group>
+						{(["hops", "actions", "tools", "time"] as const).map((key) => (
+							<Checkbox
+								key={key}
+								label={key[0].toUpperCase() + key.slice(1)}
+								checked={telemetry[key]}
+								onChange={(event) =>
+									onChangeTelemetry({
+										...telemetry,
+										[key]: event.currentTarget.checked,
+									})
+								}
+							/>
+						))}
+					</Group>
 					<Select
 						label="Output linked folder (optional)"
 						value={datasetBuildFolderLinkId}

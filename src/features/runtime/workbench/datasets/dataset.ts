@@ -127,6 +127,23 @@ export const benchmarkWorkloadProfiles: BenchmarkWorkloadProfile[] = [
 	},
 ];
 
+/** What the generated plan says the run will record. */
+export interface DatasetTelemetry {
+	profile: string;
+	hops: boolean;
+	actions: boolean;
+	tools: boolean;
+	time: boolean;
+}
+
+export const DEFAULT_DATASET_TELEMETRY: DatasetTelemetry = {
+	profile: "real-world-baseline",
+	hops: true,
+	actions: true,
+	tools: true,
+	time: true,
+};
+
 export function buildDatasetArtifacts({
 	template,
 	runLabel,
@@ -138,13 +155,7 @@ export function buildDatasetArtifacts({
 	runLabel: string;
 	workloadProfile: BenchmarkWorkloadProfile;
 	remoteSources: WorkbenchRemoteSource[];
-	telemetry: {
-		profile: string;
-		hops: boolean;
-		actions: boolean;
-		tools: boolean;
-		time: boolean;
-	};
+	telemetry: DatasetTelemetry;
 }): DatasetBuildArtifact[] {
 	const createdAtUnixMs = Date.now();
 	const runId = `${template.id}-${createdAtUnixMs}`;
