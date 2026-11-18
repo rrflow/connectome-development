@@ -51,6 +51,12 @@ import {
 	getWorkbenchLaneVisibility,
 	type WorkbenchLane,
 } from "./lane-helpers";
+import {
+	buildTemplateExport,
+	manualTrigger,
+	normalizeWorkbench,
+	parseTemplateImport,
+} from "./workbench-state";
 
 /**
  * The Workbench lanes beside the prompt workbench: dataset authoring, MCPL
@@ -119,18 +125,6 @@ const remoteSourceModeOptions: { value: WorkbenchRemoteSourceMode; label: string
 	{ value: "mixed", label: "Mixed usage" },
 ];
 
-const TEMPLATE_EXPORT_VERSION = 1;
-
-interface TemplateExportPayload {
-	version: number;
-	exportedAtUnixMs: number;
-	templates: WorkbenchDatasetTemplate[];
-}
-
-function manualTrigger(): WorkbenchLearningTrigger {
-	return { id: newId(), kind: "manual", description: "Run on operator command." };
-}
-
 function normalizeTemplateStepCount(count: string | null | undefined) {
 	const parsed = Number.parseInt(count ?? "0", 10);
 	if (Number.isNaN(parsed)) return 0;
@@ -183,214 +177,11 @@ function downloadArtifact(artifact: DatasetBuildArtifact) {
 	URL.revokeObjectURL(href);
 }
 
-function toStringArray(value: unknown): string[] {
-	if (!Array.isArray(value)) return [];
-	return value
-		.filter((entry: unknown): entry is string => typeof entry === "string")
-		.map((entry) => entry.trim())
-		.filter((entry) => entry.length > 0);
-}
-
 function splitLines(value: string): string[] {
 	return value
 		.split(/\r?\n/)
 		.map((entry) => entry.trim())
 		.filter((entry) => entry.length > 0);
-}
-
-function parseLearningEvents(value: unknown): WorkbenchLearningEvent[] {
-	if (!Array.isArray(value)) return [];
-	return value
-		.filter((entry: unknown) => typeof entry === "object" && entry !== null)
-		.map((entryValue: unknown) => {
-			const event = entryValue as Record<string, unknown>;
-			const kind =
-				event.kind === "did-you-know" ||
-				event.kind === "knowledge-drop" ||
-				event.kind === "factoid"
-					? event.kind
-					: "factoid";
-			const mode =
-				event.mode === "passive" || event.mode === "interactive" ? event.mode : "passive";
-			const component =
-				event.component === "card" ||
-				event.component === "alert" ||
-				event.component === "badge"
-					? event.component
-					: "card";
-			const route =
-				typeof event.route === "string" && event.route.trim() ? event.route : undefined;
-			const actions: WorkbenchLearningAction[] = (
-				Array.isArray(event.actions) ? event.actions : []
-			)
-				.filter(
-					(actionValue: unknown) =>
-						typeof actionValue === "object" && actionValue !== null,
-				)
-				.map((actionValue: unknown) => {
-					const action = actionValue as Record<string, unknown>;
-					const name =
-						action.name === "navigate-route" ||
-						action.name === "refresh-storage-signals" ||
-						action.name === "refresh-governed-flights" ||
-						action.name === "open-workbench" ||
-						action.name === "capture-runtime-receipt"
-							? action.name
-							: "navigate-route";
-					return {
-						id: newId(),
-						name,
-						label:
-							typeof action.label === "string" && action.label.trim()
-								? action.label.trim()
-								: "Action",
-						payload:
-							typeof action.payload === "string" && action.payload.trim()
-								? action.payload
-								: undefined,
-					};
-				});
-			const triggers: WorkbenchLearningTrigger[] = (
-				Array.isArray(event.triggers) ? event.triggers : []
-			)
-				.filter(
-					(triggerValue: unknown) =>
-						typeof triggerValue === "object" && triggerValue !== null,
-				)
-				.map((triggerValue: unknown) => {
-					const trigger = triggerValue as Record<string, unknown>;
-					const triggerKind =
-						trigger.kind === "manual" ||
-						trigger.kind === "cold-signal" ||
-						trigger.kind === "linked-path-missing" ||
-						trigger.kind === "governed-flights-available"
-							? trigger.kind
-							: "manual";
-					return {
-						id: newId(),
-						kind: triggerKind,
-						description:
-							typeof trigger.description === "string"
-								? trigger.description.trim()
-								: "",
-					};
-				});
-			return {
-				id: newId(),
-				kind,
-				mode,
-				title:
-					typeof event.title === "string" && event.title.trim()
-						? event.title.trim()
-						: "Learning event",
-				body: typeof event.body === "string" ? event.body.trim() : "",
-				component,
-				route,
-				requiresOperatorSignoff:
-					typeof event.requiresOperatorSignoff === "boolean"
-						? event.requiresOperatorSignoff
-						: mode === "interactive",
-				triggers,
-				actions,
-				catamorphismTarget:
-					typeof event.catamorphismTarget === "string" && event.catamorphismTarget.trim()
-						? event.catamorphismTarget.trim()
-						: "clyffy",
-				catamorphismNote:
-					typeof event.catamorphismNote === "string" ? event.catamorphismNote.trim() : "",
-			};
-		});
-}
-
-/** Accepts an exported template file; unknown linked paths are dropped, not invented. */
-export function parseTemplateImport(
-	value: unknown,
-	linkedPaths: WorkbenchLinkedPath[],
-): WorkbenchDatasetTemplate[] {
-	if (typeof value !== "object" || value === null) return [];
-	const payload = value as { templates?: unknown };
-	if (!Array.isArray(payload.templates)) return [];
-	const linkedPathIds = new Set(linkedPaths.map((entry) => entry.id));
-	const imported: WorkbenchDatasetTemplate[] = [];
-	for (const templateValue of payload.templates) {
-		if (typeof templateValue !== "object" || templateValue === null) continue;
-		const template = templateValue as Record<string, unknown>;
-		const name = typeof template.name === "string" ? template.name.trim() : "";
-		if (!name) continue;
-		const importedSteps = Array.isArray(template.steps) ? template.steps : [];
-		const steps: WorkbenchTemplateStep[] = importedSteps
-			.slice(0, 5)
-			.map((stepValue: unknown, index: number) => {
-				const step =
-					typeof stepValue === "object" && stepValue !== null
-						? (stepValue as Record<string, unknown>)
-						: {};
-				const linkedPathId =
-					typeof step.linkedPathId === "string" && linkedPathIds.has(step.linkedPathId)
-						? step.linkedPathId
-						: undefined;
-				return {
-					id: newId(),
-					title:
-						typeof step.title === "string" && step.title.trim()
-							? step.title.trim()
-							: `Step ${index + 1}`,
-					detail: typeof step.detail === "string" ? step.detail.trim() : "",
-					route:
-						typeof step.route === "string" && step.route.trim()
-							? step.route
-							: "reasoning/workbench",
-					linkedPathId,
-				};
-			});
-		const now = Date.now();
-		imported.push({
-			id: newId(),
-			name,
-			description:
-				typeof template.description === "string" ? template.description.trim() : "",
-			schema: typeof template.schema === "string" ? template.schema.trim() : "",
-			skills: toStringArray(template.skills),
-			researchReferences: toStringArray(template.researchReferences),
-			minimumRequirements: toStringArray(template.minimumRequirements),
-			filePatterns: toStringArray(template.filePatterns),
-			folderPatterns: toStringArray(template.folderPatterns),
-			createdAtUnixMs:
-				typeof template.createdAtUnixMs === "number" ? template.createdAtUnixMs : now,
-			updatedAtUnixMs: now,
-			steps,
-			learningEvents: parseLearningEvents(template.learningEvents),
-		});
-	}
-	return imported;
-}
-
-/** Fills the fields a connection saved before these lanes existed. */
-export function normalizeWorkbench(
-	state: ConnectionWorkbenchState | undefined,
-): ConnectionWorkbenchState {
-	const templates = (state?.templates ?? []).map((template) => ({
-		...template,
-		skills: template.skills ?? [],
-		researchReferences: template.researchReferences ?? [],
-		learningEvents: (template.learningEvents ?? []).map((event) => ({
-			...event,
-			requiresOperatorSignoff:
-				typeof event.requiresOperatorSignoff === "boolean"
-					? event.requiresOperatorSignoff
-					: event.mode === "interactive",
-			triggers: event.triggers ?? [manualTrigger()],
-			actions: event.actions ?? [],
-		})),
-	}));
-	return {
-		workbenches: state?.workbenches ?? [],
-		activeWorkbenchId: state?.activeWorkbenchId,
-		receipts: state?.receipts ?? [],
-		templates,
-		linkedPaths: state?.linkedPaths ?? [],
-		remoteSources: state?.remoteSources ?? [],
-	};
 }
 
 function formatWhen(unixMs: number | null | undefined) {
@@ -426,7 +217,7 @@ export function WorkbenchLanes({
 	);
 	const updateConnection = useConfigStore((state) => state.updateConnection);
 	const workbench = useMemo(
-		() => normalizeWorkbench(connection?.workbench),
+		() => normalizeWorkbench(connection?.workbench, newId),
 		[connection?.workbench],
 	);
 	const remoteSources = workbench.remoteSources ?? [];
@@ -461,7 +252,7 @@ export function WorkbenchLanes({
 		useState<WorkbenchLearningTriggerKind>("manual");
 	const [learningTriggerDescription, setLearningTriggerDescription] = useState("");
 	const [learningTriggers, setLearningTriggers] = useState<WorkbenchLearningTrigger[]>([
-		manualTrigger(),
+		manualTrigger(newId),
 	]);
 	const [templateLearningEvents, setTemplateLearningEvents] = useState<WorkbenchLearningEvent[]>(
 		[],
@@ -515,7 +306,7 @@ export function WorkbenchLanes({
 				.getState()
 				.connections.find((candidate) => candidate.id === connectionId);
 			if (!latest) return;
-			const current = normalizeWorkbench(latest.workbench);
+			const current = normalizeWorkbench(latest.workbench, newId);
 			updateConnection({ id: connectionId, workbench: { ...current, ...change } });
 		},
 		[connectionId, updateConnection],
@@ -574,7 +365,7 @@ export function WorkbenchLanes({
 		setLearningActions([]);
 		setLearningActionLabel("");
 		setLearningActionPayload("");
-		setLearningTriggers([manualTrigger()]);
+		setLearningTriggers([manualTrigger(newId)]);
 	};
 
 	const addLearningEvent = () => {
@@ -591,7 +382,8 @@ export function WorkbenchLanes({
 							payload: learningRoute,
 						},
 					];
-		const eventTriggers = learningTriggers.length > 0 ? learningTriggers : [manualTrigger()];
+		const eventTriggers =
+			learningTriggers.length > 0 ? learningTriggers : [manualTrigger(newId)];
 		setTemplateLearningEvents((current) => [
 			...current,
 			{
@@ -705,11 +497,7 @@ export function WorkbenchLanes({
 	};
 
 	const exportTemplates = () => {
-		const payload: TemplateExportPayload = {
-			version: TEMPLATE_EXPORT_VERSION,
-			exportedAtUnixMs: Date.now(),
-			templates: workbench.templates,
-		};
+		const payload = buildTemplateExport(workbench.templates, Date.now());
 		downloadArtifact({
 			fileName: `rrflow-workbench-templates-${connectionId}.json`,
 			content: JSON.stringify(payload, null, 2),
@@ -728,7 +516,7 @@ export function WorkbenchLanes({
 		setTemplateImportError(null);
 		try {
 			const parsed = JSON.parse(await file.text()) as unknown;
-			const imported = parseTemplateImport(parsed, workbench.linkedPaths);
+			const imported = parseTemplateImport(parsed, workbench.linkedPaths, newId);
 			if (imported.length === 0) {
 				setTemplateImportError("The selected file contains no valid dataset templates.");
 				return;
@@ -762,7 +550,7 @@ export function WorkbenchLanes({
 			.getState()
 			.connections.find((candidate) => candidate.id === connectionId);
 		if (!latest) return;
-		const current = normalizeWorkbench(latest.workbench);
+		const current = normalizeWorkbench(latest.workbench, newId);
 		if (current.linkedPaths.length === 0) return;
 		const refreshed = await Promise.all(current.linkedPaths.map(probeLinkedPath));
 		const changed = refreshed.some((entry, index) => {
