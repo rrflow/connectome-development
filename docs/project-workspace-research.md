@@ -172,6 +172,6 @@ candidate CI and acceptance evidence before being called complete.
 
 Nothing in this sequence changes the RRFlow gate status. In particular, a saved
 client profile and a bounded graph do not prove full indexing, a learning system,
-or a Qdrant/SurrealDB/Neo4j comparison.
+or a comparison with other graph or vector engines.
 
 [Local instance-history and relationship-snapshot change evidence](evidence/change-journals/instance-history-and-relationship-snapshot-2026-11-06.md) records the candidate and its verification limits.
