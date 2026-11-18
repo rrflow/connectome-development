@@ -1,9 +1,11 @@
 import { Alert, SimpleGrid, Stack } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "@tanstack/react-router";
 import { isTauri } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import type { ChangeEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { projectAreas } from "~/app/router/project-menu";
 import type { RrdSessionClient, RrdStorageView } from "~/rrflow/session";
 import { probeExternalPath, writeExternalTextFile } from "~/rrflow/session";
 import type {
@@ -36,6 +38,7 @@ import { WorkbenchLinkedCloudPanel } from "../linked-cloud/linked-cloud-panel";
 import { WorkbenchMcplLanePanel } from "../mcpl/mcpl-lane-panel";
 import { WorkbenchTemplateAuthoringPanel } from "../templates/template-authoring-panel";
 import { WorkbenchTemplateLibraryPanel } from "../templates/template-library-panel";
+import { runWorkbenchEventActions } from "./event-actions";
 import {
 	buildDatasetCompareReadiness,
 	buildDatasetFlowReadiness,
@@ -928,31 +931,47 @@ export function WorkbenchLanes({
 		}
 	};
 
-	const runLearningAction = useCallback(
-		async (action: WorkbenchLearningAction) => {
-			if (action.name === "navigate-route") {
-				onOpenRoute(action.payload?.trim() || "reasoning/workbench");
-			} else if (action.name === "open-workbench") {
-				onOpenRoute("reasoning/workbench");
-			} else if (action.name === "refresh-storage-signals") {
-				await storageSignals.refetch();
-			} else if (action.name === "refresh-governed-flights") {
-				await onRefreshSnapshot();
-			} else if (action.name === "capture-runtime-receipt") {
-				await onCaptureReceipt();
-			}
-		},
-		[onOpenRoute, storageSignals, onRefreshSnapshot, onCaptureReceipt],
+	// A scripted event acts on the workbench it was started in: its generation
+	// ends when the project, the connection or the lane changes.
+	const eventGeneration = useRef(0);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: the inputs are the trigger, not read inside
+	useEffect(() => {
+		eventGeneration.current += 1;
+	}, [connectionId, connected, lane]);
+	const router = useRouter();
+	const knownRoutes = useMemo(
+		() =>
+			new Set(
+				projectAreas(Object.values(router.routesById)).flatMap((area) =>
+					area.tabs.map((tab) => tab.path),
+				),
+			),
+		[router],
 	);
+	const canCaptureReceipt = workbench.workbenches.length > 0;
 
 	const runLearningEvent = useCallback(
 		async (templateName: string, event: WorkbenchLearningEvent) => {
 			setEventExecutionError(null);
 			setRunningEventIds((current) => [...current, event.id]);
 			try {
-				if (event.actions.length === 0)
-					throw new Error("Scripted event has no actions to execute.");
-				for (const action of event.actions) await runLearningAction(action);
+				const generation = eventGeneration.current;
+				await runWorkbenchEventActions(event.actions, {
+					resolveRoute: (route) => (knownRoutes.has(route) ? route : undefined),
+					canReadEngine: connected,
+					canCapture: canCaptureReceipt,
+					isCurrent: () => eventGeneration.current === generation,
+					openRoute: onOpenRoute,
+					refreshStorage: async () => {
+						await storageSignals.refetch();
+					},
+					refreshFlights: async () => {
+						await onRefreshSnapshot();
+					},
+					captureDiagnostics: async () => {
+						await onCaptureReceipt();
+					},
+				});
 				recordReceipt(
 					`MCPL event executed: ${event.title}`,
 					`template=${templateName}; kind=${event.kind}; mode=${event.mode}; component=${event.component}`,
@@ -966,7 +985,16 @@ export function WorkbenchLanes({
 				setRunningEventIds((current) => current.filter((id) => id !== event.id));
 			}
 		},
-		[runLearningAction, recordReceipt],
+		[
+			knownRoutes,
+			connected,
+			canCaptureReceipt,
+			onOpenRoute,
+			storageSignals,
+			onRefreshSnapshot,
+			onCaptureReceipt,
+			recordReceipt,
+		],
 	);
 
 	useEffect(() => {

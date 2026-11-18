@@ -1,7 +1,11 @@
 import { FileFilter } from "~/adapter/base";
+import {
+	type SaveContent,
+	type SaveContentProvider,
+	writeSelectedFile,
+} from "./write-selected-file";
 
-export type SaveContent = Blob | string | Response | null;
-export type SaveContentProvider = () => Result<SaveContent>;
+export type { SaveContent, SaveContentProvider } from "./write-selected-file";
 
 function mapFileFilter(filters: FileFilter[]): FilePickerAcceptType[] {
 	return filters.map((f) => ({
@@ -52,17 +56,7 @@ export async function openAndWriteFile(
 	});
 
 	const writableStream = await fileHandle.createWritable();
-	const result = typeof content === "function" ? await content() : content;
-
-	if (!result) {
-		throw new Error("File is empty");
-	}
-
-	if (result instanceof Response) {
-		await result.body?.pipeTo(writableStream);
-	} else {
-		await writableStream.write(result);
-	}
+	await writeSelectedFile(writableStream, content);
 
 	return true;
 }
