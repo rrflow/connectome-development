@@ -850,6 +850,24 @@ test("a large engram says how much of it the engine sent", async ({ page }) => {
 	await expect(page.getByText(/The engine sent the 1 most linked of 40 records/)).toBeVisible();
 });
 
+test("runtime actions read the engine on request and guided routes only navigate", async ({
+	page,
+}) => {
+	const { profileA, profileB } = await createDiagnosticProfiles(page);
+	await openDiagnosticWorkbench(page, profileA, profileB);
+	await expect(page.getByRole("heading", { name: "Runtime actions" })).toBeVisible();
+	await page.getByRole("button", { name: "Read storage", exact: true }).click();
+	await expect(page.getByText(/Storage profile .*; cursor \d+\./)).toBeVisible();
+	await expect(page.getByText("completed", { exact: true })).toBeVisible();
+	await page.getByRole("button", { name: "Open vectors", exact: true }).click();
+	await expect(page).toHaveURL(/\/knowledge\/vectors$/);
+	await page.getByRole("button", { name: "Reasoning", exact: true }).click();
+	await page.getByRole("tab", { name: "Workbench", exact: true }).click();
+	await expect(page.getByRole("heading", { name: "Guided routes" })).toBeVisible();
+	await page.getByRole("button", { name: "Open step" }).first().click();
+	await expect(page).toHaveURL(/\/knowledge\/models$/);
+});
+
 test("the engine tab shows rrflowDB, rrflowKV, rrflowQL and rrflowCLD on one cursor", async ({
 	page,
 }) => {

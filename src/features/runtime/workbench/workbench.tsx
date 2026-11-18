@@ -20,8 +20,10 @@ import type { WorkbenchRunKind } from "~/shared/types";
 import { newId } from "~/shared/util/text/helpers";
 import { useConfigStore } from "~/shell/stores/config";
 import { formatTime } from "../utils/format";
+import { WorkbenchGuidedRoutes } from "./guided/guided-routes";
 import type { WorkbenchLane } from "./lanes/lane-helpers";
 import { WorkbenchLanes, workbenchLaneOptions } from "./lanes/lanes";
+import { WorkbenchRuntimeActions } from "./runtime-actions/runtime-actions";
 import { FlightEventMap, ProjectVisuals } from "./visuals";
 
 /** Engine flight readback is the source of the timeline; local notes are separate. */
@@ -599,6 +601,16 @@ export function WorkbenchPanel({
 							</details>
 						))}
 					</Paper>
+					<WorkbenchRuntimeActions
+						key={JSON.stringify([connectionId, sessionKey, connected, activeWorkbench])}
+						client={client}
+						sessionKey={sessionKey}
+						connected={connected && Boolean(sessionKey)}
+						canCapture={Boolean(activeWorkbench) && !capture.isPending}
+						onOpenRoute={onOpenRoute}
+						captureDiagnostics={captureActiveWorkbench}
+					/>
+					<WorkbenchGuidedRoutes onOpenRoute={onOpenRoute} />
 				</>
 			)}
 		</Stack>
