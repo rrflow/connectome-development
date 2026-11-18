@@ -84,6 +84,24 @@ pub struct InstanceView {
     pub revision: u64,
 }
 
+/// Diagnostic observation only: the engine and its readiness proof remain the
+/// authorities. Do not log project paths, credentials, endpoints or output.
+pub(super) fn trace_lifecycle(instance: &InstanceView) {
+    let instance_id = instance
+        .estate
+        .as_ref()
+        .map(|estate| estate.instance.as_str());
+    log::info!(
+        target: "connectome::instance",
+        "[connectome::instance] revision={} state={:?} origin={:?} stage={:?} instance={:?}",
+        instance.revision,
+        instance.state,
+        instance.origin,
+        instance.stage,
+        instance_id,
+    );
+}
+
 /// The projects the webview knows and the engine it would prove them with.
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -913,6 +931,7 @@ impl ServeObserver for ProjectObserver {
             .emit(OUTPUT_EVENT, format!("[{}] {line}", self.project));
     }
     fn lifecycle(&self, instance: InstanceView) {
+        trace_lifecycle(&instance);
         let _ = self.app.emit(LIFECYCLE_EVENT, instance);
     }
 }

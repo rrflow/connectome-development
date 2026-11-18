@@ -1,4 +1,5 @@
 import { Alert, Badge, Button, Group, Paper, Text, TextInput } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { isTauri } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
@@ -9,6 +10,7 @@ import type { RrdConnectionView, RrdSessionClient } from "~/rrflow/session";
 import { sessionQueryKey } from "~/rrflow/session";
 import { iconErrorCircle, iconKey, iconOpenFolder, iconPower } from "~/shared/assets/icons";
 import type { Connection } from "~/shared/types";
+import { persistCurrentConfig } from "~/shared/util/config/config";
 import { useConfigStore } from "~/shell/stores/config";
 import { Hint, Term } from "../components/glossary";
 import classes from "../style.module.scss";
@@ -62,7 +64,21 @@ export function SessionPanel({
 				credential_path: credentialPath,
 			});
 		},
-		onSuccess: (view) => queryClient.setQueryData(sessionQueryKey(connection.id), view),
+		onSuccess: async (view) => {
+			try {
+				await persistCurrentConfig();
+				notifications.hide(`session-save-${connection.id}`);
+			} catch (error) {
+				notifications.show({
+					id: `session-save-${connection.id}`,
+					color: "orange",
+					autoClose: false,
+					title: "Project session open, but not saved",
+					message: `Connectome could not save this connection for reopening: ${error instanceof Error ? error.message : String(error)}`,
+				});
+			}
+			queryClient.setQueryData(sessionQueryKey(connection.id), view);
+		},
 	});
 
 	const disconnect = useMutation({
