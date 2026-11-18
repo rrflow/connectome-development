@@ -121,6 +121,18 @@ Every remaining branch was read against `main` by capability, not ancestry, and 
 | `origin/agent/connectome-rrd-only` | superseded by decisions 16 to 18; the `endpoint` and `controlToken` connection fields are still **pending** with the client replacement |
 | `origin/agent/rrflow-native-connectome` | **partly carried**: the authored value model, `rrflow/ui`, the presentation editor, the behaviour and dependency tests and `docs/rrflow-native-rewrite.md` are pending with the client replacement |
 
+## The Copilot commit `fa8d769c` and its five check scripts, 2026-11-18
+
+`fa8d769c` (the `connectome-merge-repaired` worktree) held five checks over the pre-restructure modules. Read against `main`:
+
+| Script | State |
+|---|---|
+| `check-workbench-dataset` | carried, retargeted (pull request 87) |
+| `check-workbench-event-actions`, `check-file-write` | carried (pull request 87) |
+| `check-workbench-state` | carried as `scripts/check-workbench-state.mjs` against the pure `lanes/workbench-state.ts`, extracted from `lanes.tsx` for it; a mutation of three rules fails it |
+| `check-workbench-template-interchange` | **owner decision open.** The old script held a lossless interchange: an import keeps every authored field and rejects a file that is not valid. `main` documents the opposite: an import is sanitised, unknown linked paths are dropped, invalid templates are skipped. The new check pins what `main` does; it does not choose between them |
+| `check-workbench-template-transfer`, `check-workbench-event-browser` | **not carried.** Each drives the old `WorkbenchPanel` and transfer components in a bespoke Vite and Playwright harness. The behaviour (template transfer between profiles, a stale event stopping, the diagnostic buttons) needs smoke tests on the current components |
+
 ## `agent/connectome-rrd-only` (tip `58a3aeae`): superseded by owner decisions, one idea to keep
 
 A work-in-progress "not for review until D1's checks pass" that implements sprint 009 **decision 16** (fold, then delete, no stand-in): 52,146 deletions across 227 files, including 58 components `main` still uses. The owner rejected that approach on 2026-10-27 (**decision 18**: "I do not want you excluding … code but getting it authored properly"; re-author in place) and decision 17 forbids any visual regression. So its deletions are **not** absorbed, by your own direction.
