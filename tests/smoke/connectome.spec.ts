@@ -1,46 +1,65 @@
 import { readFileSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
 
+/** What the pinned engine serves, from the golden offer the RRD process test checks. */
+const OFFER = JSON.parse(readFileSync("src/rrflow/fixtures/engine-offer.json", "utf8")) as {
+	operations: string[];
+	websocket_operations: string[];
+	capabilities: { name: string; status: string; limitation: string | null }[];
+};
+/** The capabilities that engine declares, as its capabilities read returns them. */
+const CAPABILITIES = OFFER.capabilities.map((capability) => ({
+	contract_version: 1,
+	...capability,
+}));
+const CATALOGUE = {
+	endpoints: OFFER.operations.map((operation) => ({ operation })),
+	websocket_endpoints: OFFER.websocket_operations.map((operation) => ({ operation })),
+	families: [],
+};
+
 async function createDiagnosticProfiles(page: Page) {
 	await page.route(/http:\/\/localhost:947[78]\/v1\//, async (route) => {
 		const requestUrl = new URL(route.request().url());
 		const path = requestUrl.pathname;
 		const payload =
-			path === "/v1/health/live"
-				? { observed_at_unix_ms: 1 }
-				: path === "/v1/health/ready"
-					? {
-							observed_at_unix_ms: 2,
-							claim_sequence: 3,
-							runtime_cursor: 4,
-							backend: "rrflow_kv",
-						}
-					: {
-							protocol: "rrd",
-							protocol_version: 1,
-							implementation: "rrflow",
-							implementation_version: "1.0.0",
-							deployment: {
-								contract_version: 1,
-								deployment_form: "single_node_server",
-								storage_profile: "rrflow_kv",
-								endpoint_presentation: "loopback_http_websocket",
-							},
-							configuration: {
-								format_version: 1,
-								revision: 1,
-								configuration_sha256: "b".repeat(64),
-							},
-							instance: {
-								kind: "instance",
-								id:
-									requestUrl.port === "9478"
-										? "diagnostic-profile-b"
-										: "diagnostic-profile-a",
-							},
-							capabilities: [],
-							product_capabilities: {},
-						};
+			path === "/v1/schema/endpoints"
+				? CATALOGUE
+				: path === "/v1/health/live"
+					? { observed_at_unix_ms: 1 }
+					: path === "/v1/health/ready"
+						? {
+								observed_at_unix_ms: 2,
+								claim_sequence: 3,
+								runtime_cursor: 4,
+								backend: "rrflow_kv",
+							}
+						: {
+								protocol: "rrd",
+								protocol_version: 1,
+								implementation: "rrflow",
+								implementation_version: "1.0.0",
+								deployment: {
+									contract_version: 1,
+									deployment_form: "single_node_server",
+									storage_profile: "rrflow_kv",
+									endpoint_presentation: "loopback_http_websocket",
+								},
+								configuration: {
+									format_version: 1,
+									revision: 1,
+									configuration_sha256: "b".repeat(64),
+								},
+								instance: {
+									kind: "instance",
+									id:
+										requestUrl.port === "9478"
+											? "diagnostic-profile-b"
+											: "diagnostic-profile-a",
+								},
+								capabilities: CAPABILITIES,
+								product_capabilities: {},
+							};
 		await route.fulfill({
 			contentType: "application/json",
 			headers: { "Access-Control-Allow-Origin": "*" },
@@ -87,7 +106,7 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 		page.getByText("testing · Manual note remains local", { exact: true }),
 	).toBeVisible();
 	await page.evaluate(
-		({ profileA, profileB }) => {
+		({ profileA, profileB, catalogue, capabilities }) => {
 			Object.assign(globalThis, { isTauri: true });
 			let connectedAt = 101;
 			let handshakeInstance = "diagnostic-profile-a";
@@ -289,39 +308,41 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 								? "diagnostic-profile-b"
 								: handshakeInstance;
 							const payload =
-								path === "/v1/health/live"
-									? { observed_at_unix_ms: 1 }
-									: path === "/v1/health/ready"
-										? {
-												observed_at_unix_ms: 2,
-												claim_sequence: 3,
-												runtime_cursor: 4,
-												backend: "rrflow_kv",
-											}
-										: {
-												protocol: "rrd",
-												protocol_version: 1,
-												implementation: "rrflow",
-												implementation_version: "1.0.0",
-												deployment: {
-													contract_version: 1,
-													deployment_form: "single_node_server",
-													storage_profile: "rrflow_kv",
-													endpoint_presentation:
-														"loopback_http_websocket",
-												},
-												configuration: {
-													format_version: 1,
-													revision: 1,
-													configuration_sha256: "b".repeat(64),
-												},
-												instance: {
-													kind: "instance",
-													id: instanceId,
-												},
-												capabilities: [],
-												product_capabilities: {},
-											};
+								path === "/v1/schema/endpoints"
+									? catalogue
+									: path === "/v1/health/live"
+										? { observed_at_unix_ms: 1 }
+										: path === "/v1/health/ready"
+											? {
+													observed_at_unix_ms: 2,
+													claim_sequence: 3,
+													runtime_cursor: 4,
+													backend: "rrflow_kv",
+												}
+											: {
+													protocol: "rrd",
+													protocol_version: 1,
+													implementation: "rrflow",
+													implementation_version: "1.0.0",
+													deployment: {
+														contract_version: 1,
+														deployment_form: "single_node_server",
+														storage_profile: "rrflow_kv",
+														endpoint_presentation:
+															"loopback_http_websocket",
+													},
+													configuration: {
+														format_version: 1,
+														revision: 1,
+														configuration_sha256: "b".repeat(64),
+													},
+													instance: {
+														kind: "instance",
+														id: instanceId,
+													},
+													capabilities,
+													product_capabilities: {},
+												};
 							return {
 								protocol: "rrd",
 								protocol_version: 1,
@@ -689,7 +710,7 @@ async function openDiagnosticWorkbench(page: Page, profileA: string, profileB: s
 				},
 			});
 		},
-		{ profileA, profileB },
+		{ profileA, profileB, catalogue: CATALOGUE, capabilities: CAPABILITIES },
 	);
 	await page.getByRole("button", { name: "System", exact: true }).click();
 	await expect(page).toHaveURL(/\/system\/instance$/);
@@ -1326,48 +1347,51 @@ test("creates an RRD HTTP runtime profile by default", async ({ page }, testInfo
 		const path = new URL(route.request().url()).pathname;
 		requests.push(path);
 		const payload =
-			path === "/v1/health/live"
-				? { observed_at_unix_ms: 1 }
-				: path === "/v1/health/ready"
-					? {
-							observed_at_unix_ms: 2,
-							claim_sequence: 3,
-							runtime_cursor: 4,
-							backend: "rrflow_kv",
-						}
-					: {
-							protocol: "rrd",
-							protocol_version: 1,
-							implementation: "rrflow",
-							implementation_version: "1.0.0",
-							deployment: {
-								contract_version: 1,
-								deployment_form: "single_node_server",
-								storage_profile: "rrflow_kv",
-								endpoint_presentation: "loopback_http_websocket",
-							},
-							configuration: {
-								format_version: 1,
-								revision: 1,
-								configuration_sha256:
-									"bf8a4557c1465ab4bf0e8640be42f65b28e4d65dff5f3147b2892edfe9db31be",
-							},
-							instance: {
-								kind: "instance",
-								id:
-									new URL(route.request().url()).port === "9478"
-										? "rrd-project-b"
-										: "rrd-smoke",
-							},
-							capabilities: [
-								{
-									name: "context-assemble",
+			path === "/v1/schema/endpoints"
+				? CATALOGUE
+				: path === "/v1/health/live"
+					? { observed_at_unix_ms: 1 }
+					: path === "/v1/health/ready"
+						? {
+								observed_at_unix_ms: 2,
+								claim_sequence: 3,
+								runtime_cursor: 4,
+								backend: "rrflow_kv",
+							}
+						: {
+								protocol: "rrd",
+								protocol_version: 1,
+								implementation: "rrflow",
+								implementation_version: "1.0.0",
+								deployment: {
 									contract_version: 1,
-									status: "available",
+									deployment_form: "single_node_server",
+									storage_profile: "rrflow_kv",
+									endpoint_presentation: "loopback_http_websocket",
 								},
-							],
-							product_capabilities: {},
-						};
+								configuration: {
+									format_version: 1,
+									revision: 1,
+									configuration_sha256:
+										"bf8a4557c1465ab4bf0e8640be42f65b28e4d65dff5f3147b2892edfe9db31be",
+								},
+								instance: {
+									kind: "instance",
+									id:
+										new URL(route.request().url()).port === "9478"
+											? "rrd-project-b"
+											: "rrd-smoke",
+								},
+								capabilities: [
+									{
+										name: "context-assemble",
+										contract_version: 1,
+										status: "available",
+									},
+									...CAPABILITIES,
+								],
+								product_capabilities: {},
+							};
 		await route.fulfill({
 			contentType: "application/json",
 			headers: { "Access-Control-Allow-Origin": "*" },
@@ -1447,7 +1471,13 @@ test("creates an RRD HTTP runtime profile by default", async ({ page }, testInfo
 	await expect(page.getByRole("heading", { name: "Project plan", exact: true })).toHaveCount(0);
 	expect(
 		requests.every((path) =>
-			["/v1/health/live", "/v1/health/ready", "/v1/capabilities"].includes(path),
+			[
+				"/v1/health/live",
+				"/v1/health/ready",
+				"/v1/capabilities",
+				// The public catalogue a view is gated on; it carries no project data.
+				"/v1/schema/endpoints",
+			].includes(path),
 		),
 	).toBe(true);
 	await page.goto(`${firstProject}/learning`);
@@ -2017,7 +2047,7 @@ test("runs explicit binary, score and choice assessments with protected readback
 		equivalent_attempts: {},
 	};
 	await page.evaluate(
-		({ task, taskB, repeatedTask, source, budget, budgetB, budgetRepeated }) => {
+		({ task, taskB, repeatedTask, source, budget, budgetB, budgetRepeated, catalogue }) => {
 			Object.assign(globalThis, { isTauri: true });
 			let storedAssessment: Record<string, unknown> | null = null;
 			let assessmentIndex = 0;
@@ -2106,46 +2136,59 @@ test("runs explicit binary, score and choice assessments with protected readback
 									? {
 											protocol: "rrd",
 											protocol_version: 1,
-											endpoints: exposeAssessmentOperations
-												? [
-														{
-															action: {
-																action: "reasoning_write",
-																source: "fixed",
+											// Everything the pinned engine serves, except the assessment
+											// operations this test turns on and off.
+											endpoints: [
+												...catalogue.endpoints.filter(
+													(endpoint: { operation: string }) =>
+														!endpoint.operation.startsWith(
+															"task-assessment-",
+														),
+												),
+												...(exposeAssessmentOperations
+													? [
+															{
+																action: {
+																	action: "reasoning_write",
+																	source: "fixed",
+																},
+																authentication: "session_bearer",
+																description:
+																	"Execute one bounded assessment.",
+																family: "tasks",
+																method: "post",
+																mutation: true,
+																operation:
+																	"task-assessment-execute",
+																path: "/v1/tasks/assessment/execute",
+																request_type:
+																	"TaskAssessmentRequest",
+																response_type:
+																	"TaskAssessmentOutput",
+																summary:
+																	"Execute one bounded assessment.",
 															},
-															authentication: "session_bearer",
-															description:
-																"Execute one bounded assessment.",
-															family: "tasks",
-															method: "post",
-															mutation: true,
-															operation: "task-assessment-execute",
-															path: "/v1/tasks/assessment/execute",
-															request_type: "TaskAssessmentRequest",
-															response_type: "TaskAssessmentOutput",
-															summary:
-																"Execute one bounded assessment.",
-														},
-														{
-															action: {
-																action: "reasoning_read",
-																source: "fixed",
+															{
+																action: {
+																	action: "reasoning_read",
+																	source: "fixed",
+																},
+																authentication: "session_bearer",
+																description:
+																	"Read one protected assessment.",
+																family: "tasks",
+																method: "post",
+																mutation: false,
+																operation: "task-assessment-read",
+																path: "/v1/tasks/assessment/read",
+																request_type: "TaskAssessmentRead",
+																response_type: "TaskAssessmentView",
+																summary:
+																	"Read one protected assessment.",
 															},
-															authentication: "session_bearer",
-															description:
-																"Read one protected assessment.",
-															family: "tasks",
-															method: "post",
-															mutation: false,
-															operation: "task-assessment-read",
-															path: "/v1/tasks/assessment/read",
-															request_type: "TaskAssessmentRead",
-															response_type: "TaskAssessmentView",
-															summary:
-																"Read one protected assessment.",
-														},
-													]
-												: [],
+														]
+													: []),
+											],
 											families: [],
 											websocket_endpoints: [],
 										}
@@ -2439,7 +2482,16 @@ test("runs explicit binary, score and choice assessments with protected readback
 				},
 			});
 		},
-		{ task, taskB, repeatedTask, source, budget, budgetB, budgetRepeated },
+		{
+			task,
+			taskB,
+			repeatedTask,
+			source,
+			budget,
+			budgetB,
+			budgetRepeated,
+			catalogue: CATALOGUE,
+		},
 	);
 	await page.route(/http:\/\/localhost:9477\/v1\//, async (route) => {
 		const path = new URL(route.request().url()).pathname;
