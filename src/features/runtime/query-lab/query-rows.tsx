@@ -1,4 +1,5 @@
 import { Badge, Group, Paper, ScrollArea, Table, Text } from "@mantine/core";
+import { nativeQueryTable } from "~/rrflow/client/query-presentation";
 import type { RrdQueryView } from "~/rrflow/session";
 import { plural } from "~/shared/util/text/helpers";
 import { formatCount } from "../utils/format";
@@ -9,6 +10,9 @@ const CELL_STYLE = { overflow: "hidden", textOverflow: "ellipsis" } as const;
 
 /** The rows the engine returned for one query, exactly as it returned them. */
 export function QueryRows({ result }: { result: RrdQueryView }) {
+	// Cells are read as the row's own values, so a column a row lacks is empty
+	// rather than a property every JavaScript object inherits.
+	const table = nativeQueryTable(result);
 	return (
 		<Paper p="md">
 			<Group
@@ -31,7 +35,11 @@ export function QueryRows({ result }: { result: RrdQueryView }) {
 			>
 				{result.canonical_query}
 			</Text>
-			{result.rows.length === 0 ? (
+			{table === null ? (
+				<Text c="red">
+					The answer does not have the shape of a query result, so no rows are shown.
+				</Text>
+			) : table.rows.length === 0 ? (
 				<Text c="slate">The engine returned zero rows for this query.</Text>
 			) : (
 				<ScrollArea.Autosize
@@ -47,13 +55,13 @@ export function QueryRows({ result }: { result: RrdQueryView }) {
 						<Table.Thead>
 							<Table.Tr>
 								<Table.Th>identity</Table.Th>
-								{result.columns.map((column) => (
+								{table.columns.map((column) => (
 									<Table.Th key={column}>{column}</Table.Th>
 								))}
 							</Table.Tr>
 						</Table.Thead>
 						<Table.Tbody>
-							{result.rows.map((row) => (
+							{table.rows.map((row) => (
 								<Table.Tr key={row.identity}>
 									<Table.Td
 										ff="monospace"
@@ -63,14 +71,14 @@ export function QueryRows({ result }: { result: RrdQueryView }) {
 									>
 										{row.identity}
 									</Table.Td>
-									{result.columns.map((column) => (
+									{row.cells.map((cell, index) => (
 										<Table.Td
-											key={column}
+											key={table.columns[index]}
 											maw={CELL_WIDTH}
-											title={row.values[column]}
+											title={cell ?? undefined}
 											style={CELL_STYLE}
 										>
-											{row.values[column] ?? ""}
+											{cell ?? ""}
 										</Table.Td>
 									))}
 								</Table.Tr>

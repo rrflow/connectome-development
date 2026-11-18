@@ -1,4 +1,9 @@
-import { defineLanguageFacet, Language, LanguageSupport } from "@codemirror/language";
+import {
+	defineLanguageFacet,
+	Language,
+	LanguageSupport,
+	languageDataProp,
+} from "@codemirror/language";
 import {
 	type Input,
 	NodeSet,
@@ -39,8 +44,19 @@ const INVALID = ROLES.length + 2;
 /** A buffer entry is `[type, from, to, size]`; a node's size counts its children's. */
 const LEAF = 4;
 
+/**
+ * What is registered for this language (completions, for one). CodeMirror
+ * finds it through the top node, so the node must name it.
+ */
+const languageData = defineLanguageFacet({});
+
 const nodes = new NodeSet([
-	NodeType.define({ id: 0, name: "Query", top: true }),
+	NodeType.define({
+		id: 0,
+		name: "Query",
+		top: true,
+		props: [[languageDataProp, languageData]],
+	}),
 	...ROLES.map((role, index) => NodeType.define({ id: index + 1, name: ROLE_NODES[role] })),
 	NodeType.define({ id: RECORD_ID, name: "RecordId" }),
 	NodeType.define({ id: INVALID, name: "Invalid", error: true }),
@@ -100,12 +116,7 @@ class RrflowqlParser extends Parser {
 	}
 }
 
-export const rrflowqlLanguage = new Language(
-	defineLanguageFacet({}),
-	new RrflowqlParser(),
-	[],
-	"rrflowql",
-);
+export const rrflowqlLanguage = new Language(languageData, new RrflowqlParser(), [], "rrflowql");
 
 /** rrflowQL highlighting for a `CodeEditor`. */
 export function rrflowql(): LanguageSupport {
