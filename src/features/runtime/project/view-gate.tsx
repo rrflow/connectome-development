@@ -32,10 +32,11 @@ export function ViewGate({ path, children }: { path: string; children: ReactNode
 				connection.runtimeSshHost,
 			).catalogue(),
 	});
-	if (!needed || !handshake || !catalogue.data) return <>{children}</>;
+	// An unread or unusable catalogue gates nothing: a failed read is not a missing operation.
+	if (!needed || !handshake || !Array.isArray(catalogue.data?.endpoints)) return <>{children}</>;
 
 	const offer: InstanceOffer = {
-		operations: new Set(catalogue.data.endpoints.map((endpoint) => endpoint.operation)),
+		operations: new Set(catalogue.data?.endpoints.map((endpoint) => endpoint.operation)),
 		capabilities: handshake.service.capabilities.map((capability) => ({
 			name: capability.name,
 			status: capability.status,
