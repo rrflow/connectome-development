@@ -29,6 +29,7 @@ import type {
 	ProjectInstance,
 	ServedEstate,
 } from "~/shared/types";
+import { persistCurrentConfig } from "~/shared/util/config/config";
 import { useConfigStore } from "~/shell/stores/config";
 import { useDatabaseStore } from "~/stores/database";
 import { displayPath, refusedAsFresh } from "./installation-facts";
@@ -171,8 +172,19 @@ export function DatabaseServing() {
 		const estate = await adapter.serveEstate(digest, request);
 		setPreview(null);
 		useDatabaseStore.getState().confirmServing(estate);
-		navigate(resolveServedConnection(estate));
+		await openServed(estate);
 		setOpened(false);
+	};
+	const openServed = async (estate: ServedEstate) => {
+		const connection = resolveServedConnection(estate);
+		try {
+			await persistCurrentConfig();
+		} catch (cause) {
+			throw new Error(
+				`RRFlow is running, but Connectome could not save this project for reopening: ${describeRrdError(cause)}`,
+			);
+		}
+		navigate(connection);
 	};
 	const prepare = (request: EstateSelection) =>
 		run(async () => {
@@ -321,8 +333,11 @@ export function DatabaseServing() {
 										disabled={pending}
 										onClick={() => {
 											if (!instance.estate) return;
-											navigate(resolveServedConnection(instance.estate));
-											setOpened(false);
+											const estate = instance.estate;
+											void run(async () => {
+												await openServed(estate);
+												setOpened(false);
+											});
 										}}
 									>
 										Open project
