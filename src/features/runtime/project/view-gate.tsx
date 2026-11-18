@@ -2,19 +2,24 @@ import { Alert, Stack, Text } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { Icon } from "~/components/Icon";
+import { connectionProject } from "~/rrflow/instances";
 import { RrdRuntimeClient } from "~/rrflow/runtime";
-import { type InstanceOffer, VIEW_NEEDS, viewState } from "~/rrflow/views";
+import { type InstanceOffer, lifecycleState, VIEW_NEEDS, viewState } from "~/rrflow/views";
 import { iconErrorCircle } from "~/shared/assets/icons";
+import { useDatabaseStore } from "~/stores/database";
 import { useProject } from "./context";
 
 /**
- * Shows a view only when its engine serves what the view calls. While the
+ * Shows a view only when its project's engine runs and serves what the view calls. While the
  * catalogue is unread the view renders as before; a view the engine does not
  * serve says which operations or capabilities are missing, in the engine's
  * own words, instead of failing on its first request.
  */
 export function ViewGate({ path, children }: { path: string; children: ReactNode }) {
 	const { endpoint, connection, handshake } = useProject();
+	const project = connectionProject(connection);
+	const instance = useDatabaseStore((state) => (project ? state.instances[project] : undefined));
+	const lifecycle = lifecycleState(instance);
 	const needed = path in VIEW_NEEDS;
 	const catalogue = useQuery({
 		queryKey: [
@@ -32,6 +37,17 @@ export function ViewGate({ path, children }: { path: string; children: ReactNode
 				connection.runtimeSshHost,
 			).catalogue(),
 	});
+	if (lifecycle) {
+		return (
+			<Alert
+				color={lifecycle.state === "failed" ? "red" : "yellow"}
+				title={`This project's engine is ${lifecycle.state}`}
+				icon={<Icon path={iconErrorCircle} />}
+			>
+				<Text size="sm">{lifecycle.detail}</Text>
+			</Alert>
+		);
+	}
 	// An unread or unusable catalogue gates nothing: a failed read is not a missing operation.
 	if (!needed || !handshake || !Array.isArray(catalogue.data?.endpoints)) return <>{children}</>;
 

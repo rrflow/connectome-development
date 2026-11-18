@@ -17,7 +17,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const { VIEW_NEEDS, viewState } = await import(
+const { VIEW_NEEDS, viewState, lifecycleState } = await import(
 	`file://${join(root, "src/rrflow/views.ts").replaceAll("\\", "/")}`
 );
 const golden = JSON.parse(
@@ -132,6 +132,20 @@ for (const [path, needs] of Object.entries(VIEW_NEEDS)) {
 assert.deepEqual(Object.keys(AT_THE_PIN).sort(), Object.keys(VIEW_NEEDS).sort());
 check("a view with no entry is not gated", () => {
 	assert.deepEqual(viewState("system/instance", offer), { kind: "ready", experimental: [] });
+});
+
+for (const state of ["starting", "stopping", "stopped", "failed"]) {
+	check(`a tracked instance that is ${state} gates every view with the registry's words`, () => {
+		assert.deepEqual(lifecycleState({ state, detail: `It is ${state}.` }), {
+			kind: "instance",
+			state,
+			detail: `It is ${state}.`,
+		});
+	});
+}
+check("a running instance, or one the registry does not track, gates nothing", () => {
+	assert.equal(lifecycleState({ state: "ready", detail: "Serving." }), null);
+	assert.equal(lifecycleState(undefined), null);
 });
 
 console.log(
