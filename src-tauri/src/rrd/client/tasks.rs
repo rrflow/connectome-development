@@ -427,7 +427,8 @@ pub enum TaskReply {
         inventory: Option<SourceInventory>,
     },
     Assessment {
-        assessment: Option<TaskAssessmentOutput>,
+        /// Boxed: the assessment output is far larger than every other reply.
+        assessment: Option<Box<TaskAssessmentOutput>>,
         outcome_sha256: Option<String>,
     },
 }
@@ -1237,7 +1238,7 @@ impl NativeRrdClient {
                     .await
                     .map_err(RrdError::sdk)?;
                 Ok(TaskReply::Assessment {
-                    assessment: Some(output),
+                    assessment: Some(Box::new(output)),
                     outcome_sha256: None,
                 })
             }
@@ -1270,7 +1271,7 @@ impl NativeRrdClient {
                     );
                 }
                 Ok(TaskReply::Assessment {
-                    assessment: view.assessment,
+                    assessment: view.assessment.map(Box::new),
                     outcome_sha256: view.outcome_sha256,
                 })
             }
