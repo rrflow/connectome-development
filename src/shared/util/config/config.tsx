@@ -6,6 +6,7 @@ import { adapter } from "~/adapter";
 import { DesktopAdapter } from "~/adapter/desktop";
 import type { ConnectomeConfig } from "~/shared/types";
 import { useConfigStore } from "~/shell/stores/config";
+import { createConfigWriteQueue } from "./config-write-queue";
 import { CONFIG_VERSION, createBaseConfig } from "./defaults";
 import { showDowngradeWarningModal } from "./downgrade";
 import { applyMigrations } from "./migrator";
@@ -56,6 +57,14 @@ export function getSetting<C extends Category, K extends keyof Settings<C>>(cate
 
 let skipConfigSave = false;
 
+// Snapshot when the save is requested and serialize all writes, including the
+// background debounce and explicit user actions. A delayed background save
+// reads the current store instead of retaining an older captured state.
+export const persistCurrentConfig = createConfigWriteQueue(
+	() => JSON.parse(JSON.stringify(useConfigStore.getState())) as ConnectomeConfig,
+	(config) => adapter.saveConfig(config),
+);
+
 /**
  * Start the config synchronization process
  */
@@ -78,8 +87,10 @@ export async function startConfigSync() {
 		{
 			delay: 250,
 		},
-		(state: ConnectomeConfig) => {
-			adapter.saveConfig(state);
+		() => {
+			void persistCurrentConfig().catch((error) => {
+				console.error("Connectome could not save its configuration", error);
+			});
 		},
 	);
 
@@ -89,7 +100,7 @@ export async function startConfigSync() {
 	// Sync the config with the adapter
 	useConfigStore.subscribe(async (updated) => {
 		if (!skipConfigSave) {
-			scheduleSave(updated);
+			scheduleSave();
 
 			if (adapter instanceof DesktopAdapter) {
 				skipConfigSave = true;

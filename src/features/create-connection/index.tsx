@@ -37,6 +37,7 @@ import {
 	iconRelation,
 } from "~/shared/assets/icons";
 import { Template } from "~/shared/types";
+import { persistCurrentConfig } from "~/shared/util/config/config";
 import { createBaseConnection } from "~/shared/util/config/defaults";
 import { isConnectionValid } from "~/shared/util/connection/connection";
 import { dispatchIntent } from "~/shared/util/platform/intents";
@@ -107,7 +108,7 @@ export function CreateConnectionPage() {
 				addConnection(connection);
 			// A successful Save must survive an immediate reload; the ordinary
 			// settings debounce is not a durable acknowledgement for this action.
-			await adapter.saveConfig(useConfigStore.getState());
+			await persistCurrentConfig();
 			if (connection.target === "control-plane") navigate(`/control/${connection.id}`);
 			else if (connection.target === "diagnostics") navigate(`/diagnostics/${connection.id}`);
 			else navigateConnection(connection.id);

@@ -96,6 +96,7 @@ impl ServeObserver for AppHandle {
     }
 
     fn lifecycle(&self, instance: InstanceView) {
+        lifecycle::trace_lifecycle(&instance);
         let _ = self.emit(lifecycle::LIFECYCLE_EVENT, instance);
     }
 }

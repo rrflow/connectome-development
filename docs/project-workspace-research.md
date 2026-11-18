@@ -103,3 +103,75 @@ instance IDs for identical source inventories. Local process ownership uses the
 canonical directory; session ownership uses a saved profile with a verified
 endpoint and native credential. An instance label alone is not a globally unique
 project selector or an authorization boundary.
+
+## Implementation sequence: one project and its evidence
+
+This is supporting Connectome design work, not a replacement for RRFlow's
+objective, roadmap, or capability status. The engine remains the authority;
+Connectome presents engine responses and client-side discovery profiles. The
+following packages need their own source-grounded briefs, implementation,
+candidate CI and acceptance evidence before being called complete.
+
+1. **Remember and re-prove an instance.** The existing local profile is saved
+   through `src/shared/util/config.tsx` and the native config writer; the native
+   lifecycle registry in `src-tauri/src/rrd/estate/lifecycle.rs` proves an
+   instance again rather than trusting `.rrflow/serving.json`. Save the profile
+   before acknowledging open, retain the previous config on a failed write,
+   and report the actual outcome. Lifecycle diagnostics are redacted and are not
+   an engine audit log. Acceptance must include an actual desktop restart, a
+   stopped process, a changed endpoint, an identity mismatch, save failure, and
+   independently started processes. Cross-process profile-write ordering and
+   power-loss durability must be tested before claiming them.
+2. **Show source-grounded relationships and coverage.** The existing
+   `src-tauri/src/rrd/client.rs::database` presents `diagnostic_snapshot`, and
+   `src-tauri/src/rrd/view.rs` derives a display graph from the returned records
+   and relations. Missing endpoints can suppress edges. Retain the honest
+   snapshot label until an engine-owned, authorized, bounded traversal contract
+   supplies paging, source/provenance, freshness, limits and explicit coverage.
+   Exercise a project with known cross-file relationships, deletions and edits;
+   compare returned endpoints and edges with a separately constructed fixture.
+   User-visible clusters are a display computation, not learned facts.
+3. **Index progressively and repair missed changes.** The engine should serve
+   admitted project information as it becomes available, with durable progress,
+   source identity, configurable CPU/memory/I/O budgets, and visible errors.
+   The indexer must reconcile after restart, missed events and watcher overflow;
+   notification events alone cannot establish completeness. Windows documents
+   [overflow and re-enumeration](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-readdirectorychangesexw),
+   and Linux documents [inotify queue overflow](https://man7.org/linux/man-pages/man7/inotify.7.html).
+   Test a large project, concurrent edit/rename/delete, interruption, restart,
+   overflow and permission denial against an independently enumerated baseline.
+   Respect inherited permissions and do not move or change project files.
+4. **Capability-backed multimodal retrieval.** Expose text, documents, vectors,
+   relationships and configured knowledge paths through existing engine-owned,
+   typed contracts with provenance and source boundaries; unavailable providers
+   remain unavailable. Qdrant documents [payload and text indexing](https://qdrant.tech/documentation/manage-data/indexing/)
+   and [hybrid retrieval](https://qdrant.tech/documentation/hybrid-queries/);
+   these are research inputs, not claims of RRFlow parity. Measure latency,
+   throughput, indexing resources, retrieval quality and failure behavior on
+   equivalent datasets and hardware. No universal competitor claim follows from
+   a UI rendering or a microbenchmark.
+5. **Configurable controller and learning.** Bind effort, budgets, routing and
+   adapters to engine-advertised capabilities. SWAG, LFG and other endpoints
+   are configured contracts, not hardwired dependencies. Enable supervised
+   labels and unsupervised proposals only when engine operations actually exist;
+   capture consent, dataset provenance, evaluation, promotion and rollback.
+   An external chat or SDK can use permitted public operations, but discovery
+   does not authorize training or external effects. Training UI must distinguish
+   proposals from verified project facts. [MLflow's tracking model](https://www.mlflow.org/docs/latest/tracking/)
+   illustrates recording run configuration, metrics and artifacts; it does not
+   establish that RRFlow already has those facilities.
+6. **Observability and dogfooding.** Correlate project/instance, request,
+   selected capabilities, input identities, bounded resource use, indexing
+   progress, effects and errors; present source and trace freshness in the
+   workbench. Keep authoritative engine receipts separate from diagnostic
+   traces: [OpenTelemetry sampling](https://opentelemetry.io/docs/concepts/sampling/)
+   can omit spans. Prove the whole path by starting a project, observing its
+   index and relationships, making an ordinary edit, reopening the desktop,
+   re-proving the engine, and reading the resulting change and receipts. Record
+   exact source and binary identities, commands, timings, omissions and failures.
+
+Nothing in this sequence changes the RRFlow gate status. In particular, a saved
+client profile and a bounded graph do not prove full indexing, a learning system,
+or a Qdrant/SurrealDB/Neo4j comparison.
+
+[Local instance-history and relationship-snapshot change evidence](evidence/change-journals/instance-history-and-relationship-snapshot-2026-11-06.md) records the candidate and its verification limits.
