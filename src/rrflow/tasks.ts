@@ -18,6 +18,8 @@ export interface TaskBudget {
 	active_attempt: string | null;
 	execution_may_continue: boolean;
 	stopped: string | null;
+	repetition_policy: { max_equivalent_attempts: string } | null;
+	equivalent_attempts: Record<string, string>;
 }
 export interface TaskProposal {
 	attempt_id: string;
@@ -83,6 +85,69 @@ export interface WorkerDraft {
 	configuration_sha256: string;
 	elapsed_ms: string | null;
 	source: TaskWorkerSourceProvenance | null;
+}
+export type AssessmentDescriptor =
+	| { mode: "binary"; proposition: string }
+	| {
+			mode: "choice";
+			question: string;
+			options: { id: string; description: string }[];
+	  }
+	| {
+			mode: "score";
+			rubric: string;
+			minimum: number;
+			maximum: number;
+			direction: "higher_is_better" | "lower_is_better";
+	  };
+export interface AssessmentPracticeIdentity {
+	question_set_id: string;
+	question_id: string;
+	template_id: string;
+	template_revision: number;
+	template_sha256: string;
+	requirement_id: string;
+}
+export type AssessmentDecision =
+	| {
+			outcome: "answered";
+			value:
+				| { kind: "binary"; value: boolean }
+				| { kind: "choice"; option_id: string }
+				| { kind: "score"; value: number };
+	  }
+	| { outcome: "abstained"; reason: string };
+export interface AssessmentReference {
+	input: "source" | "practice";
+	input_sha256: string;
+	start_byte: number;
+	end_byte: number;
+}
+export interface TaskAssessmentOutput {
+	contract_version: number;
+	scope: string;
+	task_id: string;
+	attempt_id: string;
+	task_sha256: string;
+	configuration_sha256: string;
+	packet_sha256: string;
+	request_sha256: string;
+	response_sha256: string;
+	content_sha256: string;
+	controller_binding_id: string;
+	service_id: string;
+	descriptor: AssessmentDescriptor;
+	practice_identity: AssessmentPracticeIdentity;
+	practice_sha256: string;
+	source_bytes: number;
+	practice_bytes: number;
+	source: TaskWorkerSourceProvenance;
+	read: unknown;
+	decision: AssessmentDecision;
+	references: AssessmentReference[];
+	usage: unknown | null;
+	elapsed_ms: number | null;
+	http_status: number | null;
 }
 export interface TaskWorkerSourceProvenance {
 	contract_version: number;
@@ -173,7 +238,20 @@ export type TaskCommand =
 			expected_configuration_sha256: string;
 			source?: TaskWorkerSourceRequest | null;
 	  }
-	| { action: "attempt"; task_id: string; attempt_id: string };
+	| { action: "attempt"; task_id: string; attempt_id: string }
+	| { action: "prepare_assessment"; task_id: string }
+	| {
+			action: "assess";
+			task_id: string;
+			attempt_id: string;
+			expected_task_sha256: string;
+			expected_configuration_sha256: string;
+			source: TaskWorkerSourceRequest;
+			descriptor: AssessmentDescriptor;
+			practice_text: string;
+	  }
+	| { action: "assessment"; task_id: string; attempt_id: string };
+
 export type TaskReply =
 	| { kind: "not_dispatched"; reason: string }
 	| { kind: "page"; tasks: TaskSummary[]; truncated: boolean; next_cursor: string }
@@ -198,6 +276,27 @@ export type TaskReply =
 			status: "reserved" | "accepted" | "stopped" | "invalidated" | null;
 			proposal: TaskProposal | null;
 			worker: WorkerDraft | null;
+	  }
+	| {
+			kind: "assessment_prepared";
+			task: TaskSummary;
+			task_sha256: string;
+			configuration_sha256: string;
+			controller_binding_id: string | null;
+			controller_destination: string | null;
+			maximum_input_bytes: string | null;
+			maximum_response_bytes: string | null;
+			wait_timeout_ms: string | null;
+			allow_network: boolean;
+			allow_source_export: boolean;
+			allow_context_export: boolean;
+			unavailable: string | null;
+			inventory: SourceInventory | null;
+	  }
+	| {
+			kind: "assessment";
+			assessment: TaskAssessmentOutput | null;
+			outcome_sha256: string | null;
 	  };
 
 /** Recovery metadata, never a cached outcome or permission to retry. */
