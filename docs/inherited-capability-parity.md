@@ -16,9 +16,9 @@ Limits: 85 inherited files were read by no area and 26 capabilities were missed 
 
 | Status | Count | Meaning |
 |---|---|---|
-| native | 30 | the native client already does it, equal or better |
-| partial | 43 | part is native; the stated part is not |
-| engine has it, no native UI | 143 | an engine operation exists; no native screen uses it |
+| native | 35 | the native client already does it, equal or better |
+| partial | 47 | part is native; the stated part is not |
+| engine has it, no native UI | 134 | an engine operation exists; no native screen uses it |
 | engine cannot do it | 99 | the engine has no operation or language support for it |
 | missing | 9 | neither side has it |
 | not applicable | 24 | an inherited-database concept with no meaning in RRFlow; the row says what meets the need |
@@ -27,7 +27,7 @@ Limits: 85 inherited files were read by no area and 26 capabilities were missed 
 
 | Area | native | partial | engine has it, no native UI | engine cannot do it | missing | not applicable |
 |---|---|---|---|---|---|---|
-| Query studio | 3 | 2 | 26 | 3 | 2 | 1 |
+| Query studio | 8 | 6 | 17 | 3 | 2 | 1 |
 | Explorer and records | 1 | 8 | 23 | 8 | 1 | 2 |
 | Designer and schema | 0 | 8 | 22 | 10 | 0 | 2 |
 | Authentication and access | 1 | 3 | 2 | 16 | 1 | 1 |
@@ -40,55 +40,58 @@ Limits: 85 inherited files were read by no area and 26 capabilities were missed 
 
 ## Query studio
 
-### Native (3)
+### Native (8)
 
 - **Query editor with rrflowQL highlighting.** Type a query in a CodeMirror editor with rrflowQL token highlighting (keywords, source family, kind, field, parameter, string, number, bool, null, invalid tokens).
   - Native: src/features/runtime/components/query-editor.tsx QueryEditor uses the same rrflowql() from ~/editor/rrflowql; used by src/features/runtime/query-lab/query-lab.tsx QueryLabView.
   - Gap: None for highlighting. The inherited pane additionally passes scrollPastEnd(), lineNumbers and autoCollapseDepth to CodeEditor; the native editor passes none of these (see 'Editor appearance settings').
+- **Select the statement under the cursor (Mod-E).** Ctrl/Cmd+E selects the query the cursor is in.
+  - Native: src/features/runtime/components/query-editor.tsx binds Mod-e to getQueryRange (src/editor/rrflowql/codemirror/range.ts) and selects it; the lab's hint names the key. Smoke: tests/smoke/connectome.spec.ts 'the query lab sends typed variables and runs only what is selected'.
+  - Gap: None. The engine takes one statement per request, so the statement under the cursor is the query; if multi-statement text is ever accepted, getQueryRange is the one place to split it.
+- **Infer variables from query.** One click scans the query for $parameters, merges them into the variables object keeping existing values, opens the pane; reserved names are skipped.
+  - Native: query-lab.tsx 'Infer variables' calls inferParameters (src/rrflow/query-parameters.ts), which reads the query's $names with classify(), adds each missing one as null, keeps every value already typed, and opens the pane. It refuses to touch text it cannot read. Tests: scripts/test-query-parameters.mjs; the smoke test.
+  - Gap: None. rrflowQL has no reserved parameter names, so none are skipped.
+- **Variable name autocompletion.** Typing $ offers the variables defined in the pane.
+  - Native: src/editor/rrflowql/codemirror/complete.ts rrflowqlParameterCompletion, loaded by query-editor.tsx with the names that currently have a value in the variables pane.
+  - Gap: None.
+- **Pre-run lexical validation (lint) and its setting.** While typing (250 ms) the editor underlines what the tokenizer would refuse (unterminated string, bad escape, u64 overflow, unsupported character) with the engine's wording; the Run button is highlighted only when valid; 'Query validation' preference turns it off.
+  - Native: query-editor.tsx loads rrflowqlLinting (src/editor/rrflowql/codemirror/lint.ts): what the engine's tokenizer would refuse is underlined with the engine's wording after 250 ms; query-lab.tsx turns Run red with that reason in its title. The behavior.queryErrorChecker setting turns it off. Smoke: the unterminated-string step of the query lab test.
+  - Gap: None.
 - **Engine error display.** A failed statement shows its error message in red monospace, selectable, sized by editor scale; a thrown error becomes a 'Failed to execute' notification.
   - Native: query-lab.tsx Alert 'The engine refused this query' with queryRefusal(error).reason; query-editor.tsx showRefusal marks the exact token (editor/rrflowql/codemirror/diagnostics.ts, engine/refusal.ts); src-tauri/src/rrd/error.rs:33 PARSE_REFUSAL supplies the UTF-16 offset.
   - Gap: None blocking. Note the offset is recovered by string-matching the engine's debug text at the pinned revision; a structured parse-error field in the engine contract would be sturdier.
+- **Editor appearance settings.** 'Query editor line numbers' preference; editor scale applies to error text size; scroll past end.
+  - Native: query-editor.tsx passes appearance.queryLineNumbers to CodeEditor, which already sizes text from appearance.editorScale and applies appearance.autoCollapseDepth.
+  - Gap: None for the two settings. scrollPastEnd is not applied: a query is one short statement.
 - **Sample / starter queries.** The sandbox connection seeds tabs with sample queries (basics, graph, vector); an empty result pane says 'Execute a RRFlowQL query to view the results here'.
   - Native: query-lab.tsx starters(): buttons built from the engine's real schema (record kind, EXPLAIN ANALYZE variant, relation kind) that fill the editor and run; explains when the schema lists no kinds or cannot be read.
   - Gap: None for this capability. The sandbox itself is another area.
 
-### Partial (2)
+### Partial (6)
 
 - **Run query (button, Mod-Enter, loading state).** Run the editor text with a Run button or Ctrl/Cmd+Enter; button shows a spinner while running; empty text does nothing; 'must be connected' error when no connection.
   - Native: query-lab.tsx: useMutation(client.query), Run button with loading/disabled, 'Waiting for the engine's answer'; query-editor.tsx binds Mod-Enter and Ctrl-Enter; session.ts query -> rrd_query -> src-tauri/src/rrd/client.rs:961 query / :462 execute_query -> engine query-execute POST /v1/query. Native adds canonical_query, plan candidates, read evidence, analysis (query-answer.tsx).
-  - Gap: UI: native Run has no validity colouring of the button (inherited: gradient when lint passes) and is not reachable from the command palette (see 'Command palette and keybindings'). Native refuses >64 KiB or NUL before sending (client.rs:467); inherited had no size cap. Engine: none.
+  - Gap: UI: not reachable from the command palette (see 'Command palette and keybindings'). Native refuses >64 KiB or NUL before sending (client.rs execute_query); inherited had no size cap. Run now shows validity (red, with the tokenizer's reason) and sends the variables. Engine: none.
   - Second reader: The read path is confirmed and richer (src/features/runtime/query-lab/query-lab.tsx, routed at src/routes/runtime/$id/workbench/query.tsx with a menu entry; src-tauri/src/rrd/client.rs query -> execute_query). But it does not accept the same inputs as the inherited Run. (1) The inherited studio runs write statements; the native lab states 'Queries here only read', and rrflowQL's Query AST (crates/compute/rrd-query/src/syntax/ast.rs) has only read sources. ExecuteQueryTransaction exists in rrd-contract and rrd-engine (engine/query_transaction.rs) but I found no catalogue operation, client call or server route for it; only transaction-begin/commit/abort/preview are in the catalogue. (2) Variables are dropped (client.rs execute_query sets parameters: Default::default()). (3) One statement only. (4) With no session the view returns null instead of a 'must be connected' message.
+- **Execute only the selection (+ warning banner).** With a selection, only the highlighted text runs; button label becomes 'Run selection'; a slide-up banner 'Only the highlighted selection will execute' with 'Hide Temporarily' and 'Configure' (opens settings at query-selection-execution); two settings toggle the behaviour and the warning; multiple cursors concatenate the statement under each cursor with ';'.
+  - Native: query-editor.tsx reports the selected text; query-lab.tsx sends it instead of the whole text when behavior.querySelectionExecution is on, relabels Run to 'Run selection', and shows 'Only the highlighted selection will run' when behavior.querySelectionExecutionWarning is on. Smoke: the Run selection step.
+  - Gap: UI: the warning is a line of text, without the inherited 'Hide Temporarily' and 'Configure' buttons. Several cursors' selections are joined by a newline and sent as one query, which the engine refuses unless they form one statement; the inherited ';' join needs multi-statement support (engine).
+- **Query variables panel.** Toggle a Variables pane beside the editor; edit a value object of $name bindings; 50 ms debounced save per tab; 'Invalid syntax' badge when it is not an object; Clear (resets to {}) and Close buttons; Mod-Enter inside it runs the main query; visibility persisted per tab; variables are sent with every run.
+  - Native: Client: RrdQueryRequest and RrdQueryExportRequest carry `parameters: BTreeMap<String, QueryValue>` and the contract's own ExecuteQuery::validate refuses before sending (src-tauri/src/rrd/client.rs with_parameters); session.ts query(query, parameters) and exportQuery(query, parameters). UI: src/features/runtime/query-lab/query-variables.tsx, a JSON object typed by src/rrflow/query-parameters.ts (whole numbers unsigned or integer by sign, or the contract's own {type, value} form), with a count badge, a 'not sent' badge and a blocked Run when it cannot be read, Clear, Close, and Mod-Enter running the main query. Real engine: the_lenses_read_a_live_engram binds $at, is refused unbound in the engine's words, and refuses a list before sending.
+  - Gap: UI: the pane's text and visibility are not kept per tab or across a reload (no native tabs yet; see 'Query tabs'). Client: live queries (rrd_live_open) still send no parameters. Engine: only null, boolean, integer, unsigned and string are accepted as parameters, so the lists, maps and decimals the inherited pane allowed are refused.
+- **Table/kind name autocompletion.** After FROM (and inherited's update/create/delete/into) the editor offers table names from the connection schema.
+  - Native: src/editor/rrflowql/codemirror/complete.ts rrflowqlSourceCompletion: the source family after FROM or JOIN, then the kinds the engine's schema lists for that family (sourceKinds in src/rrflow/query-parameters.ts, from RrdDatabaseView.tables).
+  - Gap: UI: no completion of schema property names after WHERE, PROJECT or ON. Which data models `record` reads is taken as every table that is not a relation, event, series or geo table; the engine publishes no family-to-model map to check that against.
+- **Format query / format selection.** A button (and 'Format query' command) pretty-prints the whole query or only the selection; on failure a 'Failed to format — Your query must be valid' notification.
+  - Native: query-lab.tsx 'Format' / 'Format selection' calls formatQuery (query-editor.tsx), which applies layout() (src/editor/rrflowql/engine/format.ts) to the selection or the whole query. Whitespace only, so it cannot fail. Smoke: the Format selection step.
+  - Gap: UI: no 'Format query' entry in the command palette (see 'Command palette, keybindings and menu actions').
 - **Result summary: row count and duration.** Each statement shows 'N results in <duration>' (server-reported), and the combined header shows the duration.
-  - Native: query-rows.tsx shows returned_rows and truncated; query-answer.tsx shows 'Elapsed µs' only inside the analysis block, which exists only when the query ends with EXPLAIN ANALYZE (execution.analysis is null otherwise).
-  - Gap: UI: show a duration on every run; today the only option without EXPLAIN ANALYZE is timing the round trip in the webview. Engine: QueryResult carries no elapsed time unless ANALYZE is requested; adding an always-present elapsed field would make this equal. Row count, keys examined and output bytes are already better than inherited.
+  - Native: query-rows.tsx shows returned_rows, truncated, and 'answered in N ms round trip', measured in the window from sending the query to holding its answer (query-lab.tsx) and labelled as such; query-answer.tsx shows the engine's own 'Elapsed µs' inside the analysis block, which exists only for EXPLAIN ANALYZE.
+  - Gap: Engine: QueryResult carries no elapsed time unless ANALYZE is requested; an always-present elapsed field would let the summary show the engine's time and not only the round trip. Row count, keys examined and output bytes are already better than inherited.
   - Second reader: Half of this is already native and the other half is not in the engine. Row count: query-rows.tsx shows returned_rows and a truncated badge (native-equal). Duration: the engine does not report it for a normal query. QueryExecutionSnapshot.analysis is Option and crates/compute/rrd-query/src/execute/run.rs:84 sets it only when explain_analyze is true (`plan.logical.explain_analyze.then_some(fusion.analysis)`); elapsed_micros lives only inside that analysis. So 'engine-has-ui-missing' is wrong for duration.
 
-### Engine has it, no native UI (26)
+### Engine has it, no native UI (17)
 
-- **Execute only the selection (+ warning banner).** With a selection, only the highlighted text runs; button label becomes 'Run selection'; a slide-up banner 'Only the highlighted selection will execute' with 'Hide Temporarily' and 'Configure' (opens settings at query-selection-execution); two settings toggle the behaviour and the warning; multiple cursors concatenate the statement under each cursor with ';'.
-  - Native: Engine takes any query text via query-execute; native query-lab.tsx always sends the whole `query` state and tracks no selection.
-  - Gap: UI: native editor must report its selection, send the selected slice, relabel Run, and show the warning with the two settings. Multi-cursor concatenation depends on multi-statement support. Engine: none.
-- **Select the statement under the cursor (Mod-E).** Ctrl/Cmd+E selects the query the cursor is in.
-  - Native: query-editor.tsx keymap only binds Mod-Enter/Ctrl-Enter; range.ts getQueryRange returns the whole trimmed text because the engine takes one statement.
-  - Gap: UI: add the Mod-E binding to the native editor (trivial today: selects all non-whitespace text; meaningful only if multi-statement splitting is authored). Engine: none.
-- **Query variables panel.** Toggle a Variables pane beside the editor; edit a value object of $name bindings; 50 ms debounced save per tab; 'Invalid syntax' badge when it is not an object; Clear (resets to {}) and Close buttons; Mod-Enter inside it runs the main query; visibility persisted per tab; variables are sent with every run.
-  - Native: Engine: ExecuteQuery.parameters: BTreeMap<String, QueryValue> (crates/transport/rrd-contract/src/query.rs:100-107, max MAX_QUERY_PARAMETERS). Native client drops it: src-tauri/src/rrd/client.rs:476 `parameters: Default::default()`, RrdQueryRequest {query} only (client.rs:116); session.ts query(query: string).
-  - Gap: Client: add `parameters` to RrdQueryRequest / rrd_query (and rrd_query_export, rrd_live_open query stream), validate count and 64 KiB, and expose it on RrdSessionClient.query. UI: native variables pane with a typed editor built on src/rrflow/model.ts parseValue/value.* instead of the inherited value parser. Engine: per the reference only null, bool, integer, unsigned and string parameters are accepted, so list/map/decimal variables the inherited pane allowed have no engine equivalent (engine gap for those types).
-- **Infer variables from query.** One click scans the query for $parameters, merges them into the variables object keeping existing values, opens the pane; reserved names are skipped.
-  - Native: editor/rrflowql/engine/classify.ts gives role 'parameter' to $words; no native caller. Engine accepts $param in AT VALID/KNOWN and filter values (reference section 8).
-  - Gap: UI: author the button in the native studio using classify(); replace formatValue with JSON/model.ts; drop the the inherited client reserved-name list (rrflowQL has no reserved parameters). Engine: none.
-- **Variable name autocompletion.** Typing $ offers the variables defined in the pane.
-  - Native: Extension attaches to the native rrflowqlLanguage but query-editor.tsx does not load it.
-  - Gap: UI: load the completion in the native editor with a resolver over the native variables state. Engine: none.
-- **Table/kind name autocompletion.** After FROM (and inherited's update/create/delete/into) the editor offers table names from the connection schema.
-  - Native: Engine data-schema-read / rrd_schema and rrd_database list tables and models (session.ts schema(), database()); query-lab.tsx already reads databaseQuery for starters but offers no completion.
-  - Gap: UI: author a completion for source family after FROM/JOIN, kind after `family:`, and schema property names after WHERE/PROJECT/ON, fed from RrdSchemaView. Engine: none.
-- **Pre-run lexical validation (lint) and its setting.** While typing (250 ms) the editor underlines what the tokenizer would refuse (unterminated string, bad escape, u64 overflow, unsupported character) with the engine's wording; the Run button is highlighted only when valid; 'Query validation' preference turns it off.
-  - Native: lint.ts is native code but src/features/runtime/components/query-editor.tsx does not include rrflowqlLinting; it only shows post-run refusals.
-  - Gap: UI: add rrflowqlLinting(onValidate) to the native editor and carry the validity state to the Run button; keep the queryErrorChecker setting. Engine: none.
-- **Format query / format selection.** A button (and 'Format query' command) pretty-prints the whole query or only the selection; on failure a 'Failed to format — Your query must be valid' notification.
-  - Native: Authored formatter exists: src/editor/rrflowql/engine/format.ts layout() (clause-per-line, whitespace only) but grep finds no caller anywhere in src.
-  - Gap: UI: wire layout() to a Format button/command in the native studio, for whole text and for a selection. No engine work. This removes one of the three uses of the inherited WASM in this area.
 - **Record links in editor and results (Ctrl/Cmd+click).** kind:id addresses are underlined in the query editor and in text results; Ctrl/Cmd+click opens that record in the inspector; clicking a table row with an id also inspects it.
   - Native: Native tree marks RecordId spans (editor/rrflowql/engine/record-id.ts) only for traversal START references; query-rows.tsx cells and identity column are plain text with no click action; a native inspector host exists (features/runtime/components/inspector.tsx InspectorPanel).
   - Gap: UI: make result identities and reference-valued cells clickable into the native inspector (a `FROM record:<kind> ... WHERE id = "..."` read) and load rrflowqlRecordLinks in the native editor. Client: cells arrive as display text, so a reference cannot be told from a string; needs typed cells (see 'Typed result cells'). Engine: none.
@@ -131,9 +134,6 @@ Limits: 85 inherited files were read by no area and 26 capabilities were missed 
 - **Pane layout and orientation.** Resizable editor/result split, horizontal or vertical by the 'Orientation' preference; variables pane docks on the other axis; minimum sizes; sidebar width limits; layout hidden until measured.
   - Native: query-lab.tsx is a fixed vertical Stack.
   - Gap: UI only: author the resizable layout and orientation setting in the native studio.
-- **Editor appearance settings.** 'Query editor line numbers' preference; editor scale applies to error text size; scroll past end.
-  - Native: query-editor.tsx passes neither lineNumbers nor scrollPastEnd to CodeEditor.
-  - Gap: UI only: honour queryLineNumbers and editorScale in the native editor.
 - **Command palette, keybindings and menu actions.** Commands 'Run query' (Mod-Enter), 'Save query', 'Format query', 'Toggle variables panel', 'Infer variables from query', 'View saved queries', 'View query history', 'Create new query' (Mod-T), 'Close current query' (Mod-W), 'Open query file…' (Mod-O, desktop, also an app-menu item); all rebindable.
   - Native: No useIntent handler in src/features/runtime/query-lab; the native route /runtime/$id/workbench/query is not the 'query' view the intents navigate to.
   - Gap: UI: re-point each intent at the native studio and implement its handler there; otherwise the commands vanish when the inherited view is removed. Engine: none.

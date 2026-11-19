@@ -28,15 +28,15 @@ use rrd_contract::{
     CanonicalId, CloseSession, ColdHistoryReadResult, CreateSession, DataReference,
     DataVectorValue, DiagnosticSnapshot, ExecuteQuery, LaunchPromptFlight, ListPromptFlights,
     ListVectorCollections, PromptFlightContextMode, PromptFlightContextRequest,
-    PromptFlightProvider, QueryBudget, ReadColdHistory, ReadDiagnosticSnapshot, ReadPromptFlight,
-    ReadStorageDiagnostics, RenewSession, RetrieveVectorPoints, ScrollVectorPoints, SearchVectors,
-    ServiceCapabilities, SessionLimits, VectorPointBatch, VectorPointPage, VectorPointSnapshot,
-    VectorSearchHit, VectorSearchMode, VectorSearchQuery, VectorSearchResult,
-    MAX_DIAGNOSTIC_RUNTIME_SCANNED_CHANGES, MAX_PROMPT_FLIGHT_STORAGE_KEYS, MAX_QUERY_BYTES,
-    MAX_VECTOR_POINT_PAGE, MAX_VECTOR_SEARCH_TOP_K, MAX_VECTOR_STORAGE_KEYS,
+    PromptFlightProvider, QueryBudget, QueryValue, ReadColdHistory, ReadDiagnosticSnapshot,
+    ReadPromptFlight, ReadStorageDiagnostics, RenewSession, RetrieveVectorPoints,
+    ScrollVectorPoints, SearchVectors, ServiceCapabilities, SessionLimits, VectorPointBatch,
+    VectorPointPage, VectorPointSnapshot, VectorSearchHit, VectorSearchMode, VectorSearchQuery,
+    VectorSearchResult, MAX_DIAGNOSTIC_RUNTIME_SCANNED_CHANGES, MAX_PROMPT_FLIGHT_STORAGE_KEYS,
+    MAX_QUERY_BYTES, MAX_VECTOR_POINT_PAGE, MAX_VECTOR_SEARCH_TOP_K, MAX_VECTOR_STORAGE_KEYS,
 };
 use serde::Deserialize;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fmt;
 use std::future::Future;
 use std::net::{SocketAddr, ToSocketAddrs};
@@ -57,6 +57,7 @@ mod history;
 mod knowledge;
 mod live;
 mod quantization;
+mod query;
 pub mod tasks;
 mod transaction;
 
@@ -69,6 +70,8 @@ pub use quantization::{
     RrdQuantizationApplyRequest, RrdQuantizationProposeRequest, RrdQuantizationsRequest,
     RrdVectorCompareRequest,
 };
+pub use query::RrdQueryRequest;
+use query::{execute_query, with_parameters};
 pub use transaction::{RrdChangeCommitRequest, RrdChangePreviewRequest};
 
 // Connectome's own session policy; the engine enforces its own ceilings.
@@ -109,12 +112,6 @@ pub struct RrdConnectRequest {
     pub instance: String,
     /// Installed operator credential file (`.rrflow/credentials/<principal>.json`).
     pub credential_path: String,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct RrdQueryRequest {
-    pub query: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -455,27 +452,6 @@ fn neighbour_links(
             score,
         })
         .collect()
-}
-
-/// One rrflowQL request within the engram's budget, refused before it is sent
-/// when the contract could never accept it.
-fn execute_query(
-    query: &str,
-    scope: String,
-    budget: &QueryBudget,
-) -> Result<ExecuteQuery, RrdError> {
-    if query.trim().is_empty() || query.len() > MAX_QUERY_BYTES || query.contains('\0') {
-        return Err(format!(
-            "RRFlowQL query must be non-empty, at most {MAX_QUERY_BYTES} bytes, and free of NUL"
-        )
-        .into());
-    }
-    Ok(ExecuteQuery {
-        scope,
-        query: query.to_owned(),
-        parameters: Default::default(),
-        budget: budget.clone(),
-    })
 }
 
 /// The lowest and highest cursor seen across the reads that built one view.
@@ -956,19 +932,6 @@ impl NativeRrdClient {
                 .await
         })
         .await
-    }
-
-    pub async fn query(&self, request: RrdQueryRequest) -> Result<QueryView, RrdError> {
-        let execution = execute_query(&request.query, self.scope(), &self.query_budget)?;
-        let result = self
-            .send(false, |session, options| async move {
-                self.client
-                    .execute_query(&session, execution, options)
-                    .await
-            })
-            .await
-            .map_err(|error| error.in_query(&request.query))?;
-        Ok(view::query(&result))
     }
 
     pub async fn vector_collections(&self) -> Result<VectorCollectionsView, RrdError> {

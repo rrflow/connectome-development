@@ -45,6 +45,11 @@ request lifecycle transitions or preview and accept a successor after source edi
 rejection and receipt recovery. This does not establish full attunement execution
 or a completed development task.
 
+The inherited query, explorer, designer, access, GraphQL and import and export
+views are not yet re-authored onto RRFlow and still depend on the inherited client.
+[The native client requirement](docs/native-client-requirement.md) owns that work
+and a check reports, from the tree, exactly what is left.
+
 Credentials and session tokens remain in the native process. The renderer
 receives bounded public results and catalogue metadata. Cloud synchronization,
 PostgreSQL wire/SQL compatibility, full attunement and automatic image/audio/video

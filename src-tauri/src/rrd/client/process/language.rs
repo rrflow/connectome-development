@@ -347,3 +347,55 @@ fn the_rrflowql_golden_matches_the_engine() {
         "src/rrflow/fixtures/engine-queries.json differs from what this engine returns"
     );
 }
+
+/// A parameter against a real engine: a bound value, an unbound name, and a
+/// value the contract does not take.
+#[test]
+#[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
+fn a_query_parameter_is_bound_refused_unbound_and_typed_by_the_contract() {
+    let engram = Engram::install_and_serve();
+    tauri::async_runtime::block_on(async {
+        load_fixture(&engram).await;
+        let client = NativeRrdClient::connect(engram.connect_request())
+            .await
+            .expect("native connection");
+        let at = now_unix_ms().expect("clock");
+        // A parameter stands for a value: the same read with its valid time
+        // bound by name returns the same rows.
+        let by_name = "FROM record:document AT VALID $at KNOWN HEAD PROJECT * LIMIT 50";
+        let bound = client
+            .query(RrdQueryRequest {
+                query: by_name.into(),
+                parameters: BTreeMap::from([("at".to_owned(), QueryValue::Unsigned(at))]),
+            })
+            .await
+            .expect("a query with a bound parameter");
+        assert_eq!(bound.returned_rows, DOCUMENTS as u64);
+        // Unbound, the engine refuses it in its own words; nothing is guessed.
+        let unbound = client
+            .query(RrdQueryRequest {
+                query: by_name.into(),
+                parameters: Default::default(),
+            })
+            .await
+            .expect_err("an unbound parameter is refused");
+        assert!(
+            unbound.to_string().contains("missing query parameter $at"),
+            "{unbound}"
+        );
+        // A value the contract does not take as a parameter never leaves the client.
+        let listed = client
+            .query(RrdQueryRequest {
+                query: by_name.into(),
+                parameters: BTreeMap::from([("at".to_owned(), QueryValue::List(Vec::new()))]),
+            })
+            .await
+            .expect_err("a list is not a parameter value");
+        assert!(
+            listed
+                .to_string()
+                .contains("support only null, boolean, integer, unsigned, and string"),
+            "{listed}"
+        );
+    });
+}

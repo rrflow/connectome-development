@@ -25,7 +25,7 @@
 			"status": "partial",
 			"what": "Run the editor text with a Run button or Ctrl/Cmd+Enter; button shows a spinner while running; empty text does nothing; 'must be connected' error when no connection.",
 			"native": "query-lab.tsx: useMutation(client.query), Run button with loading/disabled, 'Waiting for the engine's answer'; query-editor.tsx binds Mod-Enter and Ctrl-Enter; session.ts query -> rrd_query -> src-tauri/src/rrd/client.rs:961 query / :462 execute_query -> engine query-execute POST /v1/query. Native adds canonical_query, plan candidates, read evidence, analysis (query-answer.tsx).",
-			"gap": "UI: native Run has no validity colouring of the button (inherited: gradient when lint passes) and is not reachable from the command palette (see 'Command palette and keybindings'). Native refuses >64 KiB or NUL before sending (client.rs:467); inherited had no size cap. Engine: none.",
+			"gap": "UI: not reachable from the command palette (see 'Command palette and keybindings'). Native refuses >64 KiB or NUL before sending (client.rs execute_query); inherited had no size cap. Run now shows validity (red, with the tokenizer's reason) and sends the variables. Engine: none.",
 			"dependsOn": "",
 			"inheritedPaths": [
 				"src/features/query/ResultPane/index.tsx",
@@ -52,10 +52,10 @@
 		{
 			"area": "query-studio",
 			"name": "Execute only the selection (+ warning banner)",
-			"status": "engine has it, no native UI",
+			"status": "partial",
 			"what": "With a selection, only the highlighted text runs; button label becomes 'Run selection'; a slide-up banner 'Only the highlighted selection will execute' with 'Hide Temporarily' and 'Configure' (opens settings at query-selection-execution); two settings toggle the behaviour and the warning; multiple cursors concatenate the statement under each cursor with ';'.",
-			"native": "Engine takes any query text via query-execute; native query-lab.tsx always sends the whole `query` state and tracks no selection.",
-			"gap": "UI: native editor must report its selection, send the selected slice, relabel Run, and show the warning with the two settings. Multi-cursor concatenation depends on multi-statement support. Engine: none.",
+			"native": "query-editor.tsx reports the selected text; query-lab.tsx sends it instead of the whole text when behavior.querySelectionExecution is on, relabels Run to 'Run selection', and shows 'Only the highlighted selection will run' when behavior.querySelectionExecutionWarning is on. Smoke: the Run selection step.",
+			"gap": "UI: the warning is a line of text, without the inherited 'Hide Temporarily' and 'Configure' buttons. Several cursors' selections are joined by a newline and sent as one query, which the engine refuses unless they form one statement; the inherited ';' join needs multi-statement support (engine).",
 			"dependsOn": "Multi-statement execution (only for the multi-cursor case)",
 			"inheritedPaths": [
 				"src/editor/languages/query.tsx",
@@ -68,10 +68,10 @@
 		{
 			"area": "query-studio",
 			"name": "Select the statement under the cursor (Mod-E)",
-			"status": "engine has it, no native UI",
+			"status": "native",
 			"what": "Ctrl/Cmd+E selects the query the cursor is in.",
-			"native": "query-editor.tsx keymap only binds Mod-Enter/Ctrl-Enter; range.ts getQueryRange returns the whole trimmed text because the engine takes one statement.",
-			"gap": "UI: add the Mod-E binding to the native editor (trivial today: selects all non-whitespace text; meaningful only if multi-statement splitting is authored). Engine: none.",
+			"native": "src/features/runtime/components/query-editor.tsx binds Mod-e to getQueryRange (src/editor/rrflowql/codemirror/range.ts) and selects it; the lab's hint names the key. Smoke: tests/smoke/connectome.spec.ts 'the query lab sends typed variables and runs only what is selected'.",
+			"gap": "None. The engine takes one statement per request, so the statement under the cursor is the query; if multi-statement text is ever accepted, getQueryRange is the one place to split it.",
 			"dependsOn": "",
 			"inheritedPaths": [
 				"src/editor/core/query-keymaps.tsx",
@@ -83,10 +83,10 @@
 		{
 			"area": "query-studio",
 			"name": "Query variables panel",
-			"status": "engine has it, no native UI",
+			"status": "partial",
 			"what": "Toggle a Variables pane beside the editor; edit a value object of $name bindings; 50 ms debounced save per tab; 'Invalid syntax' badge when it is not an object; Clear (resets to {}) and Close buttons; Mod-Enter inside it runs the main query; visibility persisted per tab; variables are sent with every run.",
-			"native": "Engine: ExecuteQuery.parameters: BTreeMap<String, QueryValue> (crates/transport/rrd-contract/src/query.rs:100-107, max MAX_QUERY_PARAMETERS). Native client drops it: src-tauri/src/rrd/client.rs:476 `parameters: Default::default()`, RrdQueryRequest {query} only (client.rs:116); session.ts query(query: string).",
-			"gap": "Client: add `parameters` to RrdQueryRequest / rrd_query (and rrd_query_export, rrd_live_open query stream), validate count and 64 KiB, and expose it on RrdSessionClient.query. UI: native variables pane with a typed editor built on src/rrflow/model.ts parseValue/value.* instead of the inherited value parser. Engine: per the reference only null, bool, integer, unsigned and string parameters are accepted, so list/map/decimal variables the inherited pane allowed have no engine equivalent (engine gap for those types).",
+			"native": "Client: RrdQueryRequest and RrdQueryExportRequest carry `parameters: BTreeMap<String, QueryValue>` and the contract's own ExecuteQuery::validate refuses before sending (src-tauri/src/rrd/client.rs with_parameters); session.ts query(query, parameters) and exportQuery(query, parameters). UI: src/features/runtime/query-lab/query-variables.tsx, a JSON object typed by src/rrflow/query-parameters.ts (whole numbers unsigned or integer by sign, or the contract's own {type, value} form), with a count badge, a 'not sent' badge and a blocked Run when it cannot be read, Clear, Close, and Mod-Enter running the main query. Real engine: the_lenses_read_a_live_engram binds $at, is refused unbound in the engine's words, and refuses a list before sending.",
+			"gap": "UI: the pane's text and visibility are not kept per tab or across a reload (no native tabs yet; see 'Query tabs'). Client: live queries (rrd_live_open) still send no parameters. Engine: only null, boolean, integer, unsigned and string are accepted as parameters, so the lists, maps and decimals the inherited pane allowed are refused.",
 			"dependsOn": "Native RRD client replacing the inherited engines",
 			"inheritedPaths": [
 				"src/features/query/VariablesPane/index.tsx",
@@ -98,10 +98,10 @@
 		{
 			"area": "query-studio",
 			"name": "Infer variables from query",
-			"status": "engine has it, no native UI",
+			"status": "native",
 			"what": "One click scans the query for $parameters, merges them into the variables object keeping existing values, opens the pane; reserved names are skipped.",
-			"native": "editor/rrflowql/engine/classify.ts gives role 'parameter' to $words; no native caller. Engine accepts $param in AT VALID/KNOWN and filter values (reference section 8).",
-			"gap": "UI: author the button in the native studio using classify(); replace formatValue with JSON/model.ts; drop the the inherited client reserved-name list (rrflowQL has no reserved parameters). Engine: none.",
+			"native": "query-lab.tsx 'Infer variables' calls inferParameters (src/rrflow/query-parameters.ts), which reads the query's $names with classify(), adds each missing one as null, keeps every value already typed, and opens the pane. It refuses to touch text it cannot read. Tests: scripts/test-query-parameters.mjs; the smoke test.",
+			"gap": "None. rrflowQL has no reserved parameter names, so none are skipped.",
 			"dependsOn": "Query variables panel",
 			"inheritedPaths": [
 				"src/features/query/QueryPane/index.tsx",
@@ -112,10 +112,10 @@
 		{
 			"area": "query-studio",
 			"name": "Variable name autocompletion",
-			"status": "engine has it, no native UI",
+			"status": "native",
 			"what": "Typing $ offers the variables defined in the pane.",
-			"native": "Extension attaches to the native rrflowqlLanguage but query-editor.tsx does not load it.",
-			"gap": "UI: load the completion in the native editor with a resolver over the native variables state. Engine: none.",
+			"native": "src/editor/rrflowql/codemirror/complete.ts rrflowqlParameterCompletion, loaded by query-editor.tsx with the names that currently have a value in the variables pane.",
+			"gap": "None.",
 			"dependsOn": "Query variables panel",
 			"inheritedPaths": [
 				"src/editor/languages/variables.tsx",
@@ -126,10 +126,10 @@
 		{
 			"area": "query-studio",
 			"name": "Table/kind name autocompletion",
-			"status": "engine has it, no native UI",
+			"status": "partial",
 			"what": "After FROM (and inherited's update/create/delete/into) the editor offers table names from the connection schema.",
-			"native": "Engine data-schema-read / rrd_schema and rrd_database list tables and models (session.ts schema(), database()); query-lab.tsx already reads databaseQuery for starters but offers no completion.",
-			"gap": "UI: author a completion for source family after FROM/JOIN, kind after `family:`, and schema property names after WHERE/PROJECT/ON, fed from RrdSchemaView. Engine: none.",
+			"native": "src/editor/rrflowql/codemirror/complete.ts rrflowqlSourceCompletion: the source family after FROM or JOIN, then the kinds the engine's schema lists for that family (sourceKinds in src/rrflow/query-parameters.ts, from RrdDatabaseView.tables).",
+			"gap": "UI: no completion of schema property names after WHERE, PROJECT or ON. Which data models `record` reads is taken as every table that is not a relation, event, series or geo table; the engine publishes no family-to-model map to check that against.",
 			"dependsOn": "",
 			"inheritedPaths": ["src/editor/languages/tables.tsx"],
 			"skeptic": ""
@@ -148,10 +148,10 @@
 		{
 			"area": "query-studio",
 			"name": "Pre-run lexical validation (lint) and its setting",
-			"status": "engine has it, no native UI",
+			"status": "native",
 			"what": "While typing (250 ms) the editor underlines what the tokenizer would refuse (unterminated string, bad escape, u64 overflow, unsupported character) with the engine's wording; the Run button is highlighted only when valid; 'Query validation' preference turns it off.",
-			"native": "lint.ts is native code but src/features/runtime/components/query-editor.tsx does not include rrflowqlLinting; it only shows post-run refusals.",
-			"gap": "UI: add rrflowqlLinting(onValidate) to the native editor and carry the validity state to the Run button; keep the queryErrorChecker setting. Engine: none.",
+			"native": "query-editor.tsx loads rrflowqlLinting (src/editor/rrflowql/codemirror/lint.ts): what the engine's tokenizer would refuse is underlined with the engine's wording after 250 ms; query-lab.tsx turns Run red with that reason in its title. The behavior.queryErrorChecker setting turns it off. Smoke: the unterminated-string step of the query lab test.",
+			"gap": "None.",
 			"dependsOn": "",
 			"inheritedPaths": [
 				"src/editor/rrflowql/codemirror/lint.ts",
@@ -179,10 +179,10 @@
 		{
 			"area": "query-studio",
 			"name": "Format query / format selection",
-			"status": "engine has it, no native UI",
-			"what": "A button (and 'Format query' command) pretty-prints the whole query or only the selection; on failure a 'Failed to format \u2014 Your query must be valid' notification.",
-			"native": "Authored formatter exists: src/editor/rrflowql/engine/format.ts layout() (clause-per-line, whitespace only) but grep finds no caller anywhere in src.",
-			"gap": "UI: wire layout() to a Format button/command in the native studio, for whole text and for a selection. No engine work. This removes one of the three uses of the inherited WASM in this area.",
+			"status": "partial",
+			"what": "A button (and 'Format query' command) pretty-prints the whole query or only the selection; on failure a 'Failed to format — Your query must be valid' notification.",
+			"native": "query-lab.tsx 'Format' / 'Format selection' calls formatQuery (query-editor.tsx), which applies layout() (src/editor/rrflowql/engine/format.ts) to the selection or the whole query. Whitespace only, so it cannot fail. Smoke: the Format selection step.",
+			"gap": "UI: no 'Format query' entry in the command palette (see 'Command palette, keybindings and menu actions').",
 			"dependsOn": "",
 			"inheritedPaths": [
 				"src/features/query/QueryPane/index.tsx",
@@ -374,7 +374,7 @@
 			"area": "query-studio",
 			"name": "Result mode: Live (live queries)",
 			"status": "engine has it, no native UI",
-			"what": "A query containing LIVE SELECT starts subscriptions; the tab is marked live; a banner 'Click here to open Live Mode' appears in other modes; Live mode lists incoming messages newest first (max 50) with action badge CREATE/UPDATE/DELETE/CLOSE, relative time refreshed every 30 s, live query id, expandable formatted body; right-click: 'Copy live query id', 'Kill live query'; 'Stop listening' button; 'Waiting for live query messages\u2026 / Listening\u2026' and 'No live queries currently active' empty states; error if the protocol cannot do live queries; subscriptions are cancelled on re-run and on tab close.",
+			"what": "A query containing LIVE SELECT starts subscriptions; the tab is marked live; a banner 'Click here to open Live Mode' appears in other modes; Live mode lists incoming messages newest first (max 50) with action badge CREATE/UPDATE/DELETE/CLOSE, relative time refreshed every 30 s, live query id, expandable formatted body; right-click: 'Copy live query id', 'Kill live query'; 'Stop listening' button; 'Waiting for live query messages… / Listening…' and 'No live queries currently active' empty states; error if the protocol cannot do live queries; subscriptions are cancelled on re-run and on tab close.",
 			"native": "RrdSessionClient.openLive({kind:'query', query}, onEvent) / closeLive -> rrd_live_open / rrd_live_close; src-tauri/src/rrd/client/live.rs:217-246 runs the query first, then opens SubscriptionStream::LiveQuery; engine subscription-open + /v1/ws and query-live-poll (crates/transport/rrd-contract/src/query.rs:302 PollLiveQuery). The only native caller uses kind 'changes' (features/runtime/live/use-live-changes.ts:109); no UI opens a live query.",
 			"gap": "UI: a 'Follow this query' control in the native studio that calls openLive with the query, shows the first snapshot and then added / updated (before and after) / removed rows, a stop button, tab live indicator, reconnect/ended status, message cap. This would be an enhancement over the inherited view (row diffs, resume, reconnect). Constraints to surface: query must use KNOWN HEAD and must not be truncated (crates/compute/rrd-query/src/live.rs:70,172), 8 subscriptions per connection, 256 delta rows. Client: live stream also hard-codes no parameters. Engine: none. There is no LIVE/KILL statement text; the control replaces it.",
 			"dependsOn": "Query tabs (per-tab live state); Typed result cells",
@@ -407,8 +407,8 @@
 			"name": "Result summary: row count and duration",
 			"status": "partial",
 			"what": "Each statement shows 'N results in <duration>' (server-reported), and the combined header shows the duration.",
-			"native": "query-rows.tsx shows returned_rows and truncated; query-answer.tsx shows 'Elapsed \u00b5s' only inside the analysis block, which exists only when the query ends with EXPLAIN ANALYZE (execution.analysis is null otherwise).",
-			"gap": "UI: show a duration on every run; today the only option without EXPLAIN ANALYZE is timing the round trip in the webview. Engine: QueryResult carries no elapsed time unless ANALYZE is requested; adding an always-present elapsed field would make this equal. Row count, keys examined and output bytes are already better than inherited.",
+			"native": "query-rows.tsx shows returned_rows, truncated, and 'answered in N ms round trip', measured in the window from sending the query to holding its answer (query-lab.tsx) and labelled as such; query-answer.tsx shows the engine's own 'Elapsed µs' inside the analysis block, which exists only for EXPLAIN ANALYZE.",
+			"gap": "Engine: QueryResult carries no elapsed time unless ANALYZE is requested; an always-present elapsed field would let the summary show the engine's time and not only the round trip. Row count, keys examined and output bytes are already better than inherited.",
 			"dependsOn": "",
 			"inheritedPaths": [
 				"src/features/query/ResultPane/index.tsx",
@@ -450,10 +450,10 @@
 		{
 			"area": "query-studio",
 			"name": "Editor appearance settings",
-			"status": "engine has it, no native UI",
+			"status": "native",
 			"what": "'Query editor line numbers' preference; editor scale applies to error text size; scroll past end.",
-			"native": "query-editor.tsx passes neither lineNumbers nor scrollPastEnd to CodeEditor.",
-			"gap": "UI only: honour queryLineNumbers and editorScale in the native editor.",
+			"native": "query-editor.tsx passes appearance.queryLineNumbers to CodeEditor, which already sizes text from appearance.editorScale and applies appearance.autoCollapseDepth.",
+			"gap": "None for the two settings. scrollPastEnd is not applied: a query is one short statement.",
 			"dependsOn": "",
 			"inheritedPaths": [
 				"src/features/query/QueryView/index.tsx",
@@ -466,7 +466,7 @@
 			"area": "query-studio",
 			"name": "Command palette, keybindings and menu actions",
 			"status": "engine has it, no native UI",
-			"what": "Commands 'Run query' (Mod-Enter), 'Save query', 'Format query', 'Toggle variables panel', 'Infer variables from query', 'View saved queries', 'View query history', 'Create new query' (Mod-T), 'Close current query' (Mod-W), 'Open query file\u2026' (Mod-O, desktop, also an app-menu item); all rebindable.",
+			"what": "Commands 'Run query' (Mod-Enter), 'Save query', 'Format query', 'Toggle variables panel', 'Infer variables from query', 'View saved queries', 'View query history', 'Create new query' (Mod-T), 'Close current query' (Mod-W), 'Open query file…' (Mod-O, desktop, also an app-menu item); all rebindable.",
 			"native": "No useIntent handler in src/features/runtime/query-lab; the native route /runtime/$id/workbench/query is not the 'query' view the intents navigate to.",
 			"gap": "UI: re-point each intent at the native studio and implement its handler there; otherwise the commands vanish when the inherited view is removed. Engine: none.",
 			"dependsOn": "Import rewiring onto authored modules",
@@ -571,7 +571,7 @@
 				"src/hooks/connection/schema.ts",
 				"src/shared/util/connection/schema.tsx"
 			],
-			"skeptic": "tables-view.tsx renders NavLinks in the engine's order with a text description 'model \u00b7 mode'. There is no per-variant icon, no ordering or grouping by variant (inherited sorts normal, view, relation and pinned first), and the count is a sentence, not a badge. The extra schema revision and read time do not replace the lost ordering on a long list that also has no search. That is not 'enhanced'."
+			"skeptic": "tables-view.tsx renders NavLinks in the engine's order with a text description 'model · mode'. There is no per-variant icon, no ordering or grouping by variant (inherited sorts normal, view, relation and pinned first), and the count is a sentence, not a badge. The extra schema revision and read time do not replace the lost ordering on a long list that also has no search. That is not 'enhanced'."
 		},
 		{
 			"area": "explorer-records",
@@ -1841,7 +1841,7 @@
 			"status": "engine cannot do it",
 			"what": "'New access method' > type JWT (default on root/namespace): name, optional AUTHENTICATE clause (code editor), token/session durations, either algorithm+key (13 algorithms: EDDSA, ES256/384/512, HS256/384/512, PS256/384/512, RS256/384/512) or 'Use JWKS verification' with a JWKS URL, optional comment; an issuer-key field is shown but is not emitted for type JWT. Error toast is mislabelled 'Failed to save user'.",
 			"native": "Engine: JWT sessions work over HTTP today (transport/rrd-server/src/http/handlers/session.rs:30-42 create_jwt_authenticated_session; auth.rs accepts 'Bearer <jwt>' on session-create) but with one server-wide verification key and HS256 only (rrd-security repository issue_jwt header alg \"HS256\"); issuers are declared in SecurityState.jwt_issuers, max 32, token lifetime <= 1 h (MAX_JWT_LIFETIME_MS). Declaring an issuer is engine-only (replace_security_authority).",
-			"gap": "Engine: public operation to add/disable a JwtIssuer and IdentityBinding; asymmetric algorithms (EdDSA/ES/PS/RS) and JWKS URL verification do not exist (HS256 only, key supplied to the server process); no AUTHENTICATE-clause equivalent (custom per-token check) \u2014 the nearest is the exact issuer/subject/audience binding plus SessionCreate policy; no comment field. UI: issuer form (issuer, audience, key id, validity) with the key handled natively.",
+			"gap": "Engine: public operation to add/disable a JwtIssuer and IdentityBinding; asymmetric algorithms (EdDSA/ES/PS/RS) and JWKS URL verification do not exist (HS256 only, key supplied to the server process); no AUTHENTICATE-clause equivalent (custom per-token check) — the nearest is the exact issuer/subject/audience binding plus SessionCreate policy; no comment field. UI: issuer form (issuer, audience, key id, validity) with the key handled natively.",
 			"dependsOn": "Security admin operations; engine decision on asymmetric/JWKS verification.",
 			"inheritedPaths": ["src/features/authentication/LevelPanel/models/access.tsx"],
 			"skeptic": ""
@@ -1918,7 +1918,7 @@
 			"area": "auth-admin",
 			"name": "Command palette and keybindable auth commands",
 			"status": "engine cannot do it",
-			"what": "Command palette group 'Authentication': 'Create root user', 'Create namespace user', 'Create database user' (each user-bindable to a key, navigate to the view and open the editor for that level), 'Create access' (bindable; navigates to the view but nothing listens for the intent, so no editor opens \u2014 inherited defect), and one 'Register user with access method <name>' command per RECORD access found at any level. Intents can also arrive by intent URL.",
+			"what": "Command palette group 'Authentication': 'Create root user', 'Create namespace user', 'Create database user' (each user-bindable to a key, navigate to the view and open the editor for that level), 'Create access' (bindable; navigates to the view but nothing listens for the intent, so no editor opens — inherited defect), and one 'Register user with access method <name>' command per RECORD access found at any level. Intents can also arrive by intent URL.",
 			"native": "No native access commands exist; no native access view to target.",
 			"gap": "UI: once the native access view exists, register bindable commands 'New principal', 'New role', 'New sign-in method', and make the last one actually open its editor. Engine: as above.",
 			"dependsOn": "Native access view.",
@@ -1986,7 +1986,7 @@
 			"status": "engine cannot do it",
 			"what": "Auth mode 'Record Access': namespace, database, access method name, and an 'Edit access fields' modal to add/remove arbitrary name/value pairs; values whose field name is password/pass/secret are masked. The pairs are sent as sign-in variables.",
 			"native": "No equivalent (see record access method). Native connect takes only {endpoint, instance, credential_path} (session.tsx:61-65).",
-			"gap": "The variable-bag form is the inherited client-specific. The need \u2014 connect as a restricted, non-operator identity to see what it can see \u2014 requires (engine) public creation of restricted principals and (UI) choosing which credential/principal a profile signs in with; the native registry already allows up to 8 profiles, so one profile per identity is feasible once such credentials can be issued.",
+			"gap": "The variable-bag form is the inherited client-specific. The need — connect as a restricted, non-operator identity to see what it can see — requires (engine) public creation of restricted principals and (UI) choosing which credential/principal a profile signs in with; the native registry already allows up to 8 profiles, so one profile per identity is feasible once such credentials can be issued.",
 			"dependsOn": "Security admin operations.",
 			"inheritedPaths": [
 				"src/components/ConnectionDetails/authentication.tsx",
@@ -2296,7 +2296,7 @@
 			"area": "params-functions-graphql",
 			"name": "Functions: call from queries",
 			"status": "engine cannot do it",
-			"what": "A defined function can be invoked from any query (RETURN fn::greet(\"x\")); the editors offer fn:: completions inserting name(\u2026). The intro panel teaches this.",
+			"what": "A defined function can be invoked from any query (RETURN fn::greet(\"x\")); the editors offer fn:: completions inserting name(…). The intro panel teaches this.",
 			"native": "rrflowQL has no function calls (reference section 9; parser keyword set). Engine alternatives: standalone RrdEngine::execute_function(ExecuteFunction {function_id, input}) returning a sealed FunctionInvocationReceipt (output, fuel/interrupts consumed, digests), and TransactionFunctionBinding (effect require_true | append_event{kind}) bound to a mutation kind (binding.rs). Neither has a catalogue operation or native UI.",
 			"gap": "Engine: public function-execute operation; calling a function from rrflowQL would be new language work (not present, not planned in the read sources). UI: a 'Run function' panel (JSON input validated against input_schema, shows output and receipt) and a transaction-bindings editor (mutation kind, optional kind, effect) - the bindings are an enhancement over the inherited client events, the in-query call is a loss.",
 			"dependsOn": "function-execute operation; typed QueryValue reaching the webview (today cells are display text)",
@@ -2711,7 +2711,7 @@
 			"name": "Migration: export database hand-off",
 			"status": "engine has it, no native UI",
 			"what": "'Export database' on the all-clear screen dispatches intent export-database with {v3:\"true\", tables:\"*\", resources:\"*\"}; the export modal re-syncs the schema, pre-selects every table and all 11 resource kinds, shows a blue 'You are exporting your database for use with RRFlow 3.0' banner and passes v3:true to the export so the dump is written in 3.0 syntax.",
-			"native": "Engine: backup-create POST /v1/backups, backup-list POST /v1/backups/list, restore-create POST /v1/restores (catalogue/lifecycle.rs). Native client: rrd_backups / rrd_backup_create / rrd_backup_restore and RrdSessionClient.backups / createBackup / restoreBackup (src/rrflow/session.ts). grep for createBackup|restoreBackup|backups( outside src/rrflow finds only src/shared/util/config/downgrade.tsx (unrelated config backup) \u2014 no view.",
+			"native": "Engine: backup-create POST /v1/backups, backup-list POST /v1/backups/list, restore-create POST /v1/restores (catalogue/lifecycle.rs). Native client: rrd_backups / rrd_backup_create / rrd_backup_restore and RrdSessionClient.backups / createBackup / restoreBackup (src/rrflow/session.ts). grep for createBackup|restoreBackup|backups( outside src/rrflow finds only src/shared/util/config/downgrade.tsx (unrelated config backup) — no view.",
 			"gap": "UI: a native backup and restore view (list with optional archive verification, create with label 1..96 chars, restore by sha256 into its own verified root) does not exist. Engine: there is no selective export (choose tables/resource kinds), no statement-dump export and no import; whole-instance backup is the only movement path, and restore does not replace the running engram. So the inherited 'pick tables and resource kinds, get a portable text dump' capability is an engine gap; only the 'take everything with me' need is covered.",
 			"dependsOn": "Sandbox/import-export modal area audit; native backup view.",
 			"inheritedPaths": [
@@ -2725,7 +2725,7 @@
 			"area": "migration-docs",
 			"name": "Docs: view availability and schema refresh",
 			"status": "native",
-			"what": "Sidebar entry 'Runtime API' (id documentation), shown when flag apidocs_view is on \u2014 on in development and preview, OFF in production ('TODO fix api docs'). On focus the view re-syncs the connection schema so table-based examples are current. With no schema loaded the page is empty (no loading or error state).",
+			"what": "Sidebar entry 'Runtime API' (id documentation), shown when flag apidocs_view is on — on in development and preview, OFF in production ('TODO fix api docs'). On focus the view re-syncs the connection schema so table-based examples are current. With no schema loaded the page is empty (no loading or error state).",
 			"native": "src/routes/runtime/$id/system/api.tsx (Route /runtime/$id/system/api, menu 'API reference'); src/features/runtime/api-reference/index.tsx ApiReference: reads RrdRuntimeClient.catalogue() (endpoint-catalogue GET /v1/schema/endpoints, public, no session), shows a loader and a red alert with describeRrdError on failure; gated by VIEW_NEEDS[\"system/api\"] in src/rrflow/views.ts.",
 			"gap": "None for availability: native works without a session, in every build, with real loading/error states. Minor: the catalogue is cached with staleTime Infinity and there is no manual 'read again' button.",
 			"dependsOn": "",
@@ -2760,7 +2760,7 @@
 			"status": "partial",
 			"what": "Dropdown in the article pane header listing 9 languages (CLI, Rust, JavaScript, Python, .NET, PHP, GoLang, Java, C), each with its logo and a check mark on the selected one; the choice is saved in settings (behavior.docsLanguage, default 'cli') and re-renders every snippet.",
 			"native": "src/features/runtime/api-reference/index.tsx lines 70-71 and 173-182: Select 'Example language' bound to the same behavior.docsLanguage setting; src/features/runtime/api-reference/examples.ts EXAMPLE_LANGUAGES = CLI (curl), TypeScript, Python, Go, Java, .NET; exampleLanguage() falls back to curl for a saved language RRFlow has no client for.",
-			"gap": "UI: native options have no language logos or check mark. Language set differs: native adds a working Java example (inherited Java was a stub) but has no Rust, PHP or C. PHP and C have no RRFlow client (sdks/ holds dotnet, go, java, python, typescript) so they are not applicable; Rust is a real gap \u2014 a first-party Rust client exists (crates/transport/rrd-client: RrdClient, create_session, call_operation) but examples.ts has no Rust generator.",
+			"gap": "UI: native options have no language logos or check mark. Language set differs: native adds a working Java example (inherited Java was a stub) but has no Rust, PHP or C. PHP and C have no RRFlow client (sdks/ holds dotnet, go, java, python, typescript) so they are not applicable; Rust is a real gap — a first-party Rust client exists (crates/transport/rrd-client: RrdClient, create_session, call_operation) but examples.ts has no Rust generator.",
 			"dependsOn": "Rust example generator in examples.ts.",
 			"inheritedPaths": [
 				"src/features/documentation/ArticlePane/index.tsx",
@@ -2840,7 +2840,7 @@
 			"status": "engine has it, no native UI",
 			"what": "Two prose articles with examples showing how to create a client and open a connection in CLI, JS, Rust, Python, Go, .NET, PHP (Java stub).",
 			"native": "Every native example starts with real client construction (examples.ts typescript()/python()/go()/java()/dotnet()), and session-create appears as an operation entry. But there is no narrative 'getting started' article: comments only say '// session comes from client.createSession(...)'.",
-			"gap": "UI: author a short 'Connect and open a session' guide (construct client, read health/capabilities, create a session from an API key, renew, close) above the per-operation list. Engine: nothing missing \u2014 session-create/renew/close and health-live/ready exist.",
+			"gap": "UI: author a short 'Connect and open a session' guide (construct client, read health/capabilities, create a session from an API key, renew, close) above the per-operation list. Engine: nothing missing — session-create/renew/close and health-live/ready exist.",
 			"dependsOn": "",
 			"inheritedPaths": [
 				"src/features/documentation/content/topics/global/initialize.tsx",
@@ -2941,12 +2941,12 @@
 		},
 		{
 			"area": "migration-docs",
-			"name": "Docs: Tables section \u2014 table picker",
+			"name": "Docs: Tables section — table picker",
 			"status": "engine has it, no native UI",
 			"what": "Section header with a blue 'Preview a table' alert containing a clearable dropdown of the connection's table names (placeholder example_table). The chosen table is remembered in the interface store and drives every table article; with no choice a built-in example_table with one field is used; with zero tables a warning 'The current schema has no tables defined' is shown instead of the dropdown.",
 			"native": "Engine/client can supply the list: rrd_database / rrd_schema (RrdSessionClient.database().tables, schema()). Native ApiReference takes only endpoint and instance (index.tsx:63) and has no table input. The native Tables view (src/features/runtime/tables/tables-view.tsx) has a table chooser but shows rows, not code.",
 			"gap": "UI: the native reference has no 'choose one of my tables/kinds and show me code for it' control. Author a kind picker fed by database().tables (needs a session, unlike the rest of the reference) with the same fallback and empty-state behaviour.",
-			"dependsOn": "Docs: Tables section \u2014 per-table CRUD examples",
+			"dependsOn": "Docs: Tables section — per-table CRUD examples",
 			"inheritedPaths": [
 				"src/features/documentation/content/topics/tables/selector.tsx",
 				"src/features/documentation/content/hooks/table.tsx",
@@ -2956,12 +2956,12 @@
 		},
 		{
 			"area": "migration-docs",
-			"name": "Docs: Tables section \u2014 per-table read examples (select fields, select all)",
+			"name": "Docs: Tables section — per-table read examples (select fields, select all)",
 			"status": "engine has it, no native UI",
 			"what": "Articles titled with the chosen table as a badge, showing how to read all fields or one named field (the first field that is not id/in/out) of that table in each language.",
-			"native": "Engine: query-execute with `FROM record:<kind> AT VALID <t> KNOWN HEAD PROJECT <fields|*> LIMIT n`. Native UI generates exactly such text elsewhere \u2014 starters() in src/features/runtime/query-lab/query-lab.tsx:27-56 and tableRowsQuery() in src/features/runtime/tables/row-query.ts:43 \u2014 but only as runnable queries, not as per-language client code; the reference's query-execute example is the generic '// payload is a ExecuteQuery'.",
+			"native": "Engine: query-execute with `FROM record:<kind> AT VALID <t> KNOWN HEAD PROJECT <fields|*> LIMIT n`. Native UI generates exactly such text elsewhere — starters() in src/features/runtime/query-lab/query-lab.tsx:27-56 and tableRowsQuery() in src/features/runtime/tables/row-query.ts:43 — but only as runnable queries, not as per-language client code; the reference's query-execute example is the generic '// payload is a ExecuteQuery'.",
 			"gap": "UI: per-kind worked examples in each SDK language (build an ExecuteQuery with scope instance:<id>, the rrflowQL text for the chosen kind and a chosen property from rrd_schema) are not authored. No engine gap for reads. Table definition (DEFINE TABLE) maps to a put_schema mutation carrying the whole registry, which has no native UI either.",
-			"dependsOn": "Docs: Tables section \u2014 table picker; request-body documentation.",
+			"dependsOn": "Docs: Tables section — table picker; request-body documentation.",
 			"inheritedPaths": [
 				"src/features/documentation/content/topics/tables/introduction.tsx",
 				"src/features/documentation/content/topics/tables/select.tsx",
@@ -2972,7 +2972,7 @@
 		},
 		{
 			"area": "migration-docs",
-			"name": "Docs: Tables section \u2014 per-table write examples (create, insert, update, delete)",
+			"name": "Docs: Tables section — per-table write examples (create, insert, update, delete)",
 			"status": "engine has it, no native UI",
 			"what": "Articles showing, for the chosen table, how to create a record (random or specific id), insert one or many, update all or one, and delete all or one, in each language.",
 			"native": "Engine: transaction-begin / preview / commit / abort with typed mutations put_record and retire_data (catalogue/data.rs; 10 mutation variants). Native client: previewChange / commitChange / discardChange in src/rrflow/session.ts with no UI caller (reference section 6). The reference lists the four transaction operations with generic examples only.",
@@ -2988,7 +2988,7 @@
 		},
 		{
 			"area": "migration-docs",
-			"name": "Docs: Tables section \u2014 live query example",
+			"name": "Docs: Tables section — live query example",
 			"status": "engine has it, no native UI",
 			"what": "Article 'Live queries' for the chosen table showing LIVE SELECT DIFF and the JS/.NET live-subscription APIs; hidden for PHP.",
 			"native": "Engine: query-live-poll POST /v1/query/live/poll, subscription-open/close and GET /v1/ws deliveries. Native client: rrd_live_open / rrd_live_close, RrdSessionClient.openLive (used by src/features/runtime/live/use-live-changes.ts). The reference lists these operations (including the WebSocket endpoint, index.tsx:79-97) with generic examples.",
@@ -3018,7 +3018,7 @@
 			"name": "Docs: request and response body detail",
 			"status": "engine has it, no native UI",
 			"what": "Inherited snippets show the concrete call with its arguments and field values (for example signin with username/password fields, insert with a record body), so a reader can copy a complete call.",
-			"native": "Native examples name only the type: curl says '# request.json is an RRD request envelope whose payload is a <request_type>' and SDK examples say '// payload is a <request_type>' (examples.ts:82,107). Engine publishes full schemas at openapi-read GET /v1/schema/openapi (catalogue/platform.rs:62), but the Tauri public transport refuses that path \u2014 allowlist is exactly health/live, health/ready, capabilities, schema/endpoints (src-tauri/src/rrd/transport.rs:41, with a test asserting /v1/schema/openapi is an error at line 66).",
+			"native": "Native examples name only the type: curl says '# request.json is an RRD request envelope whose payload is a <request_type>' and SDK examples say '// payload is a <request_type>' (examples.ts:82,107). Engine publishes full schemas at openapi-read GET /v1/schema/openapi (catalogue/platform.rs:62), but the Tauri public transport refuses that path — allowlist is exactly health/live, health/ready, capabilities, schema/endpoints (src-tauri/src/rrd/transport.rs:41, with a test asserting /v1/schema/openapi is an error at line 66).",
 			"gap": "UI: show each operation's request and response fields (and a sample body) from the OpenAPI document. Native client: allow /v1/schema/openapi in rrd_public_request (the 1 MiB response cap must be checked against the document size) and add a runtime client method. Engine: nothing missing.",
 			"dependsOn": "Tauri transport allowlist change.",
 			"inheritedPaths": [
@@ -3032,7 +3032,7 @@
 			"area": "migration-docs",
 			"name": "Docs: operation metadata (native-only enhancement)",
 			"status": "native",
-			"what": "Not present in the inherited view: for every operation the native reference shows HTTP method and path, authentication kind (No credentials / API key / Session), 'Changes state' versus 'Read only', the security action, operation id, request and response type names, a count line ('N operations in M families, protocol rrd v1'), family titles and descriptions \u2014 all read live from the engine so a new engine operation appears without a Connectome change.",
+			"what": "Not present in the inherited view: for every operation the native reference shows HTTP method and path, authentication kind (No credentials / API key / Session), 'Changes state' versus 'Read only', the security action, operation id, request and response type names, a count line ('N operations in M families, protocol rrd v1'), family titles and descriptions — all read live from the engine so a new engine operation appears without a Connectome change.",
 			"native": "src/features/runtime/api-reference/index.tsx lines 251-353; data from endpoint-catalogue (crates/transport/rrd-contract/src/operation_reference.rs owns family/summary/description).",
 			"gap": "None. Listed so the replacement is credited where it already exceeds the inherited view.",
 			"dependsOn": "",
@@ -3081,7 +3081,7 @@
 			"area": "connection-layer",
 			"name": "Connection state indicator in the toolbar",
 			"status": "native",
-			"what": "Toolbar button shows the connection name and icon, a loader while connecting/retrying, a pulsing green/red dot, and a hover menu whose header reads Disconnected / Connecting... / Reconnecting... / 'RRFlow \u00b7 core <version>'. Clicking it opens the connections list.",
+			"what": "Toolbar button shows the connection name and icon, a loader while connecting/retrying, a pulsing green/red dot, and a hover menu whose header reads Disconnected / Connecting... / Reconnecting... / 'RRFlow · core <version>'. Clicking it opens the connections list.",
 			"native": "src/features/runtime/project/layout.tsx: Badge Negotiating / RRD connected / Rejected / Unreachable, project Select, engram instance id; src/features/runtime/session/session.tsx: 'Session open / No session / Opening' badge with principal and since-time.",
 			"gap": "UI: the native badge is driven by a one-shot query (retry:false, no refetchInterval), so it only changes on a manual Reconnect or remount; inherited state was event-driven. Version string is not in the top bar (it is in System > Capabilities / Connections / Instance). Engine: none.",
 			"dependsOn": "Health polling (see automatic reconnect)",
@@ -3581,7 +3581,7 @@
 			"status": "engine cannot do it",
 			"what": "'Export database' (connection menu, Explorer view, command palette with keybinding) saves a single .rrflowql text dump named <connection-slug>-YYYY-MM-DD.rrflowql that can be re-imported; progress notification, success/failure notification with the error message.",
 			"native": "Engine: only query-export (one query, Parquet, <=1024 rows / 64 columns / 512 KiB: crates/transport/rrd-contract/src/query_export.rs lines 12-17), audit-export, and backup-create/backup-list/restore-create (catalogue/lifecycle.rs). Native client has exportQuery, exportAudit, saveArtifact, backups, createBackup, restoreBackup (src/rrflow/session.ts:1420-1452) with NO UI caller.",
-			"gap": "Engine: no logical whole-database export in a portable, re-importable text or data format; no export above 1024 rows. Whole-instance movement is backup/restore only, and restore goes to its own verified root rather than into a running instance. UI: nothing is authored \u2014 no backup view, no export button in the query lab. Minimum to avoid regression: (1) Backups view (list, create with label, restore, verify) on the existing native commands; (2) 'Export result' in the query lab on exportQuery + saveArtifact; (3) an engine export operation that pages through all kinds (or a native loop of paged queries written to one file) to cover 'everything in one file'.",
+			"gap": "Engine: no logical whole-database export in a portable, re-importable text or data format; no export above 1024 rows. Whole-instance movement is backup/restore only, and restore goes to its own verified root rather than into a running instance. UI: nothing is authored — no backup view, no export button in the query lab. Minimum to avoid regression: (1) Backups view (list, create with label, restore, verify) on the existing native commands; (2) 'Export result' in the query lab on exportQuery + saveArtifact; (3) an engine export operation that pages through all kinds (or a native loop of paged queries written to one file) to cover 'everything in one file'.",
 			"dependsOn": "Engine: paged/streamed logical export operation; UI: backups view, query-lab export button",
 			"inheritedPaths": [
 				"src/shell/components/App/modals/data/data-export.tsx",
@@ -3686,7 +3686,7 @@
 			"status": "engine has it, no native UI",
 			"what": "Pick a .csv: table name autocompletes from existing tables and defaults to the file name when it is a valid identifier; 'With headers' switch; one-character delimiter field; a per-column list with editable name (locked when headers are on) and type; parse errors shown inline; preview note 'will create or update N(+) records' from the first 1000 rows; import streams the file in 100 KiB chunks, skipping empty lines, one INSERT per chunk.",
 			"native": "Engine: put_record / put_relation mutations through transaction-preview/commit (crates/transport/rrd-contract/src/transaction.rs enum TransactionMutation; 1..=4096 mutations per transaction). Native client: session.previewChange/commitChange (session.ts:1372,1380), value builders and parseValue in src/rrflow/model.ts. No UI caller.",
-			"gap": "UI: the whole importer must be re-authored on the native model \u2014 file pick, papaparse preview (papaparse is not an inherited-client dependency and can stay), column mapping to RRFlow value types, canonical-id validation (^[a-z0-9][a-z0-9._-]*$, <=128 bytes), batching into previews of <=4096 put_record mutations, commit per batch, and a real per-batch result. Constraints that change behaviour: one pending change per connection, preview key budget 10,000, valid time must be chosen, a strict table rejects unknown columns, and the target kind may need a put_schema first. previewChange is typed loosely (RrdMutation) and should take model.ts TransactionMutation. Engine: works today, but there is no bulk path, so large files mean many transactions.",
+			"gap": "UI: the whole importer must be re-authored on the native model — file pick, papaparse preview (papaparse is not an inherited-client dependency and can stay), column mapping to RRFlow value types, canonical-id validation (^[a-z0-9][a-z0-9._-]*$, <=128 bytes), batching into previews of <=4096 put_record mutations, commit per batch, and a real per-batch result. Constraints that change behaviour: one pending change per connection, preview key budget 10,000, valid time must be chosen, a strict table rejects unknown columns, and the target kind may need a put_schema first. previewChange is typed loosely (RrdMutation) and should take model.ts TransactionMutation. Engine: works today, but there is no bulk path, so large files mean many transactions.",
 			"dependsOn": "Typed previewChange; native schema read; value model (model.ts)",
 			"inheritedPaths": ["src/shell/components/App/modals/data/data-import.tsx"],
 			"skeptic": ""
@@ -3728,7 +3728,7 @@
 			"area": "sandbox-mini-importexport",
 			"name": "Import: partial-failure reporting",
 			"status": "engine has it, no native UI",
-			"what": "After a data import: 'Import partially failed \u2014 failed N, inserted M, error: \u2026' warning, or 'Import failed \u2014 failed N' error; a CSV parse error in any chunk aborts with 'Import failed'; schema is re-synced afterwards; a spinner notification runs for the whole import.",
+			"what": "After a data import: 'Import partially failed — failed N, inserted M, error: …' warning, or 'Import failed — failed N' error; a CSV parse error in any chunk aborts with 'Import failed'; schema is re-synced afterwards; a spinner notification runs for the whole import.",
 			"native": "Native errors carry {message, retryable, query?} (RrdCommandError in src/rrflow/session.ts); commit returns RrdCommitReceiptView; preview returns the prospective state before anything is written.",
 			"gap": "Native can be better than inherited (preview shows what will change before commit; each batch is atomic; a receipt per batch) but nothing is authored. UI must count committed vs refused batches and surface the engine's refusal text. No engine change.",
 			"dependsOn": "CSV/JSON import work",
@@ -3741,7 +3741,7 @@
 			"status": "engine cannot do it",
 			"what": "A separate page (/mini, tools/mini-embed.html) that renders only a query editor and result pane over a private in-browser engine, for embedding in an iframe on any website; no config is saved; it always targets the sandbox.",
 			"native": "Engine: no browser/WASM or in-memory deployment (capabilities.rs lines 215-225, Planned). Native session requires Tauri (every RrdSessionClient method throws outside it) and loopback; a public web page cannot reach an engine.",
-			"gap": "Engine: an embeddable runner needs either the WASM/in-memory profile or a hosted read-only endpoint with CORS and a public query operation; neither exists. UI: no native mini screen. This capability cannot be carried today; removing it is a regression the owner must accept explicitly or defer until the engine gap closes. Observation: tools/mini-embed.html declares <meta name=\"connectome-mini\"> while src/adapter/index.tsx selects meta[name=Connectome-mini]; if that selector is case-sensitive the mini adapter is never chosen and the page is already not working as a mini \u2014 not run, so not confirmed.",
+			"gap": "Engine: an embeddable runner needs either the WASM/in-memory profile or a hosted read-only endpoint with CORS and a public query operation; neither exists. UI: no native mini screen. This capability cannot be carried today; removing it is a regression the owner must accept explicitly or defer until the engine gap closes. Observation: tools/mini-embed.html declares <meta name=\"connectome-mini\"> while src/adapter/index.tsx selects meta[name=Connectome-mini]; if that selector is case-sensitive the mini adapter is never chosen and the page is already not working as a mini — not run, so not confirmed.",
 			"dependsOn": "Engine deployment-wasm-browser / deployment-in-memory, or a hosted public read endpoint",
 			"inheritedPaths": [
 				"tools/mini-embed.html",
@@ -3989,7 +3989,7 @@
 			"area": "config-model-constants",
 			"name": "Token / password sign-in with expiry warning",
 			"status": "engine cannot do it",
-			"what": "Paste a JWT: invalid-JWT alert, 'expires in \u2026' warning inside 3 hours, 'has expired' notice; or type a username and password.",
+			"what": "Paste a JWT: invalid-JWT alert, 'expires in …' warning inside 3 hours, 'has expired' notice; or type a username and password.",
 			"native": "Engine: no signin/username-password/token operation in the catalogue; JWT issuance is engine-only (RrdEngine::issue_principal_jwt, authority/rrd-engine/src/engine/security.rs per the surface reference); capability security-capability-controls is Planned (authority/rrd-engine/src/capabilities.rs:263). Native shows session lifetimes instead: session.tsx:157-161.",
 			"gap": "Engine: a public human identity login (username/passphrase or JWT bearer) operation. UI: a sign-in form and expiry display once it exists. The owner has asked for identity-managed login; today only machine API keys in a file work.",
 			"dependsOn": "Engine security administration surface.",
@@ -4491,7 +4491,7 @@
 			"gap": "Engine has no per-table or per-field permissions, defaults, computed values, assertions, readonly/flex flags, DEFINE EVENT triggers, named users/access methods, params or public functions (functions and security administration are engine-only). Each is owned by its view's audit; this type block can be removed only when those views are. UI: nothing new here beyond using the native types.",
 			"dependsOn": "Designer, authentication, parameters, functions view audits.",
 			"inheritedPaths": [
-				"src/shared/types.tsx (ConnectionSchema \u2026 SchemaInfoTB, Permissions, AccessJwt, TableView)",
+				"src/shared/types.tsx (ConnectionSchema … SchemaInfoTB, Permissions, AccessJwt, TableView)",
 				"src/shared/util/config/defaults.tsx (createConnectionSchema)",
 				"src/stores/database.tsx"
 			],

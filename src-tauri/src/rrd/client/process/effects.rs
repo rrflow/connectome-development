@@ -35,9 +35,9 @@ fn document_change(id: &str) -> RrdChangePreviewRequest {
 async fn documents(client: &NativeRrdClient) -> Vec<String> {
     let at = now_unix_ms().expect("clock");
     let rows = client
-        .query(RrdQueryRequest {
-            query: format!("FROM record:document AT VALID {at} KNOWN HEAD PROJECT * LIMIT 50"),
-        })
+        .query(RrdQueryRequest::new(format!(
+            "FROM record:document AT VALID {at} KNOWN HEAD PROJECT * LIMIT 50"
+        )))
         .await
         .expect("documents");
     rows.rows.into_iter().map(|row| row.identity).collect()
@@ -288,6 +288,7 @@ fn exports_and_backups_round_trip_through_the_native_process() {
                 query: format!(
                     "FROM record:document AT VALID {at} KNOWN HEAD PROJECT id, title LIMIT 50"
                 ),
+                parameters: Default::default(),
             })
             .await
             .expect("Parquet export");

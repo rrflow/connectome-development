@@ -1,58 +1,37 @@
+import type { EditorView } from "@codemirror/view";
 import { Alert, Box, Button, Group, Loader, Stack, Text } from "@mantine/core";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Icon } from "~/components/Icon";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
+import { useSetting } from "~/hooks/app/config";
+import {
+	inferParameters,
+	parseParameters,
+	type QueryParameters,
+	sourceKinds,
+} from "~/rrflow/query-parameters";
 import { describeRrdError } from "~/rrflow/runtime";
-import { queryRefusal, type RrdDatabaseView } from "~/rrflow/session";
-import { iconErrorCircle, iconQuery } from "~/shared/assets/icons";
+import { queryRefusal } from "~/rrflow/session";
+import {
+	iconBraces,
+	iconErrorCircle,
+	iconQuery,
+	iconText,
+	iconVariable,
+} from "~/shared/assets/icons";
 import { databaseQuery } from "../api/queries";
 import { Term } from "../components/glossary";
-import { QueryEditor } from "../components/query-editor";
+import { formatQuery, QueryEditor } from "../components/query-editor";
 import { useProject } from "../project/context";
 import { QueryAnswer } from "./query-answer";
 import { QueryRows } from "./query-rows";
+import { QueryVariables } from "./query-variables";
+import { starters } from "./starters";
 
-/** Row bound for the starter queries; the engine's own query budget still applies. */
-const STARTER_ROW_LIMIT = 50;
-/** A source name the starter queries can spell without quoting. */
-const PLAIN_NAME = /^[A-Za-z_][A-Za-z0-9_-]*$/;
-
-interface Starter {
-	label: string;
-	query: string;
-}
-
-/** Starter queries over the kinds this engine really holds, read from its schema. */
-function starters(view: RrdDatabaseView | undefined): Starter[] {
-	if (!view) return [];
-	const at = `AT VALID ${Date.now()} KNOWN HEAD`;
-	const table = view.tables.find(
-		(entry) => entry.model === "relational" && PLAIN_NAME.test(entry.name),
-	)?.name;
-	const kind =
-		table ?? view.graph.nodes.find((node) => PLAIN_NAME.test(node.kind))?.kind ?? undefined;
-	const relation = view.tables.find(
-		(entry) => entry.model === "graph_relation" && PLAIN_NAME.test(entry.name),
-	)?.name;
-	const list: Starter[] = [];
-	if (kind) {
-		list.push({
-			label: `Read ${kind} records`,
-			query: `FROM record:${kind} ${at} PROJECT * LIMIT ${STARTER_ROW_LIMIT}`,
-		});
-		list.push({
-			label: `Read ${kind} records and analyse the run`,
-			query: `FROM record:${kind} ${at} PROJECT * EXPLAIN ANALYZE`,
-		});
-	}
-	if (relation) {
-		list.push({
-			label: `Read ${relation} relations`,
-			query: `FROM relation:${relation} ${at} PROJECT * LIMIT ${STARTER_ROW_LIMIT}`,
-		});
-	}
-	return list;
+interface Run {
+	text: string;
+	parameters: QueryParameters;
 }
 
 /** Why the engine refused a query: its parser's words when it gave them. */
@@ -67,18 +46,39 @@ export function QueryLabView() {
 		...databaseQuery(client, sessionKey),
 		enabled: Boolean(session),
 	});
+	const [runSelection] = useSetting("behavior", "querySelectionExecution");
+	const [warnSelection] = useSetting("behavior", "querySelectionExecutionWarning");
 	const [query, setQuery] = useState("");
+	const [selected, setSelected] = useState("");
+	const [lexical, setLexical] = useState("");
+	const [variables, setVariables] = useState("");
+	const [showVariables, setShowVariables] = useState(false);
+	const [editor, setEditor] = useState<EditorView | null>(null);
+	const parsed = useMemo(() => parseParameters(variables), [variables]);
+	const kinds = useMemo(() => sourceKinds(database.data?.tables ?? []), [database.data]);
 	const execution = useMutation({
 		mutationKey: ["rrd-query-lab", sessionKey],
-		mutationFn: (text: string) => client.query(text),
+		mutationFn: async ({ text, parameters }: Run) => {
+			const started = performance.now();
+			const result = await client.query(text, parameters);
+			return { result, roundTripMs: performance.now() - started };
+		},
 	});
 
 	if (!session) return null;
 
+	const selection = runSelection && selected.trim() ? selected : "";
 	const run = (text: string) => {
-		if (text.trim()) execution.mutate(text);
+		if (text.trim() && parsed.ok) execution.mutate({ text, parameters: parsed.parameters });
+	};
+	const runEditor = () => run(selection || query);
+	const infer = () => {
+		const next = inferParameters(variables, query);
+		if (next !== null) setVariables(next);
+		setShowVariables(true);
 	};
 	const examples = starters(database.data);
+	const answer = execution.data;
 
 	return (
 		<Stack gap="xl">
@@ -99,10 +99,25 @@ export function QueryLabView() {
 				<QueryEditor
 					query={query}
 					onChange={setQuery}
-					onRun={() => run(query)}
-					refused={execution.variables}
+					onRun={runEditor}
+					refused={execution.variables?.text}
 					error={execution.error}
+					onSelection={setSelected}
+					onValidity={setLexical}
+					kinds={() => kinds}
+					parameters={() => (parsed.ok ? Object.keys(parsed.parameters) : [])}
+					onMount={setEditor}
 				/>
+				{showVariables && (
+					<QueryVariables
+						text={variables}
+						parsed={parsed}
+						onChange={setVariables}
+						onRun={runEditor}
+						onClear={() => setVariables("")}
+						onClose={() => setShowVariables(false)}
+					/>
+				)}
 				<Group justify="space-between">
 					<Group gap="xs">
 						{database.isPending && <Loader size="xs" />}
@@ -141,19 +156,75 @@ export function QueryLabView() {
 							fz="xs"
 							c="slate"
 						>
-							Ctrl/⌘ + Enter runs the query.
+							Ctrl/⌘ + Enter runs the query; Ctrl/⌘ + E selects it.
 						</Text>
 					</Group>
-					<Button
-						size="xs"
-						leftSection={<Icon path={iconQuery} />}
-						loading={execution.isPending}
-						disabled={!query.trim()}
-						onClick={() => run(query)}
-					>
-						Run
-					</Button>
+					<Group gap="xs">
+						<Button
+							size="xs"
+							variant="subtle"
+							leftSection={<Icon path={iconText} />}
+							disabled={!query.trim() || !editor}
+							onClick={() => editor && formatQuery(editor)}
+						>
+							{selected.trim() ? "Format selection" : "Format"}
+						</Button>
+						<Button
+							size="xs"
+							variant="subtle"
+							leftSection={<Icon path={iconBraces} />}
+							disabled={!query.trim()}
+							onClick={infer}
+						>
+							Infer variables
+						</Button>
+						<Button
+							size="xs"
+							variant={showVariables ? "light" : "subtle"}
+							leftSection={<Icon path={iconVariable} />}
+							onClick={() => setShowVariables((shown) => !shown)}
+						>
+							Variables
+							{parsed.ok && Object.keys(parsed.parameters).length > 0
+								? ` (${Object.keys(parsed.parameters).length})`
+								: ""}
+						</Button>
+						<Button
+							size="xs"
+							color={lexical ? "red" : undefined}
+							variant={lexical ? "light" : "filled"}
+							title={
+								lexical
+									? `The engine's tokenizer would refuse this: ${lexical}`
+									: undefined
+							}
+							leftSection={<Icon path={iconQuery} />}
+							loading={execution.isPending}
+							disabled={!query.trim() || !parsed.ok}
+							onClick={runEditor}
+						>
+							{selection ? "Run selection" : "Run"}
+						</Button>
+					</Group>
 				</Group>
+				{selection && warnSelection && (
+					<Text
+						fz="xs"
+						c="orange"
+					>
+						Only the highlighted selection will run. Change this under Settings,
+						Behaviour.
+					</Text>
+				)}
+				{!parsed.ok && (
+					<Alert
+						color="red"
+						title="The variables cannot be read, so the query will not run"
+						icon={<Icon path={iconErrorCircle} />}
+					>
+						{parsed.error}
+					</Alert>
+				)}
 				{execution.isError && (
 					<Alert
 						color="red"
@@ -174,10 +245,15 @@ export function QueryLabView() {
 						</Text>
 					</Group>
 				)}
-				{execution.data && <QueryRows result={execution.data} />}
+				{answer && (
+					<QueryRows
+						result={answer.result}
+						roundTripMs={answer.roundTripMs}
+					/>
+				)}
 			</Stack>
 
-			{execution.data && <QueryAnswer result={execution.data} />}
+			{answer && <QueryAnswer result={answer.result} />}
 		</Stack>
 	);
 }

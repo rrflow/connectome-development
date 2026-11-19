@@ -798,9 +798,9 @@ fn the_lenses_read_a_live_engram() {
         // view maps every result shape the same way, so one query covers it.
         let at = now_unix_ms().expect("clock");
         let rows = client
-            .query(RrdQueryRequest {
-                query: format!("FROM record:document AT VALID {at} KNOWN HEAD PROJECT * LIMIT 50"),
-            })
+            .query(RrdQueryRequest::new(format!(
+                "FROM record:document AT VALID {at} KNOWN HEAD PROJECT * LIMIT 50"
+            )))
             .await
             .expect("record query");
         assert_eq!(rows.returned_rows, DOCUMENTS as u64);
@@ -812,9 +812,9 @@ fn the_lenses_read_a_live_engram() {
             "geo:location",
         ] {
             let result = client
-                .query(RrdQueryRequest {
-                    query: format!("FROM {source} AT VALID {at} KNOWN HEAD PROJECT * LIMIT 50"),
-                })
+                .query(RrdQueryRequest::new(format!(
+                    "FROM {source} AT VALID {at} KNOWN HEAD PROJECT * LIMIT 50"
+                )))
                 .await
                 .expect("native family query");
             assert_eq!(result.returned_rows, 1, "{source}");
