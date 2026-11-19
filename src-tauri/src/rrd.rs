@@ -45,8 +45,9 @@ use view::{
 const MAX_RRD_RESPONSE_BYTES: u64 = 1024 * 1024;
 const NOT_CONNECTED: &str = "Connectome is not connected to RRD";
 
-/// Bounded profile-scoped native clients. A read clones exactly its requested
-/// client before releasing the registry lock; there is no global active client.
+/// Profile-scoped native clients, one for every connected profile. A read
+/// clones exactly its requested client before releasing the registry lock;
+/// there is no global active client.
 #[derive(Default)]
 pub struct RrdClientState(tokio::sync::Mutex<BTreeMap<String, Arc<NativeRrdClient>>>);
 
@@ -76,11 +77,6 @@ impl RrdClientState {
         let mut guard = self.0.lock().await;
         if guard.contains_key(&profile) {
             return Err("this project profile is already connected; disconnect it first".into());
-        }
-        if guard.len() >= 8 {
-            return Err(
-                "eight native sessions are already open; disconnect a project first".into(),
-            );
         }
         let client = NativeRrdClient::connect(request).await?;
         let connection = client.connection();

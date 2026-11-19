@@ -1,6 +1,18 @@
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { type } from "arktype";
 
+/** Replay shows one event every this long at speed 1. */
+const PLAYBACK_STEP_MS = 700;
+/** The shortest step replay takes, so every event is drawn before the next. */
+const PLAYBACK_SHORTEST_STEP_MS = 80;
+
+/**
+ * How long replay stays on one event. The speed is the person's own choice in
+ * the replay controls, from the speeds the diagnostics endpoint offers.
+ */
+export const playbackStepMs = (speed: number) =>
+	Math.max(PLAYBACK_SHORTEST_STEP_MS, PLAYBACK_STEP_MS / speed);
+
 export const VYRM_DIAGNOSTICS_PROTOCOL = "vyrm-diagnostics" as const;
 export const VYRM_DIAGNOSTICS_VERSION = 1 as const;
 

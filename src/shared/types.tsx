@@ -349,19 +349,17 @@ export interface ConnectomeTemplateSettings {
 	list: Template[];
 }
 
-/**
- * How the desktop serves a local RRFlow engram. RRFlow has one storage
- * engine, picks its own loopback port, and keeps the operator credential in a
- * file the native process reads, so there is nothing else to configure.
- */
+/** How the desktop serves local RRFlow engines; each picks its own loopback port. */
 export interface ConnectomeServingSettings {
 	/** The project directory that holds, or will hold, the engram. Empty means the app's default engram. */
 	project: string;
-	/** Installation mode used when the project has no engram yet. */
-	mode: InstallMode;
 	/** An explicit `rrflow` executable; empty means the one on PATH. */
 	executable: string;
 	historySize: number;
+	/** Seconds between looks at every project's instance while the app is visible. */
+	instanceCheckSeconds: number;
+	outputBurstLines: number; // lines the serving console takes at once
+	outputRefillMs: number; // milliseconds for one of those lines to come back
 }
 
 /** How the desktop chose the engine it ran. */
@@ -378,7 +376,7 @@ export interface EngineBinding {
 
 export interface EngramSelection {
 	project: string;
-	mode: InstallMode;
+	mode?: InstallMode; // a pending preview states it; absent, the folder decides
 	executable: string;
 	/** The identity a pending installation preview was planned with. */
 	installationIdentity?: string;
@@ -388,7 +386,7 @@ export interface EngramSelection {
 
 export interface EngramPreview {
 	project: string;
-	mode: InstallMode;
+	mode: InstallMode | null; // present with `installation`: what the folder called for
 	engine: EngineBinding;
 	installation: { installation: { plan_sha256: string }; [key: string]: unknown } | null;
 	/** Present with `installation`: keep it with the preview to apply the same plan. */

@@ -38,7 +38,8 @@ each request and response. The webview receives view projections
 operator credential, a session bearer, or an engine-clock expiry instant.
 
 - **Engrams:** `rrd_engram_preview`, `rrd_engram_serve`, `rrd_engram_status`,
-  `rrd_engram_stop`; and `rrd_public_request` for public read-only paths.
+  `rrd_engram_stop`, `rrd_engram_forget`; and `rrd_public_request` for public
+  read-only paths.
   Startup may explicitly name an endpoint credential mapping file for that
   project. The launcher passes only its path; RRFlow validates the mapping and
   resolves environment values. The webview never reads the file or credentials.

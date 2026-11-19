@@ -91,7 +91,7 @@ impl Engram {
         let _ = self.served.server.wait();
         let mut reopen = EngramServeRequest {
             project: self.served.view.project.clone(),
-            mode: InstallMode::Fresh,
+            mode: Some(InstallMode::Fresh),
             executable: rrflow().to_string_lossy().into_owned(),
             accepted_plan_sha256: None,
             installation_identity: None,

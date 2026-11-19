@@ -28,9 +28,9 @@ to run the built desktop bundle on a supported desktop with its WebView runtime.
 
 Start with **Start local RRFlow** on the home screen, review **Install and open
 RRFlow**, then explore **Data models**, **Records & relations**, **Vectors** and
-**Storage engine** under the selected project. **Manage project engines** runs
-up to four independent local projects; **Advanced details** exposes engine
-identity and evidence. Project sections preserve their URL across navigation.
+**Storage engine** under the selected project. **Manage project engines** adds,
+starts, stops and removes independent local projects, each by itself and with no
+limit on how many run; **Advanced details** exposes engine identity and evidence. Project sections preserve their URL across navigation.
 **Guides** on a project's home walk through real views on that project's records.
 A step ends when you do the real action, and you can leave a guide at any time.
 Learning, knowledge-path setup and cloud services are labelled unavailable until

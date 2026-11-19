@@ -25,6 +25,7 @@ mod effects;
 mod elsewhere;
 mod language;
 mod live;
+mod many;
 mod offer;
 mod quantization;
 mod startup;
@@ -125,7 +126,7 @@ impl Engram {
         let served = serve_engram(
             accepted(EngramServeRequest {
                 project: project.to_string_lossy().into_owned(),
-                mode: InstallMode::Fresh,
+                mode: Some(InstallMode::Fresh),
                 executable: rrflow().to_string_lossy().into_owned(),
                 accepted_plan_sha256: None,
                 installation_identity: None,
@@ -282,7 +283,7 @@ impl Engram {
         let served = serve_engram(
             EngramServeRequest {
                 project: project_arg,
-                mode: InstallMode::Existing,
+                mode: Some(InstallMode::Existing),
                 executable: executable.to_string_lossy().into_owned(),
                 accepted_plan_sha256: None,
                 installation_identity: None,
@@ -329,7 +330,7 @@ impl Engram {
         self.served = serve_engram(
             EngramServeRequest {
                 project,
-                mode: InstallMode::Existing,
+                mode: Some(InstallMode::Existing),
                 executable: rrflow().to_string_lossy().into_owned(),
                 accepted_plan_sha256: None,
                 installation_identity: None,
@@ -985,7 +986,7 @@ fn the_bundled_engine_serves_as_the_verified_sidecar() {
     let served = serve_engram(
         accepted(EngramServeRequest {
             project: project.to_string_lossy().into_owned(),
-            mode: InstallMode::Fresh,
+            mode: Some(InstallMode::Fresh),
             executable: String::new(),
             accepted_plan_sha256: None,
             installation_identity: None,
@@ -1040,7 +1041,7 @@ fn native_preview_requires_exact_acceptance_and_reopens() {
     let observer = Arc::new(RecordingObserver::default());
     let mut request = EngramServeRequest {
         project: project.to_string_lossy().into_owned(),
-        mode: InstallMode::Fresh,
+        mode: Some(InstallMode::Fresh),
         executable: rrflow().to_string_lossy().into_owned(),
         accepted_plan_sha256: None,
         installation_identity: None,
@@ -1082,7 +1083,7 @@ fn project_registry_keeps_parallel_engrams_and_sessions_isolated() {
                     .join(format!("connectome-project-{}", Uuid::new_v4().simple()))
                     .to_string_lossy()
                     .into_owned(),
-                mode: InstallMode::Fresh,
+                mode: Some(InstallMode::Fresh),
                 executable: rrflow().to_string_lossy().into_owned(),
                 accepted_plan_sha256: None,
                 installation_identity: None,
@@ -1151,18 +1152,15 @@ fn project_registry_keeps_parallel_engrams_and_sessions_isolated() {
             .connect("invalid/handle".into(), request(&first))
             .await
             .is_err());
-        for index in 0..6 {
+        // Ten sessions at once: no count of open sessions refuses another.
+        for index in 0..8 {
             sessions
                 .connect(format!("extra-{index}"), request(&second))
                 .await
                 .unwrap();
         }
-        let full = sessions
-            .connect("over-capacity".into(), request(&second))
-            .await
-            .unwrap_err();
-        assert!(full.message.contains("eight native sessions"));
-        for index in 0..6 {
+        assert_eq!(sessions.0.lock().await.len(), 10);
+        for index in 0..8 {
             sessions
                 .disconnect(&format!("extra-{index}"))
                 .await

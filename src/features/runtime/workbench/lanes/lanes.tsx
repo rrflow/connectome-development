@@ -50,6 +50,7 @@ import {
 	getSelectedWorkloadProfile,
 	getWorkbenchLaneVisibility,
 	type WorkbenchLane,
+	watchLinkedPaths,
 } from "./lane-helpers";
 import {
 	buildTemplateExport,
@@ -787,9 +788,7 @@ export function WorkbenchLanes({
 
 	useEffect(() => {
 		if (!isTauri() || lane === "runtime-control") return;
-		void refreshLinkedPaths();
-		const timer = window.setInterval(() => void refreshLinkedPaths(), 10_000);
-		return () => window.clearInterval(timer);
+		return watchLinkedPaths(refreshLinkedPaths);
 	}, [lane, refreshLinkedPaths]);
 
 	useEffect(() => {

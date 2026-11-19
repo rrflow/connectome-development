@@ -82,7 +82,7 @@ fn an_instance_started_elsewhere_is_found_attached_and_left_running() {
     };
     let open = || EngramServeRequest {
         project: project.clone(),
-        mode: InstallMode::Existing,
+        mode: Some(InstallMode::Existing),
         executable: rrflow().to_string_lossy().into_owned(),
         accepted_plan_sha256: None,
         installation_identity: None,

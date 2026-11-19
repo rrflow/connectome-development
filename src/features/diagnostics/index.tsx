@@ -24,10 +24,12 @@ import { PageBreadcrumbs } from "~/components/PageBreadcrumbs";
 import { PrimaryTitle } from "~/components/PrimaryTitle";
 import {
 	type LaunchVyrmFlight,
+	playbackStepMs,
 	VyrmDiagnosticsClient,
 	type VyrmFlight,
 } from "~/rrflow/diagnostics";
 import { iconErrorCircle, iconRefresh } from "~/shared/assets/icons";
+import { visibleInterval } from "~/shared/util/platform/visibility";
 import { useConfigStore } from "~/shell/stores/config";
 import classes from "./style.module.scss";
 
@@ -83,17 +85,13 @@ export function RuntimeDiagnosticsPage({ id }: { id: string }) {
 
 	useEffect(() => {
 		if (!playing || !selectedFlight?.events.length) return;
-		const timer = window.setInterval(
-			() => {
-				setCursor((current) => {
-					const next = clampCursor(selectedFlight, current + playing);
-					if (next === current) setPlaying(0);
-					return next;
-				});
-			},
-			Math.max(80, 700 / speed),
-		);
-		return () => window.clearInterval(timer);
+		return visibleInterval(() => {
+			setCursor((current) => {
+				const next = clampCursor(selectedFlight, current + playing);
+				if (next === current) setPlaying(0);
+				return next;
+			});
+		}, playbackStepMs(speed));
 	}, [playing, selectedFlight, speed]);
 
 	const refresh = async () => {

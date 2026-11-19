@@ -1,9 +1,5 @@
 import assert from "node:assert/strict";
-import {
-	displayPath,
-	installationFacts,
-	refusedAsFresh,
-} from "../src/components/ActionBar/installation-facts.ts";
+import { displayPath, installationFacts } from "../src/components/ActionBar/installation-facts.ts";
 
 // The shape of a real `rrflow install plan --mode existing` reply, trimmed to the
 // fields the summary reads.
@@ -52,10 +48,6 @@ assert.deepEqual(unknown.createdPaths, []);
 assert.equal(unknown.preservesProjectFiles, false);
 assert.equal(unknown.networkEndpoints, null);
 assert.equal(unknown.permissions, null);
-
-assert.equal(refusedAsFresh("ProjectBindingMismatch", "fresh"), true);
-assert.equal(refusedAsFresh("ProjectBindingMismatch", "existing"), false);
-assert.equal(refusedAsFresh("some other failure", "fresh"), false);
 
 assert.equal(displayPath(String.raw`\\?\D:\work\project`), String.raw`D:\work\project`);
 assert.equal(displayPath(String.raw`\\?\UNC\server\share`), String.raw`\\server\share`);

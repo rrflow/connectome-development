@@ -341,7 +341,7 @@ try {
 		// A fresh project folder under the capture's output, so every run
 		// installs and seeds its own engram.
 		await page.getByLabel("Project directory").first().fill(join(out, "project"));
-		await page.getByRole("button", { name: "Preview or open project" }).first().click();
+		await page.getByRole("button", { name: "Add project", exact: true }).first().click();
 		await wait(8000);
 		await shot("installation-preview");
 	});

@@ -13,7 +13,7 @@ fn endpoint_mapping_is_engine_validated_and_requires_explicit_restart() {
     std::fs::write(&mapping, empty_mapping).unwrap();
     let request = accepted(EngramServeRequest {
         project: root.join("project").to_string_lossy().into_owned(),
-        mode: InstallMode::Fresh,
+        mode: Some(InstallMode::Fresh),
         executable: rrflow().to_string_lossy().into_owned(),
         accepted_plan_sha256: None,
         installation_identity: None,

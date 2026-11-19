@@ -110,6 +110,14 @@ export interface ConnectomeAdapter {
 	stopEngram(project: string): Promise<boolean>;
 
 	/**
+	 * Stop tracking a project that is being removed from Connectome: the
+	 * engine this desktop started is stopped, and an instance started
+	 * elsewhere keeps running. The project's files are never touched.
+	 * Resolves with whether an engine was stopped.
+	 */
+	forgetProject(project: string): Promise<boolean>;
+
+	/**
 	 * Open the given URL in the default browser
 	 *
 	 * @param url The URL to open
