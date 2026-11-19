@@ -11,7 +11,9 @@ commit's text exists somewhere. The evidence levels are **Read** (the branch
 code and its counterpart on `main` were read), **Tested** (a check that fails
 without the feature passes on `main`) and **Not read** (no claim).
 
-## `agent/rrflow-native-connectome` (tip `8a9eb5e5`, base 2026-10-16): read in full, carried or decided
+## `agent/rrflow-native-connectome` (tip `8a9eb5e5`, base 2026-10-16): code carried or decided; intent not met, now a requirement
+
+The table below answers whether the branch's code is on `main`. It does not answer whether `main` does what the branch set out to do, and it does not: Connectome still runs its inherited views on the inherited client. That intent is owned by [the native client requirement](native-client-requirement.md), which a check measures from the tree. An earlier version of this ledger called the branch absorbed on the code comparison alone; that was wrong.
 
 Design record read in full (`docs/rrflow-native-rewrite.md`), plus `knowledge.rs`, `knowledge.ts`, `ssh_forward.rs`, `editor/lexical.ts`, `editor/parser.ts`, `editor/index.ts`, the export lists of `client/values.ts`, `shared/util/rrflowql/native.ts` and `rrflow/ui/index.tsx`, and the rewrite's tests list. Sprint 009 decision 14 says this branch was "salvaged": its lexer and parser, dependency gate and knowledge-tree work were to be rebuilt on `main` "with credit". The dependency gate is on `main`. The rest is as below.
 
@@ -120,8 +122,8 @@ Every remaining branch was read against `main` by capability, not ancestry, and 
 |---|---|
 | `agent/engine-pin-catalogue`, `agent/one-engine-view-20261111` | absorbed, verified |
 | `agent/f4b-view-registry` | one gap: per-view instance lifecycle (`lifecycleState` in `src/rrflow/views.ts`, applied by `ViewGate`); carried by pull request 90. `planned` is not carried: a view exists only when its route file does |
-| `origin/agent/connectome-rrd-only` | superseded by decisions 16 to 18; the `endpoint` and `controlToken` connection fields are still **pending** with the client replacement |
-| `origin/agent/rrflow-native-connectome` | read in full on 2026-11-18. Carried: the query-result table, the dependency rules it had and `main` lacked, the denial assertions, the language-data fix and the design record. Not carried on purpose: the value classes and `NativeRRFlowQL`. Decisions open: `Markdown`, statement ranges, `CodeBlock` languages |
+| `origin/agent/connectome-rrd-only` | its method (delete with no stand-in) is superseded by decisions 17 and 18; its goal is not met and is owned by [the native client requirement](native-client-requirement.md), which also carries its connection model in full |
+| `origin/agent/rrflow-native-connectome` | intent not met; owned by [the native client requirement](native-client-requirement.md). Code read in full on 2026-11-18. Carried: the query-result table, the dependency rules it had and `main` lacked, the denial assertions, the language-data fix and the design record. Not carried on purpose: the value classes and `NativeRRFlowQL`. Decisions open: `Markdown`, statement ranges, `CodeBlock` languages |
 
 ## The Copilot commit `fa8d769c` and its five check scripts, 2026-11-18
 
@@ -149,7 +151,9 @@ Seven worktrees held uncommitted work. Each was read against `main` by capabilit
 | `connectome-visual-isolated-20261107` | all on `main` |
 | `connectome-visual-runner-20261107` | three local capture scripts carried into `tests/visual/` (pull request 91, **not run against the current UI**). Two items are not carried: reading the all-model snapshot only on Overview (the project layout uses that query for the menu counts on every route, so it cannot be gated) and the `CONNECTOME_VISUAL_SANDBOX` data-directory override (its own comment says it is local and never to be committed) |
 
-## `agent/connectome-rrd-only` (tip `58a3aeae`): superseded by owner decisions, one idea to keep
+## `agent/connectome-rrd-only` (tip `58a3aeae`): method superseded by owner decisions; goal not met, now a requirement
+
+The branch's goal, no inherited engine surface in Connectome, is the owner's decision 12 and is not met on `main`. It is owned by [the native client requirement](native-client-requirement.md), which quotes the connection model below in full so the branch holds nothing `main` lacks.
 
 A work-in-progress "not for review until D1's checks pass" that implements sprint 009 **decision 16** (fold, then delete, no stand-in): 52,146 deletions across 227 files, including 58 components `main` still uses. The owner rejected that approach on 2026-10-27 (**decision 18**: "I do not want you excluding … code but getting it authored properly"; re-author in place) and decision 17 forbids any visual regression. So its deletions are **not** absorbed, by your own direction.
 
@@ -157,7 +161,7 @@ Read in full: the commit message, sprint 009 decisions 16 to 18, and every line 
 
 | Added by the branch | State |
 |---|---|
-| A connection model that names an RRD target and endpoint (`target`, `endpoint`, `runtimeInstance`, `runtimeCredential`, `controlToken`) instead of the inherited authentication-shaped profile that `main` still uses | **pending**: belongs to the view re-authoring; carry the model, not the migrator |
+| A connection model that names an RRD target and endpoint (`target`, `endpoint`, `runtimeInstance`, `runtimeCredential`, `controlToken`) instead of the inherited authentication-shaped profile that `main` still uses | **owed**: recorded in full in [the native client requirement](native-client-requirement.md); carry the model, not the migrator |
 | A version-3 configuration migrator that keeps only RRD profiles and drops all others | **not carried**: it is migration code, which pre-release forbids, and it deletes saved profiles |
 | A move of `RelationGraph/drawing.tsx` | a pure rename; nothing to carry |
 | A simplified toolbar and route table | tied to the deletions; not carried |
@@ -555,12 +559,21 @@ Each tip is an ancestor of `main` and had no open pull request when its branch w
 | `codex/worker-handoff` | `0b31c2e6fd45648526ed6aec6bf6ce5372c671db` |
 | `docs/sprint-009-rrflow-conversion` | `cd769940886384883335a0c193ad239c328f1786` |
 
+### The last two old branches and their tips (2026-11-19)
+
+Neither is an ancestor of `main`. Each is deleted once [the native client requirement](native-client-requirement.md) is on `main`, because that record then owns what the branch set out to do.
+
+| Branch | Tip | Still readable as |
+|---|---|---|
+| `agent/rrflow-native-connectome` | `8a9eb5e52b8df91b888b75f6c98edabeb8d3199d` | pull request 10 (`refs/pull/10/head`) |
+| `agent/connectome-rrd-only` | `58a3aeae55aa499c7e8e989891d1972de12837a8` | nothing on the remote; its one addition is quoted in the requirement |
+
 ## Open items for the owner
 
 1. **One rrflowQL editor language.** `main` has two lineages: an engine-tokenizer language for the Query lab, and the inherited grammar for the inherited views. The branch adds a third (presentation scanner, formatter, statement splitting). Which is canonical?
 2. **The pre-area address translations** kept in `layout.tsx` (`tasks`, `plan`, `api`, `workbench`, `knowledge/storage`) are pinned by the smoke suite but are compatibility under the pre-release rule. Keep or retire?
 3. **Grouping.** Areas are folders, so regrouping the views is moving files. The August Workbench grouped them as a primary set, "Visual labs" and "Developer tools"; PR #67 uses Knowledge, Reasoning, Labs, Engine, Activity and System.
-4. **Branch deletion** once everything above is carried: which of the 11 branches to delete, since each deletion is hard to undo.
+4. **Branch deletion.** Settled by the owner's direction of one branch of record per repository: the last two old branches go once the native client requirement is on `main` (tips above).
 5. **Backup, restore, export and import UI is missing.** The inherited backups block, backups drawer and the data export and import dialogs are gone, and no RRFlow lens replaces them. PARITY lists them; plan step V5. Build, or retire?
 6. **Metrics and log monitoring is missing.** The inherited monitor view (log, metric and monitors panes) was removed with the hosted-service surface and has no RRFlow equivalent; the connection-diagnostics view is not one. Your monitoring and hop-tracing requirement is open.
 7. **Three real views decision 20 owes:** project knowledge paths (PR #68, open), editable rrflowQL graph results, and plan and handoff records with the schemas they produce. Learning, Services, Provider setup and Session replay are unbuilt.

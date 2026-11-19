@@ -55,8 +55,9 @@ const earlierTermGate = "scripts/check-retired-identities.mjs";
 
 /**
  * Files whose purpose is to preserve or report third-party provenance, plus
- * the gates that must spell the name they forbid: this one, and the RRFlow
- * isolation gate, which fails when an RRFlow page loads the vendor's packages.
+ * the gates that must spell the name they forbid: this one, the RRFlow
+ * isolation gate, which fails when an RRFlow page loads the vendor's packages,
+ * and the native client requirement, which counts what is left of them.
  */
 const noticeFiles = new Set([
 	"LICENSE",
@@ -64,6 +65,7 @@ const noticeFiles = new Set([
 	"src/shared/assets/data/license-report.json",
 	"scripts/check-retired-identities.mjs",
 	"scripts/check-rrflow-isolation.mjs",
+	"scripts/check-native-client-requirement.mjs",
 ]);
 
 /**
@@ -106,12 +108,9 @@ const declared = Object.keys({
 	...manifest.optionalDependencies,
 }).filter((name) => vendor.test(name));
 
-/**
- * The inherited dependencies are counted down, never up: a new one would
- * authorise its own name everywhere, because the allowed set above is read
- * from the manifest. Lower this as each is removed.
- */
-const INHERITED_DEPENDENCY_LIMIT = 4;
+// The allowed set is read from the manifest, so a new inherited dependency
+// would authorise its own name everywhere. `check-native-client-requirement.mjs`
+// refuses one: the number it records may only go down.
 
 function escapePattern(text) {
 	return text.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&");
@@ -207,13 +206,6 @@ if (earlierTermViolations.length > 0) {
 	for (const violation of earlierTermViolations.sort()) {
 		console.error(`- ${violation}`);
 	}
-	process.exitCode = 1;
-}
-
-if (declared.length > INHERITED_DEPENDENCY_LIMIT) {
-	console.error(
-		`package.json declares ${declared.length} inherited vendor dependencies; the limit is ${INHERITED_DEPENDENCY_LIMIT} and may only go down.`,
-	);
 	process.exitCode = 1;
 }
 
