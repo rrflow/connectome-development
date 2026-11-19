@@ -204,6 +204,32 @@ export function parseTemplateImport(
 	return imported;
 }
 
+export type TemplateImportOutcome = { templates: WorkbenchDatasetTemplate[] } | { error: string };
+
+/**
+ * What an import does once its file has been read. Reading takes time, so
+ * the workbench is looked at again now: `latest` is what the connection
+ * holds at this moment, and `current` says whether the person is still in
+ * the workbench the import was started in. An import whose workbench is
+ * gone writes nothing, and the imported templates go in front of the ones
+ * the connection has now, not the ones it had when the import began.
+ */
+export function finishTemplateImport(
+	parsed: unknown,
+	latest: ConnectionWorkbenchState | null,
+	current: boolean,
+	newId: NewId,
+): TemplateImportOutcome {
+	if (!current || !latest) {
+		return { error: "Workbench context changed; import stopped." };
+	}
+	const imported = parseTemplateImport(parsed, latest.linkedPaths, newId);
+	if (imported.length === 0) {
+		return { error: "The selected file contains no valid dataset templates." };
+	}
+	return { templates: [...imported, ...latest.templates] };
+}
+
 /** Fills the fields a connection saved before these lanes existed. */
 export function normalizeWorkbench(
 	state: ConnectionWorkbenchState | undefined,
