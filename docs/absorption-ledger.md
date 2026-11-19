@@ -568,6 +568,15 @@ Neither is an ancestor of `main`. Each is deleted once [the native client requir
 | `agent/rrflow-native-connectome` | `8a9eb5e52b8df91b888b75f6c98edabeb8d3199d` | pull request 10 (`refs/pull/10/head`) |
 | `agent/connectome-rrd-only` | `58a3aeae55aa499c7e8e989891d1972de12837a8` | nothing on the remote; its one addition is quoted in the requirement |
 
+### Local archive refs, 2026-11-19
+
+Five refs under `refs/archive/20261114/` exist only in the owner's checkout; none is on the remote and none is an ancestor of `main`. Three hold branches read above (`agent/engine-pin-catalogue`, `agent/one-engine-view-20261111`, `agent/f4b-view-registry`). Two were never named in this ledger:
+
+| Ref | What it set out to do | On `main` |
+|---|---|---|
+| `branch/agent/alarm-livefire-20261110` (tip `edd9b45a`, pull request 48, closed) | Prove the merge alarm fires, with a test made to fail on purpose; "not for merging" in its own words | met: the alarm has since opened and closed real `merge-blocked` issues (84, 88, 89, 93, 94). Its two lines are the deliberate failure and are not wanted |
+| `head/main-folder` (tip `f7f48125`) | Rename the earlier word to engram in four files; an editor commit whose find and replace also broke names (`InstalledengramView`, and a message naming `usengram`) | met by pull request 96, which renamed the whole repository correctly and added the earlier-term gate |
+
 ## Open items for the owner
 
 1. **One rrflowQL editor language.** `main` has two lineages: an engine-tokenizer language for the Query lab, and the inherited grammar for the inherited views. The branch adds a third (presentation scanner, formatter, statement splitting). Which is canonical?
