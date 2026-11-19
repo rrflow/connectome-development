@@ -15,9 +15,10 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const { buildTemplateExport, normalizeWorkbench, parseTemplateImport } = await import(
-	`file://${join(root, "src/features/runtime/workbench/lanes/workbench-state.ts").replaceAll("\\", "/")}`
-);
+const { buildTemplateExport, finishTemplateImport, normalizeWorkbench, parseTemplateImport } =
+	await import(
+		`file://${join(root, "src/features/runtime/workbench/lanes/workbench-state.ts").replaceAll("\\", "/")}`
+	);
 
 let checks = 0;
 const check = (name, run) => {
@@ -189,6 +190,36 @@ check("a file that is not a template export imports nothing", () => {
 	for (const value of [null, undefined, 5, "x", {}, { templates: "no" }, { templates: [] }]) {
 		assert.deepEqual(parseTemplateImport(value, [], counter()), []);
 	}
+});
+
+check("an import goes in front of what the connection holds when the file has been read", () => {
+	// Reading the file takes time: one template was added and one removed meanwhile.
+	const latest = normalizeWorkbench(
+		{ templates: [{ ...template, id: "added-meanwhile", name: "Added meanwhile" }] },
+		counter(),
+	);
+	const outcome = finishTemplateImport({ templates: [template] }, latest, true, counter());
+	assert.deepEqual(
+		outcome.templates.map((entry) => entry.name),
+		[template.name.trim(), "Added meanwhile"],
+	);
+});
+
+check("an import whose workbench is gone writes nothing", () => {
+	const latest = normalizeWorkbench({ templates: [] }, counter());
+	for (const outcome of [
+		finishTemplateImport({ templates: [template] }, latest, false, counter()),
+		finishTemplateImport({ templates: [template] }, null, true, counter()),
+	]) {
+		assert.deepEqual(outcome, { error: "Workbench context changed; import stopped." });
+	}
+});
+
+check("an import with nothing valid in it says so and writes nothing", () => {
+	const latest = normalizeWorkbench({ templates: [] }, counter());
+	assert.deepEqual(finishTemplateImport({ templates: [] }, latest, true, counter()), {
+		error: "The selected file contains no valid dataset templates.",
+	});
 });
 
 console.log(`Workbench state holds: ${checks} checks.`);

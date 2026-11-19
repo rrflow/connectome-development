@@ -55,9 +55,9 @@ import {
 } from "./lane-helpers";
 import {
 	buildTemplateExport,
+	finishTemplateImport,
 	manualTrigger,
 	normalizeWorkbench,
-	parseTemplateImport,
 } from "./workbench-state";
 
 /**
@@ -505,19 +505,28 @@ export function WorkbenchLanes({
 		importInputRef.current?.click();
 	};
 
+	// A scripted event or an import acts on the workbench it was started in:
+	// its generation ends when the project, the connection or the lane changes.
+	const eventGeneration = useRef(0);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: the inputs are the trigger, not read inside
+	useEffect(() => {
+		eventGeneration.current += 1;
+	}, [connectionId, connected, lane]);
+
 	const importTemplates = async (event: ChangeEvent<HTMLInputElement>) => {
 		const file = event.currentTarget.files?.[0];
 		event.currentTarget.value = "";
 		if (!file) return;
 		setTemplateImportError(null);
+		const generation = eventGeneration.current;
 		try {
 			const parsed = JSON.parse(await file.text()) as unknown;
-			const imported = parseTemplateImport(parsed, workbench.linkedPaths, newId);
-			if (imported.length === 0) {
-				setTemplateImportError("The selected file contains no valid dataset templates.");
-				return;
-			}
-			saveWorkbench({ templates: [...imported, ...workbench.templates] });
+			const saved = useConfigStore.getState().connections.find((c) => c.id === connectionId);
+			const latest = saved ? normalizeWorkbench(saved.workbench, newId) : null;
+			const current = eventGeneration.current === generation;
+			const outcome = finishTemplateImport(parsed, latest, current, newId);
+			if ("error" in outcome) setTemplateImportError(outcome.error);
+			else saveWorkbench({ templates: outcome.templates });
 		} catch (error) {
 			setTemplateImportError(error instanceof Error ? error.message : String(error));
 		}
@@ -712,13 +721,6 @@ export function WorkbenchLanes({
 		}
 	};
 
-	// A scripted event acts on the workbench it was started in: its generation
-	// ends when the project, the connection or the lane changes.
-	const eventGeneration = useRef(0);
-	// biome-ignore lint/correctness/useExhaustiveDependencies: the inputs are the trigger, not read inside
-	useEffect(() => {
-		eventGeneration.current += 1;
-	}, [connectionId, connected, lane]);
 	const router = useRouter();
 	const knownRoutes = useMemo(
 		() =>
