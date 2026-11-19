@@ -118,6 +118,69 @@ mod tests {
         );
     }
 
+    /// A process that prints one line that is not an announcement and waits.
+    fn waiting_child() -> Child {
+        #[cfg(windows)]
+        let mut command = {
+            use std::os::windows::process::CommandExt;
+            let mut command = Command::new("powershell.exe");
+            command
+                .args([
+                    "-NoLogo",
+                    "-NoProfile",
+                    "-NonInteractive",
+                    "-Command",
+                    "[Console]::Out.WriteLine('invalid announcement'); [Console]::Out.Flush(); Start-Sleep -Seconds 60",
+                ])
+                .creation_flags(0x08000000);
+            command
+        };
+        #[cfg(not(windows))]
+        let mut command = {
+            let mut command = Command::new("sh");
+            command.args(["-c", "printf 'invalid announcement\n'; exec sleep 60"]);
+            command
+        };
+        command
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null())
+            .spawn()
+            .expect("start a waiting process")
+    }
+
+    fn is_running(process: u32) -> bool {
+        #[cfg(windows)]
+        let output = Command::new("tasklist")
+            .args(["/FI", &format!("PID eq {process}"), "/NH", "/FO", "CSV"])
+            .output()
+            .expect("list processes");
+        #[cfg(not(windows))]
+        let output = Command::new("sh")
+            .args([
+                "-c",
+                &format!("kill -0 {process} 2>/dev/null && echo {process}"),
+            ])
+            .output()
+            .expect("probe the process");
+        String::from_utf8_lossy(&output.stdout).contains(&process.to_string())
+    }
+
+    #[test]
+    fn a_refused_announcement_reaps_the_started_process() {
+        let mut server = OwnedProcess(waiting_child());
+        let process = server.id();
+        let error = announcement(&mut server).unwrap_err();
+        assert!(
+            error.to_string().contains("announcement is not JSON"),
+            "{error}"
+        );
+        assert!(is_running(process), "the process waits until it is dropped");
+        // Every error path out of the serve sequence drops the owned process.
+        drop(server);
+        assert!(!is_running(process), "a dropped engine is reaped");
+    }
+
     #[test]
     fn a_failure_that_wrote_nothing_says_so() {
         assert_eq!(diagnostic(b""), "no error output");
