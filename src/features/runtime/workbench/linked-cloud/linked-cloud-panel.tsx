@@ -45,6 +45,7 @@ export function WorkbenchLinkedCloudPanel({
 	remoteSourceError,
 	onAddRemoteSource,
 	remoteSources,
+	onOpenRemoteSource,
 	onLoadDocIntoWorkspace,
 	onRemoveRemoteSource,
 	docWorkspaceBusy,
@@ -84,6 +85,7 @@ export function WorkbenchLinkedCloudPanel({
 	remoteSourceError: string | null;
 	onAddRemoteSource: () => void;
 	remoteSources: WorkbenchRemoteSource[];
+	onOpenRemoteSource: (source: WorkbenchRemoteSource) => void;
 	onLoadDocIntoWorkspace: (source: WorkbenchRemoteSource) => void;
 	onRemoveRemoteSource: (sourceId: string) => void;
 	docWorkspaceBusy: boolean;
@@ -332,9 +334,7 @@ export function WorkbenchLinkedCloudPanel({
 								<Button
 									size="xs"
 									variant="subtle"
-									onClick={() =>
-										window.open(source.relayUrl ?? source.url, "_blank")
-									}
+									onClick={() => onOpenRemoteSource(source)}
 								>
 									Open source
 								</Button>
