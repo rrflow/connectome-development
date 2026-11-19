@@ -35,6 +35,7 @@ import {
 } from "../datasets/dataset";
 import { WorkbenchDatasetPanel } from "../datasets/dataset-panel";
 import { WorkbenchLinkedCloudPanel } from "../linked-cloud/linked-cloud-panel";
+import { checkedSource, openSource, usableSourceUrl } from "../linked-cloud/source-url";
 import { WorkbenchMcplLanePanel } from "../mcpl/mcpl-lane-panel";
 import { WorkbenchTemplateAuthoringPanel } from "../templates/template-authoring-panel";
 import { WorkbenchTemplateLibraryPanel } from "../templates/template-library-panel";
@@ -153,12 +154,6 @@ function inferPathLabel(path: string) {
 	const normalized = path.replace(/\\/g, "/");
 	const parts = normalized.split("/").filter((part) => part.length > 0);
 	return parts[parts.length - 1] ?? path;
-}
-
-function relayUrlForGoogleDocs(url: string) {
-	const match = url.match(/\/document\/d\/([^/]+)/);
-	if (!match) return null;
-	return `https://docs.google.com/document/d/${match[1]}/export?format=txt`;
 }
 
 /** Joins with the separator the linked folder already uses. */
@@ -631,19 +626,13 @@ export function WorkbenchLanes({
 
 	const addRemoteSource = () => {
 		setRemoteSourceError(null);
-		const url = remoteSourceUrl.trim();
-		if (!url) {
-			setRemoteSourceError("Remote source URL is required.");
+		const relay = remoteSourceProvider === "google-docs-relay";
+		const checked = checkedSource(remoteSourceUrl, relay);
+		if ("error" in checked) {
+			setRemoteSourceError(checked.error);
 			return;
 		}
-		let relayUrl: string | undefined;
-		if (remoteSourceProvider === "google-docs-relay") {
-			relayUrl = relayUrlForGoogleDocs(url) ?? undefined;
-			if (!relayUrl) {
-				setRemoteSourceError("Provide a valid Google Docs document URL for relay setup.");
-				return;
-			}
-		}
+		const { url, relayUrl } = checked;
 		const now = Date.now();
 		const source: WorkbenchRemoteSource = {
 			id: newId(),
@@ -667,11 +656,14 @@ export function WorkbenchLanes({
 		saveWorkbench({ remoteSources: remoteSources.filter((source) => source.id !== sourceId) });
 	};
 
+	const openRemoteSource = (source: WorkbenchRemoteSource) =>
+		setRemoteSourceError(openSource(source));
+
 	const loadDocIntoWorkspace = async (source: WorkbenchRemoteSource) => {
 		setDocWorkspaceError(null);
 		setDocWorkspaceBusy(true);
 		try {
-			const response = await fetch(source.relayUrl ?? source.url);
+			const response = await fetch(usableSourceUrl(source));
 			if (!response.ok) throw new Error(`Remote read failed: ${response.status}`);
 			const content = await response.text();
 			setSelectedDocSourceId(source.id);
@@ -1105,6 +1097,7 @@ export function WorkbenchLanes({
 						remoteSourceError={remoteSourceError}
 						onAddRemoteSource={addRemoteSource}
 						remoteSources={remoteSources}
+						onOpenRemoteSource={openRemoteSource}
 						onLoadDocIntoWorkspace={(source) => void loadDocIntoWorkspace(source)}
 						onRemoveRemoteSource={removeRemoteSource}
 						docWorkspaceBusy={docWorkspaceBusy}
