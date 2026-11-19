@@ -5,7 +5,7 @@ import { Badge, Button, Group, Paper, Stack, Text } from "@mantine/core";
 import { useMemo } from "react";
 import { CodeEditor } from "~/components/CodeEditor";
 import { useStable } from "~/hooks/state/stable";
-import type { ParsedParameters } from "~/rrflow/query-parameters";
+import type { ParsedParameters } from "~/rrflow/client/query-parameters";
 import classes from "../style.module.scss";
 
 export interface QueryVariablesProps {

@@ -10,7 +10,7 @@ import {
 	parseParameters,
 	type QueryParameters,
 	sourceKinds,
-} from "~/rrflow/query-parameters";
+} from "~/rrflow/client/query-parameters";
 import { describeRrdError } from "~/rrflow/runtime";
 import { queryRefusal } from "~/rrflow/session";
 import {

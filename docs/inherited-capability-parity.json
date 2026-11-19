@@ -85,7 +85,7 @@
 			"name": "Query variables panel",
 			"status": "partial",
 			"what": "Toggle a Variables pane beside the editor; edit a value object of $name bindings; 50 ms debounced save per tab; 'Invalid syntax' badge when it is not an object; Clear (resets to {}) and Close buttons; Mod-Enter inside it runs the main query; visibility persisted per tab; variables are sent with every run.",
-			"native": "Client: RrdQueryRequest and RrdQueryExportRequest carry `parameters: BTreeMap<String, QueryValue>` and the contract's own ExecuteQuery::validate refuses before sending (src-tauri/src/rrd/client.rs with_parameters); session.ts query(query, parameters) and exportQuery(query, parameters). UI: src/features/runtime/query-lab/query-variables.tsx, a JSON object typed by src/rrflow/query-parameters.ts (whole numbers unsigned or integer by sign, or the contract's own {type, value} form), with a count badge, a 'not sent' badge and a blocked Run when it cannot be read, Clear, Close, and Mod-Enter running the main query. Real engine: the_lenses_read_a_live_engram binds $at, is refused unbound in the engine's words, and refuses a list before sending.",
+			"native": "Client: RrdQueryRequest and RrdQueryExportRequest carry `parameters: BTreeMap<String, QueryValue>` and the contract's own ExecuteQuery::validate refuses before sending (src-tauri/src/rrd/client.rs with_parameters); session.ts query(query, parameters) and exportQuery(query, parameters). UI: src/features/runtime/query-lab/query-variables.tsx, a JSON object typed by src/rrflow/client/query-parameters.ts (whole numbers unsigned or integer by sign, or the contract's own {type, value} form), with a count badge, a 'not sent' badge and a blocked Run when it cannot be read, Clear, Close, and Mod-Enter running the main query. Real engine: the_lenses_read_a_live_engram binds $at, is refused unbound in the engine's words, and refuses a list before sending.",
 			"gap": "UI: the pane's text and visibility are not kept per tab or across a reload (no native tabs yet; see 'Query tabs'). Client: live queries (rrd_live_open) still send no parameters. Engine: only null, boolean, integer, unsigned and string are accepted as parameters, so the lists, maps and decimals the inherited pane allowed are refused.",
 			"dependsOn": "Native RRD client replacing the inherited engines",
 			"inheritedPaths": [
@@ -100,7 +100,7 @@
 			"name": "Infer variables from query",
 			"status": "native",
 			"what": "One click scans the query for $parameters, merges them into the variables object keeping existing values, opens the pane; reserved names are skipped.",
-			"native": "query-lab.tsx 'Infer variables' calls inferParameters (src/rrflow/query-parameters.ts), which reads the query's $names with classify(), adds each missing one as null, keeps every value already typed, and opens the pane. It refuses to touch text it cannot read. Tests: scripts/test-query-parameters.mjs; the smoke test.",
+			"native": "query-lab.tsx 'Infer variables' calls inferParameters (src/rrflow/client/query-parameters.ts), which reads the query's $names with classify(), adds each missing one as null, keeps every value already typed, and opens the pane. It refuses to touch text it cannot read. Tests: scripts/test-query-parameters.mjs; the smoke test.",
 			"gap": "None. rrflowQL has no reserved parameter names, so none are skipped.",
 			"dependsOn": "Query variables panel",
 			"inheritedPaths": [
@@ -128,7 +128,7 @@
 			"name": "Table/kind name autocompletion",
 			"status": "partial",
 			"what": "After FROM (and inherited's update/create/delete/into) the editor offers table names from the connection schema.",
-			"native": "src/editor/rrflowql/codemirror/complete.ts rrflowqlSourceCompletion: the source family after FROM or JOIN, then the kinds the engine's schema lists for that family (sourceKinds in src/rrflow/query-parameters.ts, from RrdDatabaseView.tables).",
+			"native": "src/editor/rrflowql/codemirror/complete.ts rrflowqlSourceCompletion: the source family after FROM or JOIN, then the kinds the engine's schema lists for that family (sourceKinds in src/rrflow/client/query-parameters.ts, from RrdDatabaseView.tables).",
 			"gap": "UI: no completion of schema property names after WHERE, PROJECT or ON. Which data models `record` reads is taken as every table that is not a relation, event, series or geo table; the engine publishes no family-to-model map to check that against.",
 			"dependsOn": "",
 			"inheritedPaths": ["src/editor/languages/tables.tsx"],
