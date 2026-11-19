@@ -1,3 +1,4 @@
+export { rrflowqlParameterCompletion, rrflowqlSourceCompletion } from "./complete.ts";
 export { refusalDiagnostic, showRefusal } from "./diagnostics.ts";
 export { rrflowql, rrflowqlLanguage } from "./language.ts";
 export { rrflowqlLinting } from "./lint.ts";

@@ -87,6 +87,9 @@ impl Artifacts {
 #[serde(deny_unknown_fields)]
 pub struct RrdQueryExportRequest {
     pub query: String,
+    /// Values for the query's `$name` parameters, as the contract types them.
+    #[serde(default)]
+    pub parameters: BTreeMap<String, QueryValue>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -144,7 +147,10 @@ impl NativeRrdClient {
         &self,
         request: RrdQueryExportRequest,
     ) -> Result<QueryExportView, RrdError> {
-        let query = execute_query(&request.query, self.scope(), &self.query_budget)?;
+        let query = with_parameters(
+            execute_query(&request.query, self.scope(), &self.query_budget)?,
+            request.parameters,
+        )?;
         let export = ExportQuery {
             max_output_bytes: (MAX_PARQUET_EXPORT_BYTES as u64).min(query.budget.max_output_bytes),
             query,

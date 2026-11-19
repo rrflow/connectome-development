@@ -75,18 +75,18 @@ Conditions 3 and 4 come first, row by row. A file or dependency under conditions
 
 ## Where it stands
 
-`pnpm check` runs the check, and `node scripts/check-native-client-requirement.mjs --complete` fails until the requirement is met. On 2026-11-19 it reports:
+`pnpm check` runs the check, and `node scripts/check-native-client-requirement.mjs --complete` fails until the requirement is met. On 2026-11-19, after the first query studio package, it reports:
 
 | Condition | Owed |
 |---|---|
 | Inherited dependencies declared | 4 |
 | Files that reach the inherited client | 55 |
-| Inherited capabilities not yet native | 294 of 348 |
+| Inherited capabilities not yet native | 289 of 348 |
 | Inherited files not read for capabilities | 85 |
 | Missed capabilities without a row | 26 |
 | Visual items not yet shown equal or better | 66 of 66 |
 
-Of the 294: 43 are partly native, 143 have an engine operation and no native screen, 9 are missing on both sides, and 99 need something the engine cannot do yet. Those 99 are engine work before they are Connectome work, and they have no owning item in the engine's roadmap yet.
+Of the 289: 47 are partly native, 134 have an engine operation and no native screen, 9 are missing on both sides, and 99 need something the engine cannot do yet. Those 99 are engine work before they are Connectome work, and they have no owning item in the engine's roadmap yet.
 
 [`native-client-requirement.json`](native-client-requirement.json) holds the measure, with the 55 files by path. It must equal the tree:
 

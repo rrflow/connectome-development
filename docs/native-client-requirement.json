@@ -61,11 +61,11 @@
 		"capabilities": 348,
 		"statuses": {
 			"engine cannot do it": 99,
-			"engine has it, no native UI": 143,
+			"engine has it, no native UI": 134,
 			"missing": 9,
-			"native": 30,
+			"native": 35,
 			"not applicable": 24,
-			"partial": 43
+			"partial": 47
 		},
 		"unreadFiles": 85,
 		"missedCapabilities": 26
