@@ -32,8 +32,11 @@ use super::error::RrdError;
 use super::transport::{is_loopback_origin, rrd_origin};
 use crate::paths::get_data_directory;
 
+mod announcement;
 pub mod lifecycle;
 mod mode;
+
+use announcement::{announced_identity, diagnostic};
 
 pub use lifecycle::{stop_on_exit, EngramState, InstanceView, Origin};
 pub use mode::InstallMode;
@@ -433,15 +436,7 @@ fn serve_with(
             None => error,
         }
     })?;
-    let endpoint = announced["url"]
-        .as_str()
-        .filter(|url| url.starts_with("http://127.0.0.1:"))
-        .ok_or("the engine's announcement does not name a loopback HTTP address")?
-        .to_owned();
-    let instance = announced["instance_id"]
-        .as_str()
-        .ok_or("the engine's announcement does not name its instance")?
-        .to_owned();
+    let (endpoint, instance) = announced_identity(&announced)?;
     stage(
         app,
         "serve",
@@ -600,9 +595,7 @@ fn prove_elsewhere(
         .output()
         .map_err(|error| format!("cannot run rrflow ready: {error}"))?;
     if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        let detail = stderr.lines().last().unwrap_or("no error output").trim();
-        return Ok(Err(detail.to_owned()));
+        return Ok(Err(diagnostic(&output.stderr)));
     }
     let (endpoint, instance) = proven(&output.stdout, "")?;
     Ok(Ok(ServedEngramView {
@@ -722,8 +715,7 @@ fn run(executable: &Path, arguments: &[&std::ffi::OsStr]) -> Result<Vec<u8>, Rrd
         .output()
         .map_err(|error| format!("cannot run {}: {error}", executable.display()))?;
     if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        let detail = stderr.lines().last().unwrap_or("no error output").trim();
+        let detail = diagnostic(&output.stderr);
         return Err(format!(
             "rrflow {} failed ({}): {detail}",
             arguments

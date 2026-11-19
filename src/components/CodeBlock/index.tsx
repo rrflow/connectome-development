@@ -20,58 +20,70 @@ import classes from "./style.module.scss";
 export interface CodeBlockProps extends Omit<PaperProps, "children" | "styles"> {
 	/** The code to display. */
 	value: string;
-	/** `rrflowql` or `json` are highlighted; any other language is shown as plain text. */
+	/**
+	 * rrflowQL, JSON and the languages in `./languages` are highlighted; any
+	 * other name is shown as plain text.
+	 */
 	lang?: string;
 	title?: string;
 	withLineNumbers?: boolean;
 	copyCodeProps?: ActionIconProps;
 }
 
-/** The inherited RRFlowQL language once loaded, shared by every block. */
-let loadedRrflowql: (() => Extension) | null = null;
+/** Languages already loaded, shared by every block, so later blocks colour from their first frame. */
+const loaded = new Map<string, Extension | null>();
 
 /**
- * The highlighting extensions for `lang`. The RRFlowQL language is still the
- * inherited editor's (sprint 009 Slice D3 replaces it), so it is loaded on
- * demand: a page that shows only plain or JSON blocks, such as the error
- * dialog every RRFlow page can open, never loads the inherited editor. Once
- * loaded it is kept, so later blocks are highlighted from their first frame.
- * `ready` is false only while an RRFlowQL block waits for that first load.
+ * Loads what colours `lang`, or null when nothing does. rrflowQL comes from
+ * the one rrflowQL editor; every other language comes from `./languages`.
+ * Both are loaded on demand: a page that shows only plain or JSON blocks, such
+ * as the error dialog every RRFlow page can open, loads neither.
+ */
+async function loadLanguage(lang: string): Promise<Extension | null> {
+	if (lang === "rrflowql") {
+		return (await import("~/editor/rrflowql")).rrflowql();
+	}
+	const { CODE_LANGUAGES } = await import("./languages");
+	return Object.hasOwn(CODE_LANGUAGES, lang) ? CODE_LANGUAGES[lang] : null;
+}
+
+/**
+ * The highlighting extensions for `lang`. `ready` is false only while a
+ * language is loading for the first time; a name nothing colours is shown as
+ * plain text.
  */
 function useLanguageExtension(lang: string | undefined) {
-	const [rrflowql, setRrflowql] = useState<(() => Extension) | null>(() => loadedRrflowql);
+	const name = lang?.toLowerCase();
+	const immediate = name === undefined || name === "json" || loaded.has(name);
+	const [, setArrived] = useState(0);
 
 	useEffect(() => {
-		if (lang !== "rrflowql" || rrflowql) {
+		if (name === undefined || name === "json" || loaded.has(name)) {
 			return;
 		}
 
 		let active = true;
 
-		import("~/editor/rrflowql").then((editor) => {
-			loadedRrflowql = editor.rrflowql;
+		loadLanguage(name).then((language) => {
+			loaded.set(name, language);
 			if (active) {
-				setRrflowql(() => editor.rrflowql);
+				setArrived((count) => count + 1);
 			}
 		});
 
 		return () => {
 			active = false;
 		};
-	}, [lang, rrflowql]);
+	}, [name]);
 
-	const extensions = useMemo(() => {
-		switch (lang) {
-			case "rrflowql":
-				return rrflowql ? [rrflowql()] : [];
-			case "json":
-				return [json()];
-			default:
-				return [];
-		}
-	}, [lang, rrflowql]);
+	const language =
+		name === undefined ? null : name === "json" ? null : (loaded.get(name) ?? null);
+	const extensions = useMemo(
+		() => (name === "json" ? [json()] : language ? [language] : []),
+		[name, language],
+	);
 
-	return { extensions, ready: lang !== "rrflowql" || rrflowql !== null };
+	return { extensions, ready: immediate };
 }
 
 /**

@@ -24,7 +24,7 @@ The owner's own commit, "Replace aliases with authored RRFlow client and knowled
 | Boundary it set out to replace | On `main` |
 |---|---|
 | The package aliases to the inherited database client and its WASM | **not met.** Four inherited dependencies are still declared, and `src/vendor/rrflow-client.ts` still re-exports the inherited client under RRFlow-facing names |
-| The inherited UI package | met: icons, pictograms, `Icon` and `CodeBlock` are Connectome's own modules. Two things are open, below |
+| The inherited UI package | met: icons, pictograms, `Icon` and `CodeBlock` are Connectome's own modules, and `CodeBlock` colours the branch's 24 languages. The branch's `Markdown` served only the inherited assistant and newsfeed, which are gone |
 | The inherited editor wrapper and its versioned WASM parsing | **partly met.** The editor wrapper is gone and there is one rrflowQL language. The two WASM parsers still parse values for the inherited views (`src/shared/util/rrflowql/v2.tsx`, `v3.tsx`) |
 | The driver, port and root-password process launcher | met: the engine is installed, served and proved through `src-tauri/src/rrd/engram` |
 
@@ -96,9 +96,7 @@ Of the 289: 47 are partly native, 134 have an engine operation and no native scr
 
 ## Open, for the owner
 
-- **Markdown.** The native-client branch rendered Markdown with two more dependencies and remote images; the application has no content security policy to bound what rendered text may fetch.
 - **Statement ranges.** Run-selection and select-current-query act on the whole document, because the one rrflowQL language takes one statement. The branch's splitter is not the engine's.
-- **Code block languages.** `main` colours rrflowQL and JSON; the branch coloured 24 languages.
 - **Engine owner for the 99.** Which engine roadmap item owns the capabilities the engine cannot serve yet.
 
 ## The branches themselves
