@@ -5,11 +5,25 @@ import type {
 	WorkbenchLinkedPath,
 	WorkbenchRemoteSource,
 } from "~/shared/types";
+import { visibleInterval } from "~/shared/util/platform/visibility";
 import {
 	type BenchmarkWorkloadProfile,
 	benchmarkWorkloadProfiles,
 	type DatasetBuildResult,
 } from "../datasets/dataset";
+
+/**
+ * How often the linked files and folders are probed again while the app is
+ * visible. Carried unchanged from the inherited view; it has no user setting
+ * yet.
+ */
+const LINKED_PATHS_REFRESH_MS = 10_000;
+
+/** Probes the linked paths now and again on that pace; returns the function that stops. */
+export function watchLinkedPaths(refresh: () => Promise<void>) {
+	void refresh();
+	return visibleInterval(() => void refresh(), LINKED_PATHS_REFRESH_MS);
+}
 
 export interface WorkbenchLearningEventEntry {
 	templateId: string;

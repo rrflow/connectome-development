@@ -1,9 +1,9 @@
 import { Channel, type InvokeArgs, invoke, isTauri } from "@tauri-apps/api/core";
 import type { AttunementCommand, AttunementReply } from "~/rrflow/attunement";
 import type { TaskCommand, TaskReply } from "~/rrflow/tasks";
+import type { QueryParameters } from "./client/query-parameters";
+import type { RrdQueryRowView, RrdQueryView } from "./client/query-views";
 import type { VectorQuantizationMethod } from "./model";
-import type { QueryParameters } from "./query-parameters";
-import type { RrdQueryRowView, RrdQueryView } from "./query-views";
 
 /*
  * Authenticated RRD session views.
@@ -229,7 +229,7 @@ export type {
 	RrdQueryReadPathView,
 	RrdQueryRowView,
 	RrdQueryView,
-} from "./query-views";
+} from "./client/query-views";
 
 export interface RrdNamedVectorView {
 	name: string;

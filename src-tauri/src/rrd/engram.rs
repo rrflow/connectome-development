@@ -7,8 +7,9 @@
 //! until the engram authenticates. Every boundary is reported to the webview
 //! as a stage event so the serving panel can explain what is happening.
 //!
-//! The webview configures a project directory, an installation mode, and an
-//! optional executable override and endpoint credential mapping path. RRFlow has one storage
+//! The webview configures a project directory and an optional executable
+//! override and endpoint credential mapping path; the folder itself decides
+//! the installation mode (`mode`). RRFlow has one storage
 //! engine, the kernel chooses the loopback port, and the operator credential
 //! stays a file the native session reads; the renderer only ever holds its
 //! path.
@@ -32,8 +33,10 @@ use super::transport::{is_loopback_origin, rrd_origin};
 use crate::paths::get_data_directory;
 
 pub mod lifecycle;
+mod mode;
 
 pub use lifecycle::{stop_on_exit, EngramState, InstanceView, Origin};
+pub use mode::InstallMode;
 
 /// How long a fresh install and the first open may take before serving is
 /// declared failed. A debug engine on a cold cache stays well inside it.
@@ -101,22 +104,6 @@ impl ServeObserver for AppHandle {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
-#[serde(rename_all = "lowercase")]
-pub enum InstallMode {
-    Fresh,
-    Existing,
-}
-
-impl InstallMode {
-    fn argument(self) -> &'static str {
-        match self {
-            Self::Fresh => "fresh",
-            Self::Existing => "existing",
-        }
-    }
-}
-
 /// Where Connectome keeps its own engram when no project is configured.
 const DEFAULT_ENGRAM: &str = "engrams/local";
 
@@ -126,8 +113,10 @@ pub struct EngramServeRequest {
     /// means Connectome's default engram inside its data directory.
     #[serde(default)]
     pub project: String,
-    /// Installation mode when the project has no locator yet.
-    pub mode: InstallMode,
+    /// Installation mode when the project has no locator yet. Absent, the
+    /// folder decides it; a pending preview states the mode it planned with.
+    #[serde(default)]
+    pub mode: Option<InstallMode>,
     /// An explicit `rrflow` executable; empty means the one on `PATH`.
     #[serde(default)]
     pub executable: String,
@@ -148,7 +137,8 @@ pub struct EngramServeRequest {
 #[derive(Debug, Serialize)]
 pub struct EngramPreview {
     pub project: String,
-    pub mode: InstallMode,
+    /// The mode `installation` was planned with; present with it.
+    pub mode: Option<InstallMode>,
     pub engine: EngineBinding,
     pub installation: Option<Value>,
     /// The identity this preview was planned with; present with `installation`.
@@ -166,8 +156,8 @@ pub fn preview_engram(request: &EngramServeRequest) -> Result<EngramPreview, Rrd
     endpoint_credentials_path(request.endpoint_credentials.as_deref())?;
     let project = project_directory(request)?;
     let engine = resolve_engine(&request.executable)?;
-    let (installation, installation_identity) = if project.join(LOCATOR).is_file() {
-        (None, None)
+    let (installation, installation_identity, mode) = if project.join(LOCATOR).is_file() {
+        (None, None, None)
     } else {
         // A repeated preview of the same pending installation keeps its
         // identity; a first preview asks the engine for a new one.
@@ -175,18 +165,20 @@ pub fn preview_engram(request: &EngramServeRequest) -> Result<EngramPreview, Rrd
             Some(identity) => valid_identity(identity)?,
             None => installation_identity(&engine.path)?,
         };
-        let plan = installation_plan(&engine.path, &project, request.mode, &identity)?;
+        let mode = install_mode(request, &project)?;
+        let plan = installation_plan(&engine.path, &project, mode, &identity)?;
         (
             Some(
                 serde_json::from_slice(&plan)
                     .map_err(|error| format!("the installation plan is not JSON: {error}"))?,
             ),
             Some(identity),
+            Some(mode),
         )
     };
     Ok(EngramPreview {
         project: project.to_string_lossy().into_owned(),
-        mode: request.mode,
+        mode,
         engine,
         installation,
         installation_identity,
@@ -246,6 +238,14 @@ fn project_directory(request: &EngramServeRequest) -> Result<PathBuf, RrdError> 
         .map_err(|error| format!("cannot create the project directory: {error}"))?;
     std::fs::canonicalize(project)
         .map_err(|error| format!("cannot resolve project directory: {error}").into())
+}
+
+/// The mode the request states, else the one its folder calls for.
+fn install_mode(request: &EngramServeRequest, project: &Path) -> Result<InstallMode, RrdError> {
+    match request.mode {
+        Some(mode) => Ok(mode),
+        None => InstallMode::for_directory(project),
+    }
 }
 
 fn installation_plan(
@@ -381,7 +381,7 @@ fn serve_with(
             app,
             &executable,
             &project,
-            request.mode,
+            install_mode(&request, &project)?,
             request.accepted_plan_sha256.as_deref(),
             request.installation_identity.as_deref(),
         )?;

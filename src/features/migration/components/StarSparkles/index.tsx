@@ -1,7 +1,14 @@
 import { Box } from "@mantine/core";
 import { useEffect, useRef, useState } from "react";
+import { visibleInterval } from "~/shared/util/platform/visibility";
 import { useConfigStore } from "~/shell/stores/config";
 import classes from "./style.module.scss";
+
+/**
+ * How often a sparkle is added. Decoration only, so its one control is the
+ * Appearance setting "Disable animations", which stops it altogether.
+ */
+const SPARKLE_EVERY_MS = 800;
 
 interface Star {
 	id: number;
@@ -34,7 +41,7 @@ export function StarSparkles({
 	useEffect(() => {
 		if (!ref.current || hidden || disableAnimations) return;
 
-		const interval = setInterval(() => {
+		return visibleInterval(() => {
 			if (!ref.current) return;
 
 			const width = ref.current.offsetWidth;
@@ -70,9 +77,7 @@ export function StarSparkles({
 			setTimeout(() => {
 				setStars((prev) => prev.filter((star) => star.id !== newStar.id));
 			}, 3000);
-		}, 800);
-
-		return () => clearInterval(interval);
+		}, SPARKLE_EVERY_MS);
 	}, [starId, hidden, inset, offsetBase, offsetModifier, disableAnimations]);
 
 	return (

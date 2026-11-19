@@ -7,8 +7,8 @@ The UI never opens the database files itself.
 ## Use the built bundle
 
 Keep `connectome.exe` and `rrflow.exe` together on Windows. Open Connectome,
-choose **Start local RRFlow**, choose a project folder in **Project engines**,
-inspect the exact installation preview, and
+choose **Start local RRFlow**, pick a project folder under **Add project** in
+**Project engines**, inspect the exact installation preview on the project's row, and
 choose **Install and open RRFlow**. Cancel leaves the engram uninstalled; an
 empty project folder may have been created for planning. A changed project,
 configuration or executable requires a fresh preview. An existing engram opens
@@ -17,7 +17,13 @@ native client; no token is entered in a URL or browser storage.
 
 The default project is in Connectome's application-data directory under
 `engrams/local` in the currently pinned desktop implementation. The serving settings can select an absolute project path,
-fresh/existing mode, and an explicit engine override. Startup binds a free
+an explicit engine override, the console history size, how often instances are
+checked, and the pace of the serving console: **Console burst (lines)**, default 50,
+is how many lines of an engine's output the console takes at once, and **Console
+refill (milliseconds)**, default 500, is how long one line of that allowance takes
+to come back. Output that arrives faster is left out of the console. Connectome reads the installation mode from the folder instead of asking:
+an empty or new folder is installed fresh, and in any other folder RRFlow is added
+beside the files already there. Startup binds a free
 loopback port and creates or updates its local connection profile. Close the
 app to stop all owned engines, or use **Stop this engine** for one project; data remains.
 Restart and **Start local RRFlow** to reopen it.
@@ -28,13 +34,44 @@ No account is required and this path does not enable synchronization.
 
 ## Project workspaces and parallel engines
 
-**Manage project engines** lists only the local processes this desktop owns.
-Choose another absolute project directory and fresh/existing mode, preview its
-installation, then open it. Up to four projects can run together, with up to eight
-native authenticated connection profiles. These admission limits do not reserve
-aggregate CPU, memory or disk; each engine retains its configured resource limits.
-Startup errors release their slot and reap the child. The manager never stops an
-arbitrary external engine. A directory already running reuses its owned process.
+**Manage project engines** lists every project added to Connectome, with the real
+state of its instance, and any other instance the desktop is tracking.
+
+- **Add project** takes a folder. Connectome previews the installation the engine
+  plans for it, and after **Install and open RRFlow** installs exactly that plan,
+  starts the engine, saves the project and opens it. A folder that already has
+  RRFlow is started and opened without another installation. The optional endpoint
+  credential mapping is under **Advanced**.
+- Only the start asked for last opens its project, and only if you are still where
+  you asked from with the dialog open. A start that finishes after you started
+  another project, moved elsewhere or closed the dialog is saved and stays in the
+  list as running, with its own **Open project** button.
+- Every row acts for its own project only. Starting, stopping or removing one
+  project never disables another project's buttons, the add form or closing the
+  dialog, and a failure is shown on the row it belongs to. A row is busy from the
+  click until its own action has ended.
+- **Remove project** asks first and says what happens: the engine is stopped if
+  Connectome started it, the project leaves Connectome's list and saved
+  connections, and nothing in the project's folder is deleted, including its
+  `.rrflow` folder and data. Removing a project's connection from the home screen
+  does the same thing. A project that is starting or stopping cannot be removed
+  until it has finished; the row and the home-screen menu say so.
+
+Connectome puts no limit on how many projects are listed, running or connected. The
+limits of four engines, eight tracked instances, eight native sessions and sixty-four
+known projects were agent-written and were removed on 2026-11-19 by owner direction.
+Each engine keeps the resource limits of its own configuration; nothing reserves
+aggregate CPU, memory or disk. A start that fails reaps its child and stays visible
+as a failed row until it is tried again, dismissed or removed.
+
+Not available yet, because they need engine commands that do not exist: finding an
+instance that was never added, stopping an instance Connectome did not start, and
+idling an instance. The dialog says so. A directory already running reuses its
+owned process.
+
+Timers follow the window. Every repeating read in the app stops while the window
+is hidden or minimized and runs once, at once, when it is shown again; a window that
+only lost focus but is still on screen keeps refreshing.
 
 **Selected project** switches saved runtime profiles while preserving the current
 section. Every native operation selects that profile's session explicitly; reads

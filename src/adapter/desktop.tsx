@@ -34,6 +34,8 @@ import { useInterfaceStore } from "~/shell/stores/interface";
 import { useDatabaseStore } from "~/stores/database";
 import { adapter } from ".";
 import type { ConnectomeAdapter, FileFilter } from "./base";
+import { followWindowVisibility } from "./desktop-visibility";
+import { outputAllowance } from "./output-allowance";
 
 interface Resource {
 	File?: FileResource;
@@ -93,9 +95,7 @@ export class DesktopAdapter implements ConnectomeAdapter {
 			this.queryOpenRequest();
 		});
 
-		getCurrentWindow().listen("tauri://focus", () => {
-			this.checkForUpdates();
-		});
+		followWindowVisibility(() => this.checkForUpdates());
 	}
 
 	public async initialize() {
@@ -170,33 +170,29 @@ export class DesktopAdapter implements ConnectomeAdapter {
 	}
 
 	public async previewEngram(selection?: EngramSelection) {
-		const { project, mode, executable } =
-			selection ?? useConfigStore.getState().settings.serving;
-		// Only a pending preview carries an identity; saved settings never do.
-		const installationIdentity = selection?.installationIdentity;
+		const { project, executable } = selection ?? useConfigStore.getState().settings.serving;
+		// Only a pending preview carries a mode and an identity; saved settings never do.
 		return invoke<EngramPreview>("rrd_engram_preview", {
 			request: {
 				project,
-				mode,
+				mode: selection?.mode,
 				executable,
-				installation_identity: installationIdentity,
+				installation_identity: selection?.installationIdentity,
 				endpoint_credentials: selection?.endpointCredentialMapping,
 			},
 		});
 	}
 
 	public async serveEngram(acceptedPlanSha256?: string, selection?: EngramSelection) {
-		const { project, mode, executable } =
-			selection ?? useConfigStore.getState().settings.serving;
-		const installationIdentity = selection?.installationIdentity;
+		const { project, executable } = selection ?? useConfigStore.getState().settings.serving;
 
 		return invoke<ServedEngram>("rrd_engram_serve", {
 			request: {
 				project,
-				mode,
+				mode: selection?.mode,
 				executable,
 				accepted_plan_sha256: acceptedPlanSha256,
-				installation_identity: installationIdentity,
+				installation_identity: selection?.installationIdentity,
 				endpoint_credentials: selection?.endpointCredentialMapping,
 			},
 		});
@@ -211,6 +207,10 @@ export class DesktopAdapter implements ConnectomeAdapter {
 
 	public async stopEngram(project: string) {
 		return invoke<boolean>("rrd_engram_stop", { project });
+	}
+
+	public async forgetProject(project: string) {
+		return invoke<boolean>("rrd_engram_forget", { project });
 	}
 
 	public async openUrl(url: string) {
@@ -352,11 +352,7 @@ export class DesktopAdapter implements ConnectomeAdapter {
 	}
 
 	private initDatabaseEvents() {
-		let throttleLevel = 0;
-
-		setInterval(() => {
-			throttleLevel = Math.max(0, throttleLevel - 1);
-		}, 500);
+		const takeOutputLine = outputAllowance(() => useConfigStore.getState().settings.serving);
 
 		// Each boundary of the serve sequence, in the order the native process
 		// reaches it: install (plan, apply), serve (announced), ready
@@ -381,14 +377,13 @@ export class DesktopAdapter implements ConnectomeAdapter {
 
 		// The engine's own diagnostic output.
 		listen<string>("engram:output", (event) => {
-			if (throttleLevel > 50) {
+			if (!takeOutputLine()) {
 				return;
 			}
 
 			const historySize = getSetting("serving", "historySize");
 
 			useDatabaseStore.getState().pushConsoleLine(event.payload, historySize);
-			throttleLevel++;
 		});
 	}
 

@@ -334,7 +334,7 @@ try {
 	await step("open-existing-real-project", async () => {
 		await page.getByRole("button", { name: "Start local RRFlow" }).first().click();
 		await page.getByLabel("Project directory").first().fill(resolve(args.project));
-		await page.getByRole("button", { name: "Preview or open project" }).first().click();
+		await page.getByRole("button", { name: "Add project", exact: true }).first().click();
 		let served = [];
 		for (let i = 0; i < 90; i++) {
 			served = await servedEngrams();

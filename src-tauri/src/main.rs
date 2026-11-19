@@ -111,6 +111,7 @@ fn main() {
             rrd::engram::lifecycle::rrd_engram_serve,
             rrd::engram::lifecycle::rrd_engram_status,
             rrd::engram::lifecycle::rrd_engram_stop,
+            rrd::engram::lifecycle::rrd_engram_forget,
             diagnostics::runtime_diagnostics_request,
             rrd::rrd_public_request,
             rrd::rrd_connect,

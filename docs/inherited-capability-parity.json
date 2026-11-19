@@ -85,7 +85,7 @@
 			"name": "Query variables panel",
 			"status": "partial",
 			"what": "Toggle a Variables pane beside the editor; edit a value object of $name bindings; 50 ms debounced save per tab; 'Invalid syntax' badge when it is not an object; Clear (resets to {}) and Close buttons; Mod-Enter inside it runs the main query; visibility persisted per tab; variables are sent with every run.",
-			"native": "Client: RrdQueryRequest and RrdQueryExportRequest carry `parameters: BTreeMap<String, QueryValue>` and the contract's own ExecuteQuery::validate refuses before sending (src-tauri/src/rrd/client.rs with_parameters); session.ts query(query, parameters) and exportQuery(query, parameters). UI: src/features/runtime/query-lab/query-variables.tsx, a JSON object typed by src/rrflow/query-parameters.ts (whole numbers unsigned or integer by sign, or the contract's own {type, value} form), with a count badge, a 'not sent' badge and a blocked Run when it cannot be read, Clear, Close, and Mod-Enter running the main query. Real engine: the_lenses_read_a_live_engram binds $at, is refused unbound in the engine's words, and refuses a list before sending.",
+			"native": "Client: RrdQueryRequest and RrdQueryExportRequest carry `parameters: BTreeMap<String, QueryValue>` and the contract's own ExecuteQuery::validate refuses before sending (src-tauri/src/rrd/client.rs with_parameters); session.ts query(query, parameters) and exportQuery(query, parameters). UI: src/features/runtime/query-lab/query-variables.tsx, a JSON object typed by src/rrflow/client/query-parameters.ts (whole numbers unsigned or integer by sign, or the contract's own {type, value} form), with a count badge, a 'not sent' badge and a blocked Run when it cannot be read, Clear, Close, and Mod-Enter running the main query. Real engine: the_lenses_read_a_live_engram binds $at, is refused unbound in the engine's words, and refuses a list before sending.",
 			"gap": "UI: the pane's text and visibility are not kept per tab or across a reload (no native tabs yet; see 'Query tabs'). Client: live queries (rrd_live_open) still send no parameters. Engine: only null, boolean, integer, unsigned and string are accepted as parameters, so the lists, maps and decimals the inherited pane allowed are refused.",
 			"dependsOn": "Native RRD client replacing the inherited engines",
 			"inheritedPaths": [
@@ -100,7 +100,7 @@
 			"name": "Infer variables from query",
 			"status": "native",
 			"what": "One click scans the query for $parameters, merges them into the variables object keeping existing values, opens the pane; reserved names are skipped.",
-			"native": "query-lab.tsx 'Infer variables' calls inferParameters (src/rrflow/query-parameters.ts), which reads the query's $names with classify(), adds each missing one as null, keeps every value already typed, and opens the pane. It refuses to touch text it cannot read. Tests: scripts/test-query-parameters.mjs; the smoke test.",
+			"native": "query-lab.tsx 'Infer variables' calls inferParameters (src/rrflow/client/query-parameters.ts), which reads the query's $names with classify(), adds each missing one as null, keeps every value already typed, and opens the pane. It refuses to touch text it cannot read. Tests: scripts/test-query-parameters.mjs; the smoke test.",
 			"gap": "None. rrflowQL has no reserved parameter names, so none are skipped.",
 			"dependsOn": "Query variables panel",
 			"inheritedPaths": [
@@ -128,7 +128,7 @@
 			"name": "Table/kind name autocompletion",
 			"status": "partial",
 			"what": "After FROM (and inherited's update/create/delete/into) the editor offers table names from the connection schema.",
-			"native": "src/editor/rrflowql/codemirror/complete.ts rrflowqlSourceCompletion: the source family after FROM or JOIN, then the kinds the engine's schema lists for that family (sourceKinds in src/rrflow/query-parameters.ts, from RrdDatabaseView.tables).",
+			"native": "src/editor/rrflowql/codemirror/complete.ts rrflowqlSourceCompletion: the source family after FROM or JOIN, then the kinds the engine's schema lists for that family (sourceKinds in src/rrflow/client/query-parameters.ts, from RrdDatabaseView.tables).",
 			"gap": "UI: no completion of schema property names after WHERE, PROJECT or ON. Which data models `record` reads is taken as every table that is not a relation, event, series or geo table; the engine publishes no family-to-model map to check that against.",
 			"dependsOn": "",
 			"inheritedPaths": ["src/editor/languages/tables.tsx"],
@@ -3075,7 +3075,7 @@
 				"src/modals/edit-connection.tsx",
 				"src/startup/mini-embed.tsx"
 			],
-			"skeptic": "The open half is real (layout.tsx handshake on mount; session.tsx canAutoOpen from the saved credential). The close half does not exist: nothing closes the native session when the route is left. src-tauri/src/rrd.rs holds profile-scoped sessions and refuses a ninth with 'eight native sessions are already open; disconnect a project first', so visiting a ninth project fails to auto-open until the operator disconnects one by hand. Auto-open is also desktop-only (isTauri) and there is no mini-embed equivalent. That is not better than the inherited behaviour."
+			"skeptic": "The open half is real (layout.tsx handshake on mount; session.tsx canAutoOpen from the saved credential). The close half does not exist: nothing closes the native session when the route is left. src-tauri/src/rrd.rs holds profile-scoped sessions with no limit on their number (the agent-written cap of eight was removed on 2026-11-19 by owner direction), so a session left open is never why another project fails to open; it stays open until the operator disconnects it or the app closes. Auto-open is also desktop-only (isTauri) and there is no mini-embed equivalent. That is not better than the inherited behaviour."
 		},
 		{
 			"area": "connection-layer",
@@ -3212,7 +3212,7 @@
 			"name": "Embedded in-browser database (Memory and IndexedDB) and sandbox bootstrap",
 			"status": "engine cannot do it",
 			"what": "Connect with no server at all: an in-page WASM engine, either in memory or persisted in IndexedDB under a chosen name, with experimental, functions, guest access, live notifications and network targets enabled. The Sandbox connection defines namespace/database 'sandbox' (optionally STRICT via the strictSandbox setting), loads starter query tabs on first use (Basics, Graph, Vector; V2 or V3 by version), and 'Reset sandbox environment' reconnects and clears all tab results.",
-			"native": "crates/authority/rrd-engine/src/capabilities.rs: 'deployment-in-memory' and 'deployment-wasm-browser' are Planned rows with no implementation. Nearest native path: desktop 'Manage project engines' (src/components/ActionBar/projects.tsx; rrd_engram_preview/serve, mode fresh) starts a real engine for a project folder.",
+			"native": "crates/authority/rrd-engine/src/capabilities.rs: 'deployment-in-memory' and 'deployment-wasm-browser' are Planned rows with no implementation. Nearest native path: desktop 'Manage project engines' (src/components/ActionBar/projects.tsx Add project; rrd_engram_preview/serve, which install an empty folder fresh without asking for a mode) starts a real engine for a project folder.",
 			"gap": "Engine: no in-memory and no browser/WASM deployment, and no operation to wipe an instance. UI: a zero-setup scratch project (create a fresh project in a temporary folder, start it, open it, discard it) is not authored; no starter queries exist in rrflowQL. The user need (try queries without installing anything) is met today only by starting a fresh project engine from the desktop app.",
 			"dependsOn": "Sandbox area decision; rrd_engram_serve fresh mode; engine deployment-in-memory",
 			"inheritedPaths": [
@@ -3302,7 +3302,7 @@
 			"name": "Create namespace / create database",
 			"status": "not applicable",
 			"what": "Modal with a name field, explanatory text, duplicate-name check that disables Create, then defines it and switches to it. A prominent 'Create namespace' / 'Create database' button replaces the dropdown when none exist; the plus button is disabled when not connected or when the credentials are database-scoped.",
-			"native": "Replacement for 'make a new isolated data container': src/components/ActionBar/projects.tsx 'Project engines' drawer (Project directory, Project mode fresh/existing, preview then start) over rrd_engram_preview / rrd_engram_serve, then a saved runtime connection. Engine has no namespace/database DDL (rrflowQL has no DEFINE).",
+			"native": "Replacement for 'make a new isolated data container': src/components/ActionBar/projects.tsx 'Project engines' dialog with add-project.tsx and project-row.tsx. Add project asks for the folder only; the native side reads the mode from the folder (empty or absent is fresh, anything else is existing; src-tauri/src/rrd/engram/mode.rs), the installation is reviewed on the project's own row, then it is installed, started, saved as a runtime connection and opened. Remove project (rrd_engram_forget) stops the engine Connectome started, removes the project from the list and its saved connection, and deletes none of the project's files. Commands: rrd_engram_preview / rrd_engram_serve / rrd_engram_stop / rrd_engram_forget / rrd_engram_status. Engine has no namespace/database DDL (rrflowQL has no DEFINE).",
 			"gap": "UI: none for creating a project on the desktop. Browser build cannot create anything ('Starting local processes requires the desktop app'). Engine: no HTTP operation creates an engram or instance; creation is the install/serve path only.",
 			"dependsOn": "Instance lifecycle (rrd_engram_*)",
 			"inheritedPaths": [
@@ -3820,7 +3820,7 @@
 			"area": "sandbox-mini-importexport",
 			"name": "Local serving launcher and console",
 			"status": "native",
-			"what": "Desktop: start/stop a local engine for a project, see its staged startup, manage up to four engines, and open a 'Serving output' drawer with the engine's ANSI-coloured log, online/offline badge, clear and close; commands 'Start/Stop database serving' and 'Open serving console'; overview card 'Start local RRFlow'.",
+			"what": "Desktop: start/stop a local engine for a project, see its staged startup, add, start, stop and remove any number of engines, each by itself, and open a 'Serving output' drawer with the engine's ANSI-coloured log, online/offline badge, clear and close; commands 'Start/Stop database serving' and 'Open serving console'; overview card 'Start local RRFlow'.",
 			"native": "src/adapter/desktop.tsx previewEngram/serveEngram/projectInstances/stopEngram invoke rrd_engram_preview/serve/status/stop and listen to engram:stage, engram:lifecycle, engram:output; src/components/ActionBar/projects.tsx handles 'toggle-serving', previews the install plan before applying it, attaches to engines started elsewhere; console.tsx renders engram:output.",
 			"gap": "Already native and richer than the inherited launcher (install preview with plan digest, multi-project registry, attach). Nothing to author for removal. Leftover inherited wording: command label 'database serving', adapter doc comment 'Wails desktop app'. Browser/Docker builds report not supported, same as before.",
 			"dependsOn": "",

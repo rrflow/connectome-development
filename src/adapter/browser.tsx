@@ -92,6 +92,10 @@ export class BrowserAdapter implements ConnectomeAdapter {
 		throw new Error("Not supported");
 	}
 
+	public async forgetProject(): Promise<boolean> {
+		return false;
+	}
+
 	public async openUrl(url: string, target?: UrlTarget) {
 		window.open(url, target === "internal" ? "_self" : "_blank");
 	}

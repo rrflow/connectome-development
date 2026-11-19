@@ -6,7 +6,7 @@ import {
 	parseParameters,
 	sourceKinds,
 	toQueryValue,
-} from "../src/rrflow/query-parameters.ts";
+} from "../src/rrflow/client/query-parameters.ts";
 
 test("JSON scalars become the contract's typed values", () => {
 	assert.deepEqual(toQueryValue(null), { type: "null" });

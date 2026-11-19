@@ -13,9 +13,6 @@ import type { InstanceState, ProjectInstance } from "~/shared/types";
 import { useConfigStore } from "~/shell/stores/config";
 import { useProject } from "../project/context";
 
-/** The engine list follows the desktop app's registry while it is open. */
-const ENGINES_REFRESH_MS = 5_000;
-
 const STATE_COLOR: Record<InstanceState, string> = {
 	starting: "blue",
 	ready: "green",
@@ -48,12 +45,16 @@ export function EnginesView() {
 		[connections],
 	);
 	const desktop = isTauri();
+	// The engine list follows the registry at the pace the Serving settings set.
+	const instanceCheckSeconds = useConfigStore(
+		(state) => state.settings.serving.instanceCheckSeconds,
+	);
 	// The same read, under the same key, as the "Project engines" dialog.
 	const status = useQuery({
 		queryKey: ["project-instances", known.map((entry) => entry.project)],
 		queryFn: () => adapter.projectInstances(known.map((entry) => entry.project)),
 		enabled: desktop,
-		refetchInterval: ENGINES_REFRESH_MS,
+		refetchInterval: instanceCheckSeconds * 1000,
 	});
 	const ownProject = connectionProject(connection);
 	const servesThisProject = (instance: ProjectInstance) => {
@@ -73,7 +74,7 @@ export function EnginesView() {
 				<Text mt={4}>
 					Each project is served by its own engine: a program running on this computer
 					that keeps the project's data and answers questions about it. These are the
-					engines this desktop app is tracking, checked every {ENGINES_REFRESH_MS / 1000}{" "}
+					engines this desktop app is tracking, checked every {instanceCheckSeconds}{" "}
 					seconds.
 				</Text>
 			</Box>

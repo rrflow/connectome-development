@@ -12,6 +12,7 @@ import { editorTheme } from "~/editor/core/theme";
 import { useSetting } from "~/hooks/app/config";
 import { useStable } from "~/hooks/state/stable";
 import { useTheme } from "~/hooks/ui/theme";
+import { focusWhenVisible } from "~/shared/util/platform/visibility";
 import { useConfigStore } from "~/shell/stores/config";
 import classes from "./style.module.scss";
 
@@ -209,12 +210,7 @@ export function CodeEditor(props: CodeEditorProps) {
 
 		const editor = editorRef.current;
 
-		if (autoFocus) {
-			const timer = setInterval(() => {
-				editor.focus();
-				if (editor.hasFocus) clearInterval(timer);
-			}, 50);
-		}
+		if (autoFocus) return focusWhenVisible(editor);
 	}, [autoFocus]);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: value is needed to trigger re-render

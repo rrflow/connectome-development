@@ -7,8 +7,8 @@
  * parameter is the contract's to say, in its own words, when the query is sent.
  */
 
-import { classify, FAMILIES } from "../editor/rrflowql/engine/index.ts";
-import { type QueryValue, VALUE_TYPES, value } from "./model.ts";
+import { classify, FAMILIES } from "../../editor/rrflowql/engine/index.ts";
+import { type QueryValue, VALUE_TYPES, value } from "../model.ts";
 
 export type QueryParameters = Record<string, QueryValue>;
 

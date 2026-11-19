@@ -61,12 +61,12 @@ Slice B and a small error-display fix. Read in full: both commits, the 468-line 
 | Only the child this process started is stopped; stopped on exit | `estate/lifecycle.rs`, `OwnedProcess` drop, `stop_on_exit` |
 | Served estate becomes the runtime connection, one per operator credential, updated with the announced address | `components/ActionBar/served-connection.ts` |
 | Legacy inherited-database launch lane removed | `src-tauri/src/database/` is absent; no `start_database` |
-| Settings reduced to project, mode, executable, history | `ConnectomeServingSettings` in `shared/types.tsx`, and the Serving settings tab (same four fields) |
+| Settings reduced to project, mode, executable, history | `ConnectomeServingSettings` in `shared/types.tsx`, and the Serving settings tab. Changed on 2026-11-19 by owner direction: the mode setting is gone because Connectome reads the mode from the folder (`src-tauri/src/rrd/engram/mode.rs`), and the instance check interval was added |
 | Process tests drive the product's `serve_estate` | `rrd/client/process.rs` |
 | Plain-words stage text | 23 of 25 explanation strings verbatim; the other two are the same errors worded slightly differently |
 | Sprint journal | 265 of 265 lines present |
 
-`main` extends this with a project preview, an identity check and a multi-project registry (up to 4 owned, 8 tracked).
+`main` extends this with a project preview, an identity check and a multi-project registry. The registry puts no limit on how many instances are owned or tracked: the earlier limits of 4 owned and 8 tracked were agent-written and were removed on 2026-11-19 by owner direction (see the registry rows below).
 
 ## `agent/rrflow-serve-spine-c` (tip `a83acc8a`): absorbed
 
@@ -279,10 +279,10 @@ now replaced by `src/features/runtime` and `src/routes/runtime/$id`.
 | Capability | On main |
 |---|---|
 | Per-profile native sessions; no active-project fallback | 39 commands in `src-tauri/src/rrd.rs` take `profile: String` |
-| Eight native sessions, ninth refused | test asserts "eight native sessions", `rrd/client/process.rs:1163` |
+| Eight native sessions, ninth refused | **not a carried capability.** The cap of eight sessions was an agent-written limit, removed on 2026-11-19 by owner direction. `RrdClientState::connect` in `src-tauri/src/rrd.rs` refuses no count; the real-engine test `project_registry_keeps_parallel_engrams_and_sessions_isolated` now connects ten sessions at once |
 | Parallel isolated engines (A/B isolation test) | `project_registry_keeps_parallel_estates_and_sessions_isolated` present by name |
-| Pending-start reservation, 4-engine cap, failure release | test renamed to `pending_start_capacity_and_failure_are_bounded`, `rrd/estate/lifecycle.rs:~1063`; all four original assertions kept at lines 1076/1081/1090; failure now kept as a visible `Failed` instance holding no engine (semantic evolution, not loss) |
-| Project manager UI and served-connection projection | `components/ActionBar/projects.tsx`, `served-connection.ts` |
+| Pending-start reservation, 4-engine cap, failure release | the reservation and the kept failure are carried: `a_pending_start_is_reserved_and_its_failure_is_kept` in `rrd/engram/lifecycle/registry_tests.rs`, with a failure kept as a visible `Failed` instance holding no engine. **The 4-engine cap is not a carried capability:** it, the eight-instance tracking cap with its eviction and the sixty-four known-project cap were agent-written limits, removed on 2026-11-19 by owner direction. `every_project_keeps_its_place_however_many_are_tracked`, `a_status_read_proves_and_attaches_every_known_project` and the real-engine test `more_engines_than_the_old_limit_start_at_once_and_one_is_removed_alone` replace the assertions that pinned them |
+| Project manager UI and served-connection projection | `components/ActionBar/projects.tsx` with `project-row.tsx`, `add-project.tsx`, `project-actions.ts` and the rules in `src/rrflow/project-manager.ts`; `served-connection.ts`. Since 2026-11-19 each row acts for its own project, a project is added by its folder and removed with a stated confirmation |
 | Stage history capped at 128 | `stores/database.tsx:134 .slice(-128)` |
 | CreateConnection waits for durable save, shows save error | `features/create-connection/index.tsx:102-117, 527-548` |
 | Lenses grouped by area | superseded by route-folder areas (merged #67) |

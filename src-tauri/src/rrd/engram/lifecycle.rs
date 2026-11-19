@@ -32,19 +32,14 @@ use crate::rrd::engine::resolve_engine;
 use crate::rrd::error::RrdError;
 
 pub(super) const LIFECYCLE_EVENT: &str = "engram:lifecycle";
-/// Local engines this desktop runs at once.
-const MAX_OWNED: usize = 4;
-/// Instances tracked at once, owned or not; each needs one of the eight
-/// native sessions to be opened.
-const MAX_TRACKED: usize = 8;
 /// A running instance keeps the startup configuration it was started with;
 /// an endpoint credential mapping applies only to a start of `rrflow serve`.
 const RUNNING_WITH_STARTUP: &str =
     "this project is already running; open it or stop it before applying endpoint startup configuration";
 const RUNNING_ELSEWHERE_WITH_STARTUP: &str = "this project is already running outside Connectome; open it, or stop it where it was started before applying endpoint startup configuration";
-/// Known projects one status read may look at for an instance started
-/// elsewhere.
-const MAX_KNOWN_PROJECTS: usize = 64;
+/// What a removed project's instance is told when another process serves it.
+const FORGOTTEN_ELSEWHERE: &str =
+    "Removed from Connectome; the instance started outside Connectome keeps running.";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -148,19 +143,6 @@ impl Entry {
             Self::Owned(_) | Self::Stopping => Origin::Connectome,
             Self::Attached(_) => Origin::Elsewhere,
         }
-    }
-
-    /// Whether this entry holds one of the desktop's local engine slots.
-    fn owns_engine(&self) -> bool {
-        matches!(
-            self,
-            Self::Owned(_)
-                | Self::Stopping
-                | Self::Starting {
-                    origin: Origin::Connectome,
-                    ..
-                }
-        )
     }
 
     fn view(&self, project: &Path, revision: u64) -> InstanceView {
@@ -267,42 +249,6 @@ impl EngramRegistry {
             engram: None,
             revision: self.revision,
         }
-    }
-
-    /// Whether one more project can be tracked. Neither a failed project nor
-    /// a background check of a saved project's recorded endpoint holds an
-    /// engine, so the oldest such entry gives up its slot, failures first.
-    /// Otherwise saved projects whose engines are gone lock a new project out
-    /// with nothing running. A check whose entry is gone is already ignored.
-    fn make_room(&mut self) -> bool {
-        if self.projects.len() < MAX_TRACKED {
-            return true;
-        }
-        let rank = |entry: &Entry| match entry {
-            Entry::Failed { .. } => Some(0),
-            Entry::Starting {
-                origin: Origin::Elsewhere,
-                ..
-            } => Some(1),
-            _ => None,
-        };
-        let oldest = self
-            .projects
-            .iter()
-            .filter_map(|(project, tracked)| {
-                rank(&tracked.entry).map(|rank| ((rank, tracked.revision), project.clone()))
-            })
-            .min()
-            .map(|(_, project)| project);
-        oldest.is_some_and(|project| self.projects.remove(&project).is_some())
-    }
-
-    /// Local engine slots held by projects other than `except`.
-    fn owned_engines(&self, except: &Path) -> usize {
-        self.projects
-            .iter()
-            .filter(|(project, tracked)| project.as_path() != except && tracked.entry.owns_engine())
-            .count()
     }
 
     fn status(&self) -> StatusView {
@@ -472,15 +418,6 @@ impl EngramState {
                 }
                 Some(Entry::Failed { .. }) | None => {}
             }
-            let replacing = registry.projects.contains_key(&project);
-            if registry.owned_engines(&project) >= MAX_OWNED {
-                return Err(
-                    "four local project engines are already running; stop one first".into(),
-                );
-            }
-            if !replacing && !registry.make_room() {
-                return Err("eight project instances are already open; stop one first".into());
-            }
             registry.set(
                 &project,
                 Entry::Starting {
@@ -563,12 +500,6 @@ impl EngramState {
         observer: Arc<dyn ServeObserver>,
         prove: Arc<Prover>,
     ) -> Result<StatusView, RrdError> {
-        if request.projects.len() > MAX_KNOWN_PROJECTS {
-            return Err(format!(
-                "a status read looks at no more than {MAX_KNOWN_PROJECTS} known projects"
-            )
-            .into());
-        }
         let known: Vec<PathBuf> = request
             .projects
             .iter()
@@ -613,9 +544,7 @@ impl EngramState {
                     registry.unproved.remove(&project);
                     continue;
                 };
-                if registry.unproved.get(&project) == Some(&hint)
-                    || registry.projects.len() >= MAX_TRACKED
-                {
+                if registry.unproved.get(&project) == Some(&hint) {
                     continue;
                 }
                 events.push(registry.set(
@@ -807,6 +736,38 @@ impl EngramState {
         observer.lifecycle(view);
         stopped.map(|()| true)
     }
+
+    /// Stops tracking a project that was removed from Connectome. The engine
+    /// this desktop started is stopped and a failure is dismissed, as `stop`
+    /// does. An instance started elsewhere keeps running and is only
+    /// forgotten: its served endpoint record is remembered as already looked
+    /// at, so a status read still naming the project does not attach it
+    /// again. The project's files are never touched. Returns whether an
+    /// engine was stopped.
+    pub fn forget(&self, project: &str, observer: &dyn ServeObserver) -> Result<bool, RrdError> {
+        let key = PathBuf::from(project);
+        let forgotten = {
+            let mut registry = self.lock();
+            let attached = matches!(
+                registry.projects.get(&key).map(|tracked| &tracked.entry),
+                Some(Entry::Attached(_))
+            );
+            attached.then(|| {
+                match record_hint(&key) {
+                    Some(hint) => registry.unproved.insert(key.clone(), hint),
+                    None => registry.unproved.remove(&key),
+                };
+                registry.remove(&key, FORGOTTEN_ELSEWHERE.into())
+            })
+        };
+        match forgotten {
+            Some(view) => {
+                observer.lifecycle(view);
+                Ok(false)
+            }
+            None => self.stop(project, observer),
+        }
+    }
 }
 
 /// The engine, an instance started elsewhere if the project has one, else
@@ -958,6 +919,18 @@ pub async fn rrd_engram_stop(
         .map_err(|e| RrdError::from(format!("stop task failed: {e}")))?
 }
 
+#[tauri::command]
+pub async fn rrd_engram_forget(
+    app: AppHandle,
+    project: String,
+    state: State<'_, EngramState>,
+) -> Result<bool, RrdError> {
+    let owner = state.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || owner.forget(&project, &app))
+        .await
+        .map_err(|e| RrdError::from(format!("removal task failed: {e}")))?
+}
+
 /// Shutdown marks the registry closed before dropping every owned child.
 /// A launch finishing afterwards drops its child instead of publishing it.
 /// Instances started elsewhere keep running.
@@ -971,335 +944,4 @@ pub fn stop_on_exit(state: &EngramState) {
 }
 
 #[cfg(test)]
-mod registry_tests {
-    use super::*;
-    use crate::rrd::engram::InstallMode;
-    use std::sync::atomic::{AtomicUsize, Ordering};
-
-    #[derive(Default)]
-    struct Recording(Mutex<Vec<InstanceView>>);
-    impl ServeObserver for Recording {
-        fn stage(&self, _: EngramStage) {}
-        fn output(&self, _: String) {}
-        fn lifecycle(&self, instance: InstanceView) {
-            self.0.lock().unwrap().push(instance);
-        }
-    }
-    impl Recording {
-        fn states(&self) -> Vec<(InstanceState, Option<&'static str>)> {
-            self.0
-                .lock()
-                .unwrap()
-                .iter()
-                .map(|view| (view.state, view.stage))
-                .collect()
-        }
-    }
-
-    fn scratch(label: &str) -> PathBuf {
-        let directory = std::env::temp_dir().join(format!(
-            "connectome-{label}-{}",
-            uuid::Uuid::new_v4().simple()
-        ));
-        std::fs::create_dir_all(&directory).unwrap();
-        std::fs::canonicalize(&directory).unwrap()
-    }
-
-    fn request(directory: &Path) -> EngramServeRequest {
-        EngramServeRequest {
-            project: directory.to_string_lossy().into_owned(),
-            mode: InstallMode::Fresh,
-            executable: directory
-                .join("missing-engine")
-                .to_string_lossy()
-                .into_owned(),
-            accepted_plan_sha256: None,
-            installation_identity: None,
-            endpoint_credentials: None,
-        }
-    }
-
-    fn starting(origin: Origin) -> Entry {
-        Entry::Starting {
-            origin,
-            stage: None,
-            detail: String::new(),
-        }
-    }
-
-    fn attached(project: &Path, endpoint: &str) -> ServedEngramView {
-        ServedEngramView {
-            project: project.to_string_lossy().into_owned(),
-            endpoint: endpoint.into(),
-            instance: "instance-elsewhere".into(),
-            credential_path: project
-                .join(".rrflow/credentials/local-operator.json")
-                .to_string_lossy()
-                .into_owned(),
-            installed: false,
-            origin: Origin::Elsewhere,
-            engine: None,
-            endpoint_credentials: None,
-        }
-    }
-
-    fn tracked(entry: impl Fn() -> Entry) -> EngramRegistry {
-        let mut registry = EngramRegistry::default();
-        for index in 0..MAX_TRACKED {
-            registry.set(Path::new(&format!("project-{index}")), entry());
-        }
-        registry
-    }
-
-    #[test]
-    fn saved_projects_that_failed_do_not_lock_out_a_new_one() {
-        let mut registry = tracked(|| Entry::Failed {
-            origin: Origin::Connectome,
-            stage: "attach",
-            detail: String::new(),
-        });
-        assert!(registry.make_room());
-        assert_eq!(registry.projects.len(), MAX_TRACKED - 1);
-        assert!(!registry.projects.contains_key(Path::new("project-0")));
-    }
-
-    #[test]
-    fn a_background_endpoint_check_gives_way_to_a_start() {
-        let mut registry = tracked(|| Entry::Starting {
-            origin: Origin::Elsewhere,
-            stage: Some("attach"),
-            detail: String::new(),
-        });
-        assert!(registry.make_room());
-        assert_eq!(registry.projects.len(), MAX_TRACKED - 1);
-    }
-
-    #[test]
-    fn the_tracking_limit_still_holds_for_projects_in_use() {
-        let mut registry = tracked(|| Entry::Starting {
-            origin: Origin::Connectome,
-            stage: None,
-            detail: String::new(),
-        });
-        assert!(!registry.make_room());
-        assert_eq!(registry.projects.len(), MAX_TRACKED);
-    }
-
-    #[test]
-    fn pending_start_capacity_and_failure_are_bounded() {
-        let directory = scratch("registry");
-        let owner = EngramState::default();
-        let quiet = Arc::new(Recording::default());
-        let start = || owner.start(request(&directory), quiet.clone());
-        owner.lock().set(&directory, starting(Origin::Connectome));
-        assert!(start().unwrap_err().message.contains("already starting"));
-        assert!(owner
-            .stop(directory.to_str().unwrap(), quiet.as_ref())
-            .unwrap_err()
-            .message
-            .contains("still running"));
-        drop(Reservation(owner.clone(), directory.clone()));
-        assert!(owner.status().instances.is_empty());
-        for index in 0..4 {
-            owner.lock().set(
-                &directory.join(index.to_string()),
-                starting(Origin::Connectome),
-            );
-        }
-        assert!(start().unwrap_err().message.contains("four local"));
-        owner.lock().projects.clear();
-        assert!(start().is_err(), "an absent executable cannot start");
-        let status = owner.status();
-        assert_eq!(status.instances.len(), 1, "the failure is kept");
-        assert_eq!(status.instances[0].state, InstanceState::Failed);
-        assert_eq!(status.instances[0].stage, Some("engine"));
-        assert_eq!(
-            owner.lock().owned_engines(Path::new("")),
-            0,
-            "a failure holds no engine"
-        );
-        owner.lock().closing = true;
-        assert!(start().unwrap_err().message.contains("shutting down"));
-        std::fs::remove_dir_all(directory).unwrap();
-    }
-
-    #[test]
-    fn every_transition_is_numbered_and_sent() {
-        let directory = scratch("transitions");
-        let owner = EngramState::default();
-        let recording = Arc::new(Recording::default());
-        assert!(owner.start(request(&directory), recording.clone()).is_err());
-        assert_eq!(
-            recording.states(),
-            [
-                (InstanceState::Starting, None),
-                (InstanceState::Starting, Some("engine")),
-                (InstanceState::Failed, Some("engine")),
-            ],
-            "a start reports the stage it reached, then where it failed"
-        );
-        assert!(owner.start(request(&directory), recording.clone()).is_err());
-        assert_eq!(owner.status().instances.len(), 1, "a new start replaces it");
-        assert!(!owner
-            .stop(directory.to_str().unwrap(), recording.as_ref())
-            .unwrap());
-        assert!(
-            owner.status().instances.is_empty(),
-            "stop dismisses a failure"
-        );
-        let views = recording.0.lock().unwrap();
-        assert_eq!(views.last().unwrap().state, InstanceState::Stopped);
-        assert!(
-            views
-                .windows(2)
-                .all(|pair| pair[0].revision < pair[1].revision),
-            "transitions are numbered in order"
-        );
-        assert_eq!(owner.status().revision, views.last().unwrap().revision);
-        drop(views);
-        std::fs::remove_dir_all(directory).unwrap();
-    }
-
-    #[test]
-    fn an_instance_started_elsewhere_is_attached_never_stopped() {
-        let directory = scratch("elsewhere");
-        let owner = EngramState::default();
-        let recording = Arc::new(Recording::default());
-        let view = attached(&directory, "http://127.0.0.1:9");
-        owner.lock().set(&directory, Entry::Attached(view.clone()));
-        assert_eq!(
-            owner
-                .start(request(&directory), recording.clone())
-                .unwrap()
-                .endpoint,
-            view.endpoint,
-            "opening it returns the attached instance"
-        );
-        let refusal = owner
-            .stop(directory.to_str().unwrap(), recording.as_ref())
-            .unwrap_err();
-        assert!(refusal.message.contains("outside Connectome"));
-        assert_eq!(owner.status().instances[0].state, InstanceState::Ready);
-        assert_eq!(owner.status().instances[0].origin, Origin::Elsewhere);
-        std::fs::remove_dir_all(directory).unwrap();
-    }
-
-    #[test]
-    fn a_running_instance_never_takes_a_startup_mapping() {
-        let directory = scratch("mapped");
-        let mapping = directory.join("mapping.json");
-        std::fs::write(&mapping, "{\"format_version\":1,\"entries\":[]}").unwrap();
-        let owner = EngramState::default();
-        let recording = Arc::new(Recording::default());
-        let view = attached(&directory, "http://127.0.0.1:9");
-        owner.lock().set(&directory, Entry::Attached(view.clone()));
-        let mut mapped = request(&directory);
-        mapped.endpoint_credentials = Some(mapping.to_string_lossy().into_owned());
-        let refusal = owner.start(mapped, recording.clone()).unwrap_err();
-        assert!(refusal.message.contains("stop it where it was started"));
-        assert_eq!(
-            owner
-                .start(request(&directory), recording.clone())
-                .unwrap()
-                .endpoint,
-            view.endpoint,
-            "opening it without a mapping still returns the attached instance"
-        );
-        let mut relative = request(&directory);
-        relative.endpoint_credentials = Some("mapping.json".into());
-        assert!(owner
-            .start(relative, recording)
-            .unwrap_err()
-            .message
-            .contains("absolute"));
-        assert_eq!(owner.status().instances[0].state, InstanceState::Ready);
-        std::fs::remove_dir_all(directory).unwrap();
-    }
-
-    #[test]
-    fn a_lost_instance_is_stopped_and_a_stale_record_is_proved_once() {
-        let directory = scratch("discovery");
-        let lost = scratch("lost");
-        std::fs::create_dir_all(directory.join(".rrflow")).unwrap();
-        std::fs::write(directory.join(SERVING_RECORD), "stale").unwrap();
-        let port = {
-            let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
-            listener.local_addr().unwrap().port()
-        };
-        let owner = EngramState::default();
-        owner.lock().set(
-            &lost,
-            Entry::Attached(attached(&lost, &format!("http://127.0.0.1:{port}"))),
-        );
-        let recording = Arc::new(Recording::default());
-        let calls = Arc::new(AtomicUsize::new(0));
-        let prover = {
-            let calls = Arc::clone(&calls);
-            let directory = directory.clone();
-            Arc::new(move |_: &str, project: &Path| {
-                calls.fetch_add(1, Ordering::SeqCst);
-                Ok(if calls.load(Ordering::SeqCst) < 3 {
-                    Err("connection refused".to_owned())
-                } else {
-                    Ok(attached(project, "http://127.0.0.1:9"))
-                })
-                .inspect(|_| assert_eq!(project, directory))
-            })
-        };
-        let refresh = || {
-            tauri::async_runtime::block_on(owner.refresh_with(
-                StatusRequest {
-                    projects: vec![directory.to_string_lossy().into_owned()],
-                    executable: String::new(),
-                },
-                recording.clone(),
-                prover.clone(),
-            ))
-            .unwrap()
-        };
-        let first = refresh();
-        assert!(
-            first.instances.is_empty(),
-            "nothing answers or proves itself"
-        );
-        assert_eq!(calls.load(Ordering::SeqCst), 1);
-        let detail = |state: InstanceState| {
-            recording
-                .0
-                .lock()
-                .unwrap()
-                .iter()
-                .filter(|view| view.state == state)
-                .map(|view| view.detail.clone())
-                .collect::<Vec<_>>()
-        };
-        let stopped = detail(InstanceState::Stopped);
-        assert!(stopped
-            .iter()
-            .any(|detail| detail.contains("no longer answers")));
-        assert!(stopped
-            .iter()
-            .any(|detail| detail.contains("did not prove itself")));
-        refresh();
-        assert_eq!(
-            calls.load(Ordering::SeqCst),
-            1,
-            "the same record is proved once"
-        );
-        std::fs::write(directory.join(SERVING_RECORD), "a newer record").unwrap();
-        refresh();
-        assert_eq!(
-            calls.load(Ordering::SeqCst),
-            2,
-            "a changed record is proved"
-        );
-        std::fs::write(directory.join(SERVING_RECORD), "the newest record").unwrap();
-        let attached = refresh();
-        assert_eq!(calls.load(Ordering::SeqCst), 3);
-        assert_eq!(attached.instances.len(), 1);
-        assert_eq!(attached.instances[0].state, InstanceState::Ready);
-        assert_eq!(attached.instances[0].origin, Origin::Elsewhere);
-        std::fs::remove_dir_all(directory).unwrap();
-        std::fs::remove_dir_all(lost).unwrap();
-    }
-}
+mod registry_tests;

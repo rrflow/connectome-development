@@ -61,11 +61,6 @@ export function installationFacts(preview: unknown): InstallationFacts {
 	};
 }
 
-/** The engine refuses a fresh install in a folder that already holds files. */
-export function refusedAsFresh(error: string | null, mode: string): boolean {
-	return mode === "fresh" && Boolean(error?.includes("ProjectBindingMismatch"));
-}
-
 const SLASH = "\\";
 const EXTENDED = `${SLASH}${SLASH}?${SLASH}`;
 const EXTENDED_SHARE = `${EXTENDED}UNC${SLASH}`;

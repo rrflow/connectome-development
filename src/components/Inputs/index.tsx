@@ -34,6 +34,7 @@ import { useKindList } from "~/hooks/connection/schema";
 import { useStable } from "~/hooks/state/stable";
 import { useIsLight, useTheme } from "~/hooks/ui/theme";
 import { iconCancel, iconCheck } from "~/shared/assets/icons";
+import { focusWhenVisible } from "~/shared/util/platform/visibility";
 import { useConfigStore } from "~/shell/stores/config";
 import { ActionButton } from "../ActionButton";
 
@@ -119,16 +120,12 @@ export function CodeInput({
 			themeComp,
 		};
 
-		if (autoFocus) {
-			const timer = setInterval(() => {
-				editor.focus();
-				if (editor.hasFocus) clearInterval(timer);
-			}, 50);
-		}
+		const stopFocusing = autoFocus ? focusWhenVisible(editor) : undefined;
 
 		onMount?.(editor);
 
 		return () => {
+			stopFocusing?.();
 			editor.destroy();
 		};
 	}, []);

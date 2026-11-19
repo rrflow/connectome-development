@@ -11,12 +11,18 @@ import {
 	ThemeIcon,
 	UnstyledButton,
 } from "@mantine/core";
+import { useQueryClient } from "@tanstack/react-query";
 import { PropsWithChildren, useRef } from "react";
+import { removeProject } from "~/components/ActionBar/project-actions";
+import { RemovalStatement } from "~/components/ActionBar/project-row";
 import { Icon } from "~/components/Icon";
 import { Spacer } from "~/components/Spacer";
 import { useStable } from "~/hooks/state/stable";
 import { openConnectionEditModal } from "~/modals/edit-connection";
 import { useConfirmation } from "~/providers/Confirmation";
+import { connectionProject } from "~/rrflow/instances";
+import { projectRows, rowControls } from "~/rrflow/project-manager";
+import { describeRrdError } from "~/rrflow/runtime";
 import {
 	iconCopy,
 	iconDatabase,
@@ -26,9 +32,10 @@ import {
 } from "~/shared/assets/icons";
 import { SANDBOX } from "~/shared/config/constants";
 import { Connection } from "~/shared/types";
-import { newId, ON_STOP_PROPAGATION } from "~/shared/util/text/helpers";
+import { newId, ON_STOP_PROPAGATION, showErrorNotification } from "~/shared/util/text/helpers";
 import { USER_ICONS } from "~/shared/util/ui/user-icons";
 import { useConfigStore } from "~/shell/stores/config";
+import { useDatabaseStore } from "~/stores/database";
 
 export interface StartConnectionProps extends BoxProps {
 	connection: Connection;
@@ -66,12 +73,33 @@ export function StartConnection({
 		});
 	});
 
+	const queryClient = useQueryClient();
+	// A project's connection is removed the way the project manager removes
+	// the project, with the same statement of what happens.
+	const project = connectionProject(connection);
+	const instances = useDatabaseStore((state) => state.instances);
+	const [row] = project ? projectRows([{ project, name: connection.name }], [], instances) : [];
+	// The same rule the manager's row applies: not while it is starting or stopping.
+	const removeBlocked = row && rowControls(row.instance, undefined, false).removeBlocked;
+
 	const handleDelete = useConfirmation({
-		title: "Remove connection",
-		message: "Are you sure you want to remove this connection?",
-		skippable: true,
+		title: row ? "Remove this project from Connectome?" : "Remove connection",
+		message: row ? (
+			<RemovalStatement row={row} />
+		) : (
+			"Are you sure you want to remove this connection?"
+		),
+		dismissText: row ? "Keep project" : undefined,
+		confirmText: row ? "Remove project" : undefined,
+		skippable: !row,
 		onConfirm() {
-			removeConnection(connection.id);
+			if (!row) return removeConnection(connection.id);
+			removeProject(row.project, queryClient).catch((cause) =>
+				showErrorNotification({
+					title: `${row.name} was not removed`,
+					content: describeRrdError(cause),
+				}),
+			);
 		},
 	});
 
@@ -187,9 +215,13 @@ export function StartConnection({
 													/>
 												}
 												onClick={handleDelete}
+												disabled={removeBlocked !== undefined}
 												c="red"
 											>
-												Delete
+												{row ? "Remove project" : "Delete"}
+												{removeBlocked && (
+													<Text size="xs">{removeBlocked}</Text>
+												)}
 											</Menu.Item>
 										</Menu.Dropdown>
 									</Menu>

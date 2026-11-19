@@ -83,9 +83,13 @@ export function createBaseSettings(): ConnectomeSettings {
 		},
 		serving: {
 			project: "",
-			mode: "fresh",
 			executable: "",
 			historySize: 250,
+			instanceCheckSeconds: 5,
+			// The pace the serving console has always had: fifty lines at once,
+			// one more every half second. Settings > Database Serving changes both.
+			outputBurstLines: 50,
+			outputRefillMs: 500,
 		},
 	};
 }
