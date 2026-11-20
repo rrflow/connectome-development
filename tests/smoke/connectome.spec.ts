@@ -2148,7 +2148,8 @@ test("explains the local database and keeps native startup explicit", async ({
 	page,
 }, testInfo) => {
 	await page.goto("/", { waitUntil: "domcontentloaded" });
-	await expect(page.getByText("Your AI data, running locally", { exact: true })).toBeVisible();
+	await expect(page.getByText("Local RRFlow", { exact: true })).toBeVisible();
+	await expect(page.getByText("No running local engine reported", { exact: true })).toBeVisible();
 	await expect(
 		page.getByRole("button", { name: "Start local RRFlow", exact: true }),
 	).toBeDisabled();

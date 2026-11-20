@@ -98,17 +98,17 @@ export function OverviewPage() {
 					<Stack
 						align="center"
 						gap={0}
-						mb={52}
+						mb="md"
 					>
 						<Image
 							src={pictoBrain}
-							w={74}
+							w={38}
 						/>
 
 						<Text
 							className={classes.heroWordmark}
 							mt="md"
-							fz={32}
+							fz={24}
 							fw={750}
 							lh={1}
 						>
@@ -275,13 +275,13 @@ export function OverviewPage() {
 							<Box>
 								<Group gap="xl">
 									<Box>
-										<Text>Runtime profiles</Text>
+										<Text>Local and remote</Text>
 										<PrimaryTitle
 											fz={18}
 											lh="h1"
 											fw={600}
 										>
-											Connected brains
+											Saved projects
 										</PrimaryTitle>
 									</Box>
 									<Divider
