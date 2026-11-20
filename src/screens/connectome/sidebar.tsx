@@ -15,6 +15,7 @@ import { Fragment, useMemo } from "react";
 import { NavigationIcon } from "~/components/NavigationIcon";
 import { Shortcut } from "~/components/Shortcut";
 import { Spacer } from "~/components/Spacer";
+import { useSetting } from "~/hooks/app/config";
 import {
 	useAbsoluteLocation,
 	useConnectionAndView,
@@ -24,13 +25,14 @@ import { useAvailablePages, useAvailableViews } from "~/hooks/connection/connect
 import { useBoolean } from "~/hooks/state/boolean";
 import { useStable } from "~/hooks/state/stable";
 import { useIsLight } from "~/hooks/ui/theme";
-import { iconArrowLeft, iconCog, iconSearch } from "~/shared/assets/icons";
+import { iconArrowLeft, iconChevronRight, iconCog, iconSearch } from "~/shared/assets/icons";
 import { pictoBrain } from "~/shared/assets/pictograms";
 import type { GlobalPage, SidebarMode, ViewPage } from "~/shared/types";
 import { dispatchIntent } from "~/shared/util/platform/intents";
 import { isMobile } from "~/shared/util/text/helpers";
 import { useConfigStore } from "~/shell/stores/config";
 import { useInterfaceStore } from "~/shell/stores/interface";
+import { ProjectNavigation } from "./project-navigation";
 import classes from "./style.module.scss";
 
 const GLOBAL_NAVIGATION: GlobalPage[][] = [["/overview"], ["/mini/new"]];
@@ -60,6 +62,7 @@ export function ConnectomeSidebar({ sidebarMode, className, ...other }: Connecto
 	const navigateConnection = useConnectionNavigator();
 	const availableUpdate = useInterfaceStore((s) => s.availableUpdate);
 	const sidebarViews = useConfigStore((s) => s.settings.appearance.sidebarViews);
+	const [, setSidebarMode] = useSetting("appearance", "sidebarMode");
 	const pages = useAvailablePages();
 	const views = useAvailableViews();
 
@@ -135,7 +138,7 @@ export function ConnectomeSidebar({ sidebarMode, className, ...other }: Connecto
 	return (
 		<ScrollArea
 			scrollbars="y"
-			type="never"
+			type="auto"
 			pos="fixed"
 			component="aside"
 			top={0}
@@ -237,6 +240,16 @@ export function ConnectomeSidebar({ sidebarMode, className, ...other }: Connecto
 							)}
 						</Fragment>
 					))}
+
+					{isCollapsed && (
+						<NavigationIcon
+							name="Show navigation labels"
+							icon={iconChevronRight}
+							withTooltip
+							onClick={() => setSidebarMode("wide")}
+						/>
+					)}
+					{!connection && <ProjectNavigation compact={isCollapsed} />}
 
 					<Spacer />
 

@@ -73,7 +73,7 @@ export function createBaseSettings(): ConnectomeSettings {
 			defaultDiagramLinkMode: "visible",
 			defaultDiagramMode: "fields",
 			defaultDiagramHoverFocus: "none",
-			sidebarMode: "expandable",
+			sidebarMode: "wide",
 			queryOrientation: "vertical",
 			sidebarViews: {},
 			disableAnimations: false,

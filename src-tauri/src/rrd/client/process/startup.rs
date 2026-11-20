@@ -3,6 +3,71 @@ use super::*;
 use crate::rrd::engram::lifecycle::InstanceState;
 use crate::rrd::engram::EngramState;
 
+/// Exercise the public resolver with the launcher's environment, without
+/// mutating environment variables shared by other test threads.
+#[test]
+#[cfg(debug_assertions)]
+#[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
+fn development_binding_drives_install_serve_and_authenticated_read() {
+    const CHILD: &str = "CONNECTOME_TEST_DEVELOPMENT_BINDING";
+    if std::env::var_os(CHILD).is_none() {
+        let result = std::process::Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "rrd::client::process::startup::development_binding_drives_install_serve_and_authenticated_read",
+                "--ignored",
+                "--nocapture",
+            ])
+            .env(CHILD, "1")
+            .env("RRFLOW_DEV_ENGINE", rrflow())
+            .output()
+            .unwrap();
+        assert!(
+            result.status.success(),
+            "{}\n{}",
+            String::from_utf8_lossy(&result.stdout),
+            String::from_utf8_lossy(&result.stderr)
+        );
+        return;
+    }
+    let project = std::env::temp_dir().join(format!("connectome-dev-binding-{}", Uuid::new_v4()));
+    let request = accepted(EngramServeRequest {
+        project: project.to_string_lossy().into_owned(),
+        mode: Some(InstallMode::Fresh),
+        executable: String::new(),
+        accepted_plan_sha256: None,
+        installation_identity: None,
+        endpoint_credentials: None,
+    });
+    let observer = Arc::new(RecordingObserver::default());
+    let owner = EngramState::default();
+    let served = owner.start(request, observer.clone()).unwrap();
+    let selected = served.engine.as_ref().unwrap();
+    assert_eq!(selected.path, rrflow().canonicalize().unwrap());
+    let expected =
+        crate::rrd::engine::resolve_engine_with(rrflow().to_str().unwrap(), None, None, None, None)
+            .unwrap();
+    assert_eq!(selected.sha256, expected.sha256);
+    assert!(served.installed);
+    tauri::async_runtime::block_on(async {
+        let client = NativeRrdClient::connect(RrdConnectRequest {
+            endpoint: served.endpoint.clone(),
+            instance: served.instance.clone(),
+            credential_path: served.credential_path.clone(),
+        })
+        .await
+        .unwrap();
+        client
+            .database()
+            .await
+            .expect("authenticated live database read");
+        client.close().await.unwrap();
+    });
+    assert!(owner.stop(&served.project, observer.as_ref()).unwrap());
+    drop(owner);
+    std::fs::remove_dir_all(project).unwrap();
+}
+
 #[test]
 #[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
 fn endpoint_mapping_is_engine_validated_and_requires_explicit_restart() {

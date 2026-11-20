@@ -1,7 +1,9 @@
 //! Which `rrflow` executable the desktop runs, and the proof that it is the
 //! one this build was contracted to.
 //!
-//! Three sources, in order: an explicit executable the operator configured;
+//! Development builds first honor the checkout launcher's explicit
+//! `RRFLOW_DEV_ENGINE` binding and refuse conflicting saved configuration.
+//! Otherwise three sources, in order: an explicit executable the operator configured;
 //! the engine bundled beside the application as a Tauri sidecar, which runs
 //! only when the file still hashes to the SHA-256 embedded at build time from
 //! `binaries/engine.json` (itself written for the revision `Cargo.lock` pins);
@@ -52,6 +54,12 @@ pub struct EngineBinding {
 /// Resolves the engine for this process: the configured override, else the
 /// verified sidecar beside the running executable, else `PATH`.
 pub fn resolve_engine(configured: &str) -> Result<EngineBinding, RrdError> {
+    // Cargo prepends target/debug/deps to PATH. The checkout launcher must not
+    // accidentally select an engine left there by a process test.
+    #[cfg(debug_assertions)]
+    if let Some(development) = std::env::var_os("RRFLOW_DEV_ENGINE") {
+        return resolve_development_engine(configured, &development);
+    }
     let sidecar_dir = std::env::current_exe()
         .ok()
         .and_then(|exe| exe.parent().map(Path::to_path_buf));
@@ -62,6 +70,24 @@ pub fn resolve_engine(configured: &str) -> Result<EngineBinding, RrdError> {
         SIDECAR_REVISION,
         std::env::var_os("PATH").as_deref(),
     )
+}
+
+#[cfg(debug_assertions)]
+fn resolve_development_engine(
+    configured: &str,
+    development: &OsStr,
+) -> Result<EngineBinding, RrdError> {
+    let development = development
+        .to_str()
+        .ok_or("RRFLOW_DEV_ENGINE must be a Unicode absolute path")?;
+    let binding = resolve_engine_with(development, None, None, None, None)?;
+    if !configured.trim().is_empty() {
+        let selected = resolve_engine_with(configured, None, None, None, None)?;
+        if selected.path != binding.path {
+            return Err("the configured engine differs from RRFLOW_DEV_ENGINE; clear the serving executable setting or launch Connectome without the development launcher".into());
+        }
+    }
+    Ok(binding)
 }
 
 /// The resolution with every input explicit, so tests can drive it.
@@ -221,6 +247,28 @@ mod tests {
         assert_eq!(binding.source, EngineSource::Override);
         assert_eq!(binding.sha256, digest(b"configured engine"));
         assert_eq!(binding.revision, None);
+    }
+
+    #[test]
+    #[cfg(debug_assertions)]
+    fn development_selection_is_exact_and_rejects_conflicting_settings() {
+        let temporary = Scratch::new("development");
+        let engine = engine_file(temporary.path(), "checkout", b"checkout engine");
+        let other = engine_file(temporary.path(), "other", b"different engine");
+        let binding = resolve_development_engine("", engine.as_os_str()).unwrap();
+        assert_eq!(binding.path, std::fs::canonicalize(&engine).unwrap());
+        assert_eq!(binding.sha256, digest(b"checkout engine"));
+        assert!(resolve_development_engine(engine.to_str().unwrap(), engine.as_os_str()).is_ok());
+        assert!(
+            resolve_development_engine(other.to_str().unwrap(), engine.as_os_str())
+                .unwrap_err()
+                .message
+                .contains("differs from RRFLOW_DEV_ENGINE")
+        );
+        assert!(resolve_development_engine("", OsStr::new("relative-engine")).is_err());
+        assert!(
+            resolve_development_engine("", temporary.path().join("missing").as_os_str()).is_err()
+        );
     }
 
     #[test]

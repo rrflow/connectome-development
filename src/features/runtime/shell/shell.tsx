@@ -3,7 +3,6 @@ import { useRouter } from "@tanstack/react-router";
 import { type ReactNode, useMemo, useState } from "react";
 import { useMenuCounts } from "~/app/router/menu-counts";
 import { areaOf, projectAreas } from "~/app/router/project-menu";
-import { Icon } from "~/components/Icon";
 import { InspectorContext } from "../components/inspector";
 import { GuideProvider } from "../guides/engine";
 import classes from "../style.module.scss";
@@ -17,9 +16,8 @@ export interface WorkspaceShellProps {
 }
 
 /**
- * One window: the project bar, the area rail and the tabs stay in place. The
- * rail and the tabs are built from the route tree, so an area is a folder and a
- * tab is a route file in it. The work pane and the inspector each scroll by
+ * The project bar and tabs stay in place; the application sidebar owns the area
+ * navigation, including before a project is open. Tabs use the same route tree. The work pane and the inspector each scroll by
  * themselves (sprint 016).
  */
 export function WorkspaceShell({ project, route, onOpen, top, children }: WorkspaceShellProps) {
@@ -55,31 +53,6 @@ export function WorkspaceShell({ project, route, onOpen, top, children }: Worksp
 				<div className={classes.workspace}>
 					<div className={classes.workspaceTop}>{top}</div>
 					<div className={classes.workspaceBody}>
-						<nav
-							aria-label="Project areas"
-							className={classes.areaRail}
-						>
-							{areas.map((area) => (
-								<Tooltip
-									key={area.id}
-									label={area.hint}
-									position="right"
-									openDelay={500}
-									multiline
-									w={240}
-								>
-									<UnstyledButton
-										className={classes.area}
-										data-active={area.id === active?.id || undefined}
-										aria-current={area.id === active?.id ? "page" : undefined}
-										onClick={() => onOpen(area.tabs[0].path)}
-									>
-										<Icon path={area.icon} />
-										<span>{area.label}</span>
-									</UnstyledButton>
-								</Tooltip>
-							))}
-						</nav>
 						<div className={classes.workspaceMain}>
 							<div
 								role="tablist"

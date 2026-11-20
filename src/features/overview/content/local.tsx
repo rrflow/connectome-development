@@ -1,18 +1,23 @@
-import { Alert, Button, Group, Paper, SimpleGrid, Stack, Text } from "@mantine/core";
+import { Alert, Badge, Button, Group, Paper, SimpleGrid, Stack, Text } from "@mantine/core";
 import { useState } from "react";
 import { adapter } from "~/adapter";
+import { useAbsoluteLocation } from "~/hooks/app/routing";
 import { dispatchIntent } from "~/shared/util/platform/intents";
 import { useDatabaseStore } from "~/stores/database";
 
 export function LocalStart() {
 	const isServing = useDatabaseStore((s) => s.isServing);
 	const pending = useDatabaseStore((s) => s.servePending);
+	const running = useDatabaseStore(
+		(s) => Object.values(s.instances).filter((instance) => instance.state === "ready").length,
+	);
+	const [, navigate] = useAbsoluteLocation();
 	const [learn, setLearn] = useState(false);
 	const open = () => dispatchIntent("toggle-serving");
 	return (
 		<Paper
 			withBorder
-			p="xl"
+			p="md"
 			radius="md"
 			mb="xl"
 		>
@@ -21,12 +26,28 @@ export function LocalStart() {
 					size="xl"
 					fw={700}
 				>
-					Your AI data, running locally
+					Local RRFlow
 				</Text>
 				<Text>
-					Start RRFlow, explore your data, and learn how records, relationships and
-					vectors fit together. Your local database works without a cloud account.
+					Open a project to query its data, inspect relationships and vectors, or use the
+					workbench. The tools are always available in the sidebar.
 				</Text>
+				<Group aria-label="Engine availability">
+					<Badge
+						variant="light"
+						color={running > 0 ? "green" : "gray"}
+					>
+						{running > 0
+							? `${running} local engine${running === 1 ? "" : "s"} running`
+							: "No running local engine reported"}
+					</Badge>
+					<Text
+						size="xs"
+						c="dimmed"
+					>
+						Cloud synchronization is not implemented.
+					</Text>
+				</Group>
 				<Group>
 					<Button
 						size="md"
@@ -35,6 +56,12 @@ export function LocalStart() {
 						onClick={open}
 					>
 						{isServing ? "Manage project engines" : "Start local RRFlow"}
+					</Button>
+					<Button
+						variant="light"
+						onClick={() => navigate("/connections/create")}
+					>
+						Connect remote engine
 					</Button>
 					<Button
 						variant="light"
