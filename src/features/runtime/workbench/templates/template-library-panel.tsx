@@ -123,7 +123,9 @@ export function WorkbenchTemplateLibraryPanel({
 											{index + 1}. {step.title} → {step.route}
 											{linked
 												? ` · link=${linked.label} (${linked.status})`
-												: ""}
+												: step.linkedPathId
+													? ` · link=${step.linkedPathId} (unavailable)`
+													: ""}
 										</Text>
 										<Button
 											size="xs"
