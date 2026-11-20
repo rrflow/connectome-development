@@ -263,6 +263,7 @@ export type TaskReply =
 			task_sha256: string;
 			configuration_sha256: string;
 			controller: string | null;
+			controller_protocol: "chat_completions" | "system_one" | null;
 			candidates: string[];
 			wait_timeout_ms: string | null;
 			unavailable: string | null;

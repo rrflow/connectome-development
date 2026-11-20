@@ -235,6 +235,16 @@ builds the desktop executable. Copy the staged engine beside that executable
 as `rrflow.exe` (Windows) or `rrflow` (Linux/macOS). The frontend-only browser
 preview intentionally cannot launch a native engine or hold its credentials.
 
+## Controller protocol review
+
+Task review reads the configured controller protocol from the engine: native
+System One typed choice or chat completions with structured choice. This display
+is configuration, not proof of connectivity or participation. Requesting a
+proposal still requires the existing budget, task/configuration digest and
+execution-state checks. The retained attempt and proposal report the outcome.
+This integration covers endpoint/effort selection; it does not qualify SWAG's
+policy envelope, native source-citing assessments, or controller decision quality.
+
 ## Validation
 
 The [actual desktop worker trial](controller-worker-desktop-live.md) records

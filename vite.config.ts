@@ -8,6 +8,7 @@ import { compression } from "vite-plugin-compression2";
 import { ViteImageOptimizer as images } from "vite-plugin-image-optimizer";
 import { Mode, plugin as markdown } from "vite-plugin-markdown";
 import { connectome, version } from "./package.json";
+import tauriConfig from "./src-tauri/tauri.conf.json";
 
 /**
  * The RRFlow engine Connectome is contracted to. `src-tauri/Cargo.lock` is
@@ -30,6 +31,9 @@ function pinnedEngine(): { version: string; revision: string } {
 	}
 	return { version: engineVersion, revision };
 }
+
+// The desktop navigation URL also owns the development server address.
+const developmentUrl = new URL(tauriConfig.build.devUrl);
 
 const isTauri = !!process.env.TAURI_ENV_PLATFORM;
 const isCompress = process.env.VITE_CONNECTOME_COMPRESS !== "false";
@@ -103,8 +107,11 @@ export default defineConfig(({ mode }) => {
 		clearScreen: false,
 		envPrefix: ["VITE_", "TAURI_"],
 		server: {
-			port: 1420,
+			host: developmentUrl.hostname,
+			port: Number(developmentUrl.port),
 			strictPort: true,
+			// Tauri watches Rust itself; neither native output nor the package cache is UI source.
+			watch: { ignored: ["**/src-tauri/**", "**/.pnpm-store/**"] },
 		},
 		build: {
 			target: "es2020",

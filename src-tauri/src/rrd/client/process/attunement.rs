@@ -1,15 +1,15 @@
 //! Real installed engine tests. Temporary source files are test fixtures, never learning data.
 use super::*;
 mod lost_reply;
+mod transport;
 use crate::rrd::client::attunement::{
     AttunementCommand as Command, AttunementReply as Reply, Control,
 };
 use crate::rrd::client::tasks::{TaskCommand, TaskReply};
 use rrd_client::{ClientConfig, RequestOptions, RrdClient, Session};
 use sha2::Digest;
-use std::io::{Read, Write};
-use std::net::{TcpListener, TcpStream};
-use std::time::Instant;
+use std::net::TcpListener;
+use transport::{accept_loopback_request, reply_loopback_chat, reply_loopback_system_one};
 
 async fn read(client: &NativeRrdClient, id: &str) -> Value {
     let Reply::Snapshot { snapshot } = client
@@ -160,8 +160,7 @@ fn loopback_worker_profile(
             },
             candidates: vec![candidate],
             system_prompt: "Select the configured controlled test binding.".into(),
-            maximum_output_tokens: 64,
-            temperature_milli: 0,
+            controller_protocol: rrd_contract::EndpointControllerProtocol::SystemOne {},
             lfg: None,
         }),
         observation_policy: None,
@@ -264,6 +263,7 @@ async fn review_source_request(
     let TaskReply::Prepared {
         task_sha256,
         configuration_sha256,
+        controller_protocol,
         unavailable,
         ..
     } = client
@@ -276,6 +276,7 @@ async fn review_source_request(
         panic!("prepared task")
     };
     assert!(unavailable.is_none(), "controlled endpoint is configured");
+    assert_eq!(controller_protocol, Some("system_one"));
     let selection_attempt_id = Uuid::new_v4().simple().to_string();
     let TaskReply::Proposal { proposal } = client
         .task_command(TaskCommand::Propose {
@@ -357,60 +358,6 @@ fn assert_ui_api_error(error: crate::rrd::error::RrdError, expected_prefix: &str
         "unexpected bounded UI error class: {}",
         error.message
     );
-}
-
-fn accept_loopback_chat(listener: &TcpListener) -> (TcpStream, Value) {
-    listener.set_nonblocking(true).unwrap();
-    let deadline = Instant::now() + Duration::from_secs(15);
-    let (mut socket, _) = loop {
-        match listener.accept() {
-            Ok(socket) => break socket,
-            Err(error)
-                if error.kind() == std::io::ErrorKind::WouldBlock && Instant::now() < deadline =>
-            {
-                std::thread::sleep(Duration::from_millis(10));
-            }
-            Err(error) => panic!("bounded loopback fixture accept failed: {error}"),
-        }
-    };
-    socket.set_nonblocking(false).unwrap();
-    socket
-        .set_read_timeout(Some(Duration::from_secs(5)))
-        .unwrap();
-    let mut header = Vec::new();
-    while !header.ends_with(b"\r\n\r\n") {
-        let mut byte = [0];
-        socket.read_exact(&mut byte).unwrap();
-        header.push(byte[0]);
-        assert!(header.len() < 8_192);
-    }
-    let header = String::from_utf8(header).unwrap();
-    assert!(header.starts_with("POST /v1/chat/completions HTTP/1.1"));
-    let length: usize = header
-        .lines()
-        .find_map(|line| {
-            let (name, value) = line.split_once(':')?;
-            name.eq_ignore_ascii_case("content-length")
-                .then(|| value.trim().parse().unwrap())
-        })
-        .expect("bounded request length");
-    assert!(length < 524_288);
-    let mut body = vec![0; length];
-    socket.read_exact(&mut body).unwrap();
-    (
-        socket,
-        serde_json::from_slice(&body).expect("chat request JSON"),
-    )
-}
-
-fn reply_loopback_chat(socket: &mut TcpStream, model: &str, content: &str) {
-    let body = serde_json::to_vec(&serde_json::json!({
-        "model": model,
-        "choices": [{"finish_reason": "stop", "message": {"role": "assistant", "content": content}}]
-    }))
-    .unwrap();
-    write!(socket, "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n", body.len()).unwrap();
-    socket.write_all(&body).unwrap();
 }
 
 #[test]
@@ -992,18 +939,24 @@ fn selected_source_worker_roundtrips_through_installed_ui_adapter() {
             let expected = ["selector", "selector", "selector", "worker", "selector"];
             let mut observed = Vec::new();
             for expected_kind in expected {
-                let (mut socket, request) = accept_loopback_chat(&server_listener);
+                let path = if expected_kind == "worker" {
+                    "/v1/chat/completions"
+                } else {
+                    "/v1/systemone"
+                };
+                let (mut socket, request) = accept_loopback_request(&server_listener, path);
                 let model = request["model"].as_str().expect("bounded model alias");
-                let message_content = request["messages"][1]["content"]
+                let packet = request["messages"][1]["content"]
                     .as_str()
-                    .expect("chat message content");
-                let packet = serde_json::from_str::<Value>(message_content).ok();
+                    .and_then(|content| serde_json::from_str::<Value>(content).ok());
                 let kind = if packet
                     .as_ref()
                     .is_some_and(|value| value.get("source").is_some())
                 {
                     "worker"
                 } else {
+                    assert!(request.get("messages").is_none());
+                    assert_eq!(request["questions"]["endpoint"]["type"], "choice");
                     "selector"
                 };
                 assert_eq!(
@@ -1036,12 +989,7 @@ fn selected_source_worker_roundtrips_through_installed_ui_adapter() {
                         "Returned one controlled source draft.",
                     );
                 } else {
-                    let choice = serde_json::json!({
-                        "kind": "select",
-                        "binding_id": "connectome-loopback-worker",
-                        "effort": null,
-                    });
-                    reply_loopback_chat(&mut socket, model, &choice.to_string());
+                    reply_loopback_system_one(&mut socket, &request);
                 }
             }
             std::thread::sleep(Duration::from_millis(250));
