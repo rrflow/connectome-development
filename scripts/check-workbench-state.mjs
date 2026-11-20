@@ -5,20 +5,22 @@
  *
  *   node --experimental-strip-types scripts/check-workbench-state.mjs
  *
- * The import contract here is the one `main` documents: an import is
- * sanitised, not copied. A linked path the destination does not have is
- * dropped, ids are minted by the caller, a template without a name is skipped,
- * and at most five steps are kept.
+ * Import validation and lossless copying are checked by
+ * test-template-interchange.mjs. This file holds profile defaults and the
+ * concurrency/no-write boundary after asynchronous file reading.
  */
 import assert from "node:assert/strict";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const { buildTemplateExport, finishTemplateImport, normalizeWorkbench, parseTemplateImport } =
-	await import(
-		`file://${join(root, "src/features/runtime/workbench/lanes/workbench-state.ts").replaceAll("\\", "/")}`
-	);
+const { finishTemplateImport, normalizeWorkbench } = await import(
+	`file://${join(root, "src/features/runtime/workbench/lanes/workbench-state.ts").replaceAll("\\", "/")}`
+);
+
+const { buildTemplateExport } = await import(
+	`file://${join(root, "src/features/runtime/workbench/templates/template-interchange.ts").replaceAll("\\", "/")}`
+);
 
 let checks = 0;
 const check = (name, run) => {
@@ -104,32 +106,19 @@ check("a template saved without lists, and an event without a decision, are fill
 });
 
 const template = {
-	name: "  Authored  ",
+	id: "authored-template",
+	name: "Authored",
 	description: " Keep ",
 	schema: "source",
-	skills: ["Rust", 5, " Go "],
+	skills: ["Rust", " Go "],
 	researchReferences: ["docs/reference"],
 	minimumRequirements: ["grounded result"],
 	filePatterns: ["src/**"],
 	folderPatterns: ["src"],
 	createdAtUnixMs: 42,
-	steps: [
-		{ title: "Inspect", detail: " Read ", route: "knowledge/records", linkedPathId: "have" },
-		{ title: " ", route: " ", linkedPathId: "absent" },
-	],
-	learningEvents: [
-		{
-			kind: "knowledge-drop",
-			mode: "interactive",
-			title: "Example",
-			body: " Body ",
-			component: "alert",
-			route: "knowledge/records",
-			triggers: [{ kind: "cold-signal", description: " Cold " }, { kind: "made-up" }],
-			actions: [],
-			catamorphismTarget: "clyffy",
-		},
-	],
+	updatedAtUnixMs: 43,
+	steps: [],
+	learningEvents: [],
 };
 
 check("an export names its version and time and carries every template", () => {
@@ -141,85 +130,48 @@ check("an export names its version and time and carries every template", () => {
 	});
 });
 
-check("an import trims, keeps the destination's own linked paths and mints every id", () => {
-	const linked = [{ id: "have" }];
-	const [imported, ...rest] = parseTemplateImport({ templates: [template] }, linked, counter());
-	assert.equal(rest.length, 0);
-	assert.equal(imported.name, "Authored");
-	assert.equal(imported.description, "Keep");
-	assert.deepEqual(imported.skills, ["Rust", "Go"]);
-	assert.equal(imported.createdAtUnixMs, 42);
-	assert.ok(imported.updatedAtUnixMs >= imported.createdAtUnixMs);
-	assert.match(imported.id, /^id-\d+$/);
-	assert.equal(imported.steps[0].linkedPathId, "have");
-	assert.equal(imported.steps[0].detail, "Read");
-	assert.equal(imported.steps[1].linkedPathId, undefined);
-	assert.equal(imported.steps[1].title, "Step 2");
-	assert.equal(imported.steps[1].route, "reasoning/workbench");
-	const [event] = imported.learningEvents;
-	assert.equal(event.kind, "knowledge-drop");
-	assert.equal(event.body, "Body");
-	assert.equal(event.requiresOperatorSignoff, true);
-	assert.deepEqual(
-		event.triggers.map((trigger) => trigger.kind),
-		["cold-signal", "manual"],
-	);
-	const ids = [imported.id, ...imported.steps.map((s) => s.id), event.id];
-	assert.equal(new Set(ids).size, ids.length);
-});
-
-check("an import never changes the file it read", () => {
-	const given = { templates: [structuredClone(template)] };
-	const before = structuredClone(given);
-	parseTemplateImport(given, [], counter());
-	assert.deepEqual(given, before);
-});
-
-check("an import keeps at most five steps and skips a template with no name", () => {
-	const six = { ...template, steps: Array.from({ length: 6 }, (_, i) => ({ title: `s${i}` })) };
-	const result = parseTemplateImport(
-		{ templates: [six, { description: "no name" }, null, "text"] },
-		[],
-		counter(),
-	);
-	assert.equal(result.length, 1);
-	assert.equal(result[0].steps.length, 5);
-});
-
-check("a file that is not a template export imports nothing", () => {
-	for (const value of [null, undefined, 5, "x", {}, { templates: "no" }, { templates: [] }]) {
-		assert.deepEqual(parseTemplateImport(value, [], counter()), []);
-	}
-});
-
 check("an import goes in front of what the connection holds when the file has been read", () => {
 	// Reading the file takes time: one template was added and one removed meanwhile.
 	const latest = normalizeWorkbench(
 		{ templates: [{ ...template, id: "added-meanwhile", name: "Added meanwhile" }] },
 		counter(),
 	);
-	const outcome = finishTemplateImport({ templates: [template] }, latest, true, counter());
+	const outcome = finishTemplateImport(
+		buildTemplateExport([template], 100),
+		latest,
+		true,
+		counter(),
+	);
 	assert.deepEqual(
 		outcome.templates.map((entry) => entry.name),
-		[template.name.trim(), "Added meanwhile"],
+		[template.name, "Added meanwhile"],
 	);
 });
 
 check("an import whose workbench is gone writes nothing", () => {
 	const latest = normalizeWorkbench({ templates: [] }, counter());
 	for (const outcome of [
-		finishTemplateImport({ templates: [template] }, latest, false, counter()),
-		finishTemplateImport({ templates: [template] }, null, true, counter()),
+		finishTemplateImport(buildTemplateExport([template], 100), latest, false, counter()),
+		finishTemplateImport(buildTemplateExport([template], 100), null, true, counter()),
 	]) {
 		assert.deepEqual(outcome, { error: "Workbench context changed; import stopped." });
 	}
 });
 
-check("an import with nothing valid in it says so and writes nothing", () => {
-	const latest = normalizeWorkbench({ templates: [] }, counter());
-	assert.deepEqual(finishTemplateImport({ templates: [] }, latest, true, counter()), {
-		error: "The selected file contains no valid dataset templates.",
-	});
+check("a rejected file changes no current templates", () => {
+	const latest = normalizeWorkbench({ templates: [template] }, counter());
+	const before = structuredClone(latest);
+	for (const templates of [[], [template, { name: "broken" }]]) {
+		const result = finishTemplateImport(
+			buildTemplateExport(templates, 100),
+			latest,
+			true,
+			counter(),
+		);
+		assert.match(result.error, /^Invalid or unsupported template export:/);
+		assert.equal("templates" in result, false);
+		assert.deepEqual(latest, before);
+	}
 });
 
 console.log(`Workbench state holds: ${checks} checks.`);

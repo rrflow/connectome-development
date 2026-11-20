@@ -38,6 +38,7 @@ import { WorkbenchLinkedCloudPanel } from "../linked-cloud/linked-cloud-panel";
 import { checkedSource, openSource, usableSourceUrl } from "../linked-cloud/source-url";
 import { WorkbenchMcplLanePanel } from "../mcpl/mcpl-lane-panel";
 import { WorkbenchTemplateAuthoringPanel } from "../templates/template-authoring-panel";
+import { buildTemplateExport } from "../templates/template-interchange";
 import { WorkbenchTemplateLibraryPanel } from "../templates/template-library-panel";
 import { runWorkbenchEventActions } from "./event-actions";
 import {
@@ -53,12 +54,7 @@ import {
 	type WorkbenchLane,
 	watchLinkedPaths,
 } from "./lane-helpers";
-import {
-	buildTemplateExport,
-	finishTemplateImport,
-	manualTrigger,
-	normalizeWorkbench,
-} from "./workbench-state";
+import { finishTemplateImport, manualTrigger, normalizeWorkbench } from "./workbench-state";
 
 /**
  * The Workbench lanes beside the prompt workbench: dataset authoring, MCPL
