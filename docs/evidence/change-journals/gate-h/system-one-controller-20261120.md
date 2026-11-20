@@ -38,3 +38,30 @@ this package does not claim a Svelte migration. The user clarified a larger
 prompt-to-visuals, constraints/lexicon/behavior, modular SWAG, hardware-write,
 competitor parity, hosted sync and rroflow SDK/signal-manager objective. Those
 are broader product requirements, not this package's completion evidence.
+
+## Initial implementation and surfaced checks
+
+The SDK pins now select the paired engine candidate. Task Prepare projects the
+explicit protocol; the UI separates configured transport from recorded
+participation. Existing timeout logic and review presentation moved into private
+helpers without changing dispatch guards. The real-process fixture uses native
+choice for selectors and chat for source-bound workers, retaining denial and
+stale-input assertions. Smoke rendering asserts the protocol disclosure.
+
+`pnpm install --lockfile-only` and `pnpm install --frozen-lockfile` passed with
+Node 24.22.0 / pnpm 11.24.0; existing peer warnings remain. Cargo resolved the two
+pinned crates. An initial `cargo test ... --lib` invocation was invalid because
+Connectome is a binary target; it did not test anything. The corrected
+`cargo test --locked --manifest-path src-tauri/Cargo.toml --all-targets` stopped
+at the build script because the existing staged sidecar names the old revision.
+`pnpm check` passed TypeScript and early checks, then correctly rejected the old
+golden value fixture revision. Neither command is claimed as passed.
+
+Acceptance scope therefore includes regenerating all three golden fixtures
+through their owning real-process drivers and restaging a canonical provenance
+build at the pin. No old fixture is relabelled by hand. The initial root dev
+launcher `--check` succeeded and staged debug bytes, but those bytes have no
+canonical source provenance and cannot qualify the bundled sidecar. The child
+implementation is recorded on its open PR branch before temporarily selecting
+its committed baseline to build the clean parent revision; the branch is then
+restored. This avoids creating another checkout or hiding dirty source identity.

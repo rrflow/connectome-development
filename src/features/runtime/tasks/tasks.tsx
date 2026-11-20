@@ -33,6 +33,8 @@ import {
 	type WorkerReview,
 } from "~/rrflow/tasks";
 
+import { ControllerReview } from "./controller-review";
+
 const message = (error: unknown) => (error instanceof Error ? error.message : String(error));
 function supportsTaskAssessmentOperations(
 	catalogue: Awaited<ReturnType<RrdRuntimeClient["catalogue"]>>,
@@ -1568,44 +1570,23 @@ function TaskDetail({
 					Review controller inputs
 				</Button>
 				{prepared && (
-					<>
-						<Text>Controller: {prepared.controller ?? "Not configured"}</Text>
-						<Text>
-							Configured candidates: {prepared.candidates.join(", ") || "None"}
-						</Text>
-						<Text>Task: {prepared.task.title}</Text>
-						<Text>{prepared.task.goal}</Text>
-						<Code
-							block
-						>{`Task digest: ${prepared.task_sha256}\nConfiguration digest: ${prepared.configuration_sha256}`}</Code>
-						{prepared.unavailable ? (
-							<Alert color="orange">{prepared.unavailable}</Alert>
-						) : (
-							<Text>
-								Native request timeout: {prepared.wait_timeout_ms} ms. Requesting
-								sends this task to the configured controller under the engine
-								policy.
-							</Text>
-						)}
-						<Button
-							disabled={
-								Boolean(prepared.unavailable) ||
-								!budget ||
-								Boolean(
-									budget.stopped ||
-										budget.active_attempt ||
-										budget.execution_may_continue,
-								) ||
-								busy ||
-								proposing ||
-								reading ||
-								needsReadback
-							}
-							onClick={() => void propose()}
-						>
-							Request one experimental proposal
-						</Button>
-					</>
+					<ControllerReview
+						prepared={prepared}
+						disabled={
+							Boolean(prepared.unavailable) ||
+							!budget ||
+							Boolean(
+								budget.stopped ||
+									budget.active_attempt ||
+									budget.execution_may_continue,
+							) ||
+							busy ||
+							proposing ||
+							reading ||
+							needsReadback
+						}
+						onPropose={() => void propose()}
+					/>
 				)}
 				{proposing && (
 					<Text role="status">

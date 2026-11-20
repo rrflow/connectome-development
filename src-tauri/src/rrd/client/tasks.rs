@@ -1,5 +1,7 @@
 //! Project-scoped task controls. Reads never dispatch a provider or reset a budget.
 use super::*;
+mod controller;
+use controller::{controller_protocol, controller_timeout};
 use rrd_client::operations::{
     TaskAssessmentExecute, TaskAssessmentRead, TaskBudgetResume, TaskEndpointPropose,
     TaskWorkerExecute,
@@ -390,6 +392,7 @@ pub enum TaskReply {
         task_sha256: String,
         configuration_sha256: String,
         controller: Option<String>,
+        controller_protocol: Option<&'static str>,
         candidates: Vec<String>,
         wait_timeout_ms: Option<String>,
         unavailable: Option<String>,
@@ -461,27 +464,6 @@ fn query_text_or_digest(value: Option<&QueryValue>) -> Option<&str> {
         Some(QueryValue::String(value) | QueryValue::Digest(value)) => Some(value),
         _ => None,
     }
-}
-
-/// Leave time for engine admission/publication in addition to the provider timeout.
-/// Refuse a duration the granted session cannot cover; never silently shorten it.
-fn controller_timeout(configuration: &EndpointConfiguration) -> Result<Duration, RrdError> {
-    let profile = configuration
-        .profile
-        .as_ref()
-        .ok_or("No endpoint profile is configured")?;
-    let policy = profile
-        .selection_policy
-        .as_ref()
-        .ok_or("No controller policy is configured")?;
-    let binding = profile
-        .bindings
-        .iter()
-        .find(|b| b.id == policy.controller_binding_id)
-        .ok_or("Configured controller binding is absent")?;
-    Duration::from_millis(binding.limits.timeout_ms)
-        .checked_add(REQUEST_TIMEOUT)
-        .ok_or_else(|| "Controller timeout exceeds the native clock".into())
 }
 
 impl NativeRrdClient {
@@ -909,6 +891,8 @@ impl NativeRrdClient {
                     task_sha256,
                     configuration_sha256,
                     controller: policy.map(|p| p.controller_binding_id.to_string()),
+                    controller_protocol: policy
+                        .map(|p| controller_protocol(&p.controller_protocol)),
                     candidates: policy
                         .map(|p| {
                             p.candidates

@@ -978,6 +978,7 @@ test("clears withheld worker output and rejects a delayed read after task contex
 								task_sha256: proposal.task_sha256,
 								configuration_sha256: proposal.configuration_sha256,
 								controller: "controller",
+								controller_protocol: "system_one",
 								candidates: ["worker"],
 								wait_timeout_ms: "1000",
 								unavailable: null,
@@ -1149,6 +1150,8 @@ test("clears withheld worker output and rejects a delayed read after task contex
 	await page.getByLabel("Maximum run time (ms)").fill("60000");
 	await page.getByRole("button", { name: "Configure task budget" }).click();
 	await page.getByRole("button", { name: "Review controller inputs" }).click();
+	await expect(page.getByText("Configured protocol: System One ? typed choice")).toBeVisible();
+	await expect(page.getByText(/This is the engine configuration/)).toBeVisible();
 	await page.getByRole("button", { name: "Request one experimental proposal" }).click();
 	await page.getByRole("button", { name: "Read budget and attempt" }).click();
 	await expect(
