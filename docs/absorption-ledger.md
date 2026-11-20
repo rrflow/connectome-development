@@ -582,6 +582,25 @@ Five refs under `refs/archive/20261114/` exist only in the owner's checkout; non
 | `branch/agent/alarm-livefire-20261110` (tip `edd9b45a`, pull request 48, closed) | Prove the merge alarm fires, with a test made to fail on purpose; "not for merging" in its own words | met: the alarm has since opened and closed real `merge-blocked` issues (84, 88, 89, 93, 94). Its two lines are the deliberate failure and are not wanted |
 | `head/main-folder` (tip `f7f48125`) | Rename the earlier word to engram in four files; an editor commit whose find and replace also broke names (`InstalledengramView`, and a message naming `usengram`) | met by pull request 96, which renamed the whole repository correctly and added the earlier-term gate |
 
+## Every merged pull request, by the tests it added (2026-11-19)
+
+Each of the 99 merges on `main`'s first-parent history was taken in turn. A pull request's own change is its merge commit against that commit's first parent; every test it added (Rust, TypeScript, Python) was looked up on today's `main` by exact name. Tests that are on `main` run in the candidate gate, so a test found is a test that passes there.
+
+**99 pull requests, 272 tests added, 261 on `main` by name, 11 not, in 8 pull requests.** Each of the 11 was read for what it demanded:
+
+| Pull request | Test not on `main` by name | What became of it |
+|---|---|---|
+| 1 | `the_lenses_read_a_live_estate` | renamed: `the_lenses_read_a_live_engram` |
+| 13 | `project_registry_keeps_parallel_estates_and_sessions_isolated` | renamed: `..._engrams_...` |
+| 13, 24 | `pending_start_capacity_and_failure_release_are_bounded`, `pending_start_capacity_and_failure_are_bounded` | the reservation and the kept failure are `a_pending_start_is_reserved_and_its_failure_is_kept`; the capacity half tested the instance limits the owner had removed |
+| 17 | `seed_served_estate_for_visual_capture` | renamed: `seed_served_engram_for_visual_capture` |
+| 47 | `test_a_pull_request_back_in_the_queue_is_not_an_alarm` | dropped on purpose by pull request 50: the workflow token cannot read whether a pull request is in the queue, so a pull request put back in the queue does raise an alarm, which closes when it merges |
+| 58 | `saved_projects_that_failed_do_not_lock_out_a_new_one`, `the_tracking_limit_still_holds_for_projects_in_use` | both tested the tracking limit, removed by owner direction; nothing is locked out now (`every_project_keeps_its_place_however_many_are_tracked`) |
+| 60 | `a_background_endpoint_check_gives_way_to_a_start` | tested eviction under the same limit; removed with it |
+| 68 | two knowledge-tree rebase tests | renamed with "engram" in their titles |
+
+No behaviour was found lost in a merged pull request. What this does not prove: a behaviour a pull request shipped without a test.
+
 ## Open items for the owner
 
 1. **One rrflowQL editor language.** `main` has two lineages: an engine-tokenizer language for the Query lab, and the inherited grammar for the inherited views. The branch adds a third (presentation scanner, formatter, statement splitting). Which is canonical?
