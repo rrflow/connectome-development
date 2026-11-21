@@ -68,7 +68,7 @@ paths map as follows:
   and newsfeed; owner decision 4 supersedes those callers.
 - Inline RuntimeConnection/knowledge view: `features/runtime/knowledge-paths`
   and the native knowledge bridge. Existing tree tests remain in pnpm check.
-- `src-tauri/src/rrd/estate.rs`: `rrd/engram/` lifecycle, discovery and process
+- the original monolithic native launcher: `rrd/engram/` lifecycle, discovery and process
   ownership. The existing SSH module and tests remain; old naming is not
   restored. Current installed-process CI supersedes test-native-client.ps1;
   the obsolete launcher script was read, including readiness and denial setup.
@@ -103,3 +103,9 @@ PR114 main in e8d43743, resolving README by retaining both journal links. The
 join changes documentation only. Application delta versus that main is the
 Icon repair and its four tests/check binding. Native Rust is unchanged;
 required hosted native/process and merge-group checks are still pending.
+
+Hosted candidate e38c3f4d failed the retired-identity documentation check in
+run 44941713458: the journal quoted an obsolete source pathname. Removed that
+spelling from this current record; source remains bound by the archived commit.
+The failing journal addition happened after the initial local check. Recheck
+on the final journal below; no application assertion or policy is weakened.
