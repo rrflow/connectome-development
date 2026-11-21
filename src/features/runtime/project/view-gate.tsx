@@ -1,9 +1,9 @@
-import { Alert, Stack, Text } from "@mantine/core";
+import { Alert, Button, Stack, Text } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { Icon } from "~/components/Icon";
 import { connectionProject } from "~/rrflow/instances";
-import { RrdRuntimeClient } from "~/rrflow/runtime";
+import { describeRrdError, RrdRuntimeClient } from "~/rrflow/runtime";
 import { type InstanceOffer, lifecycleState, VIEW_NEEDS, viewState } from "~/rrflow/views";
 import { iconErrorCircle } from "~/shared/assets/icons";
 import { useDatabaseStore } from "~/stores/database";
@@ -11,9 +11,8 @@ import { useProject } from "./context";
 
 /**
  * Shows a view only when its project's engine runs and serves what the view calls. While the
- * catalogue is unread the view renders as before; a view the engine does not
- * serve says which operations or capabilities are missing, in the engine's
- * own words, instead of failing on its first request.
+ * catalogue is unread the view waits. A failed read is reported separately from
+ * a missing operation; only an observed offer admits the gated view.
  */
 export function ViewGate({ path, children }: { path: string; children: ReactNode }) {
 	const { endpoint, connection, handshake } = useProject();
@@ -30,12 +29,26 @@ export function ViewGate({ path, children }: { path: string; children: ReactNode
 		],
 		enabled: needed && Boolean(handshake),
 		staleTime: Number.POSITIVE_INFINITY,
-		queryFn: () =>
-			new RrdRuntimeClient(
+		retry: false,
+		queryFn: async () => {
+			const offer = await new RrdRuntimeClient(
 				endpoint,
 				connection.runtimeInstance,
 				connection.runtimeSshHost,
-			).catalogue(),
+			).catalogue();
+			if (
+				![offer?.endpoints, offer?.websocket_endpoints].every(
+					(operations) =>
+						Array.isArray(operations) &&
+						operations.every(
+							(operation) => operation && typeof operation.operation === "string",
+						),
+				)
+			) {
+				throw new Error("The engine returned an invalid operation catalogue.");
+			}
+			return offer;
+		},
 	});
 	if (lifecycle) {
 		return (
@@ -48,11 +61,39 @@ export function ViewGate({ path, children }: { path: string; children: ReactNode
 			</Alert>
 		);
 	}
-	// An unread or unusable catalogue gates nothing: a failed read is not a missing operation.
-	if (!needed || !handshake || !Array.isArray(catalogue.data?.endpoints)) return <>{children}</>;
+	if (!needed) return <>{children}</>;
+	if (catalogue.isError) {
+		return (
+			<Alert
+				color="red"
+				title="Engine capabilities could not be checked"
+			>
+				<Stack gap="xs">
+					<Text size="sm">{describeRrdError(catalogue.error)}</Text>
+					<Button
+						onClick={() => void catalogue.refetch()}
+						loading={catalogue.isFetching}
+					>
+						Retry capability check
+					</Button>
+				</Stack>
+			</Alert>
+		);
+	}
+	if (!handshake || !catalogue.data) {
+		return (
+			<Alert title="Checking what this engine serves">
+				Waiting for the engine's capabilities before opening this view.
+			</Alert>
+		);
+	}
 
 	const offer: InstanceOffer = {
-		operations: new Set(catalogue.data?.endpoints.map((endpoint) => endpoint.operation)),
+		operations: new Set(
+			[...catalogue.data.endpoints, ...catalogue.data.websocket_endpoints].map(
+				(endpoint) => endpoint.operation,
+			),
+		),
 		capabilities: handshake.service.capabilities.map((capability) => ({
 			name: capability.name,
 			status: capability.status,

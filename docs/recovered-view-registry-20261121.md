@@ -24,3 +24,39 @@ pnpm build and browser navigation/instance-state coverage. Required candidate
 and merge queue must pass. Stop on lost view/state, bypassed capability checks
 or missing engine catalogue input. No new research, trace, benchmark or engine
 contract needed. Record actual source delta and results below.
+
+Conflict review found a real remaining gap: current ViewGate renders children
+when the required catalogue is unread or unusable; the recovered registry
+returned instance unknown before its offer was read. Restore explicit waiting
+and failed catalogue states at src/features/runtime/project/view-gate.tsx,
+with retry and a browser regression asserting gated content is withheld until
+a valid offer arrives. Keep untracked remote connections governed by their
+public handshake, rather than restoring the obsolete global statusRead flag.
+
+## Integration result
+
+PR112 resolves the old inline RuntimeConnection index/workspace/views into the
+current route files, project layout, ViewGate and VIEW_NEEDS. The incoming
+mislocated graph/views.tsx and removed inline screen files are not recreated.
+Their instance states, capability notices and navigation survive at those
+current boundaries. The obsolete built/planned registry is not a second source
+of route availability. Current Engram naming, native offer process test,
+generated offer and full package check chain are retained.
+
+Recovered unknown-offer behavior was genuinely missing in ViewGate: unread or
+failed catalogues rendered children. The current gate now waits, reports read
+or malformed-response errors with retry, and admits children after a successful
+offer. It includes websocket operations in the same offer. The new browser
+regression failed against the previous production build, then passed after the
+repair; it exercises delayed response, 503, malformed payload and successful
+retry. This uses a controlled public-response fixture, not a real-engine or
+whole-UI qualification claim. Existing lifecycleState still handles tracked
+starting/stopping/stopped/failed instances; an untracked remote connection is
+assessed by its handshake and catalogue.
+
+Read both registry implementations, recovered project view adapter, current
+ViewGate, current store, both native offer tests, registry checker and affected
+navigation/store merge hunks. pnpm check and pnpm build passed; the focused
+browser regression passed. Full browser suite and hosted candidate/queue are
+pending. No native Rust source delta remains; the pinned-engine process test
+will still run in required CI. Native-client parity remains unmet.
