@@ -151,3 +151,5 @@ notices.
 
 Recovered engine UI archive integration: [source and checks](docs/recovered-engine-ui-archives-20261121.md).
 [Recovered view-registry integration](docs/recovered-view-registry-20261121.md) records the remaining F4b source merge and validation.
+
+Recovery evidence: [RRD-only branch integration](docs/recovered-rrd-only-branch-20261121.md).
