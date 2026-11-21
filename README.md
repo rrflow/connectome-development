@@ -149,4 +149,5 @@ check:identity` fails if the inherited vendor's name appears anywhere other
 than a declared dependency's own identifier, the `src/vendor/` seam, or the
 notices.
 
+Recovered engine UI archive integration: [source and checks](docs/recovered-engine-ui-archives-20261121.md).
 [Recovered view-registry integration](docs/recovered-view-registry-20261121.md) records the remaining F4b source merge and validation.
