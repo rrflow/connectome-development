@@ -57,6 +57,12 @@ assessed by its handshake and catalogue.
 Read both registry implementations, recovered project view adapter, current
 ViewGate, current store, both native offer tests, registry checker and affected
 navigation/store merge hunks. pnpm check and pnpm build passed; the focused
-browser regression passed. Full browser suite and hosted candidate/queue are
-pending. No native Rust source delta remains; the pinned-engine process test
+browser regression passed. The first full browser run passed 37 and failed
+one: the worker-isolation fixture rejected the newly required public catalogue
+request. Its native bridge now supplies the shared pinned catalogue; all original
+worker withholding and late-read assertions remain. The focused test passed and
+the full production-bundle browser suite then passed all 38. A retry initially
+used the wrong nested request path and failed; an overlapping retry was refused
+because preview port 4173 was occupied. Both were corrected before the passing
+run. Final pnpm check passed. Hosted candidate/queue remain pending. No native Rust source delta remains; the pinned-engine process test
 will still run in required CI. Native-client parity remains unmet.
