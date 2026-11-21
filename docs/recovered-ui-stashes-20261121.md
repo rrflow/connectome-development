@@ -25,3 +25,29 @@ runtime telemetry is required for merging these existing changes. Stop and
 repair conflicts, test failures or missing dependencies before queueing.
 
 Merge outcomes, exact revisions and validation will be recorded below.
+
+## Local merge results
+
+- 8cf93f88632928a9b0a101d01ec472d2c71f4339 merged as 71e72484.
+  The browser helper had moved to tests/smoke/support/diagnostic.ts. Retained
+  that helper with liveHead/commitWhileClosed, the catch-up scenario and later
+  failure/engine-view scenarios rather than duplicating the old inline helper.
+- 3e644ed080e068b4756f94e5dd47444c8a7e88db merged as 37c65f9a.
+  Kept the full check chain including installation-facts. Resolved the old inline
+  project form into AddProject and ProjectRow: preview remains explicit, errors
+  stay on the affected project, and mode is selected from the folder by the
+  existing native preview instead of restoring the old manual mode switch or
+  four-project limit.
+
+These are ordinary merge commits retaining the recovered work commits as parents.
+The resolved application tree has no new feature delta against the starting
+main: these two stash behaviours were already represented by the current code.
+This package closes their outstanding Git integration; it does not establish
+that unrelated missing features are implemented. No source object was deleted.
+
+Local verification: pnpm check and pnpm build passed. The browser scenario
+'a graph cached before the engine moved on is refreshed when the tab opens'
+passed (one test). Full browser smoke passed: 36 tests. Required hosted candidate and queue gates remain pending.
+Logs: D:/.usr/Temp/rrflow-project-policy-20261121/recovered-ui-{check,build,graph,smoke}.log.
+Native checks are assigned to the repository candidate and merge queue. No
+interactive desktop trial was run. No broader parity status is advanced.
