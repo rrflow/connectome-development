@@ -128,6 +128,7 @@ fn main() {
             rrd::rrd_query,
             rrd::rrd_task,
             rrd::rrd_attunement,
+            rrd::rrd_configuration,
             rrd::rrd_knowledge_trees,
             rrd::rrd_replace_knowledge_trees,
             rrd::rrd_vector_collections,

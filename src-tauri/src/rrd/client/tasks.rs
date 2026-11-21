@@ -497,7 +497,7 @@ impl NativeRrdClient {
     /// operation. This is a stored observation, not current-head authorization.
     async fn source_inventory(&self) -> Result<SourceInventory, RrdError> {
         let valid_at = now_unix_ms().map_err(contract_error)?;
-        let mut budget = self.query_budget.clone();
+        let mut budget = self.effective_query_budget().await?;
         budget.max_storage_keys = budget.max_storage_keys.min(TASK_READ_KEYS);
         let row_cap = budget.max_rows.min(SOURCE_QUERY_ROWS);
         budget.max_rows = row_cap;

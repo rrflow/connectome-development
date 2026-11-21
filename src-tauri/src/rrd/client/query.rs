@@ -58,7 +58,11 @@ pub(super) fn with_parameters(
 impl NativeRrdClient {
     pub async fn query(&self, request: RrdQueryRequest) -> Result<QueryView, RrdError> {
         let execution = with_parameters(
-            execute_query(&request.query, self.scope(), &self.query_budget)?,
+            execute_query(
+                &request.query,
+                self.scope(),
+                &self.effective_query_budget().await?,
+            )?,
             request.parameters,
         )?;
         let result = self
