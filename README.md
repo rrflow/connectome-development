@@ -154,3 +154,5 @@ Recovered engine UI archive integration: [source and checks](docs/recovered-engi
 
 Recovery evidence: [Native client branch integration](docs/recovered-native-client-branch-20261121.md).
 Recovery evidence: [RRD-only branch integration](docs/recovered-rrd-only-branch-20261121.md).
+
+- [Recovered client foundation sources](docs/recovered-client-foundation-20261121.md)
