@@ -95,3 +95,11 @@ underlying check did not fail. Build/browser results and hosted gate follow.
 The merge resolution first completed with no staged application delta, then
 this bounded repair was added. No claim of native parity, cloud sync, statement
 selection, every archive completed, or live desktop qualification is made.
+
+Final local validation: production `pnpm build` exit 0 (existing large-chunk
+warning), `pnpm test:smoke` exit 0, all 38 browser tests passed. Logs are
+child115-build.log and child115-smoke.log. Source merge 49ba4478; joined green
+PR114 main in e8d43743, resolving README by retaining both journal links. The
+join changes documentation only. Application delta versus that main is the
+Icon repair and its four tests/check binding. Native Rust is unchanged;
+required hosted native/process and merge-group checks are still pending.
