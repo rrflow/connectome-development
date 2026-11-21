@@ -24,3 +24,42 @@ candidate/native/process/queue checks. No research or added runtime diagnostics
 needed for rejecting a superseded deletion method. Stop on lost feature,
 weakened check, profile deletion or red CI. Other native rewrite recovery and
 all unmet parity rows remain open.
+
+
+## Resolution
+
+Read every added line in the original commit (types, defaults, migrator,
+keymaps, toolbar, routes and App), its deletion path set, current connection
+fields and existing native runtime/control-plane endpoint clients. All
+merge-affected application paths retain the current version; the resulting
+merge has no application or test delta. The original deletion of designer,
+query, graph, schema, authentication, import/export and sandbox surfaces is
+superseded by the owner's explicit preserve-and-re-author direction. No
+application/test path is deleted from this candidate's baseline.
+
+The old defaults and migration would remove saved view state and non-RRD
+profiles, so they are excluded together. Endpoint/target is not retrofitted as
+an unused duplicate of authentication. Current runtime identity/credential,
+project and SSH fields remain. The endpoint-only profile goal remains unmet,
+exactly as native-client-requirement.md records; this source-history merge does
+not mark it done. Its helper import and simplified toolbar/App were coupled
+to deleting those features and cannot replace current navigation. The graph
+rename does not replace the current graph owner.
+
+The first resolution script stopped at its final assertion because
+`git diff HEAD` omitted unmerged paths; the index/unmerged path union was then
+resolved and verified empty before the merge commit. No partial resolution
+was committed. This is an explicit resolution of an owner-rejected
+implementation, not a claim that its intended native client is complete.
+Other archive work remains.
+
+
+## Validation
+
+`pnpm check` passed on the resolved candidate. Application and tests match
+9083d5ef, whose 38-browser suite passed again during PR113's local validation;
+no additional browser rerun is claimed here. Hosted native, process integration,
+frontend candidate and merge-queue checks remain required. `git diff --check`
+passed. Native parity still reports 289/348 capabilities not fully native and
+66/66 visual comparisons unqualified; these numbers are not reduced by merging
+this rejected deletion branch.
