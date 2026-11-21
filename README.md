@@ -148,3 +148,5 @@ recorded in `.agents/sprints/009-connectome-ownership.md`; `pnpm
 check:identity` fails if the inherited vendor's name appears anywhere other
 than a declared dependency's own identifier, the `src/vendor/` seam, or the
 notices.
+
+Recovered engine UI archive integration: [source and checks](docs/recovered-engine-ui-archives-20261121.md).
