@@ -186,3 +186,39 @@ fn a_wrong_instance_and_a_wrong_credential_are_refused() {
     });
     std::fs::remove_dir_all(scratch).unwrap();
 }
+
+#[test]
+#[ignore = "drives a real RRD process: set RRFLOW_BIN and run with --ignored"]
+fn native_preview_requires_exact_acceptance_and_reopens() {
+    let project =
+        std::env::temp_dir().join(format!("connectome-preview-{}", Uuid::new_v4().simple()));
+    let observer = Arc::new(RecordingObserver::default());
+    let mut request = EngramServeRequest {
+        project: project.to_string_lossy().into_owned(),
+        mode: Some(InstallMode::Fresh),
+        executable: rrflow().to_string_lossy().into_owned(),
+        accepted_plan_sha256: None,
+        installation_identity: None,
+        endpoint_credentials: None,
+    };
+    assert!(serve_engram(request.clone(), observer.clone()).is_err());
+    assert!(!project.join(".rrflow/config.toml").exists());
+    request.accepted_plan_sha256 = Some("0".repeat(64));
+    assert!(serve_engram(request.clone(), observer.clone()).is_err());
+    assert!(!project.join(".rrflow/config.toml").exists());
+    request = accepted(request);
+    let mut served =
+        serve_engram(request.clone(), observer.clone()).expect("approved installation");
+    let instance = served.view.instance.clone();
+    served.server.kill().unwrap();
+    served.server.wait().unwrap();
+    let reopened_preview = preview_engram(&request).unwrap();
+    assert!(reopened_preview.installation.is_none());
+    request.accepted_plan_sha256 = None;
+    let mut reopened = serve_engram(request, observer).expect("open installed engram");
+    assert!(!reopened.view.installed);
+    assert_eq!(reopened.view.instance, instance);
+    reopened.server.kill().unwrap();
+    reopened.server.wait().unwrap();
+    std::fs::remove_dir_all(&project).unwrap();
+}

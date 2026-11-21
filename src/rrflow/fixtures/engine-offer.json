@@ -101,7 +101,7 @@
 			"status": "experimental"
 		}
 	],
-	"engine": "36dccea2c8b47f6e431078fbdbb54165546236ef",
+	"engine": "9b35ccaf2b94cc064178be15bb993ac0be7045a2",
 	"operations": [
 		"attunement-cancel",
 		"attunement-job-list",
@@ -123,6 +123,7 @@
 		"changefeed-follow",
 		"changefeed-read",
 		"cold-history-read",
+		"configuration-effective-read",
 		"context-assemble",
 		"data-schema-read",
 		"diagnostics-read",
@@ -145,6 +146,9 @@
 		"observation-prepare",
 		"observation-read",
 		"openapi-read",
+		"project-configuration-apply",
+		"project-configuration-preview",
+		"project-configuration-read",
 		"query-execute",
 		"query-export",
 		"query-index-ensure",

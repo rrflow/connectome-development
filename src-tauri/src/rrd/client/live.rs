@@ -215,7 +215,7 @@ impl NativeRrdClient {
                 )
             }
             RrdLiveStream::Query { query: text } => {
-                let query = execute_query(&text, scope, &self.query_budget)?;
+                let query = execute_query(&text, scope, &self.effective_query_budget().await?)?;
                 let after_cursor = match request.after_cursor {
                     Some(cursor) => cursor,
                     None => {

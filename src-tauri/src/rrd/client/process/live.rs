@@ -457,7 +457,7 @@ fn live_subscriptions_are_bounded_and_refusals_end_them() {
         let baseline_query = execute_query(
             "FROM record:document AT VALID 100 KNOWN HEAD PROJECT id",
             client.scope(),
-            &client.query_budget,
+            &client.effective_query_budget().await.unwrap(),
         )
         .expect("baseline query");
         let baseline = client
