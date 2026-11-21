@@ -150,3 +150,5 @@ than a declared dependency's own identifier, the `src/vendor/` seam, or the
 notices.
 
 [Recovered view-registry integration](docs/recovered-view-registry-20261121.md) records the remaining F4b source merge and validation.
+
+Recovery evidence: [RRD-only branch integration](docs/recovered-rrd-only-branch-20261121.md).
