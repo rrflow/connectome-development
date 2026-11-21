@@ -52,10 +52,12 @@ use uuid::Uuid;
 mod artifact;
 pub mod attunement;
 mod backup;
+pub mod configuration;
 mod engram;
 mod history;
 mod knowledge;
 mod live;
+mod projection;
 mod quantization;
 mod query;
 pub mod tasks;
@@ -300,8 +302,6 @@ pub struct NativeRrdClient {
     api_key: Secret,
     connected_at_unix_ms: u64,
     service: ServiceView,
-    /// The project's configured query budget, read from its capability document.
-    query_budget: QueryBudget,
     /// The session policy the engine granted when the connection opened.
     limits: SessionLimits,
     ids: RequestIds,
@@ -309,6 +309,7 @@ pub struct NativeRrdClient {
     lease: RwLock<Option<Lease>>,
     /// The previewed change waiting for its commit, if any.
     pending: tokio::sync::Mutex<Option<transaction::PendingChange>>,
+    pending_configuration: tokio::sync::Mutex<Option<configuration::PendingConfiguration>>,
     pending_attunement: tokio::sync::Mutex<Option<attunement::PendingAttunement>>,
     /// The proposed quantization lifecycle step waiting to be applied, if any.
     quantization: tokio::sync::Mutex<Option<quantization::PendingStep>>,
@@ -489,9 +490,9 @@ impl NativeRrdClient {
             api_key,
             connected_at_unix_ms: now_unix_ms()?,
             service: view::service(&capabilities),
-            query_budget: capabilities.configuration.query.clone(),
             ids,
             pending: Default::default(),
+            pending_configuration: Default::default(),
             pending_attunement: Default::default(),
             quantization: Default::default(),
             artifacts: Default::default(),
@@ -708,9 +709,8 @@ impl NativeRrdClient {
             .map(str::trim)
             .filter(|value| !value.is_empty())
             .map(str::to_owned);
-        // Use the running engine's configured recall ceilings. Protocol maxima
-        // are not necessarily admitted by this project's configuration.
-        let recall = self.capabilities().await?.configuration.recall;
+        // Read current preferences; the engine revalidates at admission.
+        let recall = self.effective_recall_budget().await?;
         let launch = LaunchPromptFlight {
             scope: self.scope(),
             prompt: request.prompt,
@@ -924,7 +924,7 @@ impl NativeRrdClient {
             scope: self.scope(),
             generation,
             max_artifact_bytes: 64 * 1024 * 1024,
-            budget: self.query_budget.clone(),
+            budget: self.effective_query_budget().await?,
         };
         self.send(false, |session, options| async move {
             self.client
@@ -1176,6 +1176,7 @@ impl NativeRrdClient {
         };
         *self.pending.lock().await = None;
         *self.pending_attunement.lock().await = None;
+        *self.pending_configuration.lock().await = None;
         self.artifacts.clear();
         self.client
             .close_session(&lease.session, CloseSession {}, self.ids.next(true)?)

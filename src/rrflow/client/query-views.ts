@@ -9,6 +9,7 @@ export interface RrdQueryRowView {
 }
 
 export interface RrdQueryView {
+	configuration?: import("../configuration").Admission | null;
 	canonical_query: string;
 	known_at_cursor: number;
 	schema_revision: number;

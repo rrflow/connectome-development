@@ -45,6 +45,11 @@ request lifecycle transitions or preview and accept a successor after source edi
 rejection and receipt recovery. This does not establish full attunement execution
 or a completed development task.
 
+**System / Policies and preferences** reads inherited user requirements and
+previews governed project numeric policy changes. Query lab shows the policy
+revision actually admitted with each result. [Live policy controls](docs/project-policy-controls.md)
+records scope, approval/recovery behavior and validation.
+
 The inherited query, explorer, designer, access, GraphQL and import and export
 views are not yet re-authored onto RRFlow and still depend on the inherited client.
 [The native client requirement](docs/native-client-requirement.md) owns that work

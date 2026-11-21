@@ -3,6 +3,7 @@ import type { RrdQueryAnalysisView, RrdQueryView } from "~/rrflow/session";
 import { plural } from "~/shared/util/text/helpers";
 import { Section } from "../components/Section";
 import { Stat } from "../components/stat";
+import { PolicyAdmission } from "../policies/admission";
 import { formatCount, formatSize, shortDigest } from "../utils/format";
 
 function Candidates({ result }: { result: RrdQueryView }) {
@@ -177,6 +178,7 @@ export function QueryAnswer({ result }: { result: RrdQueryView }) {
 					<Badge variant="outline">access: {plan.authorization_boundary}</Badge>
 					{execution.truncated && <Badge color="orange">truncated</Badge>}
 				</Group>
+				<PolicyAdmission admission={result.configuration} />
 				<Candidates result={result} />
 				<SimpleGrid cols={{ base: 2, md: 4, xl: 6 }}>
 					<Stat

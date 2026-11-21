@@ -1,7 +1,7 @@
 import type { RequestPayload, SuccessPayload } from "@rrflow/rrd-client";
 
 /** The native boundary projects every contract integer as decimal text. */
-type Decimal<T> = T extends number
+export type Decimal<T> = T extends number
 	? string
 	: T extends (infer V)[]
 		? Decimal<V>[]

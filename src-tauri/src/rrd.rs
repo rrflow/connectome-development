@@ -641,3 +641,16 @@ pub async fn rrd_attunement(
         .attunement_command(request)
         .await
 }
+
+#[tauri::command]
+pub async fn rrd_configuration(
+    profile: String,
+    request: client::configuration::ConfigurationCommand,
+    state: State<'_, RrdClientState>,
+) -> Result<client::configuration::ConfigurationReply, RrdError> {
+    state
+        .client(&profile)
+        .await?
+        .configuration_command(request)
+        .await
+}

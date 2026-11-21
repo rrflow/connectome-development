@@ -148,7 +148,11 @@ impl NativeRrdClient {
         request: RrdQueryExportRequest,
     ) -> Result<QueryExportView, RrdError> {
         let query = with_parameters(
-            execute_query(&request.query, self.scope(), &self.query_budget)?,
+            execute_query(
+                &request.query,
+                self.scope(),
+                &self.effective_query_budget().await?,
+            )?,
             request.parameters,
         )?;
         let export = ExportQuery {
