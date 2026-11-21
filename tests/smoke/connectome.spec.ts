@@ -816,7 +816,7 @@ test("clears withheld worker output and rejects a delayed read after task contex
 	// This keeps the test isolated from desktop startup/window APIs.
 	await page.goto("/connections/create", { waitUntil: "domcontentloaded" });
 	await expect(page.getByText("Connect to RRFlow", { exact: true })).toBeVisible();
-	const installNativeBridge = () => {
+	const installNativeBridge = (catalogue: typeof CATALOGUE) => {
 		Object.assign(globalThis, { isTauri: true });
 		const taskA = {
 			id: "task-a",
@@ -917,7 +917,7 @@ test("clears withheld worker output and rejects a delayed read after task contex
 			value: {
 				invoke: async (
 					command: string,
-					args: { request?: { action?: string; attempt_id?: string } },
+					args: { path?: string; request?: { action?: string; attempt_id?: string } },
 				) => {
 					invoked.push(`${command}:${args.request?.action ?? ""}`);
 					if (command === "rrd_session")
@@ -955,6 +955,14 @@ test("clears withheld worker output and rejects a delayed read after task contex
 								clusters: [],
 							},
 							sections: [],
+						};
+					if (command === "rrd_public_request" && args.path === "/v1/schema/endpoints")
+						return {
+							protocol: "rrd",
+							protocol_version: 1,
+							request_id: "catalogue-request",
+							operation_id: "catalogue-operation",
+							outcome: { status: "ok", payload: catalogue },
 						};
 					if (command === "rrd_vector_collections") return { collections: [] };
 					if (command !== "rrd_task") throw new Error(`Unexpected command ${command}`);
@@ -1125,7 +1133,7 @@ test("clears withheld worker output and rejects a delayed read after task contex
 
 	await page.getByRole("button", { name: "Save & connect to RRD" }).click();
 	await expect(page.getByText("RRD connected", { exact: true })).toBeVisible();
-	await page.evaluate(installNativeBridge);
+	await page.evaluate(installNativeBridge, CATALOGUE);
 	await page.getByRole("button", { name: "Reasoning", exact: true }).click();
 	await expect(page).toHaveURL(/\/reasoning\/tasks$/);
 	await expect
