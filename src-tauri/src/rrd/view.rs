@@ -12,6 +12,8 @@ pub mod history;
 pub mod live;
 pub mod quantization;
 pub mod query_plan;
+mod query_result;
+pub use query_result::{query, QueryView};
 
 use super::cluster;
 use rrd_contract::{
@@ -214,23 +216,6 @@ pub struct SectionView {
     pub coverage: String,
     pub row_count: u64,
     pub known_at_cursor: u64,
-}
-
-#[derive(Debug, Serialize)]
-pub struct QueryView {
-    pub canonical_query: String,
-    pub known_at_cursor: u64,
-    pub schema_revision: u64,
-    pub columns: Vec<String>,
-    pub rows: Vec<RowView>,
-    pub returned_rows: u64,
-    pub truncated: bool,
-    pub keys_examined: u64,
-    pub output_bytes: u64,
-    /// The plan the engine bound: every access path it considered.
-    pub plan: query_plan::QueryPlanView,
-    /// What running that plan read and returned.
-    pub execution: query_plan::QueryExecutionView,
 }
 
 #[derive(Debug, Serialize)]
@@ -742,31 +727,6 @@ pub fn query_row(row: &QueryRowSnapshot) -> RowView {
     RowView {
         identity: row.identity.clone(),
         values: display_properties(&row.values),
-    }
-}
-
-pub fn query(result: &QueryResult) -> QueryView {
-    let mut columns = BTreeSet::new();
-    let rows = result
-        .rows
-        .iter()
-        .map(|row| {
-            columns.extend(row.values.keys().cloned());
-            query_row(row)
-        })
-        .collect();
-    QueryView {
-        canonical_query: result.canonical_query.clone(),
-        known_at_cursor: result.known_at_cursor,
-        schema_revision: result.schema_revision,
-        columns: columns.into_iter().collect(),
-        rows,
-        returned_rows: result.execution.returned_rows,
-        truncated: result.execution.truncated,
-        keys_examined: result.execution.read_evidence.keys_examined,
-        output_bytes: result.execution.output_bytes,
-        plan: query_plan::plan(&result.plan),
-        execution: query_plan::execution(&result.execution),
     }
 }
 

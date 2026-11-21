@@ -50,6 +50,7 @@ import { Route as RuntimeIdSystemClusterRouteImport } from './../../routes/runti
 import { Route as RuntimeIdSystemConnectionsRouteImport } from './../../routes/runtime/$id/system/connections'
 import { Route as RuntimeIdSystemEnginesRouteImport } from './../../routes/runtime/$id/system/engines'
 import { Route as RuntimeIdSystemInstanceRouteImport } from './../../routes/runtime/$id/system/instance'
+import { Route as RuntimeIdSystemPoliciesRouteImport } from './../../routes/runtime/$id/system/policies'
 import { Route as RuntimeIdSystemStorageRouteImport } from './../../routes/runtime/$id/system/storage'
 import { Route as RuntimeIdWorkbenchFlightsRouteImport } from './../../routes/runtime/$id/workbench/flights'
 import { Route as RuntimeIdWorkbenchQueryRouteImport } from './../../routes/runtime/$id/workbench/query'
@@ -270,6 +271,11 @@ const RuntimeIdSystemInstanceRoute = RuntimeIdSystemInstanceRouteImport.update({
   path: '/instance',
   getParentRoute: () => RuntimeIdSystemRouteRoute,
 } as any)
+const RuntimeIdSystemPoliciesRoute = RuntimeIdSystemPoliciesRouteImport.update({
+  id: '/policies',
+  path: '/policies',
+  getParentRoute: () => RuntimeIdSystemRouteRoute,
+} as any)
 const RuntimeIdSystemStorageRoute = RuntimeIdSystemStorageRouteImport.update({
   id: '/storage',
   path: '/storage',
@@ -334,6 +340,7 @@ export interface FileRoutesByFullPath {
   '/runtime/$id/system/connections': typeof RuntimeIdSystemConnectionsRoute
   '/runtime/$id/system/engines': typeof RuntimeIdSystemEnginesRoute
   '/runtime/$id/system/instance': typeof RuntimeIdSystemInstanceRoute
+  '/runtime/$id/system/policies': typeof RuntimeIdSystemPoliciesRoute
   '/runtime/$id/system/storage': typeof RuntimeIdSystemStorageRoute
   '/runtime/$id/workbench/flights': typeof RuntimeIdWorkbenchFlightsRoute
   '/runtime/$id/workbench/query': typeof RuntimeIdWorkbenchQueryRoute
@@ -379,6 +386,7 @@ export interface FileRoutesByTo {
   '/runtime/$id/system/connections': typeof RuntimeIdSystemConnectionsRoute
   '/runtime/$id/system/engines': typeof RuntimeIdSystemEnginesRoute
   '/runtime/$id/system/instance': typeof RuntimeIdSystemInstanceRoute
+  '/runtime/$id/system/policies': typeof RuntimeIdSystemPoliciesRoute
   '/runtime/$id/system/storage': typeof RuntimeIdSystemStorageRoute
   '/runtime/$id/workbench/flights': typeof RuntimeIdWorkbenchFlightsRoute
   '/runtime/$id/workbench/query': typeof RuntimeIdWorkbenchQueryRoute
@@ -427,6 +435,7 @@ export interface FileRoutesById {
   '/runtime/$id/system/connections': typeof RuntimeIdSystemConnectionsRoute
   '/runtime/$id/system/engines': typeof RuntimeIdSystemEnginesRoute
   '/runtime/$id/system/instance': typeof RuntimeIdSystemInstanceRoute
+  '/runtime/$id/system/policies': typeof RuntimeIdSystemPoliciesRoute
   '/runtime/$id/system/storage': typeof RuntimeIdSystemStorageRoute
   '/runtime/$id/workbench/flights': typeof RuntimeIdWorkbenchFlightsRoute
   '/runtime/$id/workbench/query': typeof RuntimeIdWorkbenchQueryRoute
@@ -476,6 +485,7 @@ export interface FileRouteTypes {
     | '/runtime/$id/system/connections'
     | '/runtime/$id/system/engines'
     | '/runtime/$id/system/instance'
+    | '/runtime/$id/system/policies'
     | '/runtime/$id/system/storage'
     | '/runtime/$id/workbench/flights'
     | '/runtime/$id/workbench/query'
@@ -521,6 +531,7 @@ export interface FileRouteTypes {
     | '/runtime/$id/system/connections'
     | '/runtime/$id/system/engines'
     | '/runtime/$id/system/instance'
+    | '/runtime/$id/system/policies'
     | '/runtime/$id/system/storage'
     | '/runtime/$id/workbench/flights'
     | '/runtime/$id/workbench/query'
@@ -568,6 +579,7 @@ export interface FileRouteTypes {
     | '/runtime/$id/system/connections'
     | '/runtime/$id/system/engines'
     | '/runtime/$id/system/instance'
+    | '/runtime/$id/system/policies'
     | '/runtime/$id/system/storage'
     | '/runtime/$id/workbench/flights'
     | '/runtime/$id/workbench/query'
@@ -875,6 +887,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RuntimeIdSystemInstanceRouteImport
       parentRoute: typeof RuntimeIdSystemRouteRoute
     }
+    '/runtime/$id/system/policies': {
+      id: '/runtime/$id/system/policies'
+      path: '/policies'
+      fullPath: '/runtime/$id/system/policies'
+      preLoaderRoute: typeof RuntimeIdSystemPoliciesRouteImport
+      parentRoute: typeof RuntimeIdSystemRouteRoute
+    }
     '/runtime/$id/system/storage': {
       id: '/runtime/$id/system/storage'
       path: '/storage'
@@ -1008,6 +1027,7 @@ interface RuntimeIdSystemRouteRouteChildren {
   RuntimeIdSystemConnectionsRoute: typeof RuntimeIdSystemConnectionsRoute
   RuntimeIdSystemEnginesRoute: typeof RuntimeIdSystemEnginesRoute
   RuntimeIdSystemInstanceRoute: typeof RuntimeIdSystemInstanceRoute
+  RuntimeIdSystemPoliciesRoute: typeof RuntimeIdSystemPoliciesRoute
   RuntimeIdSystemStorageRoute: typeof RuntimeIdSystemStorageRoute
 }
 
@@ -1018,6 +1038,7 @@ const RuntimeIdSystemRouteRouteChildren: RuntimeIdSystemRouteRouteChildren = {
   RuntimeIdSystemConnectionsRoute: RuntimeIdSystemConnectionsRoute,
   RuntimeIdSystemEnginesRoute: RuntimeIdSystemEnginesRoute,
   RuntimeIdSystemInstanceRoute: RuntimeIdSystemInstanceRoute,
+  RuntimeIdSystemPoliciesRoute: RuntimeIdSystemPoliciesRoute,
   RuntimeIdSystemStorageRoute: RuntimeIdSystemStorageRoute,
 }
 

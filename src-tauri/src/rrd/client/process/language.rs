@@ -276,8 +276,12 @@ fn the_rrflowql_golden_matches_the_engine() {
         };
         for vector in &vectors {
             let source = vector["source"].as_str().expect("vector source");
-            let mut execution =
-                execute_query(source, client.scope(), &client.query_budget).expect("query");
+            let mut execution = execute_query(
+                source,
+                client.scope(),
+                &client.effective_query_budget().await.unwrap(),
+            )
+            .expect("query");
             execution.parameters = parameters(&vector["ast"], head);
             let result = client
                 .send(false, |session, options| {

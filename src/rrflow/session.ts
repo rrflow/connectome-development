@@ -1,5 +1,6 @@
 import { Channel, type InvokeArgs, invoke, isTauri } from "@tauri-apps/api/core";
 import type { AttunementCommand, AttunementReply } from "~/rrflow/attunement";
+import type { ConfigurationCommand, ConfigurationReply } from "~/rrflow/configuration";
 import type { TaskCommand, TaskReply } from "~/rrflow/tasks";
 import type { QueryParameters } from "./client/query-parameters";
 import type { RrdQueryRowView, RrdQueryView } from "./client/query-views";
@@ -1130,6 +1131,11 @@ export class RrdSessionClient {
 	async current(): Promise<RrdConnectionView | null> {
 		this.requireNative();
 		return this.call<RrdConnectionView | null>("rrd_session");
+	}
+
+	async configuration(request: ConfigurationCommand): Promise<ConfigurationReply> {
+		this.requireNative();
+		return this.call<ConfigurationReply>("rrd_configuration", { request });
 	}
 
 	async attunement(request: AttunementCommand): Promise<AttunementReply> {

@@ -111,7 +111,7 @@ fn the_value_model_golden_matches_the_engine() {
         let query = execute_query(
             "FROM record:sample AT VALID 100 KNOWN HEAD PROJECT *",
             client.scope(),
-            &client.query_budget,
+            &client.effective_query_budget().await.unwrap(),
         )
         .expect("query");
         let result = client
