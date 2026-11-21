@@ -31,3 +31,67 @@ production build and browser smoke where source changes require them; native
 and real-RRD process candidate plus queue are mandatory. No new model research,
 cloud activation or desktop manipulation. Native parity, cloud sync and all
 remaining archive sources are explicitly unfinished.
+
+
+## Concrete uncovered behavior, before repair
+
+The branch's UI test expects a titled Icon to expose an accessible name and an
+SVG title. Current Icon hides it unless aria-label is supplied separately.
+The original also transforms the path when flipping; current Icon transforms
+the animated root, so the spin animation replaces the flip. Carry these
+behaviors into src/components/Icon/index.tsx, preserving current sizes, colors,
+classes and caller ARIA overrides. Add focused rendered-component regression
+checks at scripts/test-icon.mjs and include them in pnpm check. Show the title
+oracle failing on the current owner before editing it; then check title,
+explicit aria-label/aria-labelledby, decorative icons and transform placement.
+This bounded repair is within the original UI primitive recovery scope. It
+makes no claim about the 66 unqualified visual comparisons.
+
+## Resolution and evidence
+
+The ordinary merge restores the current owners before porting the uncovered
+Icon behavior. No current screen or assertion is deleted. Incoming obsolete
+paths map as follows:
+
+- `src/rrflow/client/native.ts`, value classes and native helpers: the current
+  SDK-backed session/runtime clients and contract-derived `src/rrflow/model.ts`.
+  The old unavailable password/import/live-query facade is not reinstated.
+- `src/rrflow/editor/*`: the one `src/editor/rrflowql/` owner, engine query
+  fixtures and current language checks. Read the old lexical scanner, splitter
+  and parser completely. Its semicolon/container rules accept syntax outside
+  the current engine grammar. Statement-range behavior remains an explicit
+  unresolved requirement in native-client-requirement.md; this merge does not
+  claim that behavior was restored or silently activate a second grammar.
+- `src/rrflow/ui/*`: current Icon, CodeBlock/languages, icons, pictograms and
+  shared theme. Read old highlighting and UI tests. Its 24-language coverage
+  already has a current check. Markdown served the removed inherited assistant
+  and newsfeed; owner decision 4 supersedes those callers.
+- Inline RuntimeConnection/knowledge view: `features/runtime/knowledge-paths`
+  and the native knowledge bridge. Existing tree tests remain in pnpm check.
+- `src-tauri/src/rrd/estate.rs`: `rrd/engram/` lifecycle, discovery and process
+  ownership. The existing SSH module and tests remain; old naming is not
+  restored. Current installed-process CI supersedes test-native-client.ps1;
+  the obsolete launcher script was read, including readiness and denial setup.
+- Old dependency scripts: current dependency-authority checker and adversarial
+  tests. These expose remaining inherited dependencies; the original zero-
+  dependency assertion cannot be claimed true by this history integration.
+- Removed inherited hosted-service screens, provider, util/mantine and old
+  wrappers: existing owner decisions and current feature/theme folders. Do not
+  revive the vendor-hosted service or remove the remaining functional screens.
+- Original design doc: existing historical record at
+  docs/evidence/change-journals/rrflow-native-rewrite-2026-10-18.md.
+
+Characterization: `node --test scripts/test-icon.mjs` failed three of four
+cases on the current Icon (title, labelledby, flip placement), then passed all
+four after the canonical repair. Tests render the real component with real
+React and Mantine; only CSS module class names are substituted. This verifies
+markup and transform placement, not visual qualification. Caller ARIA overrides
+remain authoritative. No dependency or product version change.
+
+`pnpm check`: passed, process exit 0, log child115-check.log in the session's
+external evidence directory. The Python log-print wrapper then hit a Windows
+console UnicodeEncodeError; that was after the command returned zero. The
+underlying check did not fail. Build/browser results and hosted gate follow.
+The merge resolution first completed with no staged application delta, then
+this bounded repair was added. No claim of native parity, cloud sync, statement
+selection, every archive completed, or live desktop qualification is made.

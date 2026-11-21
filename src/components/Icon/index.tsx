@@ -31,25 +31,38 @@ const FLIPS: Record<string, string> = {
  * Draws one icon from `~/icons` as an inline SVG that follows the surrounding
  * text size and color unless told otherwise.
  */
-export function Icon({ path, size = "md", color, spin, flip, className, ...other }: IconProps) {
+export function Icon({
+	path,
+	size = "md",
+	color,
+	spin,
+	flip,
+	title,
+	className,
+	...other
+}: IconProps) {
 	const dimension = typeof size === "number" ? `${size * 1.25}em` : (SIZES[size] ?? SIZES.md);
+
+	const label = other["aria-label"] ?? title;
 
 	return (
 		<Box
 			component="svg"
 			viewBox="0 0 24 24"
 			role="img"
-			aria-hidden={other["aria-label"] ? undefined : true}
+			aria-label={label}
+			aria-hidden={label || other["aria-labelledby"] ? undefined : true}
 			className={[classes.icon, spin ? classes.spin : "", className ?? ""].join(" ").trim()}
 			c={color}
 			w={dimension}
 			h={dimension}
-			style={flip ? { transform: FLIPS[flip] } : undefined}
 			{...other}
 		>
+			{title && <title>{title}</title>}
 			<path
 				d={path}
 				fill="currentColor"
+				style={flip ? { transform: FLIPS[flip], transformOrigin: "12px 12px" } : undefined}
 			/>
 		</Box>
 	);
