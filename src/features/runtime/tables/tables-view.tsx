@@ -23,6 +23,7 @@ import { databaseQuery } from "../api/queries";
 import { ReadNotice } from "../components/notice";
 import { useProject } from "../project/context";
 import { formatCount, formatMoment } from "../utils/format";
+import { RelationRules } from "./relation-rules";
 import { isQueryableName, needsRegistration, rowSource } from "./row-query";
 import { TableRows } from "./table-rows";
 
@@ -181,6 +182,12 @@ function TableDetail({ table, schema, onOpen }: TableDetailProps) {
 						Mode: {words(table.mode)}
 					</Badge>
 				</Group>
+				{table.model === "graph_relation" && (
+					<RelationRules
+						schema={schema}
+						table={table.name}
+					/>
+				)}
 				{readable && source ? (
 					<TableRows
 						client={client}

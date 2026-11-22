@@ -73,6 +73,10 @@ export function EngineLayer({ layer }: { layer: EngineLayerId }) {
 			)}
 			{storage.data && (
 				<>
+					<ReadNotice
+						query={storage}
+						observedAt={storage.data.observed_at_unix_ms}
+					/>
 					{layer === "cld" ? (
 						<ColdTier view={storage.data.physical} />
 					) : (

@@ -1,5 +1,5 @@
 {
-	"engine": "dd1f7a182f6978b577915117f2090055df160749",
+	"engine": "ea2713a7e247dd6ca697e2eb3970686fc97e7771",
 	"queries": [
 		{
 			"canonical": "FROM record:document AT VALID 100 KNOWN HEAD WHERE status = \"open\" AND title != \"x\" PROJECT id, status, title LIMIT 5 EXPLAIN CONTRACT",

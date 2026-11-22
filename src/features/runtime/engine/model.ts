@@ -10,7 +10,7 @@ import type {
 /*
  * The engine view's model: rrflowDB, rrflowKV, rrflowQL and rrflowCLD read
  * from one storage observation and one live rrflowQL answer, placed on the
- * change cursor they share. Every number is the engine's; a part that did
+ * coordinates they actually report. Every number is the engine's; a part that did
  * not report is "not reported", never zero.
  */
 
@@ -19,6 +19,7 @@ export type PartId = "db" | "kv" | "ql" | "cld";
 export type PartPosition =
 	| { kind: "at"; cursor: number }
 	| { kind: "behind"; cursor: number; by: number }
+	| { kind: "separate"; reason: string }
 	| { kind: "off"; reason: string }
 	| { kind: "unknown"; reason: string };
 
@@ -90,39 +91,48 @@ export function readEngine(storage: RrdStorageView): EngineReading {
 
 export interface Activity {
 	seconds: number;
-	commits: number;
-	kvWrites: number | null;
-	walBytes: number | null;
+	changes: number;
+	physicalMutations: number | null;
+	walRetainedBytesChange: number | null;
 	flushes: number | null;
 	compactions: number | null;
-	cldCopied: number | null;
+	cldCursorAdvance: number | null;
 }
 
 function change(before: number | null, after: number | null): number | null {
 	return before === null || after === null ? null : after - before;
 }
 
+/** A cumulative counter reset is unavailable evidence, not negative work. */
+function counterChange(before: number | null, after: number | null): number | null {
+	const delta = change(before, after);
+	return delta !== null && delta >= 0 ? delta : null;
+}
+
 /**
- * What changed between two observations of the same engine process. A
- * counter that went backwards means the engine restarted, so no rate is shown.
+ * Instance-wide differences between observations, never attribution to a prompt.
+ * A backwards sequence invalidates the interval. Individual counter resets
+ * remain unknown; without a process epoch we cannot prove restart continuity.
  */
 export function activity(
 	previous: EngineReading | undefined,
 	current: EngineReading,
 ): Activity | null {
 	if (!previous || current.observedAtMs <= previous.observedAtMs) return null;
-	const kvWrites = change(previous.kv.physicalSequence, current.kv.physicalSequence);
-	if (current.head < previous.head || (kvWrites !== null && kvWrites < 0)) return null;
+	const physicalMutations = change(previous.kv.physicalSequence, current.kv.physicalSequence);
+	if (current.head < previous.head || (physicalMutations !== null && physicalMutations < 0))
+		return null;
 	return {
 		seconds: (current.observedAtMs - previous.observedAtMs) / 1000,
-		commits: current.head - previous.head,
-		kvWrites,
-		walBytes: change(previous.kv.walBytes, current.kv.walBytes),
-		flushes: change(previous.kv.flushes, current.kv.flushes),
-		compactions: change(previous.kv.compactions, current.kv.compactions),
-		cldCopied:
+		changes: current.head - previous.head,
+		physicalMutations,
+		// Retained WAL bytes are a gauge: flushing can decrease this value.
+		walRetainedBytesChange: change(previous.kv.walBytes, current.kv.walBytes),
+		flushes: counterChange(previous.kv.flushes, current.kv.flushes),
+		compactions: counterChange(previous.kv.compactions, current.kv.compactions),
+		cldCursorAdvance:
 			previous.cld && current.cld
-				? current.cld.through_cursor - previous.cld.through_cursor
+				? counterChange(previous.cld.through_cursor, current.cld.through_cursor)
 				: null,
 	};
 }
@@ -144,15 +154,15 @@ export function positions(
 	const head = axisHead(reading, probe);
 	const cld = reading.cld;
 	return {
-		// An rrflowQL answer at the head is itself a committed rrflowDB head, so
-		// the newer of the two observations is rrflowDB's position.
-		db: { kind: "at", cursor: head },
-		// rrflowKV keeps its own sequence, not the change cursor; it holds the
-		// head because every read of the head comes from it.
+		db: place(reading.head, head),
+		// No physical-to-semantic mapping was returned by this observation.
 		kv:
 			reading.kv.durableSequence === null
 				? { kind: "unknown", reason: "rrflowKV reported no sequence" }
-				: { kind: "at", cursor: head },
+				: {
+						kind: "separate",
+						reason: `durable sequence ${reading.kv.durableSequence.toLocaleString()}; no change-cursor mapping`,
+					},
 		ql: probe
 			? place(probe.view.known_at_cursor, head)
 			: { kind: "unknown", reason: probeError ?? "rrflowQL has not answered yet" },
@@ -164,11 +174,13 @@ export function positions(
 	};
 }
 
-/** Writes rrflowKV has applied but not yet made durable. */
-export function unsyncedWrites(kv: KvReading): number | null {
-	return kv.physicalSequence === null || kv.durableSequence === null
+/** Physical mutations after the durable watermark; not a transaction count. */
+export function unsyncedMutations(kv: KvReading): number | null {
+	return kv.physicalSequence === null ||
+		kv.durableSequence === null ||
+		kv.durableSequence > kv.physicalSequence
 		? null
-		: Math.max(0, kv.physicalSequence - kv.durableSequence);
+		: kv.physicalSequence - kv.durableSequence;
 }
 
 const KIND = /^[A-Za-z_][A-Za-z0-9_-]{0,127}$/;
@@ -209,8 +221,6 @@ export function agreement(parts: Record<PartId, PartPosition>, head: number): st
 	const missing = (Object.values(parts) as PartPosition[]).filter(
 		(position) => position.kind === "unknown" || position.kind === "off",
 	).length;
-	if (behind.length === 0 && missing === 0)
-		return `All four parts agree on change ${head.toLocaleString()}.`;
 	const names: Record<PartId, string> = {
 		db: "rrflowDB",
 		kv: "rrflowKV",
@@ -219,7 +229,7 @@ export function agreement(parts: Record<PartId, PartPosition>, head: number): st
 	};
 	const lagging = behind.map(([id, position]) =>
 		position.kind === "behind"
-			? `${names[id]} is ${position.by.toLocaleString()} ${position.by === 1 ? "change" : "changes"} behind`
+			? `${names[id]}'s reading is ${position.by.toLocaleString()} ${position.by === 1 ? "change" : "changes"} earlier`
 			: "",
 	);
 	const summary = lagging.length > 0 ? `${lagging.join("; ")}.` : "";
@@ -227,5 +237,9 @@ export function agreement(parts: Record<PartId, PartPosition>, head: number): st
 		missing > 0
 			? ` ${missing} ${missing === 1 ? "part has" : "parts have"} no position to show.`
 			: "";
-	return `The head is change ${head.toLocaleString()}. ${summary}${unknown}`.trim();
+	const separate =
+		parts.kv.kind === "separate"
+			? " rrflowKV's physical sequence is a separate coordinate."
+			: "";
+	return `Latest observed change: ${head.toLocaleString()}. ${summary}${unknown}${separate}`.trim();
 }

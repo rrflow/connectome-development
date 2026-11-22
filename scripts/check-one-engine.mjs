@@ -7,7 +7,7 @@ import {
 	probeKind,
 	probeQuery,
 	readEngine,
-	unsyncedWrites,
+	unsyncedMutations,
 } from "../src/features/runtime/engine/model.ts";
 
 const metric = (id, value) => ({
@@ -77,15 +77,15 @@ const cld = (through, enabled = true) => ({
 	stopped: null,
 });
 
-// Every part at the same change agrees, and the sentence says so.
+// Physical sequence observations cannot establish a semantic cursor mapping.
 {
 	const reading = readEngine(storage({ cld: cld(100) }));
 	const parts = positions(reading, probe(100), null);
 	assert.deepEqual(
 		Object.values(parts).map((part) => part.kind),
-		["at", "at", "at", "at"],
+		["at", "separate", "at", "at"],
 	);
-	assert.equal(agreement(parts, 100), "All four parts agree on change 100.");
+	assert.match(agreement(parts, 100), /physical sequence is a separate coordinate/);
 }
 
 // A lagging cold tier and an older query answer are measured against the head.
@@ -96,17 +96,17 @@ const cld = (through, enabled = true) => ({
 	assert.deepEqual(parts.ql, { kind: "behind", cursor: 118, by: 2 });
 	assert.match(
 		agreement(parts, 120),
-		/rrflowQL is 2 changes behind; rrflowCLD is 20 changes behind\./,
+		/rrflowQL's reading is 2 changes earlier; rrflowCLD's reading is 20 changes earlier\./,
 	);
 }
 
-// A query answered after the storage read is a newer head; nothing is falsely behind.
+// A newer query answer must not overwrite the independently measured DB/KV reading.
 {
 	const reading = readEngine(storage({ head: 120, cld: cld(120) }));
 	assert.equal(axisHead(reading, probe(125)), 125);
 	const parts = positions(reading, probe(125), null);
-	assert.deepEqual(parts.db, { kind: "at", cursor: 125 });
-	assert.deepEqual(parts.kv, { kind: "at", cursor: 125 });
+	assert.deepEqual(parts.db, { kind: "behind", cursor: 120, by: 5 });
+	assert.equal(parts.kv.kind, "separate");
 	assert.deepEqual(parts.ql, { kind: "at", cursor: 125 });
 }
 
@@ -132,12 +132,12 @@ const cld = (through, enabled = true) => ({
 	);
 	assert.deepEqual(activity(before, after), {
 		seconds: 5,
-		commits: 12,
-		kvWrites: 30,
-		walBytes: 0,
+		changes: 12,
+		physicalMutations: 30,
+		walRetainedBytesChange: 0,
 		flushes: 1,
 		compactions: 0,
-		cldCopied: 10,
+		cldCursorAdvance: 10,
 	});
 	// A restart resets counters; no rate is invented across it.
 	const restarted = readEngine(storage({ head: 112, at: 7_000, physical: 3 }));
@@ -147,8 +147,24 @@ const cld = (through, enabled = true) => ({
 }
 
 // Unsynced writes are the gap between applied and durable sequences.
-assert.equal(unsyncedWrites(readEngine(storage({ physical: 510, durable: 500 })).kv), 10);
-assert.equal(unsyncedWrites(readEngine(storage({ physical: 500, durable: 500 })).kv), 0);
+assert.equal(unsyncedMutations(readEngine(storage({ physical: 510, durable: 500 })).kv), 10);
+assert.equal(unsyncedMutations(readEngine(storage({ physical: 500, durable: 500 })).kv), 0);
+assert.equal(unsyncedMutations(readEngine(storage({ physical: 499, durable: 500 })).kv), null);
+
+// Flushes can reset while persisted sequences continue, and WAL retention is a gauge.
+{
+	const before = readEngine(storage({ at: 1000, flushes: 9, cld: cld(100) }));
+	const after = readEngine(
+		storage({ at: 6000, head: 105, physical: 520, flushes: 1, cld: cld(90) }),
+	);
+	after.kv.walBytes = 1024;
+	after.kv.compactions = null;
+	const delta = activity(before, after);
+	assert.equal(delta.flushes, null);
+	assert.equal(delta.compactions, null);
+	assert.equal(delta.cldCursorAdvance, null);
+	assert.equal(delta.walRetainedBytesChange, -3072);
+}
 
 // The probe reads the most common plain kind and nothing it cannot quote.
 {

@@ -11,11 +11,15 @@ import {
 	type PartId,
 	type PartPosition,
 	type QueryProbe,
-	unsyncedWrites,
+	unsyncedMutations,
 } from "./model";
 
 function plural(count: number, one: string, many = `${one}s`): string {
 	return `${count.toLocaleString()} ${count === 1 ? one : many}`;
+}
+
+function observedCount(count: number | null, one: string, many = `${one}s`): string {
+	return count === null ? `${many} not reported` : plural(count, one, many);
 }
 
 function since(activity: Activity | null): string {
@@ -64,10 +68,12 @@ function PartCard({ id, position, headline, children }: PartCardProps) {
 						{position.kind === "at"
 							? "at the head"
 							: position.kind === "behind"
-								? `${position.by.toLocaleString()} behind`
-								: position.kind === "off"
-									? "off"
-									: "not reported"}
+								? `${position.by.toLocaleString()} earlier`
+								: position.kind === "separate"
+									? "separate sequence"
+									: position.kind === "off"
+										? "off"
+										: "not reported"}
 					</Badge>
 				</Group>
 				<Text
@@ -116,14 +122,12 @@ export function DatabaseCard({
 			headline={`change ${cursor.toLocaleString()}`}
 		>
 			<Line>
-				{graph?.records_total !== undefined
-					? `Holds ${plural(graph.records_total, "record")} and ${plural(graph.relations_total ?? 0, "relation")}.`
-					: "The record count was not reported."}
+				{`Graph observation: ${observedCount(graph?.records_total ?? null, "record")} and ${observedCount(graph?.relations_total ?? null, "relation")}.`}
 			</Line>
 			<Line>
 				{activity
-					? activity.commits > 0
-						? `Committed ${plural(activity.commits, "change")}${since(activity)}.`
+					? activity.changes > 0
+						? `Committed ${plural(activity.changes, "change")}${since(activity)}.`
 						: `No new changes${since(activity)}.`
 					: "Measuring: the next reading shows what changed."}
 			</Line>
@@ -146,7 +150,7 @@ export function StorageCard({
 	activity: Activity | null;
 }) {
 	const kv = reading.kv;
-	const unsynced = unsyncedWrites(kv);
+	const unsynced = unsyncedMutations(kv);
 	return (
 		<PartCard
 			id="kv"
@@ -161,8 +165,8 @@ export function StorageCard({
 				{unsynced === null
 					? "Whether every write is on disk was not reported."
 					: unsynced === 0
-						? "Every write it has applied is on disk."
-						: `${plural(unsynced, "write")} applied and waiting to reach disk.`}
+						? "The observed durable watermark covers every applied physical mutation."
+						: `${plural(unsynced, "physical mutation")} beyond the observed durable watermark.`}
 			</Line>
 			<Line>
 				<Term id="memtable">Memtable</Term>: {formatCount(kv.memtableKeys)} keys,{" "}
@@ -171,8 +175,8 @@ export function StorageCard({
 				<Term id="wal">Write-ahead log</Term>: {formatSize(kv.walBytes)}.
 			</Line>
 			<Line>
-				{activity && activity.kvWrites !== null
-					? `${plural(activity.kvWrites, "write")}, ${plural(activity.flushes ?? 0, "flush", "flushes")} and ${plural(activity.compactions ?? 0, "compaction")}${since(activity)}.`
+				{activity
+					? `${observedCount(activity.physicalMutations, "physical mutation")}, ${observedCount(activity.flushes, "flush", "flushes")} and ${observedCount(activity.compactions, "compaction")}${since(activity)}.`
 					: "Measuring: the next reading shows what changed."}
 			</Line>
 		</PartCard>
@@ -213,6 +217,11 @@ export function QueryCard({
 			position={position}
 			headline={`answered at ${view.known_at_cursor.toLocaleString()}`}
 		>
+			{error && (
+				<Line>
+					Latest probe failed: {error}. The reading below is the last successful answer.
+				</Line>
+			)}
 			<Line>
 				Read {plural(view.returned_rows, "record")} of kind <code>{probe.kind}</code> in{" "}
 				{probe.roundTripMs.toFixed(1)} ms, as Connectome timed the round trip.{engineTime}
@@ -265,10 +274,10 @@ export function ColdCard({
 									: `${plural(cld.files, "published file")}.`}
 					</Line>
 					<Line>
-						{activity && activity.cldCopied !== null
-							? activity.cldCopied > 0
-								? `Copied ${plural(activity.cldCopied, "change")}${since(activity)}.`
-								: `Copied nothing new${since(activity)}.`
+						{activity && activity.cldCursorAdvance !== null
+							? activity.cldCursorAdvance > 0
+								? `Coverage advanced by ${plural(activity.cldCursorAdvance, "cursor position")}${since(activity)}.`
+								: `Coverage did not advance${since(activity)}.`
 							: "Measuring: the next reading shows what changed."}
 					</Line>
 				</>
