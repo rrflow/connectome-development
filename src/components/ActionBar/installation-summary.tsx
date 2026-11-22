@@ -1,9 +1,6 @@
 import { Accordion, List, ScrollArea, Stack, Text } from "@mantine/core";
 import { installationFacts } from "./installation-facts";
 
-/** Paths listed before the rest are counted. */
-const LISTED_PATHS = 4;
-
 const PHASE_WORDS: Record<string, string> = {
 	connect: "Connect",
 	inventory: "Inventory, which lists your project's files",
@@ -15,22 +12,40 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
 /** The installation preview in plain words, with the exact plan one click away. */
 export function InstallationSummary({ preview }: { preview: unknown }) {
 	const facts = installationFacts(preview);
-	const shown = facts.createdPaths.slice(0, LISTED_PATHS);
-	const rest = facts.createdPaths.length - shown.length;
 	return (
 		<Stack gap="xs">
-			<Text fw={700}>What installing does</Text>
+			<Text fw={700}>Your project database</Text>
+			{facts.storageProfile === "rrflow_kv" && facts.storageRoot && (
+				<Text
+					size="sm"
+					style={{ overflowWrap: "anywhere" }}
+				>
+					Creates a persistent RRFlow database at {facts.storageRoot}, inside this
+					project. Records, relationships and vectors are stored by the engine in this
+					database.
+				</Text>
+			)}
+			{facts.loopbackOnly && (
+				<Text size="sm">
+					Install and open starts this project's RRFlow server on an available local port.
+					Connectome opens it after authentication and readiness succeed.
+					{facts.storageProfile === "rrflow_kv" &&
+						" Stopping the server keeps its saved data."}
+				</Text>
+			)}
+			{facts.projectLocator && (
+				<Text
+					size="sm"
+					style={{ overflowWrap: "anywhere" }}
+				>
+					Project connection settings: {facts.projectLocator}.
+				</Text>
+			)}
+			<Text fw={700}>Access and project files</Text>
 			<List
 				size="sm"
 				spacing={4}
 			>
-				{facts.createdPaths.length > 0 && (
-					<List.Item>
-						Creates {plural(facts.createdPaths.length, "item", "items")} that RRFlow
-						owns in this project: {shown.join(", ")}
-						{rest > 0 ? ` and ${rest} more` : ""}.
-					</List.Item>
-				)}
 				{facts.preservesProjectFiles && (
 					<List.Item>Leaves your own files as they are.</List.Item>
 				)}
@@ -39,7 +54,9 @@ export function InstallationSummary({ preview }: { preview: unknown }) {
 						Serves only this computer and opens no outside connection.
 					</List.Item>
 				)}
-				{facts.outsidePrograms === 0 && <List.Item>Runs no other program.</List.Item>}
+				{facts.outsidePrograms === 0 && (
+					<List.Item>The installation invokes no external project tools.</List.Item>
+				)}
 				{facts.aiProviders === 0 && (
 					<List.Item>Turns on no AI provider and uploads nothing.</List.Item>
 				)}
@@ -51,12 +68,37 @@ export function InstallationSummary({ preview }: { preview: unknown }) {
 				)}
 				{facts.phases.length > 0 && (
 					<List.Item>
-						Then learns the project, when you approve each step:{" "}
+						Available project setup steps, each requiring approval:{" "}
 						{facts.phases.map((phase) => PHASE_WORDS[phase] ?? phase).join(", then ")}.
 					</List.Item>
 				)}
 			</List>
 			<Accordion variant="contained">
+				{facts.createdPaths.length > 0 && (
+					<Accordion.Item value="files">
+						<Accordion.Control>
+							Installation files and folders ({facts.createdPaths.length} paths)
+						</Accordion.Control>
+						<Accordion.Panel>
+							{facts.instanceId && (
+								<Text size="xs">Engine identity: {facts.instanceId}</Text>
+							)}
+							<Text size="sm">
+								Configuration, credentials, database storage and installation
+								recovery paths. This is not a count of database records. The exact
+								plan below includes each path's ownership and removal rule.
+							</Text>
+							<List
+								size="sm"
+								style={{ overflowWrap: "anywhere" }}
+							>
+								{facts.createdPaths.map((path) => (
+									<List.Item key={path}>{path}</List.Item>
+								))}
+							</List>
+						</Accordion.Panel>
+					</Accordion.Item>
+				)}
 				<Accordion.Item value="plan">
 					<Accordion.Control>
 						Show the exact plan

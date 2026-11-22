@@ -153,8 +153,9 @@ function TableDetail({ table, schema, onOpen }: TableDetailProps) {
 	const { client, sessionKey } = useProject();
 	const source = rowSource(table.model);
 	const declared = schema?.tables.find((entry) => entry.name === table.name);
-	// A table whose schema does not name the row source cannot be read through it.
+	// Schemaless tables do not require a strict record schema to hold queryable rows.
 	const unregistered =
+		table.mode !== "schemaless" &&
 		source !== undefined &&
 		needsRegistration(source) &&
 		declared !== undefined &&

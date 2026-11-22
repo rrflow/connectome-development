@@ -101,7 +101,7 @@
 			"status": "experimental"
 		}
 	],
-	"engine": "9b35ccaf2b94cc064178be15bb993ac0be7045a2",
+	"engine": "dd1f7a182f6978b577915117f2090055df160749",
 	"operations": [
 		"attunement-cancel",
 		"attunement-job-list",
@@ -154,6 +154,7 @@
 		"query-index-ensure",
 		"query-index-list",
 		"query-live-poll",
+		"query-transaction-execute",
 		"restore-create",
 		"session-close",
 		"session-create",

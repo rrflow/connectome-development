@@ -7,7 +7,11 @@ const preview = {
 	preview_format_version: 1,
 	installation: {
 		product_version: "1.0.0",
-		deployment: { endpoint_presentation: "loopback_http_websocket" },
+		deployment: {
+			endpoint_presentation: "loopback_http_websocket",
+			storage_profile: "rrflow_kv",
+		},
+		target: { instance_id: "instance-proof" },
 		bootstrap: {
 			project_policy: "preserve_project_owned_state",
 			process_invocations: [],
@@ -18,6 +22,8 @@ const preview = {
 		managed_paths: [
 			{ relative_path: ".rrflow" },
 			{ relative_path: ".rrflow/credentials" },
+			{ kind: "storage_root", relative_path: ".rrflow/rrd/roots/proof" },
+			{ kind: "project_locator", relative_path: ".rrflow/config.toml" },
 			{ relative_path: ".rrflow" },
 			{ relative_path: "AGENTS.rrflow.md" },
 		],
@@ -32,7 +38,17 @@ const preview = {
 };
 
 const facts = installationFacts(preview);
-assert.deepEqual(facts.createdPaths, [".rrflow", ".rrflow/credentials", "AGENTS.rrflow.md"]);
+assert.deepEqual(facts.createdPaths, [
+	".rrflow",
+	".rrflow/config.toml",
+	".rrflow/credentials",
+	".rrflow/rrd/roots/proof",
+	"AGENTS.rrflow.md",
+]);
+assert.equal(facts.storageProfile, "rrflow_kv");
+assert.equal(facts.storageRoot, ".rrflow/rrd/roots/proof");
+assert.equal(facts.projectLocator, ".rrflow/config.toml");
+assert.equal(facts.instanceId, "instance-proof");
 assert.equal(facts.preservesProjectFiles, true);
 assert.equal(facts.loopbackOnly, true);
 assert.equal(facts.networkEndpoints, 0);
@@ -48,6 +64,10 @@ assert.deepEqual(unknown.createdPaths, []);
 assert.equal(unknown.preservesProjectFiles, false);
 assert.equal(unknown.networkEndpoints, null);
 assert.equal(unknown.permissions, null);
+assert.equal(unknown.storageProfile, null);
+assert.equal(unknown.storageRoot, null);
+assert.equal(unknown.projectLocator, null);
+assert.equal(unknown.instanceId, null);
 
 assert.equal(displayPath(String.raw`\\?\D:\work\project`), String.raw`D:\work\project`);
 assert.equal(displayPath(String.raw`\\?\UNC\server\share`), String.raw`\\server\share`);

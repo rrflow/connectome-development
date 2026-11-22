@@ -279,7 +279,7 @@ test("adding a project asks for a folder only, shows the plan, then installs, st
 	await addProject(page, folder);
 	// Listed at once, with its real state, and its installation on its own row.
 	await expect(row(page, "alpha").getByText("Not installed yet")).toBeVisible();
-	await expect(row(page, "alpha").getByText("What installing does")).toBeVisible();
+	await expect(row(page, "alpha").getByText("Your project database")).toBeVisible();
 	const [preview] = await calls(page, "rrd_engram_preview");
 	expect(preview.request.project).toBe(folder);
 	expect(preview.request.mode, "the folder decides the mode, not the form").toBeUndefined();

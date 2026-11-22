@@ -111,8 +111,8 @@ importers:
         specifier: ^6.5.0
         version: 6.5.3(@codemirror/language@6.12.3)(@codemirror/state@6.6.0)(@codemirror/view@6.40.0)
       '@rrflow/rrd-client':
-        specifier: github:rrflow/rrflow-development#9b35ccaf2b94cc064178be15bb993ac0be7045a2&path:sdks/typescript
-        version: https://codeload.github.com/rrflow/rrflow-development/tar.gz/9b35ccaf2b94cc064178be15bb993ac0be7045a2#path:sdks/typescript
+        specifier: github:rrflow/rrflow-development#dd1f7a182f6978b577915117f2090055df160749&path:sdks/typescript
+        version: https://codeload.github.com/rrflow/rrflow-development/tar.gz/dd1f7a182f6978b577915117f2090055df160749#path:sdks/typescript
       '@sigma/edge-curve':
         specifier: ^3.1.0
         version: 3.1.0(sigma@3.0.2(graphology-types@0.24.8))
@@ -1285,8 +1285,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@rrflow/rrd-client@https://codeload.github.com/rrflow/rrflow-development/tar.gz/9b35ccaf2b94cc064178be15bb993ac0be7045a2#path:sdks/typescript':
-    resolution: {gitHosted: true, integrity: sha512-lC0BQlQhwrJOeeQ6dnVar4qoJBAXsyau/FrAwx7p8dzBdNp9MsQ8vPiSeIPnHZqHMmNYRo9ck8i+aX0t5BnH1g==, path: sdks/typescript, tarball: https://codeload.github.com/rrflow/rrflow-development/tar.gz/9b35ccaf2b94cc064178be15bb993ac0be7045a2}
+  '@rrflow/rrd-client@https://codeload.github.com/rrflow/rrflow-development/tar.gz/dd1f7a182f6978b577915117f2090055df160749#path:sdks/typescript':
+    resolution: {gitHosted: true, integrity: sha512-4MDLdoBRZORwP10hTFvL6R4fQG5HDHb8bvDHTPoIwYObdmUf5sDMoxIf9BhRibW39M0RWftgjq1dM0A/hw0XcA==, path: sdks/typescript, tarball: https://codeload.github.com/rrflow/rrflow-development/tar.gz/dd1f7a182f6978b577915117f2090055df160749}
     version: 1.0.0
     engines: {node: '>=24.22.0'}
 
@@ -3617,7 +3617,7 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.60.0':
     optional: true
 
-  '@rrflow/rrd-client@https://codeload.github.com/rrflow/rrflow-development/tar.gz/9b35ccaf2b94cc064178be15bb993ac0be7045a2#path:sdks/typescript':
+  '@rrflow/rrd-client@https://codeload.github.com/rrflow/rrflow-development/tar.gz/dd1f7a182f6978b577915117f2090055df160749#path:sdks/typescript':
     dependencies:
       arktype: 2.2.8
 
