@@ -122,9 +122,7 @@ export function DatabaseCard({
 			headline={`change ${cursor.toLocaleString()}`}
 		>
 			<Line>
-				{graph?.records_total !== undefined
-					? `Holds ${plural(graph.records_total, "record")} and ${plural(graph.relations_total ?? 0, "relation")}.`
-					: "The record count was not reported."}
+				{`Graph observation: ${observedCount(graph?.records_total ?? null, "record")} and ${observedCount(graph?.relations_total ?? null, "relation")}.`}
 			</Line>
 			<Line>
 				{activity

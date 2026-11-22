@@ -66,6 +66,8 @@ missing values; cold coverage advancement is not called copied records.
 Cached storage/probe data exposes refresh failure, and observation history is
 scoped to the project session. The existing browser oracle was corrected to
 assert the independent coordinates, without weakening query/readback checks.
+The same unavailable-value rule applies independently to graph record and
+relationship counts; a missing relationship total is not substituted with zero.
 
 Commands actually run from this repository:
 
