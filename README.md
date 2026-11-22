@@ -67,6 +67,11 @@ Inherited enterprise/control-plane screens are not an implemented RRFlow fleet
 service. Only the catalogue-derived public RRD operations define engine
 capabilities; the client cannot establish another control authority.
 
+Tables displays the engine's per-endpoint relationship retirement rules and the
+schema revision and knowledge cursor that supplied them.
+[Temporal relationship rules](docs/project-temporal-relations.md) records the
+paired engine implementation and verification.
+
 ## Repository boundary
 
 ```text

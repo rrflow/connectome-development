@@ -1,196 +1,198 @@
 {
-	"capabilities": [
-		{
-			"limitation": "bounded authenticated long-poll fallback over the same commit-ordered replay used by durable WebSocket subscriptions",
-			"name": "changefeed-follow",
-			"status": "experimental"
-		},
-		{
-			"limitation": "authenticated retained cursor replay with lossless claim and typed data snapshots",
-			"name": "changefeed-replay",
-			"status": "experimental"
-		},
-		{
-			"limitation": "schema-less reasoning-claim transactions on rrflow_kv; schema-bound models use the multi-model transaction contract",
-			"name": "claim-transactions",
-			"status": "experimental"
-		},
-		{
-			"limitation": "bounded authenticated temporal context assembly with source and read evidence; attunement and release recall-quality gates remain open",
-			"name": "context-assembly",
-			"status": "experimental"
-		},
-		{
-			"limitation": "machine-readable operation catalogue and OpenAPI 3.1 schemas; generated language packages and shared conformance remain F5 work",
-			"name": "endpoint-catalogue",
-			"status": "available"
-		},
-		{
-			"limitation": "read-only engram snapshots; engram mutations remain unavailable",
-			"name": "engram-authority-read",
-			"status": "experimental"
-		},
-		{
-			"limitation": "exact session-scoped rrflowQL reads over authenticated typed versions with Arrow/DataFusion compute; mutating rrflowQL remains open",
-			"name": "exact-rrflowql-query",
-			"status": "experimental"
-		},
-		{
-			"limitation": "operator ceilings are configured, but the governed reasoning executor and activation receipts are not implemented; private exploratory reasoning remains outside this durable-effect capability",
-			"name": "governed-reasoning-runner",
-			"status": "unavailable"
-		},
-		{
-			"limitation": "configure an owner-only JWT key file and matching persisted issuer",
-			"name": "jwt-session-credentials",
-			"status": "unavailable"
-		},
-		{
-			"limitation": "authenticated project-bound catalogue configuration with revision compare-and-swap and idempotent receipts; external bindings do not establish provider execution or synchronization",
-			"name": "knowledge-tree-catalogue",
-			"status": "experimental"
-		},
-		{
-			"limitation": null,
-			"name": "lifecycle-journal",
-			"status": "available"
-		},
-		{
-			"limitation": "authenticated WebSocket push with durable ACK cursors, fenced reconnect, bounded delivery windows, and one global commit-cursor order",
-			"name": "live-subscriptions",
-			"status": "available"
-		},
-		{
-			"limitation": "principal-authenticated policy-bound loopback sessions; configure mTLS for remote transport",
-			"name": "local-transport-leases",
-			"status": "experimental"
-		},
-		{
-			"limitation": "content-authenticated logical backup and restore-to-generated-new-root; object payloads are referenced-only and restore never switches the active instance",
-			"name": "logical-backup-restore",
-			"status": "experimental"
-		},
-		{
-			"limitation": "atomic schema, claim, record, relation, event, vector, series, geo, and pre-staged object-reference commits with durable all-model prospective read-your-writes; mutating rrflowQL remains open",
-			"name": "multi-model-transactions",
-			"status": "experimental"
-		},
-		{
-			"limitation": "plain HTTP is loopback-only; configure mTLS and initialize security for remote bind",
-			"name": "remote-listen",
-			"status": "unavailable"
-		},
-		{
-			"limitation": "authenticated bounded query-result export only; uncompressed typed Arrow profile; no import, streaming, destination writes or global allocator qualification",
-			"name": "rrflow-parquet-1",
-			"status": "experimental"
-		},
-		{
-			"limitation": "independently hash-chained redacted JSON audit with protected bounded read and canonical JSON Lines export; external sink delivery remains adapter-owned",
-			"name": "security-audit",
-			"status": "experimental"
-		},
-		{
-			"limitation": "revisioned principals, inherited roles, credentials, issuers, external identity bindings, exact resource grants, and compiled tenant/row/field rrflowQL policy; constrained operations without an injector deny",
-			"name": "security-policy",
-			"status": "experimental"
-		},
-		{
-			"limitation": "named collections, typed payload indexes and filters, direct stamped dense/sparse/multi-vector reads, and persisted HNSW/quantization/TurboQuant artifact serving; release recall-quality gates remain open",
-			"name": "vector-search",
-			"status": "experimental"
-		}
-	],
-	"engine": "dd1f7a182f6978b577915117f2090055df160749",
-	"operations": [
-		"attunement-cancel",
-		"attunement-job-list",
-		"attunement-pause",
-		"attunement-read",
-		"attunement-receipt-read",
-		"attunement-recover-expired",
-		"attunement-replan-accept",
-		"attunement-replan-preview",
-		"attunement-replan-receipt-read",
-		"attunement-resume",
-		"attunement-start",
-		"attunement-step",
-		"audit-export",
-		"audit-read",
-		"backup-create",
-		"backup-list",
-		"capabilities-read",
-		"changefeed-follow",
-		"changefeed-read",
-		"cold-history-read",
-		"configuration-effective-read",
-		"context-assemble",
-		"data-schema-read",
-		"diagnostics-read",
-		"diagnostics-storage-cursor",
-		"diagnostics-storage-read",
-		"embedding-builtin-activate",
-		"endpoint-catalogue",
-		"endpoint-configuration-apply",
-		"endpoint-configuration-preview",
-		"endpoint-configuration-read",
-		"engram-read",
-		"flight-launch",
-		"flight-list",
-		"flight-read",
-		"health-live",
-		"health-ready",
-		"knowledge-tree-list",
-		"knowledge-tree-replace",
-		"observation-deliver",
-		"observation-prepare",
-		"observation-read",
-		"openapi-read",
-		"project-configuration-apply",
-		"project-configuration-preview",
-		"project-configuration-read",
-		"query-execute",
-		"query-export",
-		"query-index-ensure",
-		"query-index-list",
-		"query-live-poll",
-		"query-transaction-execute",
-		"restore-create",
-		"session-close",
-		"session-create",
-		"session-renew",
-		"subscription-close",
-		"subscription-open",
-		"task-assessment-execute",
-		"task-assessment-read",
-		"task-attempt-read",
-		"task-budget-configure",
-		"task-budget-read",
-		"task-budget-resume",
-		"task-budget-stop",
-		"task-close",
-		"task-embedding-execute",
-		"task-endpoint-propose",
-		"task-list",
-		"task-open",
-		"task-read",
-		"task-worker-execute",
-		"transaction-abort",
-		"transaction-begin",
-		"transaction-commit",
-		"transaction-preview",
-		"vector-collection-ensure",
-		"vector-collection-list",
-		"vector-index-ensure",
-		"vector-payload-index-delete",
-		"vector-payload-index-ensure",
-		"vector-point-retrieve",
-		"vector-point-scroll",
-		"vector-quantization-activate",
-		"vector-quantization-build",
-		"vector-quantization-list",
-		"vector-quantization-retire",
-		"vector-search"
-	],
-	"websocket_operations": ["websocket-connect"]
+  "capabilities": [
+    {
+      "limitation": "bounded authenticated long-poll fallback over the same commit-ordered replay used by durable WebSocket subscriptions",
+      "name": "changefeed-follow",
+      "status": "experimental"
+    },
+    {
+      "limitation": "authenticated retained cursor replay with lossless claim and typed data snapshots",
+      "name": "changefeed-replay",
+      "status": "experimental"
+    },
+    {
+      "limitation": "schema-less reasoning-claim transactions on rrflow_kv; schema-bound models use the multi-model transaction contract",
+      "name": "claim-transactions",
+      "status": "experimental"
+    },
+    {
+      "limitation": "bounded authenticated temporal context assembly with source and read evidence; attunement and release recall-quality gates remain open",
+      "name": "context-assembly",
+      "status": "experimental"
+    },
+    {
+      "limitation": "machine-readable operation catalogue and OpenAPI 3.1 schemas; generated language packages and shared conformance remain F5 work",
+      "name": "endpoint-catalogue",
+      "status": "available"
+    },
+    {
+      "limitation": "read-only engram snapshots; engram mutations remain unavailable",
+      "name": "engram-authority-read",
+      "status": "experimental"
+    },
+    {
+      "limitation": "exact session-scoped rrflowQL reads over authenticated typed versions with Arrow/DataFusion compute; mutating rrflowQL remains open",
+      "name": "exact-rrflowql-query",
+      "status": "experimental"
+    },
+    {
+      "limitation": "operator ceilings are configured, but the governed reasoning executor and activation receipts are not implemented; private exploratory reasoning remains outside this durable-effect capability",
+      "name": "governed-reasoning-runner",
+      "status": "unavailable"
+    },
+    {
+      "limitation": "configure an owner-only JWT key file and matching persisted issuer",
+      "name": "jwt-session-credentials",
+      "status": "unavailable"
+    },
+    {
+      "limitation": "authenticated project-bound catalogue configuration with revision compare-and-swap and idempotent receipts; external bindings do not establish provider execution or synchronization",
+      "name": "knowledge-tree-catalogue",
+      "status": "experimental"
+    },
+    {
+      "limitation": null,
+      "name": "lifecycle-journal",
+      "status": "available"
+    },
+    {
+      "limitation": "authenticated WebSocket push with durable ACK cursors, fenced reconnect, bounded delivery windows, and one global commit-cursor order",
+      "name": "live-subscriptions",
+      "status": "available"
+    },
+    {
+      "limitation": "principal-authenticated policy-bound loopback sessions; configure mTLS for remote transport",
+      "name": "local-transport-leases",
+      "status": "experimental"
+    },
+    {
+      "limitation": "content-authenticated logical backup and restore-to-generated-new-root; object payloads are referenced-only and restore never switches the active instance",
+      "name": "logical-backup-restore",
+      "status": "experimental"
+    },
+    {
+      "limitation": "atomic schema, claim, record, relation, event, vector, series, geo, and pre-staged object-reference commits with durable all-model prospective read-your-writes; mutating rrflowQL remains open",
+      "name": "multi-model-transactions",
+      "status": "experimental"
+    },
+    {
+      "limitation": "plain HTTP is loopback-only; configure mTLS and initialize security for remote bind",
+      "name": "remote-listen",
+      "status": "unavailable"
+    },
+    {
+      "limitation": "authenticated bounded query-result export only; uncompressed typed Arrow profile; no import, streaming, destination writes or global allocator qualification",
+      "name": "rrflow-parquet-1",
+      "status": "experimental"
+    },
+    {
+      "limitation": "independently hash-chained redacted JSON audit with protected bounded read and canonical JSON Lines export; external sink delivery remains adapter-owned",
+      "name": "security-audit",
+      "status": "experimental"
+    },
+    {
+      "limitation": "revisioned principals, inherited roles, credentials, issuers, external identity bindings, exact resource grants, and compiled tenant/row/field rrflowQL policy; constrained operations without an injector deny",
+      "name": "security-policy",
+      "status": "experimental"
+    },
+    {
+      "limitation": "named collections, typed payload indexes and filters, direct stamped dense/sparse/multi-vector reads, and persisted HNSW/quantization/TurboQuant artifact serving; release recall-quality gates remain open",
+      "name": "vector-search",
+      "status": "experimental"
+    }
+  ],
+  "engine": "ea2713a7e247dd6ca697e2eb3970686fc97e7771",
+  "operations": [
+    "attunement-cancel",
+    "attunement-job-list",
+    "attunement-pause",
+    "attunement-read",
+    "attunement-receipt-read",
+    "attunement-recover-expired",
+    "attunement-replan-accept",
+    "attunement-replan-preview",
+    "attunement-replan-receipt-read",
+    "attunement-resume",
+    "attunement-start",
+    "attunement-step",
+    "audit-export",
+    "audit-read",
+    "backup-create",
+    "backup-list",
+    "capabilities-read",
+    "changefeed-follow",
+    "changefeed-read",
+    "cold-history-read",
+    "configuration-effective-read",
+    "context-assemble",
+    "data-schema-read",
+    "diagnostics-read",
+    "diagnostics-storage-cursor",
+    "diagnostics-storage-read",
+    "embedding-builtin-activate",
+    "endpoint-catalogue",
+    "endpoint-configuration-apply",
+    "endpoint-configuration-preview",
+    "endpoint-configuration-read",
+    "engram-read",
+    "flight-launch",
+    "flight-list",
+    "flight-read",
+    "health-live",
+    "health-ready",
+    "knowledge-tree-list",
+    "knowledge-tree-replace",
+    "observation-deliver",
+    "observation-prepare",
+    "observation-read",
+    "openapi-read",
+    "project-configuration-apply",
+    "project-configuration-preview",
+    "project-configuration-read",
+    "query-execute",
+    "query-export",
+    "query-index-ensure",
+    "query-index-list",
+    "query-live-poll",
+    "query-transaction-execute",
+    "restore-create",
+    "session-close",
+    "session-create",
+    "session-renew",
+    "subscription-close",
+    "subscription-open",
+    "task-assessment-execute",
+    "task-assessment-read",
+    "task-attempt-read",
+    "task-budget-configure",
+    "task-budget-read",
+    "task-budget-resume",
+    "task-budget-stop",
+    "task-close",
+    "task-embedding-execute",
+    "task-endpoint-propose",
+    "task-list",
+    "task-open",
+    "task-read",
+    "task-worker-execute",
+    "transaction-abort",
+    "transaction-begin",
+    "transaction-commit",
+    "transaction-preview",
+    "vector-collection-ensure",
+    "vector-collection-list",
+    "vector-index-ensure",
+    "vector-payload-index-delete",
+    "vector-payload-index-ensure",
+    "vector-point-retrieve",
+    "vector-point-scroll",
+    "vector-quantization-activate",
+    "vector-quantization-build",
+    "vector-quantization-list",
+    "vector-quantization-retire",
+    "vector-search"
+  ],
+  "websocket_operations": [
+    "websocket-connect"
+  ]
 }
