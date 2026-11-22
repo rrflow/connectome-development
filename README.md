@@ -72,6 +72,9 @@ schema revision and knowledge cursor that supplied them.
 [Temporal relationship rules](docs/project-temporal-relations.md) records the
 paired engine implementation and verification.
 
+[Engine configuration and diagnostic UI](docs/engine-evidence.md) maps the six
+layer owners, current evidence, missing contracts and reusable code pattern.
+
 ## Repository boundary
 
 ```text

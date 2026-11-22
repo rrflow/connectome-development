@@ -21,7 +21,7 @@ function reading(position: PartPosition): string {
 		case "at":
 			return `change ${position.cursor.toLocaleString()}`;
 		case "behind":
-			return `change ${position.cursor.toLocaleString()} · ${position.by.toLocaleString()} behind`;
+			return `change ${position.cursor.toLocaleString()} · reading ${position.by.toLocaleString()} earlier`;
 		default:
 			return position.reason;
 	}
@@ -35,7 +35,7 @@ export interface CursorRailProps {
 }
 
 /**
- * The four parts on the change cursor they share. The rail starts a little
+ * Comparable observations on the change cursor; physical sequences stay separate. The rail starts a little
  * before the furthest-behind part so a small lag stays visible; its first
  * change is printed, so the scale is never implied.
  */
@@ -134,7 +134,7 @@ export function CursorRail({ parts, head, advanced }: CursorRailProps) {
 					c="slate"
 					ff="monospace"
 				>
-					change {head.toLocaleString()} · head
+					change {head.toLocaleString()} · latest observed
 				</Text>
 			</Group>
 		</Stack>

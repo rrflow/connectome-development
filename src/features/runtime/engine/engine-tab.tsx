@@ -6,6 +6,7 @@ import { Section } from "~/features/runtime/components/Section";
 import { describeRrdError } from "~/rrflow/runtime";
 import { iconErrorCircle } from "~/shared/assets/icons";
 import { busyRetry, databaseQuery } from "../api/queries";
+import { ReadNotice } from "../components/notice";
 import { useLiveChanges } from "../live/use-live-changes";
 import type { RuntimeLensProps } from "../types";
 import { formatTime } from "../utils/format";
@@ -28,11 +29,20 @@ const REFRESH_MS = 5_000;
 const PULSE_MS = 1_200;
 
 /**
- * rrflowDB, rrflowKV, rrflowQL and rrflowCLD as one engine: one storage
- * observation and one live rrflowQL answer, placed on their shared cursor.
+ * Independent storage and query observations, retaining their own coordinates.
  * Each committed change on the live stream triggers a fresh reading.
  */
-export function EngineTab({ client, sessionKey }: RuntimeLensProps) {
+export function EngineTab(props: RuntimeLensProps) {
+	// Never calculate activity or retain pulse state across project sessions.
+	return (
+		<EngineObservation
+			key={props.sessionKey}
+			{...props}
+		/>
+	);
+}
+
+function EngineObservation({ client, sessionKey }: RuntimeLensProps) {
 	const queryClient = useQueryClient();
 	const storageKey = ["rrd-storage", sessionKey] as const;
 	const storage = useQuery({
@@ -120,7 +130,7 @@ export function EngineTab({ client, sessionKey }: RuntimeLensProps) {
 		<Stack gap="xl">
 			<Section
 				title="One engine"
-				description="rrflowDB commits each change, rrflowKV stores it, rrflowQL answers from it, and rrflowCLD copies it to the cold tier. They share one change number, the cursor. Each line shows where a part is on it now."
+				description="Compare the database reading, query answer and published cold-history coverage. rrflowKV reports a separate physical sequence. These are independently timed observations, not one atomic snapshot or a trace of your prompt."
 				rightSection={
 					<Badge
 						variant="dot"
@@ -140,6 +150,10 @@ export function EngineTab({ client, sessionKey }: RuntimeLensProps) {
 					</Badge>
 				}
 			>
+				<ReadNotice
+					query={storage}
+					observedAt={reading.observedAtMs}
+				/>
 				<Paper p="lg">
 					<Stack gap="lg">
 						<Text
@@ -164,7 +178,8 @@ export function EngineTab({ client, sessionKey }: RuntimeLensProps) {
 									? `; rrflowQL answered ${formatTime(probe.data.atMs)}`
 									: ""}
 								. Refreshes every {REFRESH_MS / 1000} s and after every committed
-								change.
+								change. Interval activity includes all work in this instance,
+								including these probes.
 							</Text>
 						</Group>
 					</Stack>

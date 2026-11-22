@@ -155,23 +155,24 @@ test("runtime actions read the engine on request and guided routes only navigate
 	await expect(page).toHaveURL(/\/knowledge\/models$/);
 });
 
-test("the engine tab shows rrflowDB, rrflowKV, rrflowQL and rrflowCLD on one cursor", async ({
-	page,
-}) => {
+test("the engine tab keeps physical sequences separate from semantic cursors", async ({ page }) => {
 	const { profileA, profileB } = await createDiagnosticProfiles(page);
 	await openDiagnosticWorkbench(page, profileA, profileB);
 	await page.getByRole("button", { name: "Engine", exact: true }).click();
 	await page.getByRole("tab", { name: "One engine", exact: true }).click();
 	await expect(page).toHaveURL(/\/engine\/cursor$/);
 	const agreement = page.locator("[data-engine-agreement]");
-	await expect(agreement).toHaveText("The head is change 7. rrflowCLD is 2 changes behind.");
+	await expect(agreement).toHaveText(
+		"Latest observed change: 7. rrflowCLD's reading is 2 changes earlier. rrflowKV's physical sequence is a separate coordinate.",
+	);
 	const query = page.locator('[data-part-card="ql"]');
 	await expect(query).toContainText("answered at 7");
 	await expect(query).toContainText("1 range scan and 0 point reads: 2 keys examined");
 	await expect(query).toContainText("Plan: kind_prefix, because the kind bounds the key range.");
 	await expect(page.locator('[data-part-card="kv"]')).toContainText(
-		"Every write it has applied is on disk.",
+		"The observed durable watermark covers every applied physical mutation.",
 	);
+	await expect(page.locator('[data-part-card="kv"]')).toContainText("separate sequence");
 	await expect(page.locator('[data-part-card="cld"]')).toContainText("through 5");
 	// A committed change is read again by every part that follows it.
 	await page.evaluate(() =>
@@ -179,7 +180,9 @@ test("the engine tab shows rrflowDB, rrflowKV, rrflowQL and rrflowCLD on one cur
 			window as unknown as { __diagnosticCaptureTest: { commitLiveChange: () => void } }
 		).__diagnosticCaptureTest.commitLiveChange(),
 	);
-	await expect(agreement).toHaveText("The head is change 8. rrflowCLD is 3 changes behind.");
+	await expect(agreement).toHaveText(
+		"Latest observed change: 8. rrflowCLD's reading is 3 changes earlier. rrflowKV's physical sequence is a separate coordinate.",
+	);
 	await expect(query).toContainText("answered at 8");
 });
 
