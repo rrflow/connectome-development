@@ -6,6 +6,10 @@
 export interface InstallationFacts {
 	/** Folders and files RRFlow creates and owns inside the project. */
 	createdPaths: string[];
+	storageProfile: string | null;
+	storageRoot: string | null;
+	projectLocator: string | null;
+	instanceId: string | null;
 	/** The project's own files are left as they are. */
 	preservesProjectFiles: boolean;
 	/** The engine serves only this computer. */
@@ -35,6 +39,9 @@ export function installationFacts(preview: unknown): InstallationFacts {
 	const bootstrap = record(installation.bootstrap);
 	const deployment = record(installation.deployment);
 	const attunement = record(plan.attunement);
+	const managedPaths = list(installation.managed_paths).map(record);
+	const managedPath = (kind: string): string | null =>
+		text(managedPaths.find((path) => path.kind === kind)?.relative_path);
 	const createdPaths = [
 		...new Set(
 			list(installation.managed_paths)
@@ -49,6 +56,10 @@ export function installationFacts(preview: unknown): InstallationFacts {
 		.filter((phase): phase is string => Boolean(phase));
 	return {
 		createdPaths,
+		storageProfile: text(deployment.storage_profile),
+		storageRoot: managedPath("storage_root"),
+		projectLocator: managedPath("project_locator"),
+		instanceId: text(record(installation.target).instance_id),
 		preservesProjectFiles: bootstrap.project_policy === "preserve_project_owned_state",
 		loopbackOnly: deployment.endpoint_presentation === "loopback_http_websocket",
 		networkEndpoints: count(bootstrap.network_endpoints),

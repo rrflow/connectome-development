@@ -15,6 +15,13 @@ configuration or executable requires a fresh preview. An existing engram opens
 without another installation. Credentials are stored by RRFlow and read by the
 native client; no token is entered in a URL or browser storage.
 
+The preview leads with the actual native database location and local server
+behavior from the engine plan. **Installation files and folders** expands the
+complete managed-path list; these are configuration, credentials, storage and
+recovery artifacts, not the logical records stored in the database. The full
+plan retains ownership, removal rules and digests. Missing fields are omitted
+instead of displaying a guessed storage profile or location.
+
 The default project is in Connectome's application-data directory under
 `engrams/local` in the currently pinned desktop implementation. The serving settings can select an absolute project path,
 an explicit engine override, the console history size, how often instances are
