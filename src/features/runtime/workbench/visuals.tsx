@@ -15,8 +15,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { describeRrdError } from "~/rrflow/runtime";
 import type { RrdPromptFlightDetailView, RrdSessionClient } from "~/rrflow/session";
+import { isDevelopment, isPreview } from "~/shared/util/config/environment";
 import { databaseQuery } from "../api/queries";
 import { ReadNotice } from "../components/notice";
+import { FlightMeasurements } from "../flights/flight-measurements";
 import { GraphCanvas } from "../graph/graph";
 import { grouping } from "../graph/groups";
 import { InventoryNeighborhood } from "../graph/inventory-neighborhood-view";
@@ -174,7 +176,7 @@ export function ProjectVisuals({
 							{!preview ? (
 								<Text size="sm">
 									{database.isFetching
-										? "Reading project graph… You can continue using the rest of the workbench."
+										? "Reading project graphâ€¦ You can continue using the rest of the workbench."
 										: "No graph observation is available."}
 								</Text>
 							) : (
@@ -188,8 +190,8 @@ export function ProjectVisuals({
 											{formatCount(preview.graph.nodes.length)} returned
 											records and {formatCount(preview.edges.length)} of{" "}
 											{formatCount(preview.graph.edges.length)} returned
-											relationships · graph cursor{" "}
-											{formatCount(preview.graph.known_at_cursor)} · read{" "}
+											relationships Â· graph cursor{" "}
+											{formatCount(preview.graph.known_at_cursor)} Â· read{" "}
 											{formatTime(database.data?.observed_at_unix_ms)}
 										</Text>
 										<Select
@@ -240,7 +242,7 @@ export function ProjectVisuals({
 													);
 													return node ? (
 														<Text size="sm">
-															{node.label} · {node.id}
+															{node.label} Â· {node.id}
 														</Text>
 													) : null;
 												}}
@@ -261,7 +263,7 @@ export function ProjectVisuals({
 																	onSelectRecord(node.id)
 																}
 															>
-																{node.label} · {node.id}
+																{node.label} Â· {node.id}
 															</Button>
 														))}
 													</Stack>
@@ -314,7 +316,7 @@ export function ProjectVisuals({
 							{storage.data ? (
 								<>
 									<Text size="sm">
-										Observed {formatTime(storage.data.observed_at_unix_ms)} ·{" "}
+										Observed {formatTime(storage.data.observed_at_unix_ms)} Â·{" "}
 										{storage.data.evidence_level}
 									</Text>
 									<ScrollArea>
@@ -326,7 +328,7 @@ export function ProjectVisuals({
 							) : (
 								<Text size="sm">
 									{storage.isFetching
-										? "Reading storage observation…"
+										? "Reading storage observationâ€¦"
 										: "No storage observation is available."}
 								</Text>
 							)}
@@ -342,6 +344,7 @@ export function ProjectVisuals({
 export function FlightEventMap({ flight }: { flight: RrdPromptFlightDetailView }) {
 	return (
 		<Box>
+			{(isDevelopment || isPreview) && <FlightMeasurements flight={flight} />}
 			<Group gap="xs">
 				<Title order={5}>Recorded event flow</Title>
 				<Badge variant="outline">
@@ -372,7 +375,7 @@ export function FlightEventMap({ flight }: { flight: RrdPromptFlightDetailView }
 									size="xs"
 									c="dimmed"
 								>
-									{event.ordinal} · {event.elapsed_ms} ms elapsed
+									{event.ordinal} Â· {event.elapsed_ms} ms elapsed
 								</Text>
 								<Text fw={700}>{event.stage}</Text>
 								<Text size="sm">{event.label}</Text>
