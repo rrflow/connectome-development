@@ -621,7 +621,7 @@ export interface RrdMutationView {
 	operation: string;
 	/** `kind:id` for a record or relation; the event kind; `schema`. */
 	target: string;
-	/** A relation's `from â†’ to`, or the subject the mutation attaches to. */
+	/** A relation's `from → to`, or the subject the mutation attaches to. */
 	subject: string | null;
 	properties: Record<string, string>;
 }

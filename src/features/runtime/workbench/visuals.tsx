@@ -176,7 +176,7 @@ export function ProjectVisuals({
 							{!preview ? (
 								<Text size="sm">
 									{database.isFetching
-										? "Reading project graphâ€¦ You can continue using the rest of the workbench."
+										? "Reading project graph… You can continue using the rest of the workbench."
 										: "No graph observation is available."}
 								</Text>
 							) : (
@@ -190,8 +190,8 @@ export function ProjectVisuals({
 											{formatCount(preview.graph.nodes.length)} returned
 											records and {formatCount(preview.edges.length)} of{" "}
 											{formatCount(preview.graph.edges.length)} returned
-											relationships Â· graph cursor{" "}
-											{formatCount(preview.graph.known_at_cursor)} Â· read{" "}
+											relationships · graph cursor{" "}
+											{formatCount(preview.graph.known_at_cursor)} · read{" "}
 											{formatTime(database.data?.observed_at_unix_ms)}
 										</Text>
 										<Select
@@ -242,7 +242,7 @@ export function ProjectVisuals({
 													);
 													return node ? (
 														<Text size="sm">
-															{node.label} Â· {node.id}
+															{node.label} · {node.id}
 														</Text>
 													) : null;
 												}}
@@ -263,7 +263,7 @@ export function ProjectVisuals({
 																	onSelectRecord(node.id)
 																}
 															>
-																{node.label} Â· {node.id}
+																{node.label} · {node.id}
 															</Button>
 														))}
 													</Stack>
@@ -316,7 +316,7 @@ export function ProjectVisuals({
 							{storage.data ? (
 								<>
 									<Text size="sm">
-										Observed {formatTime(storage.data.observed_at_unix_ms)} Â·{" "}
+										Observed {formatTime(storage.data.observed_at_unix_ms)} ·{" "}
 										{storage.data.evidence_level}
 									</Text>
 									<ScrollArea>
@@ -328,7 +328,7 @@ export function ProjectVisuals({
 							) : (
 								<Text size="sm">
 									{storage.isFetching
-										? "Reading storage observationâ€¦"
+										? "Reading storage observation…"
 										: "No storage observation is available."}
 								</Text>
 							)}
@@ -375,7 +375,7 @@ export function FlightEventMap({ flight }: { flight: RrdPromptFlightDetailView }
 									size="xs"
 									c="dimmed"
 								>
-									{event.ordinal} Â· {event.elapsed_ms} ms elapsed
+									{event.ordinal} · {event.elapsed_ms} ms elapsed
 								</Text>
 								<Text fw={700}>{event.stage}</Text>
 								<Text size="sm">{event.label}</Text>
