@@ -3965,7 +3965,7 @@ dependencies = [
 [[package]]
 name = "rrd-client"
 version = "1.0.0"
-source = "git+https://github.com/rrflow/rrflow-development?rev=ea2713a7e247dd6ca697e2eb3970686fc97e7771#ea2713a7e247dd6ca697e2eb3970686fc97e7771"
+source = "git+https://github.com/rrflow/rrflow-development?rev=51a2bcfe946d9e465622e053dce306cb4a94a96f#51a2bcfe946d9e465622e053dce306cb4a94a96f"
 dependencies = [
  "bytes",
  "futures-util",
@@ -3984,7 +3984,7 @@ dependencies = [
 [[package]]
 name = "rrd-contract"
 version = "1.0.0"
-source = "git+https://github.com/rrflow/rrflow-development?rev=ea2713a7e247dd6ca697e2eb3970686fc97e7771#ea2713a7e247dd6ca697e2eb3970686fc97e7771"
+source = "git+https://github.com/rrflow/rrflow-development?rev=51a2bcfe946d9e465622e053dce306cb4a94a96f#51a2bcfe946d9e465622e053dce306cb4a94a96f"
 dependencies = [
  "base64 0.22.1",
  "schemars 1.2.1",
