@@ -1565,6 +1565,7 @@ mod cold_tier_tests {
             pending: false,
             failure: None,
             generation: Some(ColdHistoryGenerationSnapshot {
+                format: "vortex".into(),
                 generation: 28,
                 requested_after_cursor: 6180,
                 through_cursor: 6181,

@@ -82,7 +82,7 @@
 		"@mantine/notifications": "8.3.14",
 		"@mdi/js": "^7.4.47",
 		"@replit/codemirror-indentation-markers": "^6.5.0",
-		"@rrflow/rrd-client": "github:rrflow/rrflow-development#51a2bcfe946d9e465622e053dce306cb4a94a96f&path:sdks/typescript",
+		"@rrflow/rrd-client": "github:rrflow/rrflow-development#3564b7054c812d400dfcbcaea9ff42d8ed7d0382&path:sdks/typescript",
 		"@sigma/edge-curve": "^3.1.0",
 		"@sigma/node-border": "^3.0.0",
 		"@surrealdb/ql-wasm-v2": "npm:@surrealdb/ql-wasm@0.2.0-beta.11",

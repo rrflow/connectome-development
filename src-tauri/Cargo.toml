@@ -45,8 +45,8 @@ tokio = { version = "1", features = ["net", "rt", "sync", "time"] }
 # RRFlow's Rust SDK and contract own every authenticated RRD request and
 # response type. Pinned to one rrflow-development revision so the native client
 # and the engine it targets share one OpenAPI digest.
-rrd-client = { git = "https://github.com/rrflow/rrflow-development", rev = "51a2bcfe946d9e465622e053dce306cb4a94a96f" }
-rrd-contract = { git = "https://github.com/rrflow/rrflow-development", rev = "51a2bcfe946d9e465622e053dce306cb4a94a96f" }
+rrd-client = { git = "https://github.com/rrflow/rrflow-development", rev = "3564b7054c812d400dfcbcaea9ff42d8ed7d0382" }
+rrd-contract = { git = "https://github.com/rrflow/rrflow-development", rev = "3564b7054c812d400dfcbcaea9ff42d8ed7d0382" }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 cocoa = "0.26.1"
