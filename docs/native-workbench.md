@@ -109,6 +109,14 @@ atomic engine snapshot. Existing local notes remain readable. The native process
 tests cover a flight, pagination and session reconnect; they do not establish
 rendered desktop behavior or model quality.
 
+In the internal build, launch an Observe flight or reopen it under Flights.
+**Engine measurements** shows the retrieval cursor and valid time, preparation
+time, keys examined against budget, point reads, range scans and bytes decoded.
+The stage table shows the engine decision and reason. Ranked record sources
+keep their original packet positions, including gaps occupied by claims. Expand
+**Cost of reading this receipt** to see the later inspection cost at its own
+cursor. Fresh mode withholds context.
+
 The workbench also presents the returned event sequence, a bounded project graph
 and the rrflowKV storage path together. Graph labels and relationships come from
 the engine read; positions and colors are presentation. Choose a preview limit or

@@ -15,8 +15,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { describeRrdError } from "~/rrflow/runtime";
 import type { RrdPromptFlightDetailView, RrdSessionClient } from "~/rrflow/session";
+import { isDevelopment, isPreview } from "~/shared/util/config/environment";
 import { databaseQuery } from "../api/queries";
 import { ReadNotice } from "../components/notice";
+import { FlightMeasurements } from "../flights/flight-measurements";
 import { GraphCanvas } from "../graph/graph";
 import { grouping } from "../graph/groups";
 import { InventoryNeighborhood } from "../graph/inventory-neighborhood-view";
@@ -342,6 +344,7 @@ export function ProjectVisuals({
 export function FlightEventMap({ flight }: { flight: RrdPromptFlightDetailView }) {
 	return (
 		<Box>
+			{(isDevelopment || isPreview) && <FlightMeasurements flight={flight} />}
 			<Group gap="xs">
 				<Title order={5}>Recorded event flow</Title>
 				<Badge variant="outline">

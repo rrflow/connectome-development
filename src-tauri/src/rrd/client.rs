@@ -19,9 +19,9 @@ use super::error::RrdError;
 use super::transport::{is_loopback_origin, rrd_origin};
 use super::view::{
     self, ConnectionView, DatabaseView, MapLinkView, MapPointView, PromptFlightDetailView,
-    PromptFlightEventView, PromptFlightLaunchView, PromptFlightSummaryView, QueryView, ServiceView,
-    SessionView, StorageView, VectorCollectionsView, VectorMapProgressView, VectorMapView,
-    VectorPointsView, VectorSearchView, WorkbenchSnapshotView,
+    PromptFlightLaunchView, PromptFlightSummaryView, QueryView, ServiceView, SessionView,
+    StorageView, VectorCollectionsView, VectorMapProgressView, VectorMapView, VectorPointsView,
+    VectorSearchView, WorkbenchSnapshotView,
 };
 use rrd_client::{ClientConfig, RequestOptions, RrdClient, Session};
 use rrd_contract::{
@@ -768,38 +768,7 @@ impl NativeRrdClient {
                     .await
             })
             .await?;
-        let record = result.flight.record;
-        let events = result
-            .flight
-            .events
-            .into_iter()
-            .map(|event| PromptFlightEventView {
-                ordinal: event.ordinal,
-                at_unix_ms: event.at_unix_ms,
-                elapsed_ms: event.elapsed_ms,
-                stage: event.stage.as_str().to_owned(),
-                label: event.label,
-                detail: event.detail,
-            })
-            .collect::<Vec<_>>();
-
-        Ok(PromptFlightDetailView {
-            flight_id: record.flight_id.as_str().to_owned(),
-            status: record.status.as_str().to_owned(),
-            provider: record.provider.as_str().to_owned(),
-            context_mode: record.context_mode.as_str().to_owned(),
-            prompt: record.prompt,
-            acceptance_marker: record.acceptance_marker,
-            cohort_sha256: record.cohort_sha256,
-            created_at_unix_ms: record.created_at_unix_ms,
-            flight_cursor: record.flight_cursor,
-            known_at_cursor: record.known_at_cursor,
-            event_count: record.event_count,
-            context_items: record.metrics.context_items,
-            context_output_bytes: record.metrics.context_output_bytes,
-            elapsed_ms: record.metrics.elapsed_ms,
-            events,
-        })
+        view::flight::detail(result)
     }
 
     async fn diagnostic_snapshot(&self) -> Result<DiagnosticSnapshot, RrdError> {

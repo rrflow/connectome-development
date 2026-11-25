@@ -105,7 +105,31 @@ export interface RrdPromptFlightEventView {
 	detail: string;
 }
 
+export interface RrdFlightReadCounts {
+	keys_examined: number;
+	key_budget: number;
+	point_reads: number;
+	range_scans: number;
+	values_decoded: number;
+	decoded_bytes: number;
+}
+
 export interface RrdPromptFlightDetailView {
+	scope: string;
+	retrieval_cursor: number;
+	valid_at: number;
+	detail_cursor: number;
+	detail_reads: RrdFlightReadCounts;
+	context_reads: RrdFlightReadCounts | null;
+	stages: {
+		kind: string;
+		status: string;
+		access_path?: string;
+		exact: boolean;
+		reason: string;
+		decision_sha256: string;
+	}[];
+	uses: { rank: number; reference: RrdReference; score: number; evidence: string[] }[];
 	flight_id: string;
 	status: string;
 	provider: string;
